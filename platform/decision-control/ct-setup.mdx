@@ -53,7 +53,7 @@ Create an image pull secret for accessing container images:
 
 ```bash
 kubectl create secret docker-registry aletyx-registry \
-  --docker-server=registry-{{edition}}.aletyx.services \
+  --docker-server=registry.aletyx.services \
   --docker-username=YOUR_EMAIL \
   --docker-password=YOUR_TOKEN \
   --namespace=decision-control
@@ -218,7 +218,7 @@ spec:
       - name: aletyx-registry
       containers:
       - name: governance-api
-        image: registry-{{edition}}.aletyx.services/governance-api:1.2.1
+        image: registry.aletyx.services/governance-api:1.2.1
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
@@ -345,7 +345,7 @@ spec:
       - name: aletyx-registry
       containers:
       - name: control-tower
-        image: registry-{{edition}}.aletyx.services/control-tower:1.2.1
+        image: registry.aletyx.services/control-tower:1.2.1
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

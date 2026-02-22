@@ -25,7 +25,7 @@ The recommended versioning approach follows these principles:
 
 This diagram illustrates the lifecycle of a process from initial deployment through version updates to cleanup:
 
-![Process SVG Transition](/images/core/processes/images/version-to-version.svg)
+![Process SVG Transition](/images/core/processes/advanced-bpmn/images/version-to-version.svg)
 
 ### Initial Deployment (Version 1)
 
@@ -135,7 +135,7 @@ my-process-container:1.0.1
 **Pros:** Simplified deployment, single service endpoint
 **Cons:** Larger container size, less clear separation of versions
 
-![Single Container with Multiple Versions](/images/core/processes/images/container-single.svg)
+![Single Container with Multiple Versions](/images/core/processes/advanced-bpmn/images/container-single.svg)
 
 ### Approach 2: Multiple Containers with Version-specific Routing
 
@@ -152,13 +152,13 @@ my-process-container-v2:1.0.0
 **Pros:** Clean separation of versions, independent scaling, handles underlying model changes beyond process better
 **Cons:** More complex routing logic needed, more containers deployed
 
-![Multiple Containers with Version-specific Routing](/images/core/processes/images/container-strategy-2.svg)
+![Multiple Containers with Version-specific Routing](/images/core/processes/advanced-bpmn/images/container-strategy-2.svg)
 
 ### Cleanup Approach: Regardless of Strategy
 
 After there are no more active instances, then cleanup can be performed to remove the V1.0.0 from the deployed container.
 
-![Single Container with Multiple Versions](/images/core/processes/images/container-strategy-1.svg)
+![Single Container with Multiple Versions](/images/core/processes/advanced-bpmn/images/container-strategy-1.svg)
 
 ## Practical Example
 
