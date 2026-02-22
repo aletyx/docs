@@ -4,9 +4,9 @@
   "name": "Aletyx Documentation",
   "description": "Enterprise decision and process automation platform — Aletyx Enterprise Build of Apache KIE for Drools, jBPM, and Kogito",
   "colors": {
-    "primary": "#FC764C",
-    "light": "#FF9A7A",
-    "dark": "#1A1A1A"
+    "primary": "#FF6900",
+    "light": "#FD764D",
+    "dark": "#F54900"
   },
   "favicon": "/favicon.ico",
   "logo": {
