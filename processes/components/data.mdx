@@ -1,0 +1,28 @@
+---
+title: "Data-Index and Data-Audit"
+description: "Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx employs a de-normalized persistence model, separating runtime data from queryable data. This ensures high throughput operations without..."
+---
+Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx employs a **de-normalized persistence model**, separating **runtime data** from **queryable data**. This ensures high throughput operations without impacting query performance, making the system efficient and scalable.
+
+### Key Components
+
+Two distinct yet complementary components handle queryable data:
+
+1. **Data-Index** – Provides a **snapshot** of the current process state, accessible via a **GraphQL interface** that allows filtering and cross-referencing of process instances.
+
+2. **Data-Audit** – Focuses on long-term storage of **audited process events**, critical for **compliance and regulatory needs**. It also offers a **GraphQL interface** with support for custom queries.
+
+![Runtime feeding Data-Index](/images/core/processes/images/data.png)
+
+### Deployment Considerations
+
+- **Data-Index** can operate independently from the **runtime** in a separate container. However, this requires **Kafka and a Change Data Capture (CDC) mechanism** (e.g., **Debezium**) to maintain synchronization without relying on transactions.
+- **Compact Architecture** simplifies deployment by consolidating **Data-Index** within the application, ensuring data consistency via the database’s transaction manager.
+- **Data-Audit** is only available in **Compact Architecture**, as it requires participation in transactional consistency.
+
+### Data Retention
+
+- **Data-Index** can be periodically cleaned, keeping only **active process data** as per business requirements.
+- **Data-Audit** retains information for an extended period, depending on compliance needs.
+
+By structuring data management this way, Apache KIE achieves a balance between **real-time process monitoring** and **long-term auditability**, ensuring both efficiency and compliance.

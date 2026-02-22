@@ -1,0 +1,39 @@
+---
+title: "Temporal Intelligence Coordinator - the Job Service in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "A fundamental feature of workflow engines is the ability to schedule and monitor tasks, particularly Human Tasks and time-based events. Job Service provides this functionality within the Aletyx..."
+---
+A fundamental feature of workflow engines is the ability to **schedule and monitor tasks**, particularly **Human Tasks** and time-based events. **Job Service** provides this functionality within the Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx ecosystem.
+
+### Deployment Options Community
+
+**Job Service** can currently run in two different configurations, each with distinct trade-offs within the Apache KIE (Incubating) 10.0.0:
+
+**Independent Deployment** – Runs as a standalone container, centralizing scheduling across multiple environments.
+
+  - ✅ Centralized scheduling
+  - ⚠️ Scalability challenges (leader-based, single active node)
+  - ⚠️ Lacks transactional consistency; requires **CDC (Change Data Capture)** for data integrity.
+
+
+**Compact Architecture Deployment** – Runs as part of the core application.
+
+  - ✅ Ensures transactional consistency
+  - ✅ Integrates scheduling within the runtime
+  - ⚠️ Still requires a single active leader node, limiting scalability
+
+### Considerations
+
+- **High Availability**: The **leader-based architecture** ensures high availability but limits horizontal scaling.
+- **Load Distribution**: In compact architecture deployment, general Tasks can be redirected to be executed in non-active Job Service nodes to offload processing.
+- **Data Consistency**: Running Job Service **independently** requires **CDC mechanisms** (e.g., **Debezium**) to maintain consistency.
+
+By choosing the appropriate deployment model, developers can balance **scalability, performance, and consistency** to fit their workflow needs.
+
+## The Aletyx Difference - the Temporal Intelligence Coordinator
+
+One of the core features of the Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx release is that the limitations of the Compact Architecture in the Apache KIE community have been removed with the release of Adaptive Process Architecture is the Temporal Intelligence Coordinator. This Aletyx exclusive feature allows for scalable Intelligent Process Orchestrations containers to be deployed allowing for true Cloud Native Workflow!
+
+<Info title="Temporal Intelligence Coordinator - Enabling Intelligent Process Orchestrations Cloud Native Scalability">
+
+One of the benefits of using Aletyx Enterprise Build of Kogito and Drools is that truly Cloud Native Process is achievable through our exclusive implementation to scale your containers and workflows in your container platform!
+</Info>

@@ -1,0 +1,14 @@
+---
+title: "End Events in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "End Events mark the conclusion of a process flow. Unlike Start Events, they can have multiple incoming connections but generally no outgoing connections. Each End Event can optionally “throw”..."
+---
+End Events mark the conclusion of a process flow. Unlike Start Events, they can have multiple incoming connections but generally no outgoing connections. Each End Event can optionally “throw” something outward, such as a message, error, or signal, indicating how the rest of the system or surrounding processes should respond at termination.
+
+Using End Events effectively helps clarify what happens once a process completes—be it sending a notification or signaling that an error occurred.
+
+Here are some of the supported end events supported in Aletyx Enterprise Build of Kogito and Drools by jBPM
+
+- ![Simple End Node](/images/core/processes/basic-bpmn/images/node-simple-end.png) None End: Ends the current path without additional actions.
+- ![Message End Node](/images/core/processes/basic-bpmn/images/node-message-end.png) Message End: Sends a message outward upon completion.
+- ![Error End Node](/images/core/processes/basic-bpmn/images/node-error-end.png) Error End: Throws an error, which can be handled by specific catching mechanisms.
+- ![Terminate End Node](/images/core/processes/basic-bpmn/images/node-terminate-end.png) Terminate End: Immediately stops all running flows in the process.

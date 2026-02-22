@@ -1,0 +1,203 @@
+---
+title: "Creating Your First Decision Table"
+description: "This guide walks you through creating a decision table for a simple shipping charges calculation system. You'll build the same shipping charges example mentioned in the documentation, but with a..."
+---
+This guide walks you through creating a decision table for a simple shipping charges calculation system. You'll build the same shipping charges example mentioned in the documentation, but with a step-by-step approach.
+
+## Example Use Case: Shipping Charges
+
+Our online shopping platform has the following shipping pricing rules:
+
+- Free shipping when:
+  - The order has 4+ items AND the total is $300+
+  - Standard shipping is selected (4-5 business days)
+- Otherwise, shipping charges vary based on:
+  - Number of items
+  - Delivery speed (Next day, 2nd day, or Standard)
+  - Order total (less than $300 or $300+)
+
+## Step 1: Create a New Excel Spreadsheet
+
+1. Open Microsoft Excel or your preferred spreadsheet application
+2. Create a new blank workbook
+3. Save it as `ShippingCharges.drl.xlsx` in your project's `src/main/resources/rules` directory.
+
+> **Important**: Starting with Drools v8, file extension must end in either `.drl.xls`, `.drl.xlsx`, or `.drl.csv`
+
+## Step 2: Define the RuleSet Area
+
+The RuleSet area defines global elements for all rules in the package.
+
+1. In cell A1, type a descriptive comment like `Shipping Charges Decision Table`
+2. In cell B1, type `RuleSet`
+3. In cell C1, type `com.example.shipping` (this will be your rule package name)
+4. Move to the next row (row 2)
+5. In cell B2, type `Import`
+6. In cell C2, type `com.example.model.Order, com.example.model.Charge`
+
+Your worksheet should now look like this:
+
+| A                               | B       | C                                                 |
+| ------------------------------- | ------- | ------------------------------------------------- |
+| Shipping Charges Decision Table | RuleSet | com.example.shipping                              |
+|                                 | Import  | com.example.model.Order, com.example.model.Charge |
+
+## Step 3: Define the First RuleTable
+
+Now let's create the rule table for orders under $300:
+
+1. Skip a row and in cell B4, type `RuleTable` followed by a name: `RuleTable Shipping Under 300`
+2. In row 5, define the condition and action headers:
+   - Cell B5: `CONDITION`
+   - Cell C5: `CONDITION`
+   - Cell D5: `ACTION`
+3. In row 6, define the object types:
+   - Cell B6: `$order : Order`
+   - Cell C6: `Order`
+   - Cell D6: (leave empty)
+4. In row 7, define the constraints and actions:
+   - Cell B7: `total < 300`
+   - Cell C7: `itemsCount == $1, deliverInDays == $2`
+   - Cell D7: `insert(new Charge($param));`
+5. In row 8, add descriptive column headers:
+   - Cell B8: `Under $300`
+   - Cell C8: `Items & Delivery`
+   - Cell D8: `Shipping Charge`
+
+Now add your rule data rows (rules 9-14):
+
+| A   | B   | C               | D      |
+| --- | --- | --------------- | ------ |
+| 9   |     | 3 or fewer, 1   | 35     |
+| 10  |     | 3 or fewer, 2   | 15     |
+| 11  |     | 3 or fewer, 3-5 | 10     |
+| 12  |     | 4 or more, 1    | N*7.50 |
+| 13  |     | 4 or more, 2    | N*3.50 |
+| 14  |     | 4 or more, 3-5  | N*2.50 |
+
+
+| Shipping Charges Decision Table | RuleSet | ai.aletyx.shipping |
+| | Unit | ShippingUnit |
+| | Import | ai.aletyx.model.Order, ai.aletyx.model.Charge |
+| | Queries | query FindShippingCharge(Order order, Charge charge) order := /orders charge := /charges end |
+| | | |
+
+| A   | B                            | C                                  | D                                |
+| --- | ---------------------------- | ---------------------------------- | -------------------------------- |
+|     | RuleTable Shipping Under 300 |                                    |                                  |
+|     | CONDITION                    | CONDITION                          | ACTION                           |
+|     | $order : /orders             | $order : /orders                   |                                  |
+|     | total < 300                  | itemsCount $1, deliverInDays == $2 | charges.add(new Charge($param)); |
+|     | Under $300                   | Items & Delivery                   | Shipping Charge                  |
+|     |                              | < 3, 1                             | 35                               |
+|     |                              | < 3, 2                             | 15                               |
+|     |                              | < 3, 5                             | 10                               |
+|     |                              | >= 4, 1                            | $order.getItemsCount() * 7.50    |
+|     |                              | >= 4, 2                            | $order.getItemsCount() * 3.50    |
+|     |                              | >= 4, 5                            | $order.getItemsCount() * 2.50    |
+
+## Step 4: Create the Second RuleTable
+
+Now let's add rules for orders of $300 or more:
+
+1. Skip a row after the previous table
+2. In cell B16, type `RuleTable Shipping Over 300`
+3. Repeat the same headers and descriptive rows as with the first table
+4. Change B19 (the constraint) to `total >= 300`
+5. Use the same format for the other condition and action cells
+
+Add the data rows for orders of $300 or more:
+
+| A   | B   | C               | D      |
+| --- | --- | --------------- | ------ |
+| 21  |     | 3 or fewer, 1   | 25     |
+| 22  |     | 3 or fewer, 2   | 10     |
+| 23  |     | 3 or fewer, 3-5 | N*1.50 |
+| 24  |     | 4 or more, 1    | N*5    |
+| 25  |     | 4 or more, 2    | N*2    |
+| 26  |     | 4 or more, 3-5  | 0      |
+
+## Step 5: Create the Data Models
+
+Now, let's create the Java classes that represent our data model:
+
+### Order.java
+```java
+package com.example.model;
+
+public class Order {
+    private int itemsCount;
+    private double total;
+    private int deliverInDays;
+
+    public Order() {
+    }
+
+    public Order(int itemsCount, double total, int deliverInDays) {
+        this.itemsCount = itemsCount;
+        this.total = total;
+        this.deliverInDays = deliverInDays;
+    }
+
+    public int getItemsCount() {
+        return itemsCount;
+    }
+
+    public void setItemsCount(int itemsCount) {
+        this.itemsCount = itemsCount;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public void setTotal(double total) {
+        this.total = total;
+    }
+
+    public int getDeliverInDays() {
+        return deliverInDays;
+    }
+
+    public void setDeliverInDays(int deliverInDays) {
+        this.deliverInDays = deliverInDays;
+    }
+}
+```
+
+### Charge.java
+```java
+package com.example.model;
+
+public class Charge {
+    private double amount;
+
+    public Charge() {
+    }
+
+    public Charge(double amount) {
+        this.amount = amount;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    @Override
+    public String toString() {
+        return "Shipping charge: $" + amount;
+    }
+}
+```
+
+## Complete Example
+
+Your completed decision table should look like this:
+
+![Decision Table Example](/images/core/decisions/drl/decision-tables/getting-started/decision-table-example.png)
+
+In the next section, we'll show you how to run this decision table with a simple Java application.

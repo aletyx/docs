@@ -1,0 +1,66 @@
+---
+title: "Ruleflow"
+description: "Apache KIE continues to support the classic Drools API, ensuring a smooth migration path for users upgrading from earlier versions. This includes the traditional approach of creating a KieSession,..."
+---
+## Supporting the Classic Drools API in Apache KIE
+
+Apache KIE continues to support the classic Drools API, ensuring a smooth migration path for users upgrading from earlier versions. This includes the traditional approach of creating a `KieSession`, inserting facts, and firing rules:
+
+```java
+KieSession session = kbase.newKieSession();
+
+session.insert(obj1);
+// ...
+session.insert(objN);
+session.fireAllRules();
+```
+
+This method remains fully supported in the community edition, facilitating straightforward transitions for existing applications.
+
+### Limitations in Community Edition: Rule Flows and `startProcess`
+
+While the classic API is supported, certain features like rule flows initiated via the `startProcess` method are not available in the community edition. For example:
+
+```java
+KieSession session = kbase.newKieSession();
+
+session.insert(obj1);
+// ...
+session.insert(objN);
+session.startProcess("RuleOrchestrationProcess");
+session.fireAllRules();
+```
+
+<Info title="startProcess is an exclusive Aletyx feature in Aletyx Enterprise Build of Kogito and Drools">
+
+The `startProcess` method is not supported in the community edition due to architectural shifts favoring more modern, code-centric approaches. This is currently supported by Aletyx to help a quicker adoption to move to Drools 10.
+</Info>
+### Recommended Alternative: Rule Units
+
+For users requiring process orchestration, adopting Rule Units is the recommended approach. Rule Units provide a modular and declarative way to define and execute rules, aligning with contemporary development practices. They allow for better integration with modern frameworks and support more maintainable and testable code structures.
+
+
+### Aletyx Enterprise Support for `startProcess`
+
+We understand that migrating to Rule Units takes time, especially for enterprise users with large and mature rule sets. To support this transition, Aletyx Enterprise provides continued support for the `startProcess` API.
+
+This support is available **only when your project is packaged as a KJAR**. This does **not** mean you need to use KIE Server. Instead, the KJAR acts as a regular dependency in your application using either Spring Boot or Quarkus.
+
+You can run these applications as containers, including in environments such as Docker or different flavors of Kubernetes.
+
+To enable this support, you also need to make a minor adjustment to your BPMN process. You must add a metadata attribute:
+
+* Name: `ClassicRuleFlow`
+* Value: `true`
+
+This instructs the system to use the classic flow integration for the process. If this metadata is missing, you may encounter the following error during runtime:
+
+```
+java.lang.IllegalStateException: Illegal method call. This session was previously disposed.
+```
+
+### Assistance for Migration
+
+If you are planning to upgrade to Drools 10.x and currently utilize rule flows, Aletyx's team of experts is available to assist with the migration process. Our goal is to ensure a seamless transition, minimizing disruptions and aligning your applications with the latest best practices in rule management.
+
+For more information and support, please visit https://aletyx.ai/contact-us to reach out!

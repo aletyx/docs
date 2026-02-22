@@ -1,97 +1,73 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Aletyx Documentation"
+description: "Enterprise decision and process automation platform — Build, test, deploy, and govern business decisions and processes with Aletyx Enterprise Build of Apache KIE"
+mode: "center"
 ---
 
-## Setting up
+<div className="flex flex-col items-center text-center max-w-3xl mx-auto mt-8 mb-12">
+  <img src="/logo/dark.svg" alt="Aletyx" className="h-12 mb-6 hidden dark:block" />
+  <img src="/logo/light.svg" alt="Aletyx" className="h-12 mb-6 dark:hidden" />
+  <p className="text-xl text-gray-600 dark:text-gray-400">
+    Enterprise Decision & Process Automation Platform
+  </p>
+  <p className="text-base text-gray-500 dark:text-gray-500 mt-2">
+    Build, test, deploy, and govern business decisions and processes with the enterprise build of Apache KIE — Drools, jBPM, and Kogito.
+  </p>
+</div>
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={3}>
+  <Card title="Get Started" icon="rocket" href="/get-started/overview">
+    Choose your path based on your role — decision analyst, developer, or architect. Set up your environment and build your first project.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Decisions" icon="scale-balanced" href="/decisions/overview">
+    Learn DRL rules, decision tables, and DMN modeling. Master FEEL expressions and build intelligent decision services.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Processes" icon="diagram-project" href="/processes/overview">
+    Design and orchestrate business processes with BPMN. From basic workflows to advanced event-driven architectures.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Platform" icon="grid-2" href="/platform/overview">
+    Explore Decision Control, Playground, Drools, and MCP integration. Enterprise-grade tools for your automation needs.
   </Card>
-</Columns>
+  <Card title="Guides & Tutorials" icon="graduation-cap" href="/guides/overview">
+    Hands-on labs, DMN and DRL examples, process development tutorials, and industry-specific use cases.
+  </Card>
+  <Card title="Deploy" icon="cloud-arrow-up" href="/deploy/overview">
+    Deploy to AWS Marketplace, Kubernetes, OpenShift, or run locally with Docker. Production-ready from day one.
+  </Card>
+</CardGroup>
 
-## Create beautiful pages
+---
 
-Everything you need to create world-class documentation.
+## Quick Links
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+<CardGroup cols={2}>
+  <Card title="Playground" icon="play" href="https://playground.aletyx.ai">
+    Try Aletyx in your browser — no setup required. Model decisions and processes instantly.
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="Start a Project" icon="wand-magic-sparkles" href="https://start.aletyx.ai">
+    Generate a new Aletyx project with our project starter. Pick your stack and go.
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
+  <Card title="Decision Control" icon="shield-check" href="/platform/decision-control/overview">
+    Enterprise decision management with lifecycle governance, natural language testing, and full audit trails.
   </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+  <Card title="MCP Integration" icon="robot" href="/platform/mcp/overview">
+    Connect your decisions to AI tools via Model Context Protocol. Claude, Cursor, and VS Code ready.
   </Card>
-</Columns>
+</CardGroup>
 
-## Need inspiration?
+## What's in the Platform
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+| Component | Description |
+|-----------|-------------|
+| **Drools** | Industry-leading rule engine for DRL and DMN execution |
+| **jBPM** | Business process management with BPMN 2.0 support |
+| **Kogito** | Cloud-native business automation for Quarkus |
+| **Decision Control** | Enterprise governance, testing, and deployment for decision models |
+| **Playground** | Browser-based IDE for modeling decisions and processes |
+| **MCP Server** | AI-native integration via Model Context Protocol |
+
+<Info>
+**Enterprise Editions** — Aletyx is available in four editions: Pioneer, Innovator, Horizon, and Keystone.
+Each tier builds on the previous with additional enterprise features. [Contact us](https://aletyx.ai/contact-us)
+to find the right fit for your organization.
+</Info>

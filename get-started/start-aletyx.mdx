@@ -1,0 +1,107 @@
+---
+title: "Getting Started with Aletyx: A Visual Guide for Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "This guide will walk you through creating a new project using the Aletyx's project generator at start.aletyx.ai."
+---
+This guide will walk you through creating a new project using the Aletyx's project generator at [start.aletyx.ai](https://start.aletyx.ai).
+
+## Setting Up Your Project through start.aletyx.ai
+
+### Step 1: Access the Aletyx Start Website
+
+1. Navigate to [start.aletyx.ai](https://start.aletyx.ai)
+
+    ![start.aletyx.ai Home](/images/guides/getting-started/images/start-aletyx-home.png)
+
+    <Info title="Built with You in Mind - Available for Everyone">
+
+    💡 **Simplified Developer Experience**
+    Aletyx Enterprise Build of Kogito and Drools was created to eliminate complexity—because developers shouldn't waste time wiring together disconnected tools. Everything we've built is part of a **unified, guided journey** tailored to help you succeed at every stage of automation adoption.
+
+    🤝 **Community Commitment**
+    We are proud members of the Apache KIE (Incubating) and actively contribute to its development. While many features work seamlessly across both platforms, our enterprise offering includes exclusive capabilities designed for production-scale deployment.
+
+    🔓 **For the Community, Too**
+    Open source users can freely generate projects using the Apache KIE stack. You'll experience the core functionality that makes our platform valuable, though enterprise-exclusive features like native agentic AI and enterprise-grade scalability are only available in Aletyx Enterprise Build of Kogito and Drools.
+    </Info>
+2. You'll be presented with the Aletyx project configuration interface from this you can choose different types of projects to get started with. Let's continue to the other areas!
+
+
+### Step 2: Configure Your Project
+
+1. Complete the left-side "Project Configuration" form:
+
+    - **Group**: Enter your project's group ID (e.g., `ai.aletyx`)
+    - **Artifact**: Enter your project's artifact ID (e.g., `start-with-aletyx`)
+    - **Version**: Set your project version (default is `1.0.0-SNAPSHOT`)
+    - **Runtime**: Select "Spring Boot" from the dropdown
+    - **Target Version**: Select your desired Aletyx version (e.g., `10.0.0-aletyx`)
+    - **Maven Access Token**: Enter your Aletyx repository authentication token (if required)
+
+### Step 3: Select Your Use Case
+
+1. In the right pane, choose from one of several templates:
+    - **Intelligent Decision Service**: AI-ready decision service with seamless integration with AI assistants, agents, and copilots, backed by Model Context Protocol (MCP)
+    - **Decision Service**: Traditional DMN-based decision service
+    - **Rule Service**: DRL-based rules engine service
+    - **Hybrid Decision Service**: Combined rules and decision service
+    - **Decision Orchestration**: Orchestration of multiple decision services
+    - **Workflow Automation**: BPMN-based process automation service
+
+2. Use the technology filters (All, DMN, AI, DRL, BPMN) to narrow down options
+
+### Step 4: Generate and Download Your Project
+
+1. After selecting your use case and configuring your project, click the "Download Project" button at the bottom of the configuration panel
+2. Your browser will download a pre-configured project ZIP file
+
+### Step 5: Extract and Build Your Project
+1. Extract the downloaded ZIP file to your preferred location
+2. Open a terminal and navigate to the project directory
+3. Build the project with Maven:
+
+    ```bash
+    mvn clean install
+    ```
+
+### Step 6: Run Your Project
+
+Since there are two different types of configurations that can be used for running in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx, you can get started by going to the appropriate section for [Spring Boot](#with-spring-boot) or [Quarkus](#with-quarkus)
+
+#### With Spring Boot
+
+1. Start the project if you're using Spring Boot with:
+   ```bash
+   mvn spring-boot:run
+   ```
+2. Access your service at http://localhost:8080
+
+#### With Quarkus
+
+1. Start the project if you're using Spring Boot with:
+   ```bash
+   mvn quarkus:dev
+   ```
+2. Access your service at http://localhost:8080/q/dev-ui
+
+
+## Exploring Your Generated Project
+
+The generated project includes:
+
+- Pre-configured Maven dependencies for Aletyx Enterprise Build of Kogito and Drools components
+- Sample decision models (DMN) or processes (BPMN) depending on your selection
+- Spring Boot or Quarkus configurations for running your service
+- Integration points for connecting with other services
+<!-- - Docker configuration for containerized deployment -->
+
+## Next Steps
+
+After setting up your basic project, you can see an example like building a truly [Intelligent Decision Service interacting with Claude](/platform/mcp/first-interaction).
+
+1. Modify the included decision models to match your business requirements
+2. Add additional models as needed
+3. Configure authentication and authorization if deploying to production
+4. Connect to your data sources
+5. Extend the project with custom APIs and services
+
+By using start.aletyx.ai, we've removed a barrier of entry for you so you can focus on your business logic and implementing decisions and processes right away! ✨

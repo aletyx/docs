@@ -1,0 +1,166 @@
+---
+title: "Working with DMN Accelerators in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Accelerators in Aletyx Playground are powerful templates that transform your standalone DMN models into fully structured projects ready for deployment. They automatically generate the necessary..."
+---
+## Introduction to Accelerators
+
+Accelerators in Aletyx Playground are powerful templates that transform your standalone DMN models into fully structured projects ready for deployment. They automatically generate the necessary project structure, dependencies, and configuration files to create a working decision service.
+
+This guide will show you how to use accelerators to:
+
+1. Convert your DMN model into a deployable project
+2. Understand the generated project structure
+3. Synchronize the project with a Git repository
+4. Prepare for deployment to various environments
+
+## Benefits of Using Accelerators
+
+Accelerators provide several key advantages:
+
+- **Consistency**: Ensure all projects follow the same structure and conventions
+- **Efficiency**: Eliminate manual project setup
+- **Best Practices**: Automatically implement recommended patterns and configurations that can be shared across your organization
+- **Integration**: Enable easier integration with other systems and services
+- **Deployment-Ready**: Include necessary configurations for cloud deployments
+
+## Applying an Accelerator to Your DMN Model
+
+Let's use the vacation days model we created in the previous guide:
+
+1. Open your "vacation-days" DMN model in Aletyx Playground
+
+2. Click the **Apply Accelerator** button in the toolbar
+
+3. From the accelerator options, select **Decisions Kogito jBPM Profile**
+
+    This accelerator will generate a Java 17/Quarkus 3 project with:
+
+    - Maven project structure
+    - Required dependencies for DMN execution
+    - Deployment scripts for various environments
+    - Additional configurations for testing and monitoring
+
+4. Review the accelerator details and click **Apply**
+
+5. You'll be prompted to provide a commit message (since this will create a versioned project)
+
+    - Enter a descriptive message like "Apply DMN accelerator to vacation days model"
+    - Click **Commit**
+
+![Applying an Accelerator](/images/guides/examples/dmn/images/apply-accelerator.gif)
+
+## Understanding the Generated Project Structure
+
+After applying the accelerator, your project will be transformed from a single DMN file into a complete Maven project. Let's explore the key components:
+
+1. **Project Structure**:
+
+    - `src/main/resources`: Contains your DMN models
+    - `src/main/java`: Contains any Java classes (may be empty initially)
+    - `src/test`: Contains test resources and classes
+    - `pom.xml`: Maven project configuration
+    - `.kie-sandbox`: Configuration for Aletyx Playground
+
+2. **Key Files**:
+
+    - `pom.xml`: Defines project dependencies and build configuration
+    - `application.properties`: Quarkus configuration
+    - `README.md`: Basic documentation for the project
+
+3. **Configuration Details**:
+
+    - Java 17 compatibility
+    - Quarkus 3.x dependencies
+    - Aletyx Enterprise Build of Kogito and Drools decision runtime dependencies
+    - Test dependencies for validation
+
+The accelerator ensures that all these components work together seamlessly.
+
+## Synchronizing with GitHub
+
+To maintain version control and enable collaboration, you should synchronize your project with a Git repository:
+
+1. Click the **Share** button in the toolbar
+
+2. Under **Authentication source**, select your GitHub account
+   - If you haven't connected your GitHub account, you'll need to authorize Aletyx Playground
+
+3. Click **Create GitHub repository**
+
+4. In the dialog:
+   - Enter a name for your repository (e.g., "vacation-days-decision-service")
+   - Choose whether the repository should be public or private
+   - Click **Create**
+
+5. After the repository is created, you'll see a confirmation message with a link to the new repository
+
+Your project is now stored in GitHub, allowing for proper version control and collaboration.
+
+![GitHub Synchronization](/images/guides/examples/dmn/images/github-sync.png)
+
+## Updating the Model and Pushing Changes
+
+After making changes to your model in Aletyx Playground, you can push those changes to GitHub:
+
+1. Make your desired updates to the DMN model
+
+2. Click the **Commit** button (or select it from the three-dot menu)
+
+3. Enter a descriptive commit message
+
+4. Click **Commit** to save the changes locally
+
+5. Click the **Push** button to send changes to GitHub
+
+This workflow enables you to maintain a history of changes to your decision model and collaborate with team members.
+
+## Customizing the Accelerator
+
+If you need to customize the accelerator to match your organization's standards:
+
+1. Fork the accelerator repository: [Aletyx Enterprise Build of Kogito and Drools Accelerators Repository](https://github.com/aletyx-labs/accelerators)
+
+2. Modify the accelerator templates according to your requirements
+
+3. Update the Aletyx Playground configuration to use your custom accelerator
+
+Common customizations include:
+
+- Adding organization-specific dependencies
+- Incorporating security configurations
+- Setting up pipeline scripts for your CI/CD environment
+- Adding custom code generators or validators
+
+## Using Multiple Accelerators
+
+You can apply different accelerators for different needs:
+
+1. **Basic Decision Service**: Simple decision-only service
+2. **Process-Enabled Decisions**: Combine decisions with BPMN processes
+3. **Event-Driven Decisions**: Configure for Kafka integration
+4. **Serverless Decisions**: Set up for serverless deployment
+
+Choose the accelerator that best matches your project requirements, but just note, once you apply an accelerator, that particular project will have it applied to it. So, if you decide you need to apply a different accelerator, you would need to start from the model again. This does not mean you have to start the model from scratch, but it does mean you create a new instance that can start from the same model file (.bpmn or .dmn) that can be uploaded to Aletyx Playground and apply the accelerator that you decide was needed!
+
+## Best Practices for Accelerators
+
+When working with accelerators, follow these best practices:
+
+1. **Apply Early**: Apply the accelerator early in the development process - as soon as the model is in a state to be in a repository
+2. **Version Control**: Always sync with version control after applying changes - changes only exist in your local storage
+3. **Understand the Output**: Take time to understand the generated project
+4. **Testing**: Run tests regularly to ensure everything works as expected
+5. **Documentation**: Keep documentation up-to-date with project evolution
+
+## What's Next?
+
+Now that you have a fully structured project, you're ready to:
+
+1. Deploy your decision service (covered in [Basic Deployment Options](/guides/dmn/basic-deployment))
+2. Integrate with other services in your architecture
+3. Implement testing and validation
+4. Set up continuous integration and deployment
+
+In the next guide, we'll explore how to deploy your decision service to various environments for testing and production use.
+
+Ready to deploy? Continue to [Basic Deployment Options](/guides/dmn/basic-deployment)!

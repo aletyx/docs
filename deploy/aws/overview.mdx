@@ -1,0 +1,78 @@
+---
+title: "AWS Marketplace Deployment"
+description: "Deploy Aletyx Decision Control on AWS using pre-configured AMIs from AWS Marketplace with CloudFormation-based one-click deployment."
+---
+Deploy Aletyx Decision Control on AWS using pre-configured AMIs from AWS Marketplace with CloudFormation-based one-click deployment.
+
+## Overview
+
+<Info title="Aletyx Exclusive: AWS Marketplace Deployment">
+Deploy Aletyx Decision Control in minutes with pre-configured AMIs and automated CloudFormation templates. All infrastructure, SSL certificates, and security configuration handled automatically.
+</Info>
+**Available Edition:**
+
+- **Aletyx Decision Control Sandbox** - Quick evaluation with embedded H2 database, pay-as-you-go hourly billing
+
+## Getting Started
+
+Choose your path based on your role:
+
+
+    
+        
+            <h3>For DevOps/Platform Teams</h3>
+            <p><strong>Goal:</strong> Deploy Decision Control in your AWS environment</p>
+            <p><strong>→ Start here:</strong> [Sandbox Edition](sandbox/)</p>
+            <p>You'll learn how to launch CloudFormation stacks, configure networking, and set up SSL/HTTPS.</p>
+
+            <h3>For Business Analysts & Decision Modelers</h3>
+            <p><strong>Goal:</strong> Access Decision Control application after deployment</p>
+            <p><strong>→ Start here:</strong> [Sandbox Edition](sandbox/)</p>
+            <p>You'll learn how to find your application URL and log in to start creating decision models.</p>
+
+            <h3>For Security & Compliance Teams</h3>
+            <p><strong>Goal:</strong> Understand security controls and best practices</p>
+            <p><strong>→ Start here:</strong> [Security Best Practices](security/)</p>
+            <p>You'll learn about IP restrictions, encryption, audit trails, and compliance features.</p>
+
+            <h3>For Application Developers</h3>
+            <p><strong>Goal:</strong> Connect to Decision Control APIs</p>
+            <p><strong>→ Start here:</strong> [Sandbox Edition](sandbox/) then [Troubleshooting](troubleshooting/)</p>
+            <p>You'll learn how to SSH or use SSM Session Manager to configure integrations.</p>
+
+
+## Quick Overview
+
+| Feature | Aletyx Decision Control Sandbox |
+|---------|----------|
+| **Database** | Embedded H2 |
+| **Instance Types** | t3.medium, t3.large, c5.large, c5.xlarge |
+| **SSL/HTTPS** | Optional (Let's Encrypt) |
+| **High Availability** | Single instance |
+| **Billing** | Pay-as-you-go hourly |
+| **Best For** | Evaluation, POCs, development |
+
+## Deployment Steps
+
+All AWS Marketplace deployments follow these steps:
+
+1. **Subscribe** on AWS Marketplace
+2. **Configure** CloudFormation parameters
+3. **Deploy** via one-click CloudFormation
+4. **Access** your application (5-10 minutes)
+
+Detailed instructions:
+
+- [Sandbox Edition Deployment](/deploy/aws/sandbox) - Quick evaluation setup
+
+## Additional Resources
+
+- [SSL/HTTPS Configuration](/deploy/aws/ssl-https) - Automatic Let's Encrypt certificates
+- [Security Best Practices](/deploy/aws/security) - IP restrictions, encryption, compliance
+- [Troubleshooting Guide](/deploy/aws/troubleshooting) - Common issues and solutions
+
+## Support
+
+- **AWS Marketplace**: Contact via product listing
+- **Documentation**: [https://docs.aletyx.ai](https://docs.aletyx.ai)
+- **Email**: aws-support@aletyx.com

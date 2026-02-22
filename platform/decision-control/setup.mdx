@@ -1,0 +1,1359 @@
+---
+title: "Setup and Configuration"
+description: "This guide provides step-by-step instructions for deploying Decision Control in two different environments:"
+---
+This guide provides step-by-step instructions for deploying Decision Control in two different environments:
+
+- **Docker** - Quick local deployment for development, testing, and evaluation
+- **Kubernetes** - Production-ready deployment with complete governance capabilities
+- **AWS** - Please refer to [Deploy on AWS](/platform/decision-control/aws)
+
+Choose the deployment method that best fits your needs.
+
+---
+
+## Docker Deployment
+
+Run Decision Control locally using Docker for development, testing, and evaluation purposes. This is the fastest way to get started with Decision Control.
+
+### Prerequisites
+
+- **Docker**: Version 20.10+ with Docker Compose
+- **Available Ports**: 8080 (application)
+- **Memory**: At least 4 GB RAM available for Docker
+- **Container Registry Access**: Aletyx Container Registry credentials for pulling Decision Control images
+
+### Quick Start with H2 Database
+
+The simplest way to run Decision Control is with the embedded H2 database (in-memory):
+
+```bash
+# Step 1: Login to Aletyx Container Registry
+echo "your-username@aletyx.ai|your-token" | docker login registry-innovator.aletyx.services \
+  --username your-username --password-stdin
+
+# Step 2: Pull the Decision Control image for your edition
+docker pull registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+
+# Step 3: Run Decision Control
+docker run --rm --name decision-control \
+  -p 8080:8080 \
+  registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+```
+
+Access Decision Control at [http://localhost:8080](http://localhost:8080)
+
+<Info title="Edition Selection">
+Use the edition selector in the header to switch between editions. The commands above will automatically update to show the correct registry URL and image name for your selected edition:
+
+- **Pioneer** - Core DMN decision execution and authoring
+- **Innovator** - Adds AI-powered Prompt/Chat UI for decision analysis
+- **Horizon** - Adds Management UI for monitoring and analytics
+- **Keystone** - Complete feature set with all capabilities
+</Info>
+<Warning title="Authentication Required">
+You need valid credentials from my.aletyx.ai to access the container registry. The username is typically your email address, and the token is provided when you create API credentials in the Aletyx portal.
+</Warning>
+### Running with PostgreSQL Database
+
+For production use or persistent data storage, use PostgreSQL:
+
+#### Step 1: Start PostgreSQL Container
+
+```bash
+# Set database credentials
+export POSTGRES_DB=dc
+export POSTGRES_USER=aletyx
+export POSTGRES_PASSWORD=aletyx123
+export POSTGRES_HOST=localhost
+export POSTGRES_PORT=5432
+
+# Start PostgreSQL container
+docker run -d --name dc-database \
+  -e POSTGRES_DB=$POSTGRES_DB \
+  -e POSTGRES_USER=$POSTGRES_USER \
+  -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+  -p $POSTGRES_PORT:$POSTGRES_PORT \
+  postgres:15
+
+# Verify database is running
+docker logs dc-database --tail=5
+```
+
+#### Step 2: Start Decision Control with PostgreSQL
+
+```bash
+# Run Decision Control connected to PostgreSQL
+docker run --rm --name decision-control \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=postgres \
+  -e POSTGRES_HOST=host.docker.internal \
+  -e POSTGRES_PORT=5432 \
+  -e POSTGRES_DB=dc \
+  -e POSTGRES_USER=aletyx \
+  -e POSTGRES_PASSWORD=aletyx123 \
+  registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+```
+
+<Tip title="Database Networking">
+Use `host.docker.internal` to connect to PostgreSQL running on the host machine. For Docker networks, use the container name (e.g., `dc-database`).
+</Tip>
+### Spring Profiles and Database Configuration
+
+Decision Control uses Spring profiles for database configuration:
+
+| Profile | Database | Default DDL Auto | Use Case |
+|---------|----------|------------------|----------|
+| `h2` | H2 in-memory | `create-drop` | Development, testing, quick evaluation |
+| `postgres` | PostgreSQL | `validate` | Production, persistent data |
+
+You can override the DDL auto setting with the `HIBERNATE_DDL_AUTO` environment variable:
+
+```bash
+# Development: Drop and recreate schema on each startup
+docker run --rm --name decision-control \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=postgres \
+  -e HIBERNATE_DDL_AUTO=create-drop \
+  -e POSTGRES_HOST=host.docker.internal \
+  -e POSTGRES_PORT=5432 \
+  -e POSTGRES_DB=dc \
+  -e POSTGRES_USER=aletyx \
+  -e POSTGRES_PASSWORD=aletyx123 \
+  registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+```
+
+#### DDL Auto Options
+
+| Setting | Behavior | When to Use |
+|---------|----------|-------------|
+| `create-drop` | Drop schema on shutdown, create on startup | Development only |
+| `create` | Create schema on startup | Initial setup |
+| `update` | Update schema to match entities | Development, schema evolution |
+| `validate` | Validate schema matches (default for postgres) | Production |
+
+### Using Docker Compose
+
+For easier management, use Docker Compose to run both PostgreSQL and Decision Control:
+
+<Tabs>
+  <Tab title="docker-compose.yml">
+
+    ```yaml
+    version: '3.8'
+
+    services:
+      postgres:
+        image: postgres:15
+        container_name: dc-database
+        environment:
+          POSTGRES_DB: dc
+          POSTGRES_USER: aletyx
+          POSTGRES_PASSWORD: aletyx123
+        ports:
+          - "5432:5432"
+        volumes:
+          - postgres-data:/var/lib/postgresql/data
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U aletyx"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+
+      decision-control:
+        image: registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+        container_name: decision-control
+        depends_on:
+          postgres:
+            condition: service_healthy
+        environment:
+          SPRING_PROFILES_ACTIVE: postgres
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: dc
+          POSTGRES_USER: aletyx
+          POSTGRES_PASSWORD: aletyx123
+          HIBERNATE_DDL_AUTO: update
+        ports:
+          - "8080:8080"
+
+    volumes:
+      postgres-data:
+    ```
+  </Tab>
+  <Tab title="Start Services">
+
+    ```bash
+    # Start all services
+    docker-compose up
+
+    # Start in background
+    docker-compose up -d
+
+    # View logs
+    docker-compose logs -f decision-control
+
+    # Stop services
+    docker-compose down
+
+    # Stop and remove data
+    docker-compose down -v
+    ```
+  </Tab>
+</Tabs>
+### Accessing the Application
+
+Once Decision Control is running, access these interfaces:
+
+| Interface | URL | Description |
+|-----------|-----|-------------|
+| Main UI | [http://localhost:8080](http://localhost:8080) | Home page |
+| Authoring UI | [http://localhost:8080/#/authoring](http://localhost:8080/#/authoring) | Create and edit DMN models |
+| Management UI | [http://localhost:8080/dashboard](http://localhost:8080/dashboard) | Admin interface (Horizon/Keystone) |
+| Monitoring UI | [http://localhost:8080/monitoring](http://localhost:8080/monitoring) | Monitoring interface (Horizon/Keystone) |
+| Prompt/Chat UI | [http://localhost:8080/prompt](http://localhost:8080/prompt) | AI Chat interface (Innovator/Keystone) |
+| API Swagger | [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) | API documentation |
+| Health Check | [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health) | Application health status |
+
+### Container Configuration
+
+Common environment variables for Decision Control:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `APP_HOST` | `http://localhost:8080` | Application base URL |
+| `APP_PORT` | `8080` | Application port |
+| `SPRING_PROFILES_ACTIVE` | `h2` | Spring profile (h2 or postgres) |
+| `POSTGRES_HOST` | - | PostgreSQL host |
+| `POSTGRES_PORT` | `5432` | PostgreSQL port |
+| `POSTGRES_DB` | - | PostgreSQL database name |
+| `POSTGRES_USER` | - | PostgreSQL username |
+| `POSTGRES_PASSWORD` | - | PostgreSQL password |
+| `HIBERNATE_DDL_AUTO` | Profile-dependent | Schema management strategy |
+| `DMN_SERVER_AUTHORING_HIDE` | `false` | Hide authoring UI |
+| `DMN_SERVER_PROMPT_HIDE` | `false` | Hide prompt UI |
+| `DMN_SERVER_MANAGEMENT_HIDE` | `false` | Hide management UI |
+
+### Troubleshooting Docker Deployment
+
+#### Container Fails to Start
+
+Check container logs:
+
+```bash
+docker logs decision-control
+
+# Follow logs in real-time
+docker logs -f decision-control
+```
+
+#### Database Connection Errors
+
+Verify PostgreSQL is running and accessible:
+
+```bash
+# Check PostgreSQL logs
+docker logs dc-database
+
+# Test connection from host
+docker exec -it dc-database psql -U aletyx -d dc -c "SELECT 1;"
+```
+
+#### Port Already in Use
+
+If port 8080 is already in use, map to a different port:
+
+```bash
+docker run --rm --name decision-control \
+  -p 9090:8080 \
+  registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+
+# Access at http://localhost:9090
+```
+
+#### Container Registry Authentication
+
+If you encounter authentication errors pulling from the Aletyx Container Registry:
+
+```bash
+# Get your credentials from my.aletyx.ai
+# Username: your email address
+# Token: API token from Aletyx portal
+
+# Login to Aletyx Container Registry
+echo "your-username@aletyx.ai|your-token" | docker login registry-innovator.aletyx.services \
+  --username your-username --password-stdin
+```
+
+### Next Steps with Docker
+
+After successfully running Decision Control locally:
+
+- **Create Your First Model**: Use the [Authoring UI](http://localhost:8080/#/authoring) to create a DMN decision table
+- **Test Execution**: Use the API or UI to execute decisions
+- **Explore APIs**: Visit [Swagger UI](http://localhost:8080/swagger-ui.html) for API documentation
+- **Monitor Performance**: Check [Management UI](http://localhost:8080/dashboard) for analytics
+- **Production Deployment**: See AWS Marketplace or Kubernetes sections below
+
+---
+
+## Kubernetes Deployment
+
+Deploy Decision Control on Kubernetes with complete governance capabilities. By the end of this guide, you will have a fully functional multi-environment Decision Control platform with authentication, governance workflows, and audit trails.
+
+### Prerequisites
+
+Before beginning the installation, ensure you have:
+
+- **Kubernetes Cluster**: Version 1.24+ with at least 16 GB RAM and 8 CPU cores available
+- **kubectl**: Configured to access your cluster with cluster-admin privileges
+- **Ingress Controller**: nginx-ingress or similar with TLS support
+- **Cert Manager**: For automatic TLS certificate provisioning (recommended)
+- **Container Registry Access**: Aletyx Container Registry credentials for pulling Decision Control images
+- **DNS Management**: Ability to create DNS A records pointing to your ingress controller
+
+<Info title="Cloud Provider Notes">
+This guide assumes a managed Kubernetes service (EKS, GKE, AKS, or Red Hat OpenShift). For on-premises clusters, additional storage and ingress configuration may be required.
+</Info>
+## Architecture Overview
+
+You will deploy the following components:
+
+![Diagram](/images/diagrams/decision-control/setup-and-config/flowchart-td-1.svg)
+
+## Step 1: Namespace and RBAC Setup
+
+Create the namespace and service account:
+
+```bash
+# Create namespace
+kubectl create namespace prod
+
+# Create service account for Decision Control
+kubectl create serviceaccount decision-control-sa -n prod
+```
+
+Apply RBAC policies:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: decision-control-role
+  namespace: prod
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: decision-control-rolebinding
+  namespace: prod
+subjects:
+- kind: ServiceAccount
+  name: decision-control-sa
+  namespace: prod
+roleRef:
+  kind: Role
+  name: decision-control-role
+  apiGroup: rbac.authorization.k8s.io
+```
+
+Save as `rbac.yaml` and apply:
+
+```bash
+kubectl apply -f rbac.yaml
+```
+
+## Step 2: Container Registry Credentials
+
+Create a secret for pulling Decision Control images from Aletyx Container Registry:
+
+```bash
+# Create image pull secret
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=registry-innovator.aletyx.services \
+  --docker-username=your-username@aletyx.ai \
+  --docker-password=your-api-token \
+  --namespace=prod
+```
+
+<Tip title="Aletyx API Token">
+Get your API credentials from the Aletyx portal at https://my.aletyx.ai. The username is typically your email address, and you can create API tokens in your account settings.
+</Tip>
+## Step 3: Deploy PostgreSQL Databases
+
+Decision Control requires separate PostgreSQL databases for each environment plus one for governance.
+
+<Tabs>
+  <Tab title="Development Database">
+
+    ```yaml
+    # postgres-dev-deployment.yaml
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: postgres-dev-secret
+      namespace: prod
+    type: Opaque
+    stringData:
+      POSTGRES_USER: decision_control_user
+      POSTGRES_PASSWORD: CHANGE_ME_SECURE_PASSWORD
+      POSTGRES_DB: decision_control_dev
+    ---
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: postgres-dev-pvc
+      namespace: prod
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: postgres-dev
+      namespace: prod
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: postgres-dev
+      template:
+        metadata:
+          labels:
+            app: postgres-dev
+        spec:
+          containers:
+          - name: postgres
+            image: postgres:15-alpine
+            ports:
+            - containerPort: 5432
+            env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-dev-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-dev-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-dev-secret
+                  key: POSTGRES_DB
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+              limits:
+                memory: "1Gi"
+                cpu: "1000m"
+          volumes:
+          - name: postgres-storage
+            persistentVolumeClaim:
+              claimName: postgres-dev-pvc
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: postgres-dev
+      namespace: prod
+    spec:
+      selector:
+        app: postgres-dev
+      ports:
+      - port: 5432
+        targetPort: 5432
+    ```
+  </Tab>
+  <Tab title="Test Database">
+
+    Repeat the DEV configuration with these name changes:
+
+    - Secret: `postgres-test-secret`
+    - PVC: `postgres-test-pvc`
+    - Deployment: `postgres-test`
+    - Service: `postgres-test`
+    - Database: `decision_control_test_new`
+  </Tab>
+  <Tab title="Production Database">
+
+    Repeat with:
+
+    - Secret: `postgres-prod-secret`
+    - PVC: `postgres-prod-pvc`
+    - Deployment: `postgres-prod`
+    - Service: `postgres-prod`
+    - Database: `decision_control_prod`
+  </Tab>
+  <Tab title="Governance Database">
+
+    Repeat with:
+
+    - Secret: `postgres-governance-secret`
+    - PVC: `postgres-governance-pvc`
+    - Deployment: `postgres-governance`
+    - Service: `postgres-governance`
+    - Database: `governance_db`
+  </Tab>
+</Tabs>
+Apply all database configurations:
+
+```bash
+kubectl apply -f postgres-dev-deployment.yaml
+kubectl apply -f postgres-test-deployment.yaml
+kubectl apply -f postgres-prod-deployment.yaml
+kubectl apply -f postgres-governance-deployment.yaml
+
+# Verify databases are running
+kubectl get pods -n prod | grep postgres
+```
+
+<Warning title="Production Considerations">
+For production deployments, use managed PostgreSQL services (AWS RDS, Google Cloud SQL, Azure Database) with automated backups, read replicas, and high availability configurations.
+</Warning>
+## Step 4: Deploy Keycloak
+
+Decision Control requires Keycloak for authentication. You can use an existing Keycloak instance or deploy one:
+
+```yaml
+# keycloak-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:23.0
+        args: ["start-dev"]
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: admin
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: CHANGE_ME_ADMIN_PASSWORD
+        - name: KC_PROXY
+          value: edge
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: prod
+spec:
+  selector:
+    app: keycloak
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak-ingress
+  namespace: prod
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - keycloak.your-domain.com
+    secretName: keycloak-tls
+  rules:
+  - host: keycloak.your-domain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: keycloak
+            port:
+              number: 8080
+```
+
+Apply and verify:
+
+```bash
+kubectl apply -f keycloak-deployment.yaml
+kubectl get pods -n prod | grep keycloak
+```
+
+### Configure Keycloak Realm and Client
+
+Access Keycloak admin console at `https://keycloak.your-domain.com` and:
+
+1. **Create Realm**:
+   - Name: `aletyx`
+   - Display name: `Aletyx Decision Control`
+
+2. **Create Client**:
+   - Client ID: `decision-control-ui`
+   - Client type: `OpenID Connect`
+   - Client authentication: `Off` (public client)
+   - Standard flow: `Enabled`
+   - Valid redirect URIs: `https://landing.your-domain.com/*`
+   - Web origins: `https://landing.your-domain.com`
+
+3. **Create Roles** (Realm roles):
+   - `decision-control-dev-users` - Business Analysts
+   - `decision-control-risk-manager` - Risk Managers
+   - `decision-control-compliance` - Compliance Officers
+   - `decision-control-prod-users` - Operations Managers
+   - `decision-control-admin` - Administrators
+
+4. **Create Users**:
+
+<Tabs>
+  <Tab title="Business Analyst">
+    ```
+    Username: sarah@demo.local
+    Email: sarah@demo.local
+    Password: demo123
+    Roles: decision-control-dev-users
+    ```
+  </Tab>
+  <Tab title="Risk Manager">
+    ```
+    Username: tom@demo.local
+    Email: tom@demo.local
+    Password: demo123
+    Roles: decision-control-risk-manager
+    ```
+  </Tab>
+  <Tab title="Compliance Officer">
+    ```
+    Username: maria@demo.local
+    Email: maria@demo.local
+    Password: demo123
+    Roles: decision-control-compliance
+    ```
+  </Tab>
+</Tabs>
+## Step 5: Deploy Decision Control Applications
+
+Deploy Decision Control for each environment:
+
+<Tabs>
+  <Tab title="Development Environment">
+
+    ```yaml
+    # decision-control-dev.yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: decision-control-dev
+      namespace: prod
+      labels:
+        app: decision-control-dev
+        environment: dev
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: decision-control-dev
+      template:
+        metadata:
+          labels:
+            app: decision-control-dev
+            environment: dev
+        spec:
+          imagePullSecrets:
+          - name: ghcr-secret
+          containers:
+          - name: decision-control
+            image: registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 41378
+              name: http
+            env:
+            - name: APP_HOST
+              value: https://decision-control-dev.your-domain.com
+            - name: APP_PORT
+              value: "41378"
+            - name: DMN_SERVER_AUTHORING_HIDE
+              value: "false"
+            - name: DMN_SERVER_PROMPT_HIDE
+              value: "false"
+            - name: DMN_SERVER_MANAGEMENT_HIDE
+              value: "false"
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-dev:5432/decision_control_dev
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-dev-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-dev-secret
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "update"
+            resources:
+              requests:
+                cpu: 2000m
+                memory: 2048Mi
+              limits:
+                cpu: 3000m
+                memory: 4Gi
+            livenessProbe:
+              httpGet:
+                path: /actuator/health
+                port: 41378
+              initialDelaySeconds: 60
+              periodSeconds: 30
+            readinessProbe:
+              httpGet:
+                path: /actuator/health
+                port: 41378
+              initialDelaySeconds: 30
+              periodSeconds: 10
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: decision-control-dev
+      namespace: prod
+    spec:
+      selector:
+        app: decision-control-dev
+      ports:
+      - port: 41378
+        targetPort: 41378
+    ---
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: decision-control-dev-ingress
+      namespace: prod
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    spec:
+      ingressClassName: nginx
+      tls:
+      - hosts:
+        - decision-control-dev.your-domain.com
+        secretName: decision-control-dev-tls
+      rules:
+      - host: decision-control-dev.your-domain.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: decision-control-dev
+                port:
+                  number: 41378
+    ```
+  </Tab>
+  <Tab title="Test Environment">
+
+    Repeat DEV configuration with these changes:
+
+    - Deployment: `decision-control-test`
+    - Service: `decision-control-test`
+    - Ingress host: `decision-control-test.your-domain.com`
+    - APP_HOST: `https://decision-control-test.your-domain.com`
+    - Database: `postgres-test`
+  </Tab>
+  <Tab title="Production Environment">
+
+    Repeat with:
+
+    - Deployment: `decision-control-prod`
+    - Service: `decision-control-prod`
+    - Ingress host: `decision-control-prod.your-domain.com`
+    - APP_HOST: `https://decision-control-prod.your-domain.com`
+    - Database: `postgres-prod`
+  </Tab>
+</Tabs>
+Apply all Decision Control deployments:
+
+```bash
+kubectl apply -f decision-control-dev.yaml
+kubectl apply -f decision-control-test.yaml
+kubectl apply -f decision-control-prod.yaml
+
+# Monitor deployment progress
+kubectl get pods -n prod -w
+```
+
+<Info title="Edition Selection">
+The examples use `registry-innovator.aletyx.services/decision-control-innovator`. Available editions:
+
+- `registry-pioneer.aletyx.services/decision-control-pioneer` - Core features only
+- `registry-innovator.aletyx.services/decision-control-innovator` - Adds Prompt UI
+- `registry-horizon.aletyx.services/decision-control-horizon` - Adds Management UI
+- `registry-keystone.aletyx.services/decision-control-keystone` - Complete feature set
+
+The edition selector in the header will automatically update all image references when you switch editions.
+</Info>
+## Step 6: Deploy Governance API
+
+<Info title="Horizon/Keystone Edition">
+The Governance API is only required for Horizon and Keystone editions. Skip this step for Pioneer and Innovator deployments.
+</Info>
+The Governance API coordinates approval workflows:
+
+```yaml
+# governance-api-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: governance-api
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: governance-api
+  template:
+    metadata:
+      labels:
+        app: governance-api
+    spec:
+      containers:
+      - name: governance-api
+        image: node:18-alpine
+        workingDir: /app
+        command: ["node", "server.js"]
+        ports:
+        - containerPort: 3100
+        env:
+        - name: PORT
+          value: "3100"
+        - name: DB_HOST
+          value: postgres-governance
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: governance_db
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-governance-secret
+              key: POSTGRES_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-governance-secret
+              key: POSTGRES_PASSWORD
+        - name: KEYCLOAK_URL
+          value: https://keycloak.your-domain.com
+        - name: KEYCLOAK_REALM
+          value: aletyx
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      volumes:
+      - name: app-code
+        configMap:
+          name: governance-api-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: governance-api
+  namespace: prod
+spec:
+  selector:
+    app: governance-api
+  ports:
+  - port: 3100
+    targetPort: 3100
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: governance-api-ingress
+  namespace: prod
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://landing.your-domain.com"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - governance-api.your-domain.com
+    secretName: governance-api-tls
+  rules:
+  - host: governance-api.your-domain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: governance-api
+            port:
+              number: 3100
+```
+
+<Warning title="Governance API Code">
+The Governance API requires Node.js application code. For a complete implementation, see the [governance-api source code](https://github.com/aletyx/decision-control-governance) or use a pre-built container image.
+</Warning>
+## Step 7: Deploy Aletyx Decision Control Tower Landing Page
+
+The landing page provides unified access to all environments:
+
+```bash
+# Create environment configuration
+kubectl create configmap environment-config \
+  --from-file=config.json=environments/config.json \
+  --namespace=prod
+
+# Create landing page ConfigMap (contains HTML/CSS/JS)
+kubectl create configmap rbac-landing-enhanced-governance \
+  --from-file=landing-page/ \
+  --namespace=prod
+```
+
+Deploy the landing page:
+
+```yaml
+# landing-page-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rbac-landing-page
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rbac-landing-page
+  template:
+    metadata:
+      labels:
+        app: rbac-landing-page
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: landing-page-content
+          mountPath: /usr/share/nginx/html
+        - name: environment-config
+          mountPath: /usr/share/nginx/html/environments
+      volumes:
+      - name: landing-page-content
+        configMap:
+          name: rbac-landing-enhanced-governance
+      - name: environment-config
+        configMap:
+          name: environment-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rbac-landing-page
+  namespace: prod
+spec:
+  selector:
+    app: rbac-landing-page
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: landing-page-ingress
+  namespace: prod
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - landing.your-domain.com
+    secretName: landing-page-tls
+  rules:
+  - host: landing.your-domain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rbac-landing-page
+            port:
+              number: 80
+```
+
+Apply:
+
+```bash
+kubectl apply -f landing-page-deployment.yaml
+```
+
+## Step 8: Update Environment Configuration
+
+Edit `environments/config.json` to match your deployment:
+
+```json
+{
+  "environments": {
+    "dev": {
+      "name": "Development",
+      "baseUrl": "https://decision-control-dev.your-domain.com",
+      "enabled": true,
+      "features": {
+        "submitForReview": true,
+        "governance": true
+      },
+      "apis": {
+        "units": "/api/management/units",
+        "versions": "/api/management/units/{unitId}/versions",
+        "models": "/api/management/units/{unitId}/versions/{versionId}/models",
+        "health": "/actuator/health"
+      }
+    },
+    "test": {
+      "name": "Testing",
+      "baseUrl": "https://decision-control-test.your-domain.com",
+      "enabled": true,
+      "features": {
+        "submitForReview": true,
+        "governance": true
+      }
+    }
+  },
+  "governance": {
+    "apiUrl": "https://governance-api.your-domain.com",
+    "workflow": {
+      "submitForReview": ["BUSINESS_ANALYST"],
+      "riskApproval": ["RISK_MANAGER"],
+      "complianceApproval": ["COMPLIANCE"],
+      "promoteToProduction": ["OPERATOR"]
+    }
+  }
+}
+```
+
+Update the ConfigMap:
+
+```bash
+kubectl delete configmap environment-config -n prod
+kubectl create configmap environment-config \
+  --from-file=config.json=environments/config.json \
+  --namespace=prod
+
+# Restart landing page to pick up changes
+kubectl rollout restart deployment/rbac-landing-page -n prod
+```
+
+## Step 9: Verification and Testing
+
+Verify all pods are running:
+
+```bash
+kubectl get pods -n prod
+
+# Expected output:
+# NAME                                      READY   STATUS    RESTARTS
+# decision-control-dev-xxx              1/1     Running   0
+# decision-control-test-xxx             1/1     Running   0
+# decision-control-prod-xxx                 1/1     Running   0
+# governance-api-xxx                        1/1     Running   0
+# rbac-landing-page-xxx                     1/1     Running   0
+# postgres-dev-xxx                      1/1     Running   0
+# postgres-test-xxx                     1/1     Running   0
+# postgres-prod-xxx                         1/1     Running   0
+# postgres-governance-xxx                   1/1     Running   0
+# keycloak-xxx                              1/1     Running   0
+```
+
+Test each component:
+
+```bash
+# Test landing page
+curl -I https://landing.your-domain.com
+
+# Test Decision Control DEV
+curl -I https://decision-control-dev.your-domain.com/actuator/health
+
+# Test Governance API
+curl -I https://governance-api.your-domain.com/health
+
+# Test Keycloak
+curl -I https://keycloak.your-domain.com/realms/aletyx
+```
+
+## Step 10: First Login and Model Creation
+
+1. **Access Landing Page**: Navigate to `https://landing.your-domain.com`
+
+2. **Login**: Use credentials for `sarah@demo.local` (Business Analyst)
+
+3. **Verify Environment Access**: You should see DEV and TEST environments
+
+4. **Launch DEV Environment**: Click "Launch" button for Development
+
+5. **Create a Sample DMN Model**:
+   - Click "New Model" in Authoring UI
+   - Name: `Sample Decision`
+   - Add a decision table with simple logic
+
+6. **Publish the Model**: Click "Publish" to create version 1.0.0
+
+7. **Return to Landing Page**: The model should now appear in the Models view
+
+8. **Submit for Review**: Click "Submit for Review" to initiate governance workflow
+
+## Configuration Management
+
+### Updating Decision Control Configuration
+
+To update Decision Control environment variables:
+
+```bash
+# Edit deployment
+kubectl edit deployment decision-control-dev -n dev
+
+# Or apply updated YAML
+kubectl apply -f decision-control-dev.yaml
+```
+
+### Updating Landing Page Content
+
+To update landing page HTML/CSS/JS:
+
+```bash
+# Delete old ConfigMap
+kubectl delete configmap rbac-landing-enhanced-governance -n prod
+
+# Create new ConfigMap from updated files
+kubectl create configmap rbac-landing-enhanced-governance \
+  --from-file=landing-page/ \
+  --namespace=prod
+
+# Restart deployment
+kubectl rollout restart deployment/rbac-landing-page -n prod
+```
+
+### Scaling Deployments
+
+To handle increased load:
+
+```bash
+# Scale Decision Control DEV to 3 replicas
+kubectl scale deployment decision-control-dev --replicas=3 -n prod
+
+# Scale Governance API
+kubectl scale deployment governance-api --replicas=2 -n prod
+```
+
+## Backup and Recovery
+
+### Database Backups
+
+Create a CronJob for automated PostgreSQL backups:
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-dev
+  namespace: prod
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              pg_dump -h postgres-dev \
+                -U $POSTGRES_USER \
+                -d decision_control_dev \
+                -F c -f /backup/backup-$(date +%Y%m%d).dump
+            env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-dev-secret
+                  key: POSTGRES_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-dev-secret
+                  key: POSTGRES_PASSWORD
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          restartPolicy: OnFailure
+```
+
+### Restore from Backup
+
+```bash
+# Copy backup file to PostgreSQL pod
+kubectl cp backup-20250101.dump prod/postgres-dev-xxx:/tmp/
+
+# Exec into pod
+kubectl exec -it postgres-dev-xxx -n prod -- /bin/sh
+
+# Restore database
+pg_restore -h localhost -U decision_control_user \
+  -d decision_control_dev -c /tmp/backup-20250101.dump
+```
+
+## Monitoring and Observability
+
+### Health Checks
+
+All components expose health endpoints:
+
+```bash
+# Decision Control health
+curl https://decision-control-dev.your-domain.com/actuator/health
+
+# Governance API health
+curl https://governance-api.your-domain.com/health
+```
+
+### Prometheus Metrics
+
+Decision Control exposes Prometheus metrics at `/actuator/prometheus`:
+
+```yaml
+# ServiceMonitor for Prometheus Operator
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: decision-control-dev
+  namespace: prod
+spec:
+  selector:
+    matchLabels:
+      app: decision-control-dev
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+```
+
+### Log Aggregation
+
+Configure log forwarding to your log aggregation system:
+
+```bash
+# View Decision Control logs
+kubectl logs -f deployment/decision-control-dev -n dev
+
+# View Governance API logs
+kubectl logs -f deployment/governance-api -n prod
+```
+
+## Troubleshooting
+
+### Pod Not Starting
+
+Check pod events:
+
+```bash
+kubectl describe pod <pod-name> -n prod
+```
+
+Common issues:
+
+- **ImagePullBackOff**: Verify ghcr-secret credentials
+- **CrashLoopBackOff**: Check logs with `kubectl logs`
+- **Pending**: Check resource availability and PVC binding
+
+### Database Connection Failures
+
+Verify database connectivity:
+
+```bash
+# Exec into Decision Control pod
+kubectl exec -it <pod-name> -n prod -- /bin/sh
+
+# Test database connection
+nc -zv postgres-dev 5432
+```
+
+### Ingress Not Working
+
+Check ingress controller logs:
+
+```bash
+kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
+```
+
+Verify DNS resolution:
+
+```bash
+nslookup landing.your-domain.com
+```
+
+## Next Steps
+
+- [Governance Workflow](/platform/decision-control/governance): Configure approval workflows and roles
+- [Integration and APIs](/platform/decision-control/apis): Integrate with external systems
+- [Usage Scenarios](/platform/decision-control/usage-scenarios): Learn common usage patterns
+- [FAQ and Troubleshooting](/platform/decision-control/faq): Additional troubleshooting guidance

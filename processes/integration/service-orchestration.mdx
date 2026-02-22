@@ -1,0 +1,681 @@
+---
+title: "Service Orchestration in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Service orchestration coordinates interactions between multiple services to accomplish complex business objectives. Aletyx Enterprise Build of Kogito and Drools provides powerful orchestration..."
+---
+Service orchestration coordinates interactions between multiple services to accomplish complex business objectives. Aletyx Enterprise Build of Kogito and Drools provides powerful orchestration capabilities through BPMN processes, enabling you to design, execute, and monitor multi-service workflows with visual process models, automated service invocations, and sophisticated error handling.
+
+## Understanding Service Orchestration
+
+Service orchestration differs from service choreography by providing centralized coordination. An orchestrator process:
+
+- **Defines the sequence** of service calls explicitly
+- **Manages state** throughout the workflow
+- **Handles errors** and compensation centrally
+- **Provides visibility** into workflow progress
+- **Enforces business rules** and conditions
+
+**Orchestration vs Choreography:**
+
+![Diagram](/images/diagrams/core/integration/service-orchestration/flowchart-td-1.svg)
+
+**When to use orchestration:**
+
+- Complex workflows with many conditional paths
+- Transactions requiring compensation patterns
+- Workflows needing human intervention
+- Processes requiring audit trails and monitoring
+- Long-running business processes
+
+**When to use choreography:**
+
+- Loosely coupled event-driven systems
+- High scalability requirements
+- Services owned by different teams
+- Simple event notification patterns
+
+## Service Tasks in BPMN
+
+The **Service Task** is the primary mechanism for invoking external services within BPMN processes.
+
+### Service Task Overview
+
+![Service Task Node](/images/core/processes/basic-bpmn/images/service-task-node.png)
+
+Service Tasks enable:
+
+- **REST API invocation:** Call HTTP endpoints with custom headers and payloads
+- **Java service calls:** Invoke local Java methods directly
+- **Custom work item handlers:** Extend with specialized integration logic
+- **Asynchronous execution:** Execute long-running operations without blocking
+- **Data transformation:** Map process variables to service inputs and outputs
+
+See [BPMN Activities](/processes/bpmn/activities) for detailed Service Task configuration.
+
+### Configuring REST Service Tasks
+
+**Example: Credit Bureau Integration**
+
+Configure a Service Task to call an external credit bureau API:
+
+**Process diagram:**
+
+![Diagram](/images/diagrams/core/integration/service-orchestration/flowchart-lr-2.svg)
+
+**Service Task configuration:**
+
+1. **Task Type:** Service Task
+2. **Implementation:** REST
+3. **URL:** `https://credit-bureau.example.com/api/v1/scores`
+4. **Method:** POST
+5. **Content Type:** application/json
+
+**Input mapping:**
+
+```json
+{
+  "applicantId": "#{application.applicantId}",
+  "ssn": "#{application.ssn}",
+  "requestDate": "#{now()}"
+}
+```
+
+**Output mapping:**
+
+Map the response to process variables:
+
+- Response field `score` → Process variable `creditScore`
+- Response field `reportId` → Process variable `creditReportId`
+
+**Example REST call:**
+
+```bash
+curl -X POST https://credit-bureau.example.com/api/v1/scores \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${API_TOKEN}" \
+  -d '{
+    "applicantId": "A001",
+    "ssn": "123-45-6789",
+    "requestDate": "2025-01-31"
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "score": 745,
+  "reportId": "CR-98765",
+  "factors": ["on-time-payments", "low-utilization"],
+  "timestamp": "2025-01-31T10:30:00Z"
+}
+```
+
+### Java Service Task Implementation
+
+**Custom Java service class:**
+
+```java
+package org.example.services;
+
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class CreditService {
+
+    public CreditScore getCreditScore(String applicantId, String ssn) {
+        // Call external API or perform calculation
+        CreditScore score = externalCreditBureau.requestScore(ssn);
+
+        // Log for audit
+        auditLog.record(applicantId, "Credit score requested", score);
+
+        return score;
+    }
+}
+```
+
+**Service Task configuration in BPMN:**
+
+Configure the task to call the Java method:
+
+1. **Implementation:** Java
+2. **Interface:** `org.example.services.CreditService`
+3. **Operation:** `getCreditScore`
+4. **Parameters:** Map process variables to method parameters
+
+**Input mapping:**
+
+- Process variable `applicantId` → Parameter `applicantId`
+- Process variable `ssn` → Parameter `ssn`
+
+**Output mapping:**
+
+- Method return value → Process variable `creditScore`
+
+### Asynchronous Service Tasks
+
+For long-running operations, configure Service Tasks to execute asynchronously.
+
+**Benefits:**
+
+- **Non-blocking:** Process engine remains responsive
+- **Scalability:** Distribute work across job executors
+- **Resilience:** Automatic retry on transient failures
+- **Resource management:** Control concurrent task execution
+
+**Configuration:**
+
+1. Select the Service Task
+2. Enable **Is Async** property
+3. Configure retry parameters (optional)
+
+**Process behavior with async:**
+
+![Diagram](/images/diagrams/core/integration/service-orchestration/sequence-3.svg)
+
+**Job Service configuration (application.properties):**
+
+```properties
+# Enable job service
+quarkus.kogito.jobs-service.enabled=true
+
+# Job service URL
+kogito.jobs-service.url=http://localhost:8085
+
+# Retry configuration
+kogito.service-task.retry.maxAttempts=3
+kogito.service-task.retry.delay=5s
+```
+
+## Orchestration Patterns
+
+### Sequential Service Orchestration
+
+Call services in a defined sequence where each service depends on previous results.
+
+**Use case: Loan Approval Workflow**
+
+![Diagram](/images/diagrams/core/integration/service-orchestration/flowchart-lr-4.svg)
+
+**Implementation:**
+
+Each Service Task executes sequentially, passing data through process variables.
+
+**Example process variables flow:**
+
+1. `application` (input) → **Validate Data** → `validationResult`
+2. `validationResult` → **Check Credit Score** → `creditScore`
+3. `creditScore` → **Verify Employment** → `employmentVerified`
+4. `creditScore`, `employmentVerified` → **Calculate DTI** → `dtiRatio`
+5. `dtiRatio`, `creditScore` → **Determine Eligibility** → `approved`
+
+### Parallel Service Orchestration
+
+Invoke multiple independent services concurrently for performance.
+
+**Use case: Multi-Bureau Credit Check**
+
+![Diagram](/images/diagrams/core/integration/service-orchestration/flowchart-td-5.svg)
+
+**Implementation:**
+
+1. **Parallel Gateway (fork):** Splits process into parallel branches
+2. **Service Tasks:** Execute concurrently on separate threads
+3. **Parallel Gateway (join):** Waits for all branches to complete
+4. **Aggregation Task:** Combines results from parallel services
+
+**Performance benefit:**
+
+- **Sequential:** 3 services × 2 seconds = 6 seconds
+- **Parallel:** Max(2, 2, 2) = 2 seconds
+
+### Conditional Service Routing
+
+Route to different services based on runtime conditions.
+
+**Use case: Product-Specific Pricing**
+
+![Diagram](/images/diagrams/core/integration/service-orchestration/flowchart-td-6.svg)
+
+**Implementation:**
+
+1. **Exclusive Gateway:** Evaluates condition based on process variable
+2. **Conditional flows:** Each path has a condition expression
+3. **Service Tasks:** Different services on each path
+4. **Converging Gateway:** Paths rejoin after service execution
+
+**Gateway conditions:**
+
+- Path to Mortgage: `#{application.productType == 'MORTGAGE'}`
+- Path to Auto Loan: `#{application.productType == 'AUTO_LOAN'}`
+- Path to Personal Loan: `#{application.productType == 'PERSONAL_LOAN'}`
+
+### Error Handling and Compensation
+
+Handle service failures gracefully with error boundary events.
+
+**Pattern: Service with Fallback**
+
+![Diagram](/images/diagrams/core/integration/service-orchestration/flowchart-td-7.svg)
+
+**Implementation:**
+
+1. Attach **Error Boundary Event** to Service Task
+2. Configure error code to catch (e.g., HTTP 500, timeout)
+3. Define error handling path
+4. Optional: retry logic before fallback
+
+**Example boundary event configuration:**
+
+- **Error Code:** `500`
+- **Error Name:** `ServiceUnavailable`
+- **Handler Path:** Route to fallback service or compensation
+
+**Compensation pattern:**
+
+![Diagram](/images/diagrams/core/integration/service-orchestration/flowchart-lr-8.svg)
+
+### Saga Pattern with Orchestration
+
+Implement distributed transactions using compensation.
+
+**Use case: Order Fulfillment Saga**
+
+![Diagram](/images/diagrams/core/integration/service-orchestration/flowchart-td-9.svg)
+
+**Implementation steps:**
+
+1. **Forward path:** Define normal execution sequence
+2. **Compensation handlers:** Attach to each Service Task
+3. **Error boundaries:** Catch failures and trigger compensation
+4. **Compensation logic:** Undo completed steps in reverse order
+
+**Compensation example:**
+
+If payment fails after inventory reserved:
+
+1. Error boundary event catches payment failure
+2. Process triggers compensation for "Reserve Inventory" task
+3. Compensation calls "Release Inventory" service
+4. Process transitions to cancellation path
+
+## Data Transformation and Mapping
+
+### Input Mapping
+
+Transform process variables into service request format.
+
+**Expression examples:**
+
+```java
+// Direct variable mapping
+#{applicantId}
+
+// Object property access
+#{application.income}
+
+// Collection operations
+#{application.addresses[0].zipCode}
+
+// Arithmetic operations
+#{loanAmount * 0.1}
+
+// String concatenation
+#{'Applicant: ' + applicant.firstName + ' ' + applicant.lastName}
+
+// Conditional expressions
+#{creditScore >= 700 ? 'PRIME' : 'SUBPRIME'}
+
+// Date formatting
+#{now().format('yyyy-MM-dd')}
+```
+
+**Complex JSON construction:**
+
+```json
+{
+  "requestId": "#{processInstanceId}",
+  "timestamp": "#{now()}",
+  "applicant": {
+    "id": "#{application.applicantId}",
+    "name": "#{application.firstName} #{application.lastName}",
+    "income": #{application.income},
+    "employmentYears": #{application.employmentYears}
+  },
+  "loan": {
+    "amount": #{application.requestedAmount},
+    "term": #{application.termMonths},
+    "purpose": "#{application.purpose}"
+  }
+}
+```
+
+### Output Mapping
+
+Extract data from service responses and store in process variables.
+
+**JSON Path extraction:**
+
+- `$.score` → Extract `score` field from root
+- `$.applicant.creditHistory.accounts` → Extract nested array
+- `$..transactionId` → Extract all `transactionId` fields (recursive)
+
+**Mapping strategies:**
+
+1. **Direct mapping:** Response field → Process variable
+2. **Transformation:** Apply expression to response data
+3. **Conditional mapping:** Map different fields based on conditions
+4. **Collection mapping:** Iterate over response arrays
+
+**Example output mapping:**
+
+Service returns:
+
+```json
+{
+  "scoreResult": {
+    "score": 745,
+    "tier": "PRIME",
+    "factors": ["on-time-payments", "low-utilization"]
+  },
+  "reportId": "CR-98765"
+}
+```
+
+Mappings:
+
+- `$.scoreResult.score` → `creditScore` (Integer)
+- `$.scoreResult.tier` → `creditTier` (String)
+- `$.reportId` → `creditReportId` (String)
+
+### Data Validation
+
+Validate service responses before continuing process execution.
+
+**Validation patterns:**
+
+1. **Gateway after service:** Check response validity
+2. **Script task:** Perform complex validation logic
+3. **Business rule task:** Validate using decision rules
+4. **Boundary error event:** Handle invalid responses
+
+**Example validation gateway:**
+
+```
+#{creditScore != null && creditScore > 0 && creditScore <= 850}
+```
+
+If validation fails, route to error handling path.
+
+## Service Registry and Discovery
+
+### Static Service Configuration
+
+Configure service endpoints in application properties.
+
+**application.properties:**
+
+```properties
+# Service endpoints
+services.credit-bureau.url=https://credit-bureau.example.com/api/v1
+services.fraud-detection.url=https://fraud-detection.example.com/api/v2
+services.notification.url=https://notification.example.com/api/v1
+
+# Service credentials
+services.credit-bureau.apiKey=${CREDIT_BUREAU_API_KEY}
+services.fraud-detection.apiKey=${FRAUD_DETECTION_API_KEY}
+
+# Timeout configuration
+services.default.timeout=30s
+services.credit-bureau.timeout=60s
+```
+
+**Reference in Service Task:**
+
+```
+#{services['credit-bureau'].url}/scores
+```
+
+### Dynamic Service Discovery
+
+Integrate with service registries for dynamic endpoint resolution.
+
+**Kubernetes service discovery:**
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: credit-bureau-service
+spec:
+  selector:
+    app: credit-bureau
+  ports:
+  - port: 8080
+    targetPort: 8080
+```
+
+**Service Task URL:**
+
+```
+http://credit-bureau-service:8080/api/v1/scores
+```
+
+Kubernetes DNS resolves service name to active pod IPs automatically.
+
+## Monitoring and Observability
+
+### Process Instance Tracking
+
+Monitor orchestration execution in real-time.
+
+**Key metrics:**
+
+- **Process duration:** Time from start to completion
+- **Service task latency:** Time per service invocation
+- **Active instances:** Currently executing processes
+- **Completion rate:** Successful vs failed instances
+- **Bottleneck identification:** Tasks with longest wait times
+
+**Process dashboard queries:**
+
+```bash
+# Average process duration
+avg(process_instance_duration_seconds{process_id="loan-approval"})
+
+# Service task success rate
+sum(rate(service_task_completed_total{status="success"}[5m]))
+  / sum(rate(service_task_completed_total[5m]))
+
+# Current active instances
+process_instance_active{process_id="loan-approval"}
+```
+
+### Distributed Tracing
+
+Trace requests across service boundaries.
+
+**OpenTelemetry integration:**
+
+```java
+@ApplicationScoped
+public class TracedCreditService {
+
+    @Inject
+    Tracer tracer;
+
+    public CreditScore getCreditScore(String applicantId) {
+        Span span = tracer.spanBuilder("getCreditScore")
+            .setAttribute("applicant.id", applicantId)
+            .startSpan();
+
+        try {
+            CreditScore score = callExternalService(applicantId);
+            span.setAttribute("credit.score", score.getValue());
+            return score;
+        } catch (Exception e) {
+            span.recordException(e);
+            throw e;
+        } finally {
+            span.end();
+        }
+    }
+}
+```
+
+**Trace visualization:**
+
+```
+ProcessStart → ValidateData → GetCreditScore → VerifyEmployment → CalculateDTI → Approve
+                                    ↓
+                            ExternalCreditBureau
+                                 (2.3s)
+```
+
+### Error Logging and Alerting
+
+Capture and alert on orchestration failures.
+
+**Structured logging:**
+
+```java
+@ApplicationScoped
+public class ServiceTaskLogger {
+
+    Logger log = Logger.getLogger(ServiceTaskLogger.class);
+
+    public void logServiceInvocation(String taskName, String processInstanceId) {
+        log.info("Service task executed",
+            StructuredArguments.kv("task", taskName),
+            StructuredArguments.kv("processInstanceId", processInstanceId),
+            StructuredArguments.kv("timestamp", Instant.now())
+        );
+    }
+
+    public void logServiceError(String taskName, Exception error) {
+        log.error("Service task failed",
+            StructuredArguments.kv("task", taskName),
+            StructuredArguments.kv("errorType", error.getClass().getSimpleName()),
+            StructuredArguments.kv("errorMessage", error.getMessage())
+        );
+    }
+}
+```
+
+**Alerting rules (Prometheus):**
+
+```yaml
+groups:
+- name: service_orchestration
+  rules:
+  - alert: HighServiceTaskFailureRate
+    expr: |
+      rate(service_task_failed_total[5m]) > 0.1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High service task failure rate detected"
+```
+
+## Best Practices
+
+### Process Design
+
+1. **Keep processes focused:** One process per business capability
+2. **Limit process complexity:** Break large processes into sub-processes
+3. **Handle errors explicitly:** Define error paths for all service tasks
+4. **Use meaningful names:** Clear task and variable names
+5. **Document process logic:** Add annotations explaining business rules
+
+### Service Integration
+
+1. **Design for failure:** Assume services will fail
+2. **Implement timeouts:** Prevent indefinite waiting
+3. **Use circuit breakers:** Protect against cascading failures
+4. **Validate responses:** Check service outputs before continuing
+5. **Version service contracts:** Handle backward compatibility
+
+### Performance Optimization
+
+1. **Parallelize independent tasks:** Use parallel gateways
+2. **Minimize data transfer:** Only pass necessary variables
+3. **Use async for long operations:** Prevent process engine blocking
+4. **Cache frequent lookups:** Store static reference data
+5. **Monitor execution times:** Identify slow services
+
+### Security Considerations
+
+1. **Secure credentials:** Use secrets management for API keys
+2. **Encrypt sensitive data:** Protect PII in process variables
+3. **Validate inputs:** Sanitize data before service calls
+4. **Audit service access:** Log all external service invocations
+5. **Use mutual TLS:** Authenticate both client and server
+
+### Testing Strategy
+
+1. **Unit test service adapters:** Test service integration code
+2. **Mock external services:** Use WireMock or similar for testing
+3. **Integration test processes:** Validate full orchestration flows
+4. **Performance test under load:** Verify scalability
+5. **Chaos test error handling:** Simulate service failures
+
+## Deployment Architectures
+
+### Embedded Process Engine
+
+Deploy process engine within the application.
+
+**Characteristics:**
+
+- **Single deployable unit:** Application and engine together
+- **Low latency:** No network calls to separate engine
+- **Simple deployment:** One container/application
+- **Resource sharing:** Process engine shares application resources
+
+**Use cases:**
+
+- Microservices with embedded workflows
+- Lightweight orchestration needs
+- Fast startup requirements
+
+### Centralized Process Engine
+
+Deploy process engine as separate service.
+
+**Characteristics:**
+
+- **Multiple applications:** Many apps interact with one engine
+- **Centralized monitoring:** Single view of all processes
+- **Shared infrastructure:** Engine managed independently
+- **Horizontal scaling:** Scale engine separately
+
+**Use cases:**
+
+- Enterprise-wide orchestration
+- Complex governance requirements
+- Multiple applications sharing workflows
+
+### Hybrid Architecture
+
+Combine embedded and centralized approaches.
+
+**Strategy:**
+
+- **Embedded engines** for domain-specific workflows
+- **Centralized engine** for cross-domain orchestration
+- **Event-based integration** between engines
+
+**Benefits:**
+
+- **Autonomy:** Teams control their workflows
+- **Coordination:** Central orchestration when needed
+- **Scalability:** Scale components independently
+
+## Next Steps
+
+- **Learn BPMN Basics:** [BPMN Activities](/processes/bpmn/activities)
+- **Explore Advanced BPMN:** [Advanced BPMN Patterns](/processes/advanced/overview)
+- **Event Integration:** [Event-Driven Integration](/processes/integration/event-driven)
+- **Decision Orchestration:** [Decision Process Integration](/processes/integration/decision-process)
+- **Get Support:** [Contact Aletyx](https://aletyx.com/contact/) for orchestration design assistance

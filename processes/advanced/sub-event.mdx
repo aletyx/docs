@@ -1,0 +1,23 @@
+---
+title: "Event Subprocesses in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Event subprocesses are triggered by specific events and can interrupt or run in parallel with the main process flow. They are useful for handling exceptions, timeouts, or other events that may..."
+---
+Event subprocesses are triggered by specific events and can interrupt or run in parallel with the main process flow. They are useful for handling exceptions, timeouts, or other events that may occur during process execution.
+
+## Key Characteristics
+
+- Trigger-Based: Activated by events such as messages, timers, or errors.
+- Scope: Defined within the parent process but can interrupt or run alongside the main flow.
+- Exception Handling: Ideal for managing unexpected situations or events.
+
+## When to Use
+
+Use event subprocesses to handle events that may occur during the lifecycle of a process, especially when you need to manage exceptions or perform actions in response to specific triggers.
+
+## Example
+
+In a SAGA pattern process, instead of relying on direct data flow, exceptions can be thrown and captured using an event subprocess to manage failures.
+
+For instance, in an Order Processing Workflow, if an exception occurs (e.g., payment failure), the process throws an event, which is then captured by an event subprocess. This subprocess can trigger compensating actions.
+
+ ![Event Subprocesses](/images/core/processes/advanced-bpmn/images/sub-event.png)

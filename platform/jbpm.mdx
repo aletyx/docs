@@ -1,0 +1,132 @@
+---
+title: "Aletyx Enterprise Build of jBPM"
+description: "jBPM is a part of the Apache KIE (Incubating) delivering flexible Business Process Management (BPM) that enables organizations to model, execute, and monitor business processes throughout their..."
+---
+## What is jBPM?
+
+jBPM is a part of the Apache KIE (Incubating) delivering flexible Business Process Management (BPM) that enables organizations to model, execute, and monitor business processes throughout their lifecycle. As part of the Aletyx Enterprise Build of Kogito and Drools, our enhanced jBPM implementation provides a robust foundation for workflow automation with enterprise-grade extensions.
+
+<!-- ![jBPM Architecture Overview](/images/images/here) -->
+
+## Key Components
+
+### Process Engine
+
+At the core of jBPM is a lightweight, highly extensible process engine that supports:
+
+- **BPMN 2.0 standard** for process definition
+- **Java-based execution environment** for high performance
+- **Persistence and transaction management** for reliability
+- **Asynchronous execution** for long-running processes
+
+Our enhanced engine includes optimizations for:
+<!--/* enhancements here*/ -->
+- **High-throughput process execution**
+- **Cluster-aware coordination**
+
+
+### Runtime Manager
+
+The Runtime Manager provides infrastructure for process instances:
+
+- **Process instance lifecycle management**
+- **Runtime strategy selection** (singleton, per request, per process instance) <!-- Is this still true - for KS, yes!>
+- **Deployment unit handling** for versioned deployments
+- **Custom context propagation**
+
+### Task Service
+
+Human interaction is managed through the dedicated Task Service:
+
+- **User task assignment and notification**
+- **Task lifecycle management**
+- **Deadlines and escalations**
+- **Form rendering and submission**
+
+<!-- Our enhanced implementation adds: -->
+
+
+<!-- ### Services Infrastructure
+
+<!-- The aletyx build extends jBPM with additional services:  -->
+
+- **Job Executor** for asynchronous and scheduled work
+- **Data Indexing Service** for efficient querying
+- **Process Audit Service** for compliance and monitoring
+- **Case Management** for dynamic, adaptive processes -->
+
+## Process Development
+
+### Process Definition
+
+jBPM uses BPMN 2.0 for process definition:
+
+```xml
+<!-- BPMN HERE -->
+```
+
+The Aletyx Enterprise Build of Kogito and Drools provides:
+
+- **Visual BPMN editors** with  validation
+- **Process templates** for common deployment and integration patterns
+<!-- - **Simulation and testing tools** -->
+
+### Java Development Integration
+
+Process applications can be developed using Java APIs:
+
+```java
+// Create a process definition
+BpmnProcess process = BpmnProcess.from(new ClassPathResource("onboarding.bpmn2"));
+
+// Configure and start the process engine
+ProcessEngineBuilder.get()
+    .register(process)
+    .eventListeners(new ProcessAuditEventListener())
+    .start();
+
+// Start a process instance
+ProcessInstance<Onboarding> instance = process
+    .createInstance(new Onboarding("John Doe"))
+    .start();
+```
+
+## Deployment Models
+
+jBPM supports multiple deployment scenarios:
+
+- **Embedded within Java applications**
+- **Standalone process services**
+- **Containerized microservices**
+- **Kubernetes-native deployments**
+
+## Integration Points
+
+jBPM integrates with:
+
+- **Drools** for decision-driven processes
+- **Kogito** for cloud-native process orchestration
+- **Aletyx Playground** for visual development
+- **Spring Boot**
+- **Quarkus** for cloud-native applications
+- **Enterprise messaging systems** like Kafka, JMS
+- **External services** via REST, SOAP, or custom connectors
+
+<!-- ## User Interaction
+
+The  enhances user experience with: -->
+
+
+<!-- ## Monitoring and Management -->
+
+
+<!-- ## Advanced Features
+
+The aletyx build of jBPM adds: -->
+
+## Next Steps
+
+- [Get started with your first process](/processes/overview)
+- [Understand basic BPMN elements](/processes/bpmn/overview)
+- [Learn about human tasks](/processes/components/user-tasks)
+- [Explore the process engine architecture](/processes/architecture/engine)

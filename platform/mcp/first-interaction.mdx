@@ -1,0 +1,176 @@
+---
+title: "Integrating DMN with MCP for Intelligent Decision Services"
+description: "This guide walks you through setting up a Spring Boot service that combines Decision Model and Notation (DMN) with Model Context Protocol (MCP) to create an intelligent decision service that can..."
+---
+This guide walks you through setting up a Spring Boot service that combines Decision Model and Notation (DMN) with Model Context Protocol (MCP) to create an intelligent decision service that can interact with Claude.
+
+## Prerequisites
+
+- Java 17 installed
+- Maven 3.9.6 installed
+- Basic knowledge of Spring Boot
+- Claude Desktop application
+
+## Step 1: Create Your Intelligent Decision Service
+
+1. Visit [start.aletyx.ai](https://start.aletyx.ai)
+2. Select the "Intelligent Decision Service" template
+   ![Intelligent Decision Service](/images/components/images/intelligent-decision-service.png)
+3. Fill out the form or leave it as is to create a project called `start-with-aletyx`
+4. Click "Download Project" to get your starter code
+
+## Step 2: Configure Maven Access to Aletyx Repository
+
+Add the following to your `~/.m2/settings.xml` file to connect to the Aletyx Maven repository:
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>aletyx-maven</id>
+      <username>your-username</username>
+      <password>your-token</password>
+    </server>
+  </servers>
+
+  <profiles>
+    <profile>
+      <id>aletyx-repo</id>
+      <repositories>
+        <repository>
+          <id>aletyx-maven</id>
+          <url>https://maven-innovator.aletyx.services</url>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+
+  <activeProfiles>
+    <activeProfile>aletyx-repo</activeProfile>
+  </activeProfiles>
+</settings>
+```
+
+<Tip title="Tip">
+
+Contact Aletyx at [aletyx.ai/contact-us](https://aletyx.ai/contact-us) to get your own token.
+</Tip>
+## Step 3: Understand and Modify the DMN Model
+
+The downloaded project includes a sample DMN model. For the traffic violation example:
+
+1. Open the project in your preferred IDE
+2. Navigate to `src/main/resources/dmn/`
+3. Locate the DMN model file (e.g., `TrafficViolation.dmn`)
+4. Use the DMN editor in your IDE or a standalone DMN tool to modify the model as needed
+
+    The sample traffic violation model includes:
+    - Input variables like `Speed`, `Actual Speed`, and `Speed Limit`
+    - Decision tables for calculating fines and points
+    - Output values for the fine amount and license points
+
+## Step 4: Build and Run the Service
+
+1. Navigate to your project directory in the terminal
+2. Build and run the application:
+
+    ```bash
+    mvn clean spring-boot:run
+    ```
+
+3. Verify the service is running by checking:
+   - The console output should show that Spring Boot has started successfully
+   - The MCP endpoints are available (typically at http://localhost:8080/sse)
+
+## Step 5: Configure Claude Desktop for MCP Connection
+
+1. Download and install [Claude Desktop](https://claude.ai/desktop)
+2. Open Claude Desktop
+3. Go to Settings → Developer Settings
+4. Add the following configuration to enable MCP:
+
+    ```json
+    {
+      "mcpServers": {
+        "remote-example": {
+          "command": "npx",
+          "args": ["mcp-remote", "http://localhost:8080/sse"]
+        }
+      }
+    }
+    ```
+
+5. Save the settings
+6. You will need to add `mcp-remote` which can be done by doing:
+
+    ```bash
+	npm install -g mcp-remote
+	```
+
+	or if you don't want globally using:
+
+	```
+	npm install --save-dev mcp-remote
+	```
+
+7. Close and reopen Claude Desktop to allow the connection to be built.
+
+## Step 6: Test the Integration
+
+1. In the latest updates of Claude Desktop, the toggle icon on the chat is where the MCP Tools have been relocated to. In the screenshot you can see that the connection is active (especially when there are numbers attached to the `remote-example` which is what our properties were configured as).
+
+    ![Tools active in Claude](/images/components/mcp/images/show-claude-tools.png)
+
+    <Tip title="Older versions of Claude Desktop had this as a standalone icon, but this has moved">
+    </Tip>
+	    Older versions of Claude Desktop might show a hammer icon, indicating the MCP connection is active, but this has recently been removed in favor of the toggle talked in the step.
+
+2. You can see the tools that are available for usage with your Claude Desktop which can include getting the schemas of the DMN and also for executing them.
+
+    ![Active MCP Tools for Claude to use](/images/components/mcp/images/connected-dmn-via-mcp.png)
+
+3. Enter a prompt that would trigger the DMN model. For the traffic violation example:
+
+    ```text
+    If I am going 100 in a 60 zone what is my expected fine and points to my license for this violation?
+    ```
+
+3. If prompted to allow connections, select "Allow" or "Yes"
+4. You may need to resubmit the same prompt again if the first attempt doesn't connect properly
+5. Claude should now respond with decision information derived directly from your DMN model
+
+## Troubleshooting
+
+If you encounter connection issues:
+
+1. Verify your Spring Boot application is running properly
+2. Check the Spring Boot logs for any MCP-related errors
+3. Try clearing the MCP authentication cache:
+
+    ```bash
+    rm -rf ~/.mcp-auth
+    ```
+
+4. Restart both the Spring Boot application and Claude Desktop
+5. Ensure you're using compatible versions of MCP client and server
+6. Check for any network issues or firewalls blocking the connection
+
+## Next Steps
+
+- Create more complex DMN models for your business decisions
+- Integrate with existing business rules and processes
+- Extend the Spring Boot service with additional APIs
+- Connect other MCP-compatible clients to your decision service
+
+## Additional Resources
+
+- [DMN Specification](https://www.omg.org/dmn/)
+- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [Model Context Protocol](https://modelcontextprotocol.org/)
+- [Aletyx Documentation](https://docs.aletyx.ai/)

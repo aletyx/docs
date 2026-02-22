@@ -1,0 +1,668 @@
+---
+title: "Adaptive Process Architecture: The Future of Stateful Workflows"
+description: "Adaptive Process Architecture represents a paradigm shift in business process automation design. Moving beyond traditional deployment models, this architecture delivers cloud-native orchestration..."
+---
+## Introduction to Adaptive Process Architecture
+
+Adaptive Process Architecture represents a paradigm shift in business process automation design. Moving beyond traditional deployment models, this architecture delivers cloud-native orchestration capabilities while solving the fundamental challenges organizations face with modern process automation.
+
+Rather than forcing a choice between monolithic simplicity and microservice flexibility, Adaptive Process Architecture creates a third path forward. By strategically co-locating process components within unified deployments while maintaining clean service boundaries, this architecture delivers enterprise-grade reliability with dramatically reduced operational overhead.
+
+## Strategic Advantages of Adaptive Process Architecture
+
+### 1. Optimal Balance of Scalability and Operational Simplicity
+
+While fully distributed architectures may offer theoretical maximum scalability, they introduce exponential complexity in deployment, monitoring, and troubleshooting. Adaptive Process Architecture strikes an optimal balance by intelligently co-locating related services while maintaining clean service boundaries. This approach delivers near-linear scalability with significantly reduced operational overhead.
+
+### 2. Drastically Reduced Operational Complexity
+
+By carefully packaging contextually related services together, the operational overhead is drastically reduced. This makes sophisticated process orchestration accessible to organizations without requiring specialized microservice expertise, while still preserving the cloud-native benefits that modern enterprises demand.
+
+### 3. Perfect Alignment with Domain-Driven Design (DDD)
+
+The architecture naturally supports bounded contexts where each business service encapsulates its complete functionality. This alignment with DDD principles ensures that your technical architecture mirrors your business domains, creating a unified language between technical and business stakeholders.
+
+### 4. Intelligent Context Management
+
+Modern business processes require sophisticated context management across multiple components. Co-location dramatically reduces the challenges of distributed context coordination, allowing your processes to maintain rich contextual information without the complexity of distributed state synchronization.
+
+### 5. Optimized Performance for Critical Paths
+
+Critical process operations execute through in-memory or local service calls rather than network calls, delivering significant performance improvements. This architecture ensures consistent response times at cloud speeds for critical operations while maintaining the flexibility of distributed communications where appropriate.
+
+## Core Components of Adaptive Process Architecture
+
+The following diagram illustrates the key components of Adaptive Process Architecture:
+
+![The different components of Adaptive Process Architecture](/images/components/compact-architecture/images/compact-arch-overall.png)
+
+The table below details the different components, indicating whether they are mandatory or optional:
+
+| Component             | Type               | Stateful (Adaptive Process Architecture) | Stateless (Straight Through Processing) |
+| --------------------- | ------------------ | -------------------------------- | --------------------------------------- |
+| Process models        | BPMN files (.bpmn) | Mandatory                        | Mandatory                               |
+| Process Engine        | System             | Mandatory                        | Mandatory                               |
+| Runtime               | System             | Mandatory                        | N/A                                     |
+| Data-Index            | Subsystem (add-on) | Optional                         | N/A                                     |
+| Data-Audit            | Subsystem (add-on) | Optional                         | N/A                                     |
+| Jobs Service          | Subsystem (add-on) | Mandatory                        | N/A                                     |
+| User Tasks            | Subsystem (add-on) | Mandatory                        | N/A                                     |
+| Storage (Persistence) | External system    | Mandatory                        | N/A                                     |
+
+### Process Definition Models
+
+The Business Process Model and Notation (BPMN) artifacts serve as the digital blueprint of your business processes. These models transcend traditional software specifications by providing a visual representation that both business and technical stakeholders can understand and refine.
+
+During compilation, the Kogito build chain transforms these models into highly optimized executable code, generating specialized components tailored to your specific process requirements. This bridge between business design and technical implementation enables true collaborative development where domain experts and engineers work with a unified understanding.
+
+The resulting executable models capture business intent with exceptional fidelity while leveraging modern software engineering principles. This separation of concerns allows business experts to focus on process design while technical teams optimize deployment and integration aspects.
+
+### Orchestration Engine
+
+The intelligent core of your process applications, powered by the battle-tested jBPM engine reimagined for cloud-native environments. This sophisticated engine coordinates the flow of activities across your entire process landscape, making intelligent routing decisions and dynamically delegating specialized capabilities to purpose-built subsystems.
+
+The engine handles complex orchestration patterns including parallel execution paths, conditional branching logic, event-driven flow control, and compensation handling - all while maintaining transactional integrity across distributed components. Its modular architecture allows seamless interaction with other specialized subsystems like the Human Collaboration Framework for human-in-the-loop scenarios and the Temporal Event Coordinator for time-based orchestration.
+
+This next-generation engine combines the reliability of traditional BPM systems with the agility and scalability demands of modern cloud architectures, delivering a foundation that adapts to changing business requirements without sacrificing operational stability.
+
+### Cloud-Native Runtime
+
+The Kogito-powered foundation provides essential enterprise capabilities required for mission-critical deployments. This runtime layer elegantly handles cross-cutting concerns including transaction management, API exposure, resource pooling, security controls, and component lifecycle management.
+
+Starting with its original built on Quarkus platform, the runtime delivers exceptional startup performance and memory efficiency, whether deployed in containers, Kubernetes clusters, or serverless environments. The cloud-native design ensures your process applications can scale elastically to meet demand spikes while maintaining consistent performance characteristics.
+
+The runtime's modular design allows selective inclusion of capabilities based on your specific requirements, avoiding the bloat of traditional application servers while delivering enhanced resilience through simplified deployment topologies.
+
+### Real-Time Process Intelligence (Data-Index)
+
+The Real-Time Process Intelligence layer provides an always-current view of process execution across your enterprise. Through its event-driven architecture, this component captures incremental state changes from active processes and intelligently computes the current operational state through sophisticated aggregation algorithms.
+
+By exposing rich GraphQL interfaces, this layer enables both technical and business users to query process data through intuitive, domain-specific queries - unlocking real-time visibility without impacting performance. This capability powers executive dashboards, operational monitoring systems, and advanced analytics while maintaining complete separation from the core execution engine.
+
+![Graphical view of the Data-Index subsystem](/images/components/compact-architecture/images/data-index.png)
+
+1. **Intelligent Process Runtime:**
+
+	- Functions as the core execution environment within the Adaptive Process Architecture
+	- Can scale to multiple replicas to handle varying workloads
+	- Processes business workflows and generates workflow events
+
+2. **Workflow Event Flow:**
+
+    - When a workflow milestone is reached, the Intelligent Process Runtime generates workflow events
+	- These events carry contextual data about the workflow state and execution
+	- Events flow directly to the Data Index component for processing
+
+3. **Data Index:**
+
+    - Acts as the central event processing hub
+    - Captures and indexes all workflow events for efficient querying
+    - Provides real-time visibility into process execution
+
+4. **Data Store:**
+
+    - External persistent storage that maintains historical workflow data
+    - Receives synchronized data from the Data Index
+    - Enables advanced analytics and reporting on process performance
+
+The architecture supports a scalable approach with a single Adaptive Process instance potentially containing many runtime replicas, all utilizing their own synchronization mechanism attached to the data store.
+
+#### Querying with Data-Index
+
+Data-Index supports queries through GraphQL. For using the endpoint you just need to explore in your deployment the URI:
+
+```
+http://localhost:8080/<root-path>/graphql-ui/
+```
+
+The Data Intelligence Layer can be added to your projects when adding the dependency for the `kogito-addons-quarkus-data-index-jpa`:
+
+```xml
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-data-index-jpa</artifactId>
+</dependency>
+```
+
+### Process History Service (Data-Audit)
+
+A comprehensive temporal view of process execution that captures the complete evolution of process instances throughout their lifecycle. This component maintains an immutable record of every significant event, creating a trusted audit trail for compliance, analysis, and process improvement initiatives.
+
+The rich historical data enables authorized users to replay processes from any point in time, understand decision paths, and identify optimization opportunities. Through its flexible GraphQL interface, the Process History Service supports complex historical queries that can reveal insights for performance analysis and business intelligence.
+
+![Graphical view of the Data-Audit subsystem](/images/components/compact-architecture/images/data-audit.png)
+
+- **Data-Audit Common**: Provides the common framework to create implementations.
+- **Data-Audit**: Provides the wiring to use Data-Audit with Quarkus as colocated service in a deployment.
+- **Data-Audit JPA Common**: Provides the common extension that doesn't depend on the runtime.
+- **Data-Audit JPA**: Provides the wiring between the specific implementation and Quarkus System.
+
+#### Querying with Data-Audit
+
+The way to retrieve information from the Data-Audit is using GraphQL. This way we can abstract how the information is retrieved and allow different needs depending on the user.
+
+The Path is `${HOST}/data-audit/q` for sending GraphQL queries.
+
+**Example 1**
+
+Execute a registered query, e.g. `GetAllProcessInstancesState` with a definition of data fields that should be returned:
+
+```bash
+curl -H "Content-Type: application/json" -H "Accept: application/json" -s -X POST http://${HOST}/data-audit/q/ -d '
+{
+    "query": "{GetAllProcessInstancesState {eventId, processInstanceId, eventType, eventDate}}"
+}'|jq
+```
+
+To retrieve the GraphQL schema definition including a list of all registered queries, run a GET command to the `${HOST}/data-audit/r` endpoint. This endpoint can also be used to register new queries.
+
+**Example 2**
+
+Register a new query with a complex data type:
+
+```bash
+curl -H "Content-Type: application/json" -H "Accept: application/json" -s -X POST http://${HOST}/data-audit/r/ -d '
+{
+    "identifier" : "tests",
+    "graphQLDefinition" : "type EventTest { jobId : String, processInstanceId: String} type Query { tests (pagination: Pagination) : [ EventTest ] } ",
+    "query" : "SELECT o.job_id, o.process_instance_id FROM job_execution_log o"
+}'
+```
+
+Once registered, the new query can be executed similar to the pre-registered ones using the `${HOST}/data-audit/q` endpoint:
+
+``` bash
+curl -H "Content-Type: application/json" -H "Accept: application/json" -s -X POST http://${HOST}/data-audit/q/ -d '
+{
+    "query": "{tests {jobId, processInstanceId}}"
+}'|jq
+```
+
+The Data-Audit subsystem provides several powerful capabilities:
+
+* Runs as a colocated service within your Quarkus application
+* Includes extension points for customization and integration
+* Provides GraphQL querying capabilities for flexible data access
+* Supports multiple storage implementations through extension points
+
+To add the Data-Audit capability to your projects, the following dependencies must be added to your project:
+
+```xml
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-data-audit</artifactId>
+</dependency>
+
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-data-audit-jpa</artifactId>
+</dependency>
+```
+
+### Temporal Intelligence Coordinator (Jobs Service)
+
+<Info title="Aletyx Enterprise Build of Kogito and Drools Exclusive!">
+
+For Intelligent Process Orchestrations, Aletyx is the only offering focused on the Apache KIE ecosystem on the market capable of scaling multiple pods for your Intelligent Process Orchestrations, not just decisions!
+</Info>
+The Temporal Intelligence Coordinator provides sophisticated time-aware orchestration capabilities that ensure reliable execution of scheduled activities across distributed environments. Unlike traditional schedulers, this component maintains execution guarantees even during infrastructure changes, deployment updates, or system restarts.
+
+Built with cloud-native principles, the coordinator intelligently manages various temporal patterns including interval-based timers, calendar expressions, deadline enforcement, SLA monitoring, and escalation paths. Its transactional integration with the process engine ensures that time-based events reliably trigger appropriate process actions without timing discrepancies or missed events.
+
+![Graphical view of the Jobs Service flow](/images/components/compact-architecture/images/job_service.svg)
+
+The component's architecture uses a specialized message flow that maximizes reliability while minimizing resource consumption:
+
+#### Definitions
+
+- **transport**: the medium used to transfer a message between client component and Temporal Intelligence Coordinator.
+- **sink**: is the callback endpoint that the client uses.
+- **storage**: is the persistence layer for the jobs being scheduled by the Temporal Intelligence Coordinator.
+- **Temporal Intelligence Coordinator**: the main component containing the logic for scheduling a job and storing that data.
+
+With the Temporal Event Coordinator, events are typically driven with the ISO-8601 standard to drive the events. This standard will handle things like time format, repeatability, and more.
+
+To enable this capability in your project:
+
+```xml
+<!-- Required for the Jobs Service add-on transport tier definition -->
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-jobs-management</artifactId>
+</dependency>
+
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-jobs</artifactId>
+</dependency>
+
+<!-- Required for the Jobs Service add-on storage definition -->
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>jobs-service-storage-jpa</artifactId>
+</dependency>
+```
+
+<Tip title="Easy to Incorporate Process Scalability Changes">
+
+The benefit to how Aletyx Enterprise Build of Kogito and Drools is that through the use of Aletyx's Bill of Materials (BOM) is that using migrating to a scalable architecture is changing the BOM associated with your project and now you can enjoy process scalability in Kubernetes environments!
+</Tip>
+### Human Collaboration Framework (User Tasks)
+
+A sophisticated system for seamlessly integrating human judgment and expertise into automated processes. This framework implements a comprehensive lifecycle for tasks requiring human input, approval, or decision-making.
+
+The Human Collaboration Framework manages task assignment strategies, permission controls, and state transitions using a well-defined task lifecycle. It supports rich interaction patterns including attachments, comments, forms, and notifications - creating an intuitive collaboration experience that connects human expertise with automated process execution.
+
+![Default User Task life cycle](/images/components/compact-architecture/wf-usertaks-lifecycle.png)
+
+When a process instance reaches a User Task, the framework creates a new task in the **Created** state, which then moves through various states including **Ready**, **Reserved**, and ultimately **Completed** (or alternative terminal states like **Failed** or **Obsolete**).
+
+With the Default life cycle, when a User Task is initiated in the User Task Subsystem it starts in a **Created** state. At that moment, it automatically passes through the `Activate` phase that will set the task in **Ready** state, making the task available to the users that are allowed to work with it.
+
+The task will then remain in **Ready** state until a user claims it, which will make the task pass through the `Claim` phase making the move into a **Reserved** state and the user will become the owner of the task.
+
+With the task **Reserved**, the owner will be able to complete the task (`Complete` phase) that will finally move the task to a **Completed** that will successfully finalize the task allowing the process instance to continue.
+
+By default, the User Tasks are persisted in memory, but this can be changed to persistent storage by incorporating the following dependency:
+
+```xml
+<dependency>
+  <groupId>org.jbpm</groupId>
+  <artifactId>jbpm-addons-quarkus-usertask-storage-jpa</artifactId>
+</dependency>
+```
+
+### Persistent Context Store (Storage)
+
+The resilient foundation that maintains process context across all components. This storage layer ensures process consistency and durability, protecting against data loss even during system failures or maintenance windows.
+
+Using a relational database, it maintains a consistent view of process state that can be accessed by all components within the architecture. This shared storage approach dramatically simplifies deployment while providing strong data consistency guarantees. The Temporal Event Coordinator and Data Intelligence layer work seamlessly with the Persistent Context Store to provide realtime process updates and interactions.
+
+The storage layer is optimized for both transactional integrity and query performance, supporting both operational needs and analytical workloads from a single data store. This unified approach eliminates the complexity of data synchronization while providing a single source of truth for all process-related information.
+
+## Getting Started with Adaptive Process Architecture
+
+Implementing this architecture has been streamlined to allow teams to quickly build sophisticated process applications. The following steps will get you started:
+
+### 1. Create a new Quarkus project with the required dependencies
+
+```xml
+<!-- Core dependencies -->
+<dependency>
+	<groupId>io.quarkus</groupId>
+	<artifactId>quarkus-resteasy</artifactId>
+</dependency>
+<dependency>
+	<groupId>io.quarkus</groupId>
+	<artifactId>quarkus-resteasy-jackson</artifactId>
+</dependency>
+<dependency>
+	<groupId>io.quarkus</groupId>
+	<artifactId>quarkus-smallrye-openapi</artifactId>
+</dependency>
+<dependency>
+	<groupId>io.quarkus</groupId>
+	<artifactId>quarkus-smallrye-health</artifactId>
+</dependency>
+
+<!-- For intelligent process orchestration with Adaptive Process Architecture -->
+
+<!-- Process and Decisions  -->
+<dependency>
+	<groupId>org.jbpm</groupId>
+	<artifactId>jbpm-with-drools-quarkus</artifactId>
+</dependency>
+
+<dependency>
+	<groupId>org.kie</groupId>
+	<artifactId>kie-addons-quarkus-process-management</artifactId>
+</dependency>
+<!-- Process History Service -->
+<dependency>
+	<groupId>org.kie</groupId>
+	<artifactId>kogito-addons-quarkus-data-audit-jpa</artifactId>
+</dependency>
+<dependency>
+	<groupId>org.kie</groupId>
+	<artifactId>kogito-addons-quarkus-data-audit</artifactId>
+</dependency>
+<!-- Temporal Event Coordinator -->
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-jobs-management</artifactId>
+</dependency>
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-jobs</artifactId>
+</dependency>
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>jobs-service-storage-jpa</artifactId>
+</dependency>
+
+<!-- Human Collaboration Framework Persisted -->
+<dependency>
+  <groupId>org.jbpm</groupId>
+  <artifactId>jbpm-addons-quarkus-usertask-storage-jpa</artifactId>
+</dependency>
+
+<!-- Data Intelligence Layer (Optional) -->
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-data-index-jpa</artifactId>
+</dependency>
+
+<!-- Database connectivity -->
+<dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-jdbc-postgresql</artifactId>
+</dependency>
+<dependency>
+	<groupId>io.quarkus</groupId>
+	<artifactId>quarkus-agroal</artifactId>
+</dependency>
+<dependency>
+	<groupId>org.kie</groupId>
+	<artifactId>kie-addons-quarkus-persistence-jdbc</artifactId>
+</dependency>
+<dependency>
+	<groupId>org.kie</groupId>
+	<artifactId>kogito-addons-quarkus-data-index-persistence-postgresql</artifactId>
+</dependency>
+
+<!-- Process Diagram SVGs used with Consoles -->
+<dependency>
+	<groupId>org.kie</groupId>
+	<artifactId>kie-addons-quarkus-process-svg</artifactId>
+</dependency>
+<dependency>
+	<groupId>org.kie</groupId>
+	<artifactId>kie-addons-quarkus-source-files</artifactId>
+</dependency>
+
+<!-- Container image creation -->
+<dependency>
+	<groupId>io.quarkus</groupId>
+	<artifactId>quarkus-container-image-jib</artifactId>
+</dependency>
+```
+
+### 2. Configure your application in `application.properties`
+
+```properties
+#####################################
+# Core HTTP Configuration
+#####################################
+quarkus.http.port=8080
+quarkus.http.root-path=/
+
+# CORS Configuration
+quarkus.http.cors=true
+quarkus.http.cors.origins=*
+quarkus.http.cors.methods=GET,POST,PUT,DELETE,OPTIONS,PATCH
+quarkus.http.cors.headers=accept,authorization,content-type,x-requested-with,x-forward-for,content-length,host,origin,referer,Access-Control-Request-Method,Access-Control-Request-Headers
+quarkus.http.cors.exposed-headers=Content-Disposition,Content-Type
+quarkus.http.cors.access-control-max-age=24H
+quarkus.http.cors.access-control-allow-credentials=true
+
+#####################################
+# API Documentation
+#####################################
+quarkus.smallrye-openapi.path=/docs/openapi.json
+quarkus.swagger-ui.always-include=true
+
+#####################################
+# Logging Configuration
+#####################################
+# Minimize logging for all categories
+quarkus.log.level=WARN
+# Enable more verbose logging for application specific messages
+quarkus.log.category."com.example".level=INFO
+# Uncomment for troubleshooting
+#quarkus.log.category."org.jbpm".level=DEBUG
+#quarkus.log.category."org.kie.kogito".level=DEBUG
+
+#####################################
+# Database Configuration
+#####################################
+# Common database settings
+quarkus.hibernate-orm.database.generation=update
+quarkus.hibernate-orm.log.sql=false
+
+# Production Database Configuration
+%prod.quarkus.datasource.db-kind=postgresql
+%prod.quarkus.datasource.username=${POSTGRESQL_USER:kogito}
+%prod.quarkus.datasource.password=${POSTGRESQL_PASSWORD:kogito123}
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://${POSTGRESQL_SERVICE}:5432/${POSTGRESQL_DATABASE}
+
+# Development Database Configuration
+%dev.quarkus.datasource.db-kind=postgresql
+%dev.quarkus.datasource.devservices.enabled=true
+%dev.quarkus.datasource.devservices.port=5432
+
+#####################################
+# Flyway Migration Settings
+#####################################
+# Development Mode - Clean start for rapid iteration
+%dev.quarkus.flyway.clean-at-start=true
+%dev.quarkus.flyway.migrate-at-start=true
+%dev.quarkus.flyway.baseline-on-migrate=true
+%dev.quarkus.flyway.out-of-order=true
+%dev.quarkus.flyway.baseline-version=0.0
+%dev.quarkus.flyway.locations=classpath:/db/migration,classpath:/db/jobs-service,classpath:/db/data-audit/postgresql
+%dev.quarkus.flyway.table=FLYWAY_RUNTIME_SERVICE
+%dev.kie.flyway.enabled=true
+
+# Production Mode - Safe migration
+%prod.kie.flyway.enabled=false
+%prod.quarkus.flyway.migrate-at-start=true
+%prod.quarkus.flyway.baseline-on-migrate=true
+%prod.quarkus.flyway.out-of-order=true
+%prod.quarkus.flyway.baseline-version=0.0
+%prod.quarkus.flyway.locations=classpath:/db/migration,classpath:/db/jobs-service,classpath:/db/data-audit/postgresql
+%prod.quarkus.flyway.table=FLYWAY_RUNTIME_SERVICE
+
+#####################################
+# Process Automation Engine
+#####################################
+# Enable transactions
+kogito.transactionEnabled=true
+
+# Dev users for testing
+%dev.jbpm.devui.users.jdoe.groups=admin,HR,IT
+%dev.jbpm.devui.users.mscott.groups=admin,HR,IT
+
+#####################################
+# Jobs Service Configuration
+#####################################
+# Run periodic job loading every minute
+kogito.jobs-service.loadJobIntervalInMinutes=1
+# Load jobs into the InMemory scheduler that expire within the next 10 minutes
+kogito.jobs-service.schedulerChunkInMinutes=10
+# Load jobs into the InMemory scheduler that have expired in the last 5 minutes
+kogito.jobs-service.loadJobFromCurrentTimeIntervalInMinutes=5
+
+#####################################
+# Security Configuration
+#####################################
+# Security disabled by default
+quarkus.oidc.enabled=false
+quarkus.kogito.security.auth.enabled=false
+
+# OIDC Configuration (commented out, enable when needed)
+#quarkus.oidc.auth-server-url=https://keycloak.example.com/auth/realms/your-realm
+#quarkus.oidc.client-id=your-client-id
+#quarkus.oidc.credentials.secret=your-secret-here
+#quarkus.oidc.enabled=true
+#quarkus.oidc.tenant-enabled=true
+#quarkus.oidc.application-type=service
+#quarkus.http.auth.permission.authenticated.paths=/*
+#quarkus.http.auth.permission.authenticated.policy=authenticated
+#quarkus.http.auth.permission.public.paths=/q/*,/docs/*,/kogito/security/oidc/*
+#quarkus.http.auth.permission.public.policy=permit
+#kogito.security.auth.enabled=true
+#kogito.security.auth.impersonation.allowed-for-roles=managers
+
+#####################################
+# Environment URLs
+#####################################
+# Development Environment
+%dev.kogito.service.url=http://localhost:8080
+%dev.quarkus.devservices.enabled=true
+%dev.quarkus.kogito.devservices.enabled=true
+
+# Production Environment
+%prod.quarkus.devservices.enabled=false
+%prod.quarkus.kogito.devservices.enabled=false
+%prod.kogito.service.url=${KOGITO_SERVICE_URL:http://localhost:8080}
+
+#####################################
+# Container Image Configuration
+#####################################
+# Kubernetes Deployment
+%prod.quarkus.kubernetes.deploy=true
+%prod.quarkus.kubernetes.deployment-target=kubernetes
+%prod.quarkus.kubernetes.ingress.expose=true
+%prod.quarkus.kubernetes.ingress.host=${SERVICE_HOST:example.com}
+
+# Container Image Settings
+%prod.quarkus.container-image.build=true
+%prod.quarkus.container-image.registry=${CONTAINER_REGISTRY:docker.io}
+%prod.quarkus.container-image.group=${user.name}
+%prod.quarkus.container-image.name=process-orchestration
+
+#####################################
+# Event Configuration (Optional)
+#####################################
+# Uncomment to enable Kafka event publishing
+# kafka.bootstrap.servers=localhost:9092
+# kogito.events.usertasks.enabled=true
+# kogito.events.variables.enabled=true
+# kogito.events.processinstances.enabled=true
+# mp.messaging.outgoing.kogito-processinstances-events.connector=smallrye-kafka
+# mp.messaging.outgoing.kogito-processinstances-events.topic=kogito-processinstances-events
+# mp.messaging.outgoing.kogito-processinstances-events.value.serializer=org.apache.kafka.common.serialization.StringSerializer
+# mp.messaging.outgoing.kogito-usertaskinstances-events.connector=smallrye-kafka
+# mp.messaging.outgoing.kogito-usertaskinstances-events.topic=kogito-usertaskinstances-events
+# mp.messaging.outgoing.kogito-usertaskinstances-events.value.serializer=org.apache.kafka.common.serialization.StringSerializer
+# mp.messaging.outgoing.kogito-variables-events.connector=smallrye-kafka
+# mp.messaging.outgoing.kogito-variables-events.topic=kogito-variables-events
+# mp.messaging.outgoing.kogito-variables-events.value.serializer=org.apache.kafka.common.serialization.StringSerializer
+```
+
+### 3. Create your BPMN process models
+
+Create your BPMN process models in the `src/main/resources` directory. You can design these using our provided sandbox environment or import existing BPMN processes.
+
+### 4. Launch your application
+
+```bash
+mvn quarkus:dev
+```
+
+All components will be intelligently co-located within your service and share a consistent data store for seamless process execution.
+
+## Best Practices for Adaptive Process Architecture
+
+### Database Management
+
+1. **Use Database Migration Tools for Schema Evolution**
+
+    - Leverage Flyway as shown in the configuration for controlled schema upgrades
+    - Keep migration scripts in version control alongside application code
+    - Use separate migration scripts for different subsystems
+
+1. **Configure Proper Connection Pooling**
+
+    - Set appropriate maximum pool size based on expected workload
+    - Configure statement timeouts to prevent resource exhaustion
+    - Enable metrics collection to monitor pool utilization
+
+### Performance Optimization
+
+1. **Implement Strategic Process Fragmentation**
+
+   - Design long-running processes as orchestrated fragments
+   - Use compensation handlers for long-running transactions
+   - Leverage asynchronous continuation for I/O-intensive steps
+
+2. **Configure Database Access Patterns**
+
+   - Use read-only transactions for query operations
+   - Implement optimistic locking for high-concurrency scenarios
+   - Consider database partitioning for high-volume process instances
+
+3. **Optimize Message Flow Patterns**
+
+   - Batch process events where appropriate
+   - Implement idempotent message handlers
+   - Use correlation keys for related message sequences
+
+### Testing Strategy
+
+1. **Create Unit Tests for Process Fragments**
+
+    - Test individual subprocesses in isolation
+    - Mock external service interactions
+    - Validate process paths using test-specific process variable sets
+
+2. **Implement Integration Tests with Test Containers**
+
+    - Use testcontainers for database integration testing
+    - Test complete process flows with realistic data
+    - Verify transaction boundaries and rollback scenarios
+
+3. **Use Event Recording for Complex Process Testing**
+
+    - Capture process events for test verification
+    - Implement assertion helpers for common verification patterns
+    - Test timer-based scenarios with clock manipulation
+
+### Monitoring and Observability
+
+1. **Use Data-Index for Process State Queries**
+
+    - Implement dashboard queries using GraphQL
+    - Create custom process state visualizations
+    - Set up alerts for stalled processes or SLA violations
+
+2. **Configure Proper Logging**
+
+    - Use structured logging format (JSON) in production
+    - Implement correlation IDs across process instances
+    - Set appropriate log levels for different environments
+
+3. **Set Up Metrics Collection**
+
+    - Monitor process throughput and completion times
+    - Track resource utilization across all subsystems
+    - Implement custom metrics for business KPIs
+
+### Scaling Considerations
+
+1. **Plan for Horizontal Scaling**
+
+    - Implement stateless request handling where possible
+    - Use sticky sessions for active process instances
+    - Configure proper load balancing with health checks
+
+3. **Implement Process Affinity**
+
+    - Route related process operations to the same node
+    - Use consistent hashing for request distribution
+    - Implement backpressure mechanisms to prevent overload
+
+4. **Manage Database Connections Efficiently**
+
+    - Size connection pools appropriately for expected load
+    - Monitor database connection usage
+    - Implement circuit breakers for database interaction
+
+
+## Conclusion
+
+Adaptive Process Architecture represents the future of process orchestration, bringing together the best elements of traditional business process management and modern cloud-native architectures. By intelligently co-locating related process components, it dramatically simplifies development, deployment, and operations while maintaining the benefits of a modular, scalable design.
+
+This architecture is uniquely suited for modern business processes that require sophisticated orchestration including human collaboration, temporal coordination, and long-running transactions. The unified approach delivers exceptional developer productivity without sacrificing operational flexibility, allowing your organization to rapidly adapt to changing business requirements.
+
+Our implementation provides true elastic scalability capable of driving the Temporal Event Coordinator and the Audit services at the scale required for enterprise deployments - something that simply cannot be matched.

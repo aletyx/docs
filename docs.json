@@ -1,68 +1,466 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "theme": "maple",
+  "name": "Aletyx Documentation",
+  "description": "Enterprise decision and process automation platform — Aletyx Enterprise Build of Apache KIE for Drools, jBPM, and Kogito",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#FC764C",
+    "light": "#FF9A7A",
+    "dark": "#1A1A1A"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.ico",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://aletyx.ai"
+  },
+  "appearance": {
+    "default": "system"
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs"
+  },
+  "navbar": {
+    "links": [
+      { "label": "Playground", "href": "https://playground.aletyx.ai" },
+      { "label": "Start", "href": "https://start.aletyx.ai" }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Contact Us",
+      "href": "https://aletyx.ai/contact-us"
+    }
+  },
+  "footer": {
+    "socials": {
+      "linkedin": "https://www.linkedin.com/company/aletyx",
+      "github": "https://github.com/aletyx",
+      "x": "https://x.com/AletyxAI",
+      "youtube": "https://www.youtube.com/@aletyx"
+    },
+    "links": [
+      {
+        "header": "Products",
+        "items": [
+          { "label": "Decision Control", "href": "/platform/decision-control/overview" },
+          { "label": "Playground", "href": "/platform/playground/overview" },
+          { "label": "Start Aletyx", "href": "https://start.aletyx.ai" },
+          { "label": "MCP Integration", "href": "/platform/mcp/overview" }
+        ]
+      },
+      {
+        "header": "Resources",
+        "items": [
+          { "label": "Getting Started", "href": "/get-started/overview" },
+          { "label": "Guides & Tutorials", "href": "/guides/overview" },
+          { "label": "Industry Use Cases", "href": "/guides/use-cases/overview" },
+          { "label": "Best Practices", "href": "/guides/best-practices" }
+        ]
+      },
+      {
+        "header": "Company",
+        "items": [
+          { "label": "Aletyx.ai", "href": "https://aletyx.ai" },
+          { "label": "Contact Us", "href": "https://aletyx.ai/contact-us" },
+          { "label": "Release Notes", "href": "/reference/release-notes" }
+        ]
+      }
+    ]
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "claude",
+      "chatgpt",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "og:site_name": "Aletyx Documentation",
+      "og:image": "/images/brand/aletyx-light.svg"
+    }
+  },
+  "search": {
+    "prompt": "Search Aletyx docs..."
+  },
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-EDZLDSFK6T"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Get Started",
+        "icon": "rocket",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Choose Your Path",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "get-started/overview",
+              "get-started/migration"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Playground Tutorials",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "get-started/playground-overview",
+              "get-started/playground-dmn",
+              "get-started/playground-bpmn",
+              "get-started/start-aletyx"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Environment Setup",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "get-started/environment-setup",
+              "get-started/java",
+              "get-started/maven",
+              "get-started/docker",
+              "get-started/git",
+              "get-started/cloud-tools",
+              "get-started/vscode",
+              "get-started/ubuntu"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Decisions",
+        "icon": "scale-balanced",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "decisions/overview",
+              "decisions/rule-language"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "DRL Rules",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "decisions/drl/overview",
+              "decisions/drl/syntax",
+              "decisions/drl/building-blocks",
+              "decisions/drl/conditions",
+              "decisions/drl/actions",
+              "decisions/drl/rule-units",
+              "decisions/drl/data-stores",
+              "decisions/drl/decision-services",
+              "decisions/drl/phreak",
+              "decisions/drl/oopath"
+            ]
+          },
+          {
+            "group": "Decision Tables",
+            "pages": [
+              "decisions/tables/overview",
+              "decisions/tables/first-table",
+              "decisions/tables/running"
+            ]
+          },
+          {
+            "group": "DMN",
+            "pages": [
+              "decisions/dmn/overview",
+              "decisions/dmn/concepts",
+              "decisions/dmn/feel-handbook",
+              "decisions/dmn/decision-services",
+              "decisions/dmn/listeners"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Processes",
+        "icon": "diagram-project",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "processes/overview"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "processes/architecture/compact-architecture",
+              "processes/architecture/engine",
+              "processes/architecture/runtimes",
+              "processes/architecture/data-index",
+              "processes/architecture/data-audit"
+            ]
+          },
+          {
+            "group": "Core Components",
+            "pages": [
+              "processes/components/data",
+              "processes/components/job-service",
+              "processes/components/user-tasks"
+            ]
+          },
+          {
+            "group": "BPMN Fundamentals",
+            "pages": [
+              "processes/bpmn/overview",
+              "processes/bpmn/editor",
+              "processes/bpmn/start-events",
+              "processes/bpmn/end-events",
+              "processes/bpmn/intermediate-events",
+              "processes/bpmn/gateways",
+              "processes/bpmn/activities",
+              "processes/bpmn/api"
+            ]
+          },
+          {
+            "group": "Advanced BPMN",
+            "pages": [
+              "processes/advanced/overview",
+              "processes/advanced/iso-8601",
+              "processes/advanced/event-driven",
+              "processes/advanced/flex-processes",
+              "processes/advanced/graphql",
+              "processes/advanced/listeners",
+              "processes/advanced/monitoring",
+              "processes/advanced/subprocesses",
+              "processes/advanced/sub-embedded",
+              "processes/advanced/sub-reusable",
+              "processes/advanced/sub-event",
+              "processes/advanced/human-tasks",
+              "processes/advanced/process-versioning"
+            ]
+          },
+          {
+            "group": "Integration Patterns",
+            "pages": [
+              "processes/integration/overview",
+              "processes/integration/decision-process",
+              "processes/integration/event-driven",
+              "processes/integration/service-orchestration"
+            ]
+          },
+          {
+            "group": "Testing",
+            "pages": [
+              "processes/testing/overview",
+              "processes/testing/authoring-scesim"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Platform",
+        "icon": "grid-2",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "platform/overview"
+            ]
+          },
+          {
+            "group": "Decision Control",
+            "pages": [
+              "platform/decision-control/overview",
+              "platform/decision-control/architecture",
+              "platform/decision-control/setup",
+              "platform/decision-control/apis",
+              "platform/decision-control/usage-scenarios",
+              "platform/decision-control/governance",
+              "platform/decision-control/control-tower",
+              "platform/decision-control/ct-setup",
+              "platform/decision-control/ct-dashboard",
+              "platform/decision-control/ct-environments",
+              "platform/decision-control/ct-tasks",
+              "platform/decision-control/aws",
+              "platform/decision-control/aws-sandbox",
+              "platform/decision-control/faq"
+            ]
+          },
+          {
+            "group": "Drools",
+            "pages": [
+              "platform/drools/overview",
+              "platform/drools/getting-started",
+              "platform/drools/visual-guide",
+              "platform/drools/engine",
+              "platform/drools/ruleflow",
+              "platform/drools/troubleshooting"
+            ]
+          },
+          {
+            "group": "jBPM & Kogito",
+            "pages": [
+              "platform/jbpm",
+              "platform/kogito"
+            ]
+          },
+          {
+            "group": "Adaptive Architecture",
+            "pages": [
+              "platform/architecture/overview",
+              "platform/architecture/scaling"
+            ]
+          },
+          {
+            "group": "Playground",
+            "pages": [
+              "platform/playground/overview",
+              "platform/playground/components",
+              "platform/playground/accelerators",
+              "platform/playground/advanced",
+              "platform/playground/dev-deployments",
+              "platform/playground/customization"
+            ]
+          },
+          {
+            "group": "Model Context Protocol",
+            "pages": [
+              "platform/mcp/overview",
+              "platform/mcp/first-interaction"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "icon": "graduation-cap",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "guides/overview",
+              "guides/drools-7-eol"
+            ]
+          },
+          {
+            "group": "Decision Modeling (DMN)",
+            "pages": [
+              "guides/dmn/overview",
+              "guides/dmn/intro",
+              "guides/dmn/basic",
+              "guides/dmn/accelerators",
+              "guides/dmn/basic-deployment",
+              "guides/dmn/advanced-modeling",
+              "guides/dmn/advanced-deployment"
+            ]
+          },
+          {
+            "group": "Rules Development (DRL)",
+            "pages": [
+              "guides/drl/overview",
+              "guides/drl/first-rule",
+              "guides/drl/decision-tables",
+              "guides/drl/examples",
+              "guides/drl/queries"
+            ]
+          },
+          {
+            "group": "Process Development",
+            "pages": [
+              "guides/process/rules-orchestration",
+              "guides/process/saga-pattern",
+              "guides/process/event-driven",
+              "guides/process/bpmn-examples",
+              "guides/process/adhoc-subprocesses"
+            ]
+          },
+          {
+            "group": "Industry Use Cases",
+            "pages": [
+              "guides/use-cases/overview",
+              "guides/use-cases/compliance",
+              "guides/use-cases/finance",
+              "guides/use-cases/healthcare",
+              "guides/use-cases/human-resources",
+              "guides/use-cases/insurance",
+              "guides/use-cases/lending",
+              "guides/use-cases/manufacturing",
+              "guides/use-cases/onboarding",
+              "guides/use-cases/retail"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "guides/best-practices"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Deploy",
+        "icon": "cloud-arrow-up",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "deploy/overview"
+            ]
+          },
+          {
+            "group": "AWS Marketplace",
+            "pages": [
+              "deploy/aws/overview",
+              "deploy/aws/sandbox",
+              "deploy/aws/ssl-https",
+              "deploy/aws/security",
+              "deploy/aws/troubleshooting"
+            ]
+          },
+          {
+            "group": "Cloud Native",
+            "pages": [
+              "deploy/cloud-native/overview",
+              "deploy/cloud-native/jvm-vs-native",
+              "deploy/cloud-native/kubernetes",
+              "deploy/cloud-native/openshift",
+              "deploy/cloud-native/securing-console"
+            ]
+          },
+          {
+            "group": "Playground",
+            "pages": [
+              "deploy/playground"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "icon": "book",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "reference/overview"
+            ]
+          },
+          {
+            "group": "DMN Specification",
+            "pages": [
+              "reference/dmn/overview",
+              "reference/dmn/reserved-words",
+              "reference/dmn/select-expression"
+            ]
+          },
+          {
+            "group": "Product",
+            "pages": [
+              "reference/enterprise-features",
+              "reference/release-notes"
+            ]
+          },
+          {
+            "group": "Legal",
+            "pages": [
+              "reference/cookie-policy"
             ]
           }
         ]
@@ -71,52 +469,16 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Release Notes",
+          "icon": "list",
+          "href": "/reference/release-notes"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Community",
+          "icon": "users",
+          "href": "https://kie.org"
         }
       ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
     }
   }
 }

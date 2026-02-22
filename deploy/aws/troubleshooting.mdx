@@ -1,0 +1,562 @@
+---
+title: "Troubleshooting Guide"
+description: "Common issues and solutions for AWS Marketplace deployments of Aletyx Decision Control."
+---
+Common issues and solutions for AWS Marketplace deployments of Aletyx Decision Control.
+
+## CloudFormation Stack Issues
+
+### Stack Creation Failed
+
+**Check the Events Tab**:
+
+1. Go to **CloudFormation** console
+2. Select your stack
+3. Click **Events** tab
+4. Look for resources with `CREATE_FAILED` status
+5. Read the "Status reason" column for error details
+
+### Common CloudFormation Errors
+
+#### "The subnet ID 'subnet-xxx' does not exist"
+
+**Cause**: Selected subnet is in wrong region or doesn't exist
+**Fix**: Verify you selected a subnet in the same region as your stack
+
+```bash
+aws ec2 describe-subnets \
+  --subnet-ids subnet-xxxxx \
+  --region us-east-1
+```
+
+#### "Subnets specified should be in distinct availability zones"
+
+**Cause**: Both subnets are in the same Availability Zone (Production only)
+**Fix**: Select Subnet2 from a different AZ than Subnet1
+
+```bash
+# Check subnet AZs
+aws ec2 describe-subnets \
+  --subnet-ids subnet-111 subnet-222 \
+  --query 'Subnets[].[SubnetId,AvailabilityZone]' \
+  --output table
+```
+
+#### "Cannot find version 14.9 for postgres"
+
+**Cause**: Invalid PostgreSQL version
+**Fix**: Template should use PostgreSQL 15.x (verify template is latest version)
+
+#### "The volume 'vol-xxx' is not in the same availability zone"
+
+**Cause**: EBS volume and instance in different AZs
+**Fix**: This is a template bug - update to latest template version
+
+## Application Not Accessible
+
+**Symptom**: Cannot reach `http://ec2-xxx.compute-1.amazonaws.com/`
+
+### Diagnosis Steps
+
+**1. Verify instance is running**:
+```bash
+aws ec2 describe-instances \
+  --instance-ids i-xxxxx \
+  --query 'Reservations[0].Instances[0].State.Name'
+# Should return: "running"
+```
+
+**2. Check security group allows your IP**:
+```bash
+aws ec2 describe-security-groups --group-ids sg-xxxxx
+
+# Verify inbound rules include your IP on port 80
+```
+
+**3. Test port connectivity**:
+```bash
+nc -zv 54.123.45.67 80
+# Should show: Connection to 54.123.45.67 80 port [tcp/http] succeeded!
+```
+
+**4. Check application logs** (via SSH or SSM):
+```bash
+# Sandbox logs
+sudo tail -f /var/log/aletyx-sandbox.log
+
+# Production logs
+sudo tail -f /var/log/aletyx-production.log
+```
+
+**5. Check application is running**:
+```bash
+# Check Java process
+ps aux | grep java
+
+# Check port 8080 listening
+sudo netstat -tlnp | grep 8080
+
+# Check Docker container
+sudo docker ps
+sudo docker logs decision-control --tail 100
+```
+
+### Solution: Application Still Starting
+
+**Symptom**: Connection refused immediately after stack creation
+**Cause**: Application takes 2-3 minutes to start
+**Fix**: Wait and retry
+
+```bash
+# Wait for application startup
+sleep 180
+curl http://ec2-xxx.compute-1.amazonaws.com/
+```
+
+### Solution: Security Group Blocking
+
+**Symptom**: Connection times out
+**Cause**: Security group doesn't allow your IP
+**Fix**: Update security group or stack parameter
+
+```bash
+# Get your current IP
+MY_IP=$(curl -s https://checkip.amazonaws.com)
+
+# Update security group
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-xxxxx \
+  --protocol tcp \
+  --port 80 \
+  --cidr ${MY_IP}/32
+```
+
+## HTTPS/SSL Issues
+
+**Symptom**: HTTPS not working, certificate errors
+
+### DNS Not Resolving
+
+**Symptom**: `DNS problem: NXDOMAIN looking up A for my-app.example.com`
+
+**Diagnosis**:
+```bash
+dig my-app.example.com
+
+# Expected: IP address in ANSWER section
+# Actual: No answer (NXDOMAIN)
+```
+
+**Causes & Fixes**:
+
+1. **Route 53 hosted zone doesn't exist**:
+   ```bash
+   aws route53 list-hosted-zones \
+     --query 'HostedZones[?Name==`example.com.`]'
+   ```
+
+2. **DNS record not created**:
+   ```bash
+   aws route53 list-resource-record-sets \
+     --hosted-zone-id Z1234567890ABC \
+     --query "ResourceRecordSets[?Name=='my-app.example.com.']"
+   ```
+
+3. **DNS propagation delay** (wait up to 5 minutes):
+   ```bash
+   watch -n 10 dig my-app.example.com
+   ```
+
+### Let's Encrypt Validation Failed
+
+**Symptom**: `Failed to verify challenge` or `The client lacks sufficient authorization`
+
+**Diagnosis**:
+```bash
+# Test port 80 from internet
+curl -I http://my-app.example.com/.well-known/acme-challenge/test
+```
+
+**Causes & Fixes**:
+
+1. **Port 80 not accessible from 0.0.0.0/0**:
+   ```bash
+   # Check security group
+   aws ec2 describe-security-groups --group-ids sg-xxxxx \
+     --query 'SecurityGroups[0].IpPermissions[?FromPort==`80`]'
+
+   # Should show: 0.0.0.0/0 as source
+   ```
+
+2. **nginx not configured properly**:
+   ```bash
+   # SSH to instance
+   sudo nginx -t
+   sudo systemctl status nginx
+   sudo journalctl -u nginx -n 50
+   ```
+
+3. **Application blocking ACME challenge**:
+   ```bash
+   # Check nginx logs
+   sudo cat /var/log/nginx/error.log
+   ```
+
+### Certificate Expired
+
+**Symptom**: `SSL certificate problem: certificate has expired`
+
+**Diagnosis**:
+```bash
+echo | openssl s_client -servername my-app.example.com \
+  -connect my-app.example.com:443 2>/dev/null | \
+  openssl x509 -noout -dates
+
+# Check if notAfter has passed
+```
+
+**Causes & Fixes**:
+
+1. **Auto-renewal failed**:
+   ```bash
+   # Check renewal logs
+   sudo grep -i renew /var/log/letsencrypt/letsencrypt.log | tail -20
+   ```
+
+2. **Port 80 blocked during renewal**:
+   - Ensure security group allows HTTP from 0.0.0.0/0
+
+3. **Force manual renewal**:
+   ```bash
+   sudo certbot renew --force-renewal
+   sudo systemctl reload nginx
+   ```
+
+### nginx Not Starting
+
+**Symptom**: `nginx: [emerg] cannot load certificate`
+
+**Diagnosis**:
+```bash
+# Test nginx configuration
+sudo nginx -t
+
+# Check certificate files exist
+sudo ls -la /etc/letsencrypt/live/my-app.example.com/
+```
+
+**Fixes**:
+```bash
+# Restart nginx
+sudo systemctl restart nginx
+
+# If still failing, check logs
+sudo journalctl -u nginx -n 100
+```
+
+## Database Connection Issues (Production)
+
+**Symptom**: Application cannot connect to RDS
+
+### RDS Instance Not Available
+
+**Diagnosis**:
+```bash
+aws rds describe-db-instances \
+  --db-instance-identifier mydb \
+  --query 'DBInstances[0].DBInstanceStatus'
+# Should return: "available"
+```
+
+**If status is "creating"**: Wait 8-10 minutes for RDS to finish provisioning
+
+### Security Group Blocking EC2→RDS
+
+**Diagnosis**:
+```bash
+# Get RDS security group
+RDS_SG=$(aws rds describe-db-instances \
+  --db-instance-identifier mydb \
+  --query 'DBInstances[0].VpcSecurityGroups[0].VpcSecurityGroupId' \
+  --output text)
+
+# Check inbound rules
+aws ec2 describe-security-groups \
+  --group-ids $RDS_SG \
+  --query 'SecurityGroups[0].IpPermissions'
+```
+
+**Expected**: Should allow port 5432 from EC2 security group
+
+**Fix** (if missing):
+```bash
+aws ec2 authorize-security-group-ingress \
+  --group-id $RDS_SG \
+  --protocol tcp \
+  --port 5432 \
+  --source-group sg-ec2-xxxxx
+```
+
+### Test Database Connectivity
+
+**From EC2 instance**:
+```bash
+# SSH to instance
+aws ssm start-session --target i-xxxxx
+
+# Test connection
+psql -h mydb.c9akciq32.us-east-1.rds.amazonaws.com \
+     -U aletyxadmin \
+     -d decision_control \
+     -p 5432
+
+# If connection fails, check:
+# 1. Database endpoint is correct
+# 2. Database is available
+# 3. Security groups allow connection
+```
+
+### Wrong Database Credentials
+
+**Diagnosis**:
+```bash
+# On EC2 instance, check configuration
+sudo cat /etc/aletyx/database.conf
+```
+
+**Fix**: Update credentials to match RDS parameters
+
+## Performance Issues
+
+### High CPU Usage
+
+**Diagnosis**:
+```bash
+# Check CloudWatch metrics
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/EC2 \
+  --metric-name CPUUtilization \
+  --dimensions Name=InstanceId,Value=i-xxxxx \
+  --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 300 \
+  --statistics Average
+```
+
+**Solutions**:
+
+1. **Upgrade instance type**:
+   - Sandbox: t3.medium → t3.large
+   - Production: m5.xlarge → m5.2xlarge
+
+2. **Check for runaway processes**:
+   ```bash
+   # SSH to instance
+   top
+   # Look for processes using high CPU
+   ```
+
+3. **Review application logs for errors**:
+   ```bash
+   sudo tail -100 /var/log/aletyx-*.log | grep ERROR
+   ```
+
+### High Database Connections (Production)
+
+**Diagnosis**:
+```bash
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/RDS \
+  --metric-name DatabaseConnections \
+  --dimensions Name=DBInstanceIdentifier,Value=mydb \
+  --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 300 \
+  --statistics Maximum
+```
+
+**Solutions**:
+
+1. **Increase max_connections**:
+   ```sql
+   ALTER SYSTEM SET max_connections = 200;
+   SELECT pg_reload_conf();
+   ```
+
+2. **Check for connection leaks**:
+   ```sql
+   SELECT count(*), state
+   FROM pg_stat_activity
+   GROUP BY state;
+   ```
+
+3. **Upgrade RDS instance class**:
+   - db.t3.medium → db.m5.large
+
+### Slow Application Response
+
+**Diagnosis**:
+```bash
+# Test response time
+time curl http://ec2-xxx.compute-1.amazonaws.com/
+
+# Check disk I/O
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/EC2 \
+  --metric-name DiskReadBytes \
+  --dimensions Name=InstanceId,Value=i-xxxxx \
+  --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --period 300 \
+  --statistics Average
+```
+
+**Solutions**:
+
+1. **Check application logs for slow queries**
+2. **Increase instance size** (more vCPU, RAM)
+3. **Upgrade to c5 series** (compute-optimized)
+4. **Enable RDS read replicas** (production high traffic)
+
+## Access and Permission Issues
+
+### SSM Session Manager Not Working
+
+**Symptom**: `TargetNotConnected` error when starting session
+
+**Diagnosis**:
+```bash
+# Check instance has SSM agent
+aws ssm describe-instance-information \
+  --filters "Key=InstanceIds,Values=i-xxxxx"
+```
+
+**Causes & Fixes**:
+
+1. **Instance doesn't have internet access**:
+   - Needs NAT Gateway or IGW for SSM
+   - Or use VPC endpoints for SSM
+
+2. **IAM role not attached**:
+   ```bash
+   aws ec2 describe-instances \
+     --instance-ids i-xxxxx \
+     --query 'Reservations[0].Instances[0].IamInstanceProfile'
+   ```
+
+3. **SSM agent not running**:
+   ```bash
+   # Via SSH
+   sudo systemctl status amazon-ssm-agent
+   sudo systemctl start amazon-ssm-agent
+   ```
+
+### SSH Connection Refused
+
+**Symptom**: `Connection refused` when trying to SSH
+
+**Diagnosis**:
+1. Check security group allows port 22 from your IP
+2. Verify you have the correct private key
+3. Check instance is running
+
+**Solutions**:
+```bash
+# Test port 22 connectivity
+nc -zv 54.123.45.67 22
+
+# Fix key permissions
+chmod 400 ~/.ssh/your-key.pem
+
+# Use correct username
+ssh -i ~/.ssh/your-key.pem ec2-user@54.123.45.67
+```
+
+## Billing and Cost Issues
+
+### Unexpected Charges
+
+**Diagnosis**:
+```bash
+# Check running instances
+aws ec2 describe-instances \
+  --filters "Name=instance-state-name,Values=running" \
+  --query 'Reservations[].Instances[].[InstanceId,InstanceType,LaunchTime]' \
+  --output table
+```
+
+**Common Causes**:
+
+1. **Forgot to stop/delete instances**
+2. **EBS volumes not deleted with instances**
+3. **RDS backups accumulating**
+4. **Elastic IP charges** (when not attached)
+
+**Solutions**:
+```bash
+# Stop instance (Sandbox - stops compute charges)
+aws ec2 stop-instances --instance-ids i-xxxxx
+
+# Delete stack (removes everything)
+aws cloudformation delete-stack --stack-name my-stack
+
+# Check for orphaned volumes
+aws ec2 describe-volumes \
+  --filters "Name=status,Values=available"
+
+# Delete unused volumes
+aws ec2 delete-volume --volume-id vol-xxxxx
+```
+
+## Getting Help
+
+### Collect Diagnostic Information
+
+Before contacting support, gather this information:
+
+```bash
+# 1. CloudFormation stack details
+aws cloudformation describe-stacks \
+  --stack-name my-stack \
+  --region us-east-1 > stack-details.json
+
+# 2. CloudFormation events
+aws cloudformation describe-stack-events \
+  --stack-name my-stack \
+  --region us-east-1 > stack-events.json
+
+# 3. Instance details
+aws ec2 describe-instances \
+  --instance-ids i-xxxxx \
+  --region us-east-1 > instance-details.json
+
+# 4. Application logs (last 100 lines)
+ssh -i your-key.pem ec2-user@ec2-xxx.compute-1.amazonaws.com \
+  'sudo tail -100 /var/log/aletyx-*.log' > app-logs.txt
+
+# 5. System logs
+ssh -i your-key.pem ec2-user@ec2-xxx.compute-1.amazonaws.com \
+  'sudo journalctl -xe -n 100' > system-logs.txt
+```
+
+### Support Channels
+
+**For AWS Marketplace Issues**:
+- **Email**: aws-support@aletyx.com
+- **Subject**: Include "AWS Marketplace" and your stack name
+- **Include**: All diagnostic information above
+
+**For AWS Infrastructure Issues**:
+- **AWS Support Console**: [https://console.aws.amazon.com/support/](https://console.aws.amazon.com/support/)
+- **Topic**: EC2, RDS, CloudFormation, etc.
+
+**Documentation**:
+- **Aletyx Docs**: [https://docs.aletyx.ai](https://docs.aletyx.ai)
+- **AWS Docs**: [https://docs.aws.amazon.com/](https://docs.aws.amazon.com/)
+
+## Next Steps
+
+- **Security Best Practices**: [Security Guide](/deploy/aws/security)
+- **SSL/HTTPS Configuration**: [SSL/HTTPS Guide](/deploy/aws/ssl-https)
+- **Sandbox Deployment**: [Sandbox Edition](/deploy/aws/sandbox)
+- **Production Deployment**: [Production Edition](production)

@@ -1,0 +1,362 @@
+---
+title: "Sandbox Edition Deployment"
+description: "Deploy Aletyx Decision Control Sandbox with embedded H2 database for quick evaluation, POCs, and development environments."
+---
+Deploy Aletyx Decision Control Sandbox with embedded H2 database for quick evaluation, POCs, and development environments.
+
+## Overview
+
+<Info title="Aletyx Decision Control Sandbox">
+Perfect for developers, proof-of-concepts, testing, and small workloads with hourly billing and embedded H2 database.
+</Info>
+**Key Features:**
+
+- Embedded H2 database (no external database required)
+- Pay-as-you-go hourly billing
+- Simple single-instance deployment
+- Optional SSL/HTTPS with Let's Encrypt
+- Full Decision Control functionality
+- Automatic credential generation
+
+## Quick Start Deployment
+
+### Step 1: Subscribe on AWS Marketplace
+
+1. Visit the [AWS Marketplace](https://aws.amazon.com/marketplace)
+2. Search for "Aletyx Decision Control Sandbox"
+3. Click **Continue to Subscribe**
+4. Review and accept the terms
+5. Click **Continue to Configuration**
+
+### Step 2: Configure Deployment
+
+1. **Select Region**: Choose your AWS region (default: us-east-1)
+2. **Select Version**: Choose the latest version
+3. Click **Continue to Launch**
+
+### Step 3: Launch with CloudFormation
+
+1. **Launch Action**: Select "Launch CloudFormation"
+2. Click **Launch**
+3. You'll be redirected to AWS CloudFormation console with the template pre-loaded
+
+### Step 4: Configure Stack Parameters
+
+The CloudFormation stack will prompt you for several parameters:
+
+**Stack Name**:
+```
+aletyx-sandbox-demo
+```
+
+**Network Configuration**:
+
+- **VpcId**: Select your VPC (or use default VPC)
+- **SubnetId**: Select a public subnet in your VPC
+
+**Instance Configuration**:
+
+- **InstanceType**: `t3.medium` (default - 2 vCPU, 4 GB RAM)
+  - Options: `t3.medium`, `t3.large`, `c5.large`, `c5.xlarge`
+  - Upgrade to t3.large (8 GB RAM) or c5 series for better performance
+- **KeyName**: Select an existing EC2 key pair for SSH access
+
+**Security Configuration**:
+
+- **AllowedCidr**: **IMPORTANT - Restrict to your IP address!**
+  - Format: `YOUR_IP_ADDRESS/32`
+  - Example: `203.0.113.45/32`
+  - **Strongly recommended**: DO NOT use `0.0.0.0/0` (open to internet)
+  - Find your IP: Visit [https://checkip.amazonaws.com](https://checkip.amazonaws.com)
+
+**Optional - Custom Domain (HTTPS)**:
+
+- **CustomDomain**: Subdomain for your application (e.g., `my-app`)
+- **HostedZoneName**: Your Route 53 hosted zone (e.g., `example.com.`)
+  - Leave blank for HTTP-only deployment
+  - Requires existing Route 53 hosted zone in your AWS account
+  - See [SSL/HTTPS Configuration](/deploy/aws/ssl-https) for details
+
+### Step 5: Create Stack
+
+1. **Review all parameters** carefully
+2. **Acknowledge IAM capabilities**: Check the box to allow CloudFormation to create IAM roles
+3. Click **Create Stack**
+
+CloudFormation will now provision all resources (approximately 5-10 minutes).
+
+### Step 6: Monitor Stack Creation
+
+Watch the CloudFormation console as resources are created:
+
+1. **Events Tab**: Shows real-time progress
+2. **Resources Tab**: Lists all created AWS resources
+3. **Outputs Tab**: Will show access URLs when complete
+
+## Accessing Your Deployment
+
+### Finding Your Application URL
+
+Once the stack reaches `CREATE_COMPLETE` status:
+
+1. Go to **CloudFormation** console
+2. Select your stack
+3. Click **Outputs** tab
+
+You'll see one of these URLs:
+
+**HTTP Deployment (No Custom Domain)**:
+```
+Key: ApplicationURL
+Value: http://ec2-54-123-45-67.compute-1.amazonaws.com/
+```
+
+**HTTPS Deployment (With Custom Domain)**:
+```
+Key: ApplicationURL
+Value: https://my-app.example.com/
+```
+
+### Getting Instance Information
+
+From CloudFormation Outputs:
+
+```
+Key: PublicIpAddress
+Value: 54.123.45.67
+
+Key: InstanceId
+Value: i-0123456789abcdef0
+```
+
+Or query via AWS CLI:
+
+```bash
+aws cloudformation describe-stacks \
+  --stack-name aletyx-sandbox-demo \
+  --region us-east-1 \
+  --query 'Stacks[0].Outputs[?OutputKey==`PublicIpAddress`].OutputValue' \
+  --output text
+```
+
+## Admin Access Options
+
+### Option 1: AWS Systems Manager Session Manager (Recommended)
+
+**No SSH key required** - Uses IAM permissions for secure access.
+
+#### Connect via AWS Console:
+
+1. Go to **EC2** console
+2. Select your instance
+3. Click **Connect** button
+4. Choose **Session Manager** tab
+5. Click **Connect**
+
+#### Connect via AWS CLI:
+
+```bash
+# Get instance ID from CloudFormation
+INSTANCE_ID=$(aws cloudformation describe-stack-resources \
+  --stack-name aletyx-sandbox-demo \
+  --region us-east-1 \
+  --query 'StackResources[?ResourceType==`AWS::EC2::Instance`].PhysicalResourceId' \
+  --output text)
+
+# Start session
+aws ssm start-session \
+  --target $INSTANCE_ID \
+  --region us-east-1
+```
+
+#### Benefits:
+
+- No SSH keys to manage
+- No security group port 22 rules needed
+- All sessions logged to CloudTrail
+- IAM-based access control
+- Works even if instance has no public IP
+
+### Option 2: SSH Access
+
+Traditional SSH access for advanced users.
+
+#### Prerequisites:
+
+1. **EC2 Key Pair**: You must have the private key (`.pem` file) for the KeyName you selected
+2. **Security Group**: Port 22 must be open to your IP (included in CloudFormation template)
+
+#### Connect via SSH:
+
+```bash
+# Get instance public DNS
+PUBLIC_DNS=$(aws cloudformation describe-stacks \
+  --stack-name aletyx-sandbox-demo \
+  --region us-east-1 \
+  --query 'Stacks[0].Outputs[?OutputKey==`PublicDnsName`].OutputValue' \
+  --output text)
+
+# SSH to instance
+ssh -i ~/.ssh/your-key.pem ec2-user@$PUBLIC_DNS
+```
+
+Or using IP address:
+
+```bash
+ssh -i ~/.ssh/your-key.pem ec2-user@54.123.45.67
+```
+
+## Understanding Resources Created
+
+The CloudFormation template creates the following AWS resources:
+
+1. **EC2 Instance**: Application server with embedded H2 database
+2. **Security Group**: Firewall rules for HTTP/HTTPS/SSH access
+3. **IAM Instance Profile**: Allows SSM Session Manager and CloudWatch
+4. **IAM Role**: With `AmazonSSMManagedInstanceCore` and `CloudWatchAgentServerPolicy`
+5. **Route 53 Record** (optional): DNS A record pointing to instance IP
+6. **Elastic IP** (optional): Static IP address
+
+### Security Groups
+
+#### Application Security Group:
+
+**Inbound Rules**:
+
+| Port | Protocol | Source | Purpose |
+|------|----------|--------|---------|
+| 80 | TCP | `AllowedCidr` | HTTP access (or 0.0.0.0/0 for Let's Encrypt) |
+| 443 | TCP | `AllowedCidr` | HTTPS access |
+| 22 | TCP | `AllowedCidr` | SSH access (optional) |
+
+**Outbound Rules**: All traffic allowed (required for internet access)
+
+### CloudFormation Outputs
+
+After deployment, CloudFormation provides these useful outputs:
+
+| Output Key | Description | Example Value |
+|------------|-------------|---------------|
+| `ApplicationURL` | Application access URL | `http://ec2-54-123-45-67.compute-1.amazonaws.com/` |
+| `PublicIpAddress` | Instance public IP | `54.123.45.67` |
+| `PublicDnsName` | Instance public DNS | `ec2-54-123-45-67.compute-1.amazonaws.com` |
+| `InstanceId` | EC2 instance ID | `i-0123456789abcdef0` |
+| `SecurityGroupId` | Security group ID | `sg-0123456789abcdef0` |
+| `SSMSessionCommand` | Command to start SSM session | `aws ssm start-session --target i-...` |
+
+## Monitoring and Logs
+
+### Application Logs
+
+**Sandbox Edition**:
+```bash
+sudo tail -f /var/log/aletyx-sandbox.log
+```
+
+### System Logs
+
+**View instance startup logs**:
+```bash
+sudo tail -f /var/log/cloud-init-output.log
+```
+
+**View system messages**:
+```bash
+sudo journalctl -xe
+```
+
+### CloudWatch Logs
+
+Application logs are automatically sent to CloudWatch Logs:
+
+1. Go to **CloudWatch** console
+2. Click **Log groups**
+3. Look for `/aletyx/application`
+
+### CloudWatch Metrics
+
+**EC2 Metrics**:
+- CPUUtilization
+- NetworkIn/NetworkOut
+- DiskReadBytes/DiskWriteBytes
+- StatusCheckFailed
+
+## Updating Your Deployment
+
+### Updating CloudFormation Stack
+
+To change parameters (e.g., instance size, security rules):
+
+1. Go to **CloudFormation** console
+2. Select your stack
+3. Click **Update**
+4. Choose **Use current template**
+5. Click **Next**
+6. Modify parameters
+7. Click **Next** → **Next** → **Update stack**
+
+**Note**: Some changes require instance replacement (e.g., instance type change causes brief downtime)
+
+### Updating to New AMI Version
+
+When new AMI versions are released:
+
+1. **Update Stack** with new AMI ID
+2. **Or**: Delete and recreate stack (ensure data is backed up)
+
+## Cost Management
+
+### Sandbox Edition Billing
+
+Pay-as-you-go hourly billing includes:
+
+- EC2 instance hours (e.g., t3.large)
+- EBS storage (20 GB gp3 volume)
+- Data transfer (minimal for testing)
+- Marketplace software fee (hourly)
+
+**Stop instances when not in use** to save costs:
+
+```bash
+# Stop instance
+aws ec2 stop-instances --instance-ids i-xxx
+
+# Start instance
+aws ec2 start-instances --instance-ids i-xxx
+```
+
+**Note**: Stopping instances stops EC2 charges but EBS storage charges continue.
+
+### Deleting Your Deployment
+
+To completely remove all resources and stop all charges:
+
+1. Go to **CloudFormation** console
+2. Select your stack
+3. Click **Delete**
+4. Confirm deletion
+
+This removes:
+- EC2 instance (terminated)
+- EBS volumes (deleted if `DeleteOnTermination: true`)
+- Security groups
+- IAM roles
+- Route 53 records (if created)
+
+## Next Steps
+
+After deployment, explore these features:
+
+- **Enable SSL/HTTPS**: [SSL/HTTPS Configuration](/deploy/aws/ssl-https)
+- **Security Best Practices**: [Security Guide](/deploy/aws/security)
+- **Troubleshooting**: [Troubleshooting Guide](/deploy/aws/troubleshooting)
+- **Decision Control Overview**: [/decision-control/](/platform/decision-control/overview)
+- **API Integration**: [/decision-control/integration-and-apis/](/platform/decision-control/apis)
+- **Governance Workflow**: [/decision-control/governance-workflow/](/platform/decision-control/governance)
+- **Usage Scenarios**: [/decision-control/usage-scenarios/](/platform/decision-control/usage-scenarios)
+
+## Support
+
+- **AWS Marketplace**: Contact via product listing
+- **Documentation**: [https://docs.aletyx.ai](https://docs.aletyx.ai)
+- **Email**: support@aletyx.com

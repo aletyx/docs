@@ -1,0 +1,180 @@
+---
+title: "Using the BPMN Editor to Configure Your Process in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "In this section, you will learn how to use the Aletyx Developer Tools BPMN Editor to properly configure processes and nodes. Having explored the available BPMN nodes, this hands-on section focuses..."
+---
+In this section, you will learn how to use the Aletyx Developer Tools BPMN Editor to properly configure processes and nodes. Having explored the available BPMN nodes, this hands-on section focuses on configuring process properties, variables, and other key elements to ensure the workflow behaves as expected during execution.
+
+## Process Setup and Properties Panel
+
+When you create a new empty process, you’ll see a default screen with a graphical modeler. Clicking on the Properties Panel button (highlighted in the image below) will expand the panel, allowing you to configure key components of your BPMN model.
+
+ ![Empty BPMN Editor](/images/core/processes/basic-bpmn/images/bpmn-editor-empty.jpg)
+
+The Intelligent Process Orchestrations BPMN model is code-generated during the compilation phase, translating the graphical model into Java code. Properly configuring your process ensures that the generated code behaves as intended and integrates well with other systems.
+
+ ![Process Properties](/images/core/processes/basic-bpmn/images/bpmn-editor-process-properties.jpg)
+
+Here are the main properties you need to define when creating a process:
+
+- **ID**: This is a unique identifier used by the code generator to reference your model.
+- **Name**: Used to provide a meaningful business description for stakeholders.
+- **Package**: Determines the namespace for the generated Java code.
+- **Version**: Currently informational only, with no effect on process execution.
+
+## Defining Process Variables
+
+Process variables play a crucial role in passing data between nodes and ensuring workflow tasks have the necessary information. However, it's important to follow best practices for variable usage:
+
+- Keep variables minimal: Include only data that is essential for process execution. The process model should not act as a system of record or be used to store large amounts of business data.
+- Avoid overloading process variables: Focus on supporting workflow-specific tasks and transitions.
+
+!!!note "Workflow is not a System of Record"
+
+    Workflow should not be considered a system of record, thus the importance of keeping you process variables focused on what’s really needed.
+
+To define a process variable, follow these steps:
+
+1. Click the "+" button to add a new variable.
+2. Enter a name for the variable.
+3. Choose a data type from the dropdown menu or provide a fully qualified Java class name if using a custom data type.
+
+ ![Variable Data Type](/images/core/processes/basic-bpmn/images/bpmn-editor-process-variable-info.jpg)
+
+ ![Variable Data Type Property](/images/core/processes/basic-bpmn/images/bpmn-editor-process-variable-datatype.jpg)
+
+By properly setting up your process and variables, you'll ensure that your model is both maintainable and effective. This foundation will support clean code generation and facilitate seamless interaction between your workflow and other services.
+
+## Configuring Script Tasks
+
+Script tasks are a powerful tool within BPMN, especially for development and debugging purposes. They allow you to quickly print out information or verify that a specific process path has been executed, making them equivalent to inserting a System.out.println statement in Java code. However, script tasks should be avoided in production environments. For real-world deployments that require custom logic, Service Tasks are preferred as they offer better scalability, reusability, and maintainability.
+
+Script tasks are useful in scenarios where you need quick feedback or process validation, such as:
+
+- Printing the value of a process variable at a specific stage.
+- Confirming that a particular path in the workflow has been executed.
+
+This approach is ideal for temporary debugging during development but should not be relied upon for business logic or communication with external systems. One of the main key aspects to avoid script task is the fact that you can’t unit test it, negatively impacting the overall quality and reliability of your application.
+
+Example Script Task:
+
+ ![Task Script Example](/images/core/processes/basic-bpmn/images/bpmn-editor-task-script-example.jpg)
+
+## Service Task
+
+A Service Task is an automated activity performed by an external system or service, requiring no human interaction. These tasks are commonly used for operations such as database queries, API calls, or other system-level processes. By separating business logic from technical implementations, service tasks help improve scalability, maintainability, and modularity within workflows.
+
+In Aletyx Enterprise Build of Kogito and Drools, a service task executes by invoking a method on a specified Java class. The workflow engine relies on Dependency Injection (DI) to resolve and execute the class method, making it essential that the specified class is a registered bean in your application. This applies whether your application runs on Quarkus or Spring Boot.
+
+When a process reaches a service task, the following occurs:
+
+1. The Interface field specifies the fully qualified class name (FQCN) of the service to be called.
+2. The engine uses Dependency Injection to locate and instantiate the service bean.
+3. The Operation field defines the method to be called on this service bean.
+4. Input and output data are exchanged through process variables, which map to method parameters and return values.
+
+By using DI, you can easily integrate your service tasks with other application components without manual instantiation or setup.
+
+### Configuring a Service Task
+
+1. Add a Service Task to the BPMN process from the palette.
+
+2. In the properties panel, set the following fields:
+
+    - **Implementation**: Select "Java."
+    - **Interface**: Provide the fully qualified class name (FQCN) of the service (e.g., org.example.OrderService).
+    - **Operation**: Specify the method to be called (e.g., processOrder).
+
+        ![Service Task Properties](/images/core/processes/basic-bpmn/images/bpmn-editor-task-service-properties.jpg)
+
+3. Assign Variables:
+
+    - Click the Assignments button to define input and output data mappings.
+
+        ![Variable Assignment](/images/core/processes/basic-bpmn/images/bpmn-editor-task-service-variable-assignment.jpg)
+
+    - For each input:
+         - **Input Name**: A readable name for the parameter (used only for display). As java does not have named parameters.
+         - **Data Type**: The Java type of the parameter (e.g., String, Integer).
+         - **Source**: Maps to an existing process variable or expression.
+
+             ![Variable Assignment](/images/core/processes/basic-bpmn/images/bpmn-editor-task-service-variable-input.jpg)
+
+    - For the output:
+         - **Name**: You can use anything here, as mostly to improve readability - as Java has only one return value.
+         - **Data Type**: The type of the output (e.g., Response).
+         - **Target**: The process variable that will store the result.
+
+          ![Variable Assignment](/images/core/processes/basic-bpmn/images/bpmn-editor-task-service-variables.jpg)
+
+## Business Rules Task
+
+A Business Rule Task in BPMN is used to evaluate and execute complex business logic defined in either DMN (Decision Model and Notation) or DRL (Drools Rule Language). This task type allows you to leverage predefined rules and decisions to make automated choices within a process. Aletyx Enterprise Build of Kogito and Drools supports two execution styles for DRL: the traditional RuleFlow approach and the more modern Rule Unit approach.
+
+### Using DMN in a Business Rule Task
+
+DMN models define reusable decision logic. When configuring a business rule task to use DMN:
+
+1. Select DMN from the Rule Language dropdown in the properties panel.
+2. Use the FileName property to select the appropriate DMN file.
+
+     ![DMN File Selection](/images/core/processes/basic-bpmn/images/bpmn-editor-task-business-dmn-file.jpg)
+
+     - The editor will automatically populate the Namespace and Model Name fields based on the selected file.
+
+3. Choose the Decision Name to specify which decision logic to execute within the DMN model.
+
+     ![DMN Decision Selection](/images/core/processes/basic-bpmn/images/bpmn-editor-task-business-dmn-decision.jpg)
+
+4. Configure input and output assignments:
+
+     - Input variables must match the DMN model’s expected inputs.
+     - Output variables must map to the DMN model’s defined outputs.
+
+     ![DMN Decision Properties](/images/core/processes/basic-bpmn/images/bpmn-editor-task-business-dmn-properties.jpg)
+
+### Using DRL in a Business Rule Task
+
+Aletyx Enterprise Build of Kogito and Drools allows you to execute Drools rules through two approaches: RuleFlow and Rule Units.
+
+#### Setting up RuleFlow Execution
+
+1. Select DRL from the Rule Language dropdown in the properties panel.
+2. Use the Rule Flow property to define the rule group name:
+3. Click New and enter the name of the rule flow group (e.g., orderValidation).
+
+![DRL Rule Flow](/images/core/processes/basic-bpmn/images/bpmn-editor-task-business-drl-rule-flow.jpg)
+
+#### Setting up Rule Unit Execution
+
+1. Select DRL as the Rule Language.
+2. In the Rule Flow property, use the prefix unit: followed by the fully qualified class name (FQCN) of the Rule Unit.
+    Example: unit:org.example.OrderValidationRuleUnit.
+
+![DRL Rule Unit](/images/core/processes/basic-bpmn/images/bpmn-editor-task-business-drl-rule-unit.jpg)
+
+Rule Units offer a more modular and context-driven way to define business logic, making it easier to test and maintain rules.
+
+### Assigning Input and Output Variables
+
+Like service tasks, business rule tasks require data mapping through the Assignments section. The input and output variables are crucial, as they bind directly to:
+
+- DMN: Inputs and outputs match the model’s expected data structure.
+- DRL: Variables are bound to objects in the working memory (for RuleFlow) or Rule Unit data structure.
+
+## XOR Gateway
+
+The XOR gateway splits the process flow, allowing the engine to evaluate each outgoing sequence flow condition. The first condition that evaluates to true determines the path the process will follow. If no conditions evaluate to true, the process may terminate with an error unless a default path is defined.
+
+Steps to Configure the XOR Gateway
+
+1. Add an XOR Gateway to your process from the palette.
+2. Create outgoing sequence flows from the gateway to the next activities.
+3. Select each sequence flow and configure the condition:
+    - Open the Properties Panel for the sequence flow.
+    - Enter a boolean expression in the Condition field.
+
+        Example: processVariable > 100
+
+    - Repeat for each outgoing flow with a different condition.
+
+![XOR Gateway](/images/core/processes/basic-bpmn/images/bpmn-editor-gateway-xor.jpg)

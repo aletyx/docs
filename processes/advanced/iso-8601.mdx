@@ -1,0 +1,128 @@
+---
+title: "ISO-8601 Time Standard in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "The ISO-8601 standard provides a consistent method for representing dates, times, and durations across systems. In business automation platforms like jBPM, Drools, and Kogito, proper time handling..."
+---
+## Overview
+
+The ISO-8601 standard provides a consistent method for representing dates, times, and durations across systems. In business automation platforms like jBPM, Drools, and Kogito, proper time handling is critical for workflow execution, scheduling, and decision-making.
+
+## Basic ISO-8601 Formats
+
+### Date Formats
+
+- **Complete date**: `YYYY-MM-DD` (e.g., 2025-03-24)
+- **Year and month**: `YYYY-MM` (e.g., 2025-03)
+- **Month and day**: `-MM-DD` (e.g., -03-24)
+
+### Time Formats
+
+- **With separators**: `hh:mm:ss` (e.g., 14:30:00)
+- **Without separators**: `hhmmss` (e.g., 143000)
+- **Partial formats**: `hh:mm` or `hh` are valid
+
+### Combined Date and Time
+
+- Format: `<date>T<time>` (e.g., 2025-03-24T14:30:00)
+- The `T` character separates the date and time components
+
+### Durations
+
+- Format: `P[n]Y[n]M[n]DT[n]H[n]M[n]S`
+- Examples:
+  - `P2Y4MT3H`: 2 years, 4 months, and 3 hours
+  - `PT4H20M`: 4 hours and 20 minutes
+  - `P3M`: 3 months
+  - `PT3M`: 3 minutes
+
+### Time Intervals
+
+- **Begin/End**: `2025-03-01/2025-03-31`
+- **Begin/Duration**: `2025-03-24T10:00:00/PT1H`
+- **Duration/End**: `P3M/2025-03-24`
+
+### Repeating Intervals
+
+- Format: `Rn/<interval>`
+- Examples:
+  - `R2/2025-03-24T12:00`: Repeat twice, starting at noon on March 24, 2025
+  - `R5/PT5M/2025-04-01`: Repeat 5 times with 5-minute intervals before April 1, 2025
+  - `R/PT1H30M`: Repeat indefinitely every 1 hour and 30 minutes
+
+## Time in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx
+
+### BPMN Timer Events
+
+BPMN processes often require timed events for scheduling activities, setting deadlines, or managing recurring tasks. In jBPM, Drools, and Kogito, ISO-8601 is used for timer definitions in BPMN elements.
+
+#### Timer Types in BPMN
+
+1. **Date (timeDate)**: Fires at a specific date and time
+2. **Duration (timeDuration)**: Fires after a specific duration has passed
+3. **Cycle (timeCycle)**: Fires repeatedly at specified intervals
+
+#### Implementation in Process Definitions
+
+Timer events can be configured in the following BPMN elements:
+
+- Timer Start Events
+- Timer Intermediate Events
+- Timer Boundary Events
+
+### Timer Event Examples
+
+#### 1. Timer Start Event - Fire at a Specific Date/Time
+
+```xml
+<startEvent id="TimerStart">
+  <timerEventDefinition>
+    <timeDate>2025-03-24T09:00:00</timeDate>
+  </timerEventDefinition>
+</startEvent>
+```
+
+This starts the process on March 24, 2025, at 9:00 AM.
+
+#### 2. Intermediate Timer Event - Fire After Duration
+
+```xml
+<intermediateCatchEvent id="WaitTimer">
+  <timerEventDefinition>
+    <timeDuration>PT1H30M</timeDuration>
+  </timerEventDefinition>
+</intermediateCatchEvent>
+```
+
+This pauses the process execution for 1 hour and 30 minutes before continuing.
+
+#### 3. Boundary Timer Event - Fire Multiple Times (Recurring)
+
+```xml
+<boundaryEvent id="ReminderTimer" attachedToRef="TaskId">
+  <timerEventDefinition>
+    <timeCycle>R3/PT24H</timeCycle>
+  </timerEventDefinition>
+</boundaryEvent>
+```
+
+This fires a reminder three times, once every 24 hours, while the attached task is active.
+
+#### 4. Unlimited Repeating Timer
+
+```xml
+<boundaryEvent id="RecurringTimer" attachedToRef="LongRunningTask">
+  <timerEventDefinition>
+    <timeCycle>R/PT30M</timeCycle>
+  </timerEventDefinition>
+</boundaryEvent>
+```
+
+This timer fires every 30 minutes indefinitely until the task completes.
+
+
+## Conclusion
+
+ISO-8601 is the foundation for time-based operations in Aletyx Enterprise Build of Kogito and Drools. Understanding its format and proper implementation is essential for creating robust business automation solutions.
+
+For organizations migrating from other BPM systems to Aletyx Enterprise Build of Kogito and Drools, special attention should be paid to time format differences, especially when dealing with business calendars and timezone handling.
+
+By leveraging the ISO-8601 time standard effectively, you can create powerful, time-aware business processes that properly manage deadlines, scheduling, and periodic activities.

@@ -1,0 +1,128 @@
+---
+title: "DMN Reserved Words Reference"
+description: "This document provides a comprehensive reference of reserved words and keywords in the Decision Model and Notation (DMN) standard, particularly focusing on the FEEL (Friendly Enough Expression..."
+---
+## Introduction
+
+This document provides a comprehensive reference of reserved words and keywords in the Decision Model and Notation (DMN) standard, particularly focusing on the FEEL (Friendly Enough Expression Language) components. Understanding these reserved words is crucial when building decision services with Drools, Kogito, and jBPM to avoid naming conflicts and syntax errors.
+
+## FEEL Language Keywords
+
+The following keywords have special meaning in FEEL and cannot be used at the start of variable names:
+
+- `and`
+- `or`
+- `true`
+- `false`
+- `null`
+- `if`
+- `then`
+- `else`
+- `some`
+- `every`
+- `satisfies`
+- `for`
+- `in` (special case - see note below)
+
+<Warning title="Warning">
+
+While most keywords can be used in the middle of variable names, the keyword `in` cannot be used **anywhere** in a variable name. This is because it conflicts with the grammar definition for `for`, `every`, and `some` expression constructs.
+</Warning>
+## Built-in Data Types
+
+These represent the core data types in FEEL:
+
+- `number` - Supports both integers and floating point (based on IEEE 754-2008 Decimal 128 format)
+- `string` - Text enclosed in double quotes
+- `boolean` - `true`, `false`, or `null` (FEEL uses three-valued logic)
+- `date` - Date values (requires using the date() function)
+- `time` - Time values
+- `date and time` (also called `date-time`) - Combined date and time values
+- `days and time duration` - For representing periods of time
+- `years and months duration` - For representing periods in years and months
+  - Note: Some implementations use `yearMonthDuration` as an alternative
+
+## Temporal Function Keywords
+
+- `now()` - Returns the current date and time
+- `today()` - Returns the current date
+
+## FEEL Operators
+
+### Comparison Operators
+
+- `>` (greater than)
+- `<` (less than)
+- `>=` (greater than or equal to)
+- `<=` (less than or equal to)
+- `=` (equal to)
+- `!=` (not equal to)
+
+### Logical Operators
+
+- `and`
+- `or`
+- `not`
+
+### Collection Operators
+
+- `contains`
+- `in`
+- `..` (range operator)
+- `[ ]` (filter operator/list indexing)
+
+### Temporal Operators (DMN 1.3+)
+
+- `before`
+- `after`
+- `meets`
+- `met by`
+- `overlaps`
+- `overlapped by`
+- `finishes`
+- `finished by`
+- `includes`
+- `during`
+- `starts`
+- `started by`
+- `coincides`
+
+## FEEL Naming Rules
+
+1. Names must start with a letter, `?`, or `_` character (Unicode letters are also allowed)
+2. Variable names cannot start with language keywords
+3. After the first character, names can contain:
+   - Letters
+   - Digits
+   - Spaces
+   - Special characters: `+`, `-`, `/`, `*`, `'`, `.`
+4. Consecutive spaces are normalized to a single space in most implementations
+
+## Important Considerations
+
+- Unlike most programming languages, list indexing in FEEL starts at 1 (not 0)
+- Negative indexes can be used to access elements from the end of a list (e.g., `-1` is the last element)
+- Date literals are not directly supported - you must use the `date()` function
+- Some implementations extend the DMN specification with additional data types like functions, contexts, ranges, and lists
+
+## Common Issues and Workarounds
+
+1. **Variable Names with Reserved Words:**
+   - Avoid using `in` anywhere in variable names - this includes doing something like `time in oven` as this would trigger two reserved words because of the use of `in`
+   - Other keywords can be used in the middle of names, but not at the beginning
+
+2. **Date/Time Handling:**
+   - Use functions like `date()`, `time()`, and `date and time()` to create temporal values
+   - For XML schema compatibility issues with spaces in duration types, use `yearMonthDuration` instead of `years and months duration`
+
+3. **List Indexing:**
+   - Remember that list indexing starts at 1, not 0 as in many programming languages
+   - Example: To access the first element of list L, use `L[1]` not `L[0]`
+
+## Best Practices
+
+1. Avoid using reserved words in your variable names completely when possible
+2. Use clear, descriptive names that reduce ambiguity
+3. For complex expressions, consider using boxed expressions for clarity
+4. When in doubt about name resolution, use parentheses to disambiguate
+5. Document your variable naming conventions within your DMN models

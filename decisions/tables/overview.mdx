@@ -1,0 +1,150 @@
+---
+title: "Getting Started with Drools Decision Tables"
+description: "Before diving into decision tables, you need to set up your Java project with the necessary dependencies. This guide will walk you through the process step by step."
+---
+## Project Setup
+
+Before diving into decision tables, you need to set up your Java project with the necessary dependencies. This guide will walk you through the process step by step.
+
+### Maven Configuration
+
+Below is a complete `pom.xml` configuration you can use as a starting point for your Drools decision table project:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>ai.aletyx.example</groupId>
+    <artifactId>drools-decision-tables</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>17 </maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <drools.version>10.1.0</drools.version>
+        <slf4j.version>2.0.9</slf4j.version>
+    </properties>
+
+    <dependencies>
+        <!-- Drools Dependencies -->
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-api</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-core</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-compiler</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-mvel</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+
+        <!-- Decision Tables -->
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-decisiontables</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+
+        <!-- Required for Excel support -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+
+        <!-- Logging Dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+<Warning title="Drools Excel Spreadsheet Filename Change Requirement">
+**Important Note**: When migrating from Drools 7 or earlier, spreadsheet decision table files must use the extension `.drl.xls`, `.drl.xlsx`, or `.drl.csv`. This is important to note as historically in earlier versions of Drools, you could use `decisiontable.xls` and the project would incorporate them, now they must be explicitly defined this way. This does not affect usage in your spreadsheet editor of choice, it is mainly designed as a semantical parser/cpompiler requirement to Drools.
+</Warning>
+<Accordion title="Potential Logging Error: StatusLogger Log4j2 could not find a loggin implementation">
+
+When including `drools-decisiontables` in your project, you might encounter the following error:
+```
+ERROR StatusLogger Log4j2 could not find a logging implementation
+```
+
+This happens because Apache POI (used to process spreadsheet files) uses the Log4j API. To avoid this error, you need to include either:
+1. The SLF4J adapter (included in the above POM)
+2. 2. Or the Log4j 2 SLF4J Binding, if you're using Log4j as your logging backend
+</Accordion>
+### Project Structure
+
+Here's a recommended project structure for a basic Drools decision table application:
+
+```
+src/
+├── main/
+│   ├── java/
+│   │   └── com/
+│   │       └── example/
+│   │           ├── model/
+│   │           │   └── Order.java
+│   │           └── DecisionTableExample.java
+│   └── resources/
+│       └── rules/
+│           └── ShippingCharges.drl.xlsx
+└── test/
+    └── java/
+        └── com/
+            └── example/
+                └── DecisionTableTest.java
+```
+
+## Next Steps
+
+Now that you have your project set up, continue to the next section to create your first decision table in Excel.

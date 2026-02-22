@@ -1,0 +1,59 @@
+direction: right
+
+vars: {
+  d2-config: {
+    sketch: true
+  }
+}
+
+Development: {
+  shape: rectangle
+  style.fill: "#87CEEB"
+  style.stroke: "#333"
+  style.stroke-width: 2
+  style.font-size: 16
+}
+Development.label: |md
+  **Development**
+  Experiment & Build
+|
+
+"Test/UAT": {
+  shape: rectangle
+  style.fill: "#FFD700"
+  style.stroke: "#333"
+  style.stroke-width: 2
+  style.font-size: 16
+}
+"Test/UAT".label: |md
+  **Test/UAT**
+  Validate with Users
+|
+
+Production: {
+  shape: rectangle
+  style.fill: "#32CD32"
+  style.stroke: "#333"
+  style.stroke-width: 2
+  style.font-size: 16
+}
+Production.label: |md
+  **Production**
+  Live Decisions
+|
+
+Development -> "Test/UAT": Submit for Review {
+  style.animated: true
+  style.stroke-width: 2
+}
+
+"Test/UAT" -> Production: Approve for Production {
+  style.animated: true
+  style.stroke-width: 2
+}
+
+Production -> Development: Identify Improvements {
+  style.animated: true
+  style.stroke-dash: 5
+  style.stroke-width: 2
+}

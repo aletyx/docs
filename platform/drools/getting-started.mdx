@@ -1,0 +1,467 @@
+---
+title: "Getting Started with Drools"
+---
+15 min</div>
+
+## What is Drools?
+
+Drools is a Business Rules Management System (BRMS) solution that helps you capture business logic in a declarative way. It allows you to separate business logic from application code, making your systems more maintainable and adaptable to changing requirements.
+
+At its core, Drools is a forward-chaining rule engine that uses the rule-based approach to implement an expert system. The term "expert system" might sound intimidating, but in simple terms, Drools lets you write rules that describe what to do in specific situations - much like how human experts make decisions.
+
+## Why Use Drools?
+
+Before diving into how to use Drools, let's understand why you might want to use it:
+
+1. **Separation of business logic from application code**: Business rules can be managed separately by business analysts and domain experts.
+
+2. **Declarative programming**: Focus on "what" should happen rather than "how" it should happen.
+
+3. **Centralized knowledge repository**: All business rules are stored in a single location, making them easier to manage and update.
+
+4. **Improved decision-making capabilities**: Complex decision logic becomes more manageable and transparent.
+
+5. **Scalability**: Rules can be added or modified without requiring changes to the underlying application code.
+
+## Basic Components
+
+Let's understand some key components of the Drools rule engine:
+
+### Facts
+
+Facts are the data that your rules operate on. They can be any Java objects that you insert into the rule engine's working memory. For example, if you're building a loan approval system, your facts might include `Applicant`, `LoanApplication`, and `CreditCheck` objects.
+
+### Rules
+
+Rules are the business logic you define. Each rule has a condition part (the "when" clause) and an action part (the "then" clause). When the conditions match facts in working memory, the rule's actions are executed.
+
+Rules are typically defined in `.drl` (Drools Rule Language) files like this:
+
+```java
+rule "Approve loan for good credit"
+when
+    $application : LoanApplication(approved == false)
+    $applicant : Applicant(creditScore > 700)
+then
+    modify($application) { setApproved(true), setReason("Good credit score") }
+    System.out.println("Loan approved for applicant with good credit");
+end
+```
+
+### Working Memory
+
+This is where facts are stored during rule execution. When you insert, modify, or retract facts, the rule engine evaluates which rules' conditions are satisfied.
+
+### KIE Session
+
+A KIE session is your interaction point with the rule engine. You use it to:
+- Insert facts into working memory
+- Fire rules
+- Query the results
+
+## Setting Up Your First Drools Project
+
+Let's create a simple Drools project using Maven. This example assumes you have Maven and Java installed.
+
+### Step 1: Create a Maven Project
+
+Create a new Maven project with the following structure:
+
+```
+my-rules-project/
+├── pom.xml
+└── src/
+    ├── main/
+    │   ├── java/
+    │   │   └── com/
+    │   │       └── example/
+    │   │           ├── Applicant.java
+    │   │           ├── LoanApplication.java
+    │   │           └── DroolsTest.java
+    │   └── resources/
+    │       ├── META-INF/
+    │       │   └── kmodule.xml
+    │       └── rules/
+    │           └── loan-rules.drl
+    └── test/
+        └── java/
+```
+
+### Step 2: Configure Your pom.xml
+
+Add the following to your `pom.xml`:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>ai.aletyx</groupId>
+    <artifactId>my-rules-project</artifactId>
+    <version>1.0.0</version>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <drools.version>10.1.0-aletyx</drools.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- Drools Dependencies -->
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-api</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-core</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-compiler</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-mvel</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+    </dependencies>
+</project>
+```
+
+### Step 3: Create the Fact Models
+
+Create Java classes to represent your facts.
+
+**Applicant.java**:
+
+```java
+package ai.aletyx;
+
+public class Applicant {
+    private String name;
+    private int age;
+    private int creditScore;
+
+    public Applicant(String name, int age, int creditScore) {
+        this.name = name;
+        this.age = age;
+        this.creditScore = creditScore;
+    }
+
+    // Getters and setters
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public int getCreditScore() {
+        return creditScore;
+    }
+
+    public void setCreditScore(int creditScore) {
+        this.creditScore = creditScore;
+    }
+}
+```
+
+**LoanApplication.java**:
+
+```java
+package ai.aletyx;
+
+public class LoanApplication {
+    private Applicant applicant;
+    private double amount;
+    private boolean approved;
+    private String reason;
+
+    public LoanApplication(Applicant applicant, double amount) {
+        this.applicant = applicant;
+        this.amount = amount;
+        this.approved = false;
+    }
+
+    // Getters and setters
+    public Applicant getApplicant() {
+        return applicant;
+    }
+
+    public void setApplicant(Applicant applicant) {
+        this.applicant = applicant;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public boolean isApproved() {
+        return approved;
+    }
+
+    public void setApproved(boolean approved) {
+        this.approved = approved;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+}
+```
+
+### Step 4: Create the KIE Module Descriptor
+
+Create a file `src/main/resources/META-INF/kmodule.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<kmodule xmlns="http://www.drools.org/xsd/kmodule">
+    <kbase name="rules" packages="rules">
+        <ksession name="ksession-rules"/>
+    </kbase>
+</kmodule>
+```
+
+This file declares a knowledge base named "rules" that will look for rule files in the "rules" package, and a KIE session named "ksession-rules" that will be created from this knowledge base.
+
+### Step 5: Create Your First Rule
+
+Create a file `src/main/resources/rules/loan-rules.drl`:
+
+```java
+package rules;
+
+import ai.aletyx.Applicant;
+import ai.aletyx.LoanApplication;
+
+rule "Approve loan for good credit"
+when
+    $application : LoanApplication(approved == false)
+    $applicant : Applicant(creditScore > 700)
+then
+    modify($application) {
+        setApproved(true),
+        setReason("Good credit score")
+    }
+    System.out.println("Loan approved for " + $applicant.getName() +
+                       " with credit score: " + $applicant.getCreditScore());
+end
+
+rule "Deny loan for bad credit"
+when
+    $application : LoanApplication(approved == false)
+    $applicant : Applicant(creditScore <= 700)
+then
+    modify($application) {
+        setApproved(false),
+        setReason("Insufficient credit score")
+    }
+    System.out.println("Loan denied for " + $applicant.getName() +
+                       " with credit score: " + $applicant.getCreditScore());
+end
+```
+
+### Step 6: Create a Test Class
+
+Create a Java class to test your rules:
+
+```java
+package ai.aletyx;
+
+import org.kie.api.KieServices;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+
+public class DroolsTest {
+    public static void main(String[] args) {
+        try {
+            // Load the KIE container
+            KieServices ks = KieServices.Factory.get();
+            KieContainer kContainer = ks.getKieClasspathContainer();
+
+            // Get the session named "ksession-rules" that we defined in kmodule.xml
+            KieSession kSession = kContainer.newKieSession("ksession-rules");
+
+            // Create test data - an applicant with good credit
+            Applicant john = new Applicant("John", 30, 720);
+            LoanApplication johnApp = new LoanApplication(john, 50000);
+
+            // Insert facts into working memory
+            kSession.insert(john);
+            kSession.insert(johnApp);
+
+            // Fire all rules
+            kSession.fireAllRules();
+
+            // Check results
+            System.out.println("John's application approved: " + johnApp.isApproved());
+            System.out.println("Reason: " + johnApp.getReason());
+
+            // Create test data - an applicant with bad credit
+            Applicant mary = new Applicant("Mary", 25, 680);
+            LoanApplication maryApp = new LoanApplication(mary, 40000);
+
+            // Insert new facts
+            kSession.insert(mary);
+            kSession.insert(maryApp);
+
+            // Fire all rules again
+            kSession.fireAllRules();
+
+            // Check results for second applicant
+            System.out.println("Mary's application approved: " + maryApp.isApproved());
+            System.out.println("Reason: " + maryApp.getReason());
+
+            // Dispose the session when finished
+            kSession.dispose();
+
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+}
+```
+
+### Step 7: Run Your Project
+
+Compile and run your project. You should see output similar to:
+
+```text
+Loan approved for John with credit score: 720
+John's application approved: true
+Reason: Good credit score
+Loan denied for Mary with credit score: 680
+Mary's application approved: false
+Reason: Insufficient credit score
+```
+
+## Understanding What Happened
+
+Let's break down what happened in our example:
+
+1. We created two Java classes (`Applicant` and `LoanApplication`) that represent our facts.
+
+2. We defined two rules in Drools Rule Language (DRL):
+   - One that approves loans for applicants with good credit scores (above 700)
+   - One that denies loans for applicants with bad credit scores (700 or below)
+
+3. In our test class:
+   - We loaded the KIE container, which manages the rules
+   - We created a new KIE session from the container
+   - We inserted facts (applicants and loan applications) into working memory
+   - We called `fireAllRules()` to execute rules that match our facts
+   - We checked the results to see which applications were approved or denied
+
+This simple example demonstrates the basics of how Drools works:
+
+1. You define your data model (facts)
+2. You define rules based on those facts
+3. You insert facts into working memory
+4. You fire the rules to see what happens
+
+## Stateful vs. Stateless Sessions
+
+In the example above, we used a stateful KIE session. There are two types of sessions you can use:
+
+### Stateful Sessions
+
+Stateful sessions maintain state between rule invocations. Facts remain in working memory until explicitly removed. This is useful for scenarios where:
+
+- Facts are inserted, modified, or retracted over time
+- Rules need to be applied repeatedly as data changes
+- The state of the system needs to be tracked across multiple rule executions
+
+Our loan approval example used a stateful session.
+
+### Stateless Sessions
+
+Stateless sessions are instantiated and destroyed in a single call. They're usually faster because they don't need to maintain state. Use them when:
+
+- You need to apply rules once to a set of data
+- You don't need to track changes over time
+- You want better performance for simple rule execution
+
+Here's how you would use a stateless session:
+
+```java
+StatelessKieSession statelessSession = kContainer.newStatelessKieSession("ksession-rules");
+List<Object> facts = Arrays.asList(john, johnApp);
+statelessSession.execute(facts);
+```
+
+## Next Steps
+
+Now that you understand the basics of Drools, you might want to explore:
+
+1. **More complex rule conditions**: Learn about pattern binding, conditionals, and nested patterns
+2. **Rule attributes**: Discover how to use salience, no-loop, and other rule attributes to control rule execution
+3. **Domain-specific languages (DSLs)**: Create a business-friendly language for writing rules
+4. **Decision tables**: Define rules in spreadsheet format
+5. **Complex event processing**: Handle events that occur over time
+
+## Common Mistakes and Troubleshooting
+
+### 1. Rules Not Firing
+
+If your rules aren't firing, check:
+
+- Did you insert all the necessary facts into working memory?
+- Are your fact properties accessible (public or have getters)?
+- Do your fact values actually match the rule conditions?
+
+### 2. Circular Rules
+
+If your rules seem to execute in an infinite loop:
+
+- Use the `no-loop` attribute to prevent a rule from activating multiple times for the same set of facts
+- Make sure your `modify` statements aren't triggering the same rule again
+
+### 3. Class Not Found Exceptions
+
+If you get class not found exceptions:
+
+- Make sure your package structure in Java matches what you're importing in your DRL files
+- Check that your Maven dependencies are correctly configured
+
+### 4. KModule Not Found
+
+If you get errors related to your KIE module not being found:
+
+- Ensure your `kmodule.xml` is in the correct location (`src/main/resources/META-INF/`)
+- Verify that your package names in `kmodule.xml` match your actual package structure
+
+## Conclusion
+
+This guide has introduced you to the basics of Drools. You've learned:
+
+- What Drools is and why it's useful
+- How to set up a basic Drools project
+- How to define facts and rules
+- How to run and test your rules
+- The difference between stateful and stateless sessions
+
+As you continue with Drools, remember that the power of the rule engine comes from being able to express complex business logic in a declarative way. This separation of business rules from application code will make your systems more flexible and easier to maintain as requirements change.

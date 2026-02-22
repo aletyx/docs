@@ -1,0 +1,27 @@
+---
+title: "Ad-Hoc Subprocesses in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Ad-hoc subprocesses provide flexibility by allowing tasks within them to be executed in a non-sequential order. They are suitable for scenarios where the exact sequence of activities cannot be..."
+---
+Ad-hoc subprocesses provide flexibility by allowing tasks within them to be executed in a non-sequential order. They are suitable for scenarios where the exact sequence of activities cannot be predetermined.
+
+## Key Characteristics
+
+- Flexibility: Tasks can be performed in any order or even skipped.
+- Completion Conditions: Define conditions under which the subprocess is considered complete.
+- Dynamic Execution: Participants decide the order and necessity of tasks during runtime.
+
+## Configuration
+
+- AdHocActivationCondition (optional): Defines a Java expression that determines when the subprocess is activated. For example, in an order processing workflow, the condition order.isShipped() can be used to activate the subprocess only when the order has been shipped. If no condition is specified, the subprocess starts automatically when the parent process begins.
+
+- AdHocCompletionCondition (required): Defines a Java expression that determines when the subprocess is completed. For example, order.isDelivered() ensures the subprocess completes only when the order is delivered. By default, this field contains autocomplete, meaning the subprocess completes automatically when all its tasks are finished.
+
+## When to Use
+
+Use ad-hoc subprocesses when dealing with processes that require a high degree of flexibility, where the sequence of tasks is not fixed, and participants need the autonomy to decide the execution flow.
+
+## Example
+
+In a Research and Development project, tasks such as conducting experiments, literature review, and prototype development may not follow a strict order. An ad-hoc subprocess allows team members to perform these activities as needed, based on the project's evolving requirements.
+
+ ![Ad-hoc Subprocesses](/images/core/processes/advanced-bpmn/images/sub-adhoc.png)

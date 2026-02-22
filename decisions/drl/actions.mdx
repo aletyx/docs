@@ -1,0 +1,977 @@
+---
+title: "Working with Rule Actions in DRL"
+description: "The then section of a rule (also known as the Right Hand Side or RHS) contains the actions that execute when the rule's conditions are met. While the when section uses a specialized..."
+---
+The `then` section of a rule (also known as the Right Hand Side or RHS) contains the actions that execute when the rule's conditions are met. While the `when` section uses a specialized pattern-matching syntax, the `then` section contains plain Java code. This chapter explores how to write effective rule actions that implement your business logic.
+
+## Understanding Rule Actions
+
+Rule actions serve several purposes:
+
+1. **Modify facts**: Update the properties of matched facts
+2. **Add or remove facts**: Insert new facts or remove existing ones
+3. **Execute business logic**: Perform calculations or operations
+4. **Trigger side effects**: Call external services, log events, or send notifications
+
+Let's explore the core operations that can be performed in rule actions.
+
+## Working with Facts
+
+Facts are the objects that rules operate on. The Drools rule engine maintains a working memory containing all facts, and rule actions can modify this memory.
+
+### Modifying Facts
+
+When you match a fact in the `when` section and need to update its properties, you can modify it directly:
+
+```java
+rule "Apply Senior Discount"
+  when
+    $customer: /customers[ age >= 65, discountApplied == false ]
+  then
+    // Modify customer properties
+    $customer.setDiscountApplied(true);
+    $customer.setDiscountPercentage(10);
+
+    // Notify the rule engine about the changes
+    customers.update($customer);
+end
+```
+
+Notice the `customers.update($customer)` call. This informs the rule engine that the fact has been modified, which can trigger other rules that depend on those properties. Always remember to update the data source after modifying a fact.
+
+#### The `modify` Block
+
+As an alternative to directly modifying properties and calling `update()`, you can use the `modify` block:
+
+```java
+rule "Apply Senior Discount"
+  when
+    $customer: /customers[ age >= 65, discountApplied == false ]
+  then
+    modify($customer) {
+        setDiscountApplied(true),
+        setDiscountPercentage(10)
+    }
+end
+```
+
+The `modify` block automatically handles the update for you, which helps prevent errors where you might forget to call `update()`. It also clearly groups the changes being made to a single object.
+
+### Adding New Facts
+
+To add a new fact to working memory, you create the object and add it to the appropriate data source:
+
+```java
+rule "Create Customer Welcome Notification"
+  when
+    $customer: /customers[ newCustomer == true, welcomeNotificationSent == false ]
+  then
+    // Create a new notification fact
+    Notification notification = new Notification(
+        $customer.getId(),
+        "Welcome to our store!",
+        "EMAIL",
+        new Date()
+    );
+
+    // Add it to the notifications data source
+    notifications.add(notification);
+
+    // Update the original customer
+    $customer.setWelcomeNotificationSent(true);
+    customers.update($customer);
+end
+```
+
+### Removing Facts
+
+Sometimes you need to remove facts from working memory when they're no longer relevant:
+
+```java
+rule "Remove Expired Coupons"
+  when
+    $coupon: /coupons[ expirationDate < new Date() ]
+  then
+    // Remove the expired coupon
+    coupons.remove($coupon);
+
+    // Optionally log the removal
+    System.out.println("Removed expired coupon: " + $coupon.getCode());
+end
+```
+
+### Logical Insertions
+
+Drools supports the concept of logical insertions with `addLogical()`. Facts added with this method are automatically removed when the conditions that led to their insertion are no longer true:
+
+```java
+rule "Apply Free Shipping"
+  when
+    $order: /orders[ total > 100, freeShippingApplied == false ]
+  then
+    // Create a shipping discount
+    ShippingDiscount discount = new ShippingDiscount($order.getId(), "FREE");
+
+    // Add it logically - it will be automatically removed if the order total drops below 100
+    discounts.addLogical(discount);
+
+    // Update the order
+    $order.setFreeShippingApplied(true);
+    orders.update($order);
+end
+```
+
+If the order total later changes to less than 100 (perhaps due to a cancellation), the `ShippingDiscount` will be automatically removed from working memory.
+
+## Executing Business Logic
+
+Rule actions often need to perform business logic beyond simple fact modifications.
+
+### Calculations
+
+You can perform calculations directly in the rule action:
+
+```java
+rule "Calculate Order Total"
+  when
+    $order: /orders[ calculated == false ]
+    accumulate(
+        $item: /orderItems[ orderId == $order.id, $price: price, $quantity: quantity ];
+        $total: sum($price * $quantity)
+    )
+  then
+    // Set the calculated total
+    $order.setTotal($total);
+    $order.setCalculated(true);
+
+    // Apply tax
+    double taxRate = TaxService.getTaxRateForState($order.getShippingState());
+    $order.setTax($total * taxRate);
+
+    // Calculate grand total
+    $order.setGrandTotal($total + $order.getTax() + $order.getShippingCost());
+
+    // Update the order
+    orders.update($order);
+end
+```
+
+### Method Calls
+
+You can call methods on fact objects or utility classes:
+
+```java
+rule "Process Payment"
+  when
+    $order: /orders[ status == "CONFIRMED", paymentProcessed == false ]
+    $payment: /payments[ orderId == $order.id, status == "PENDING" ]
+  then
+    // Call the payment service
+    PaymentResult result = PaymentService.processPayment(
+        $payment.getMethod(),
+        $payment.getAmount(),
+        $payment.getDetails()
+    );
+
+    // Update the payment based on the result
+    $payment.setStatus(result.isSuccessful() ? "COMPLETED" : "FAILED");
+    $payment.setTransactionId(result.getTransactionId());
+    $payment.setProcessedDate(new Date());
+    payments.update($payment);
+
+    // Update the order
+    $order.setPaymentProcessed(true);
+    $order.setPaymentStatus($payment.getStatus());
+    orders.update($order);
+end
+```
+
+### Conditional Logic
+
+While you should strive to keep rule actions simple and declarative, sometimes you need conditional logic:
+
+```java
+rule "Determine Shipping Method"
+  when
+    $order: /orders[ shippingMethodDetermined == false ]
+  then
+    String method = "STANDARD";
+
+    // Determine shipping method based on order properties
+    if ($order.isPriority()) {
+        method = "EXPRESS";
+    } else if ($order.getWeight() > 20) {
+        method = "FREIGHT";
+    } else if ($order.getTotal() > 200) {
+        method = "PRIORITY";
+    }
+
+    // Set the method and update
+    $order.setShippingMethod(method);
+    $order.setShippingMethodDetermined(true);
+    orders.update($order);
+end
+```
+
+However, consider whether complex conditional logic would be better expressed as multiple rules instead.
+
+## Error Handling and Validation
+
+Rule actions should handle errors gracefully and validate data to ensure robustness.
+
+### Try-Catch Blocks
+
+When calling external services or performing operations that might fail, use try-catch blocks:
+
+```java
+rule "Send Confirmation Email"
+  when
+    $order: /orders[ status == "CONFIRMED", emailSent == false ]
+    $customer: /customers[ id == $order.customerId ]
+  then
+    try {
+        // Attempt to send the email
+        EmailService.sendOrderConfirmation(
+            $customer.getEmail(),
+            $order.getId(),
+            $order.getItems(),
+            $order.getTotal()
+        );
+
+        // Update the order if successful
+        $order.setEmailSent(true);
+        $order.setEmailSentDate(new Date());
+        orders.update($order);
+
+    } catch (Exception e) {
+        // Log the error
+        System.err.println("Failed to send confirmation email: " + e.getMessage());
+
+        // Create an error notification for customer service
+        ErrorNotification error = new ErrorNotification(
+            "EMAIL_FAILURE",
+            "Failed to send order confirmation email for order " + $order.getId(),
+            e.getMessage()
+        );
+        errors.add(error);
+    }
+end
+```
+
+### Input Validation
+
+Even though constraints in the `when` section filter facts, it's sometimes necessary to perform additional validation in the actions:
+
+```java
+rule "Apply Custom Discount"
+  when
+    $order: /orders[ discountCode != null, discountApplied == false ]
+  then
+    // Validate the discount code
+    String code = $order.getDiscountCode();
+    if (code == null || code.trim().isEmpty()) {
+        // Invalid code, mark as processed but don't apply
+        $order.setDiscountApplied(true);
+        $order.setDiscountRejectionReason("Empty discount code");
+        orders.update($order);
+        return;
+    }
+
+    // Look up the discount
+    Discount discount = DiscountService.findByCode(code);
+    if (discount == null) {
+        // Unknown code
+        $order.setDiscountApplied(true);
+        $order.setDiscountRejectionReason("Invalid discount code");
+        orders.update($order);
+        return;
+    }
+
+    // Check if expired
+    if (discount.getExpirationDate() != null &&
+        discount.getExpirationDate().before(new Date())) {
+        $order.setDiscountApplied(true);
+        $order.setDiscountRejectionReason("Expired discount code");
+        orders.update($order);
+        return;
+    }
+
+    // Apply the valid discount
+    double discountAmount = calculateDiscountAmount($order, discount);
+    $order.setDiscountAmount(discountAmount);
+    $order.setDiscountApplied(true);
+    $order.recalculateTotal();
+    orders.update($order);
+end
+```
+
+## Logging and Debugging
+
+Adding logging to rule actions can be invaluable for debugging and monitoring:
+
+```java
+rule "Apply Risk Score"
+  when
+    $application: /loanApplications[ riskScoreCalculated == false ]
+  then
+    // Log the start of risk calculation
+    System.out.println("Calculating risk score for application " + $application.getId());
+
+    // Calculate the risk score
+    int creditScore = $application.getCreditScore();
+    double debtToIncome = $application.getMonthlyDebt() / $application.getMonthlyIncome();
+    int loanTerm = $application.getLoanTermMonths();
+
+    // Complex calculation (simplified here)
+    double riskScore = RiskCalculator.calculate(creditScore, debtToIncome, loanTerm);
+
+    // Log the calculated score
+    System.out.println("Risk score for application " + $application.getId() + ": " + riskScore);
+
+    // Update the application
+    $application.setRiskScore(riskScore);
+    $application.setRiskScoreCalculated(true);
+    applications.update($application);
+end
+```
+
+For production systems, consider using a proper logging framework like SLF4J or Log4j instead of `System.out`.
+
+## Advanced Action Techniques
+
+Beyond the basics, there are several advanced techniques for rule actions.
+
+### Asynchronous Actions
+
+For actions that might take time to complete, consider making them asynchronous:
+
+```java
+rule "Generate Complex Report"
+  when
+    $request: /reportRequests[ status == "PENDING" ]
+  then
+    // Mark the request as processing
+    $request.setStatus("PROCESSING");
+    $request.setProcessingStartTime(new Date());
+    reportRequests.update($request);
+
+    // Submit the report generation task to a thread pool
+    executorService.submit(() -> {
+        try {
+            // Generate the report (time-consuming operation)
+            Report report = ReportGenerator.generateComplexReport(
+                $request.getType(),
+                $request.getParameters(),
+                $request.getFormat()
+            );
+
+            // Store the report result
+            $request.setStatus("COMPLETED");
+            $request.setCompletionTime(new Date());
+            $request.setReportUrl(report.getUrl());
+
+            // Update in a new KieSession since we're in a different thread
+            KieSession kieSession = kieContainer.newKieSession();
+            kieSession.insert($request);
+            kieSession.fireAllRules();
+            kieSession.dispose();
+
+        } catch (Exception e) {
+            // Handle errors
+            System.err.println("Report generation failed: " + e.getMessage());
+
+            // Update the request status
+            $request.setStatus("FAILED");
+            $request.setErrorMessage(e.getMessage());
+
+            // Update in a new KieSession
+            KieSession kieSession = kieContainer.newKieSession();
+            kieSession.insert($request);
+            kieSession.fireAllRules();
+            kieSession.dispose();
+        }
+    });
+end
+```
+
+Note that when working with threads, you need to be careful about how you update facts in the Drools working memory. The example above creates a new KieSession for the asynchronous update.
+
+### External Services Integration
+
+Rules often need to interact with external systems:
+
+```java
+rule "Process Credit Card Payment"
+  when
+    $payment: /payments[ type == "CREDIT_CARD", status == "PENDING" ]
+    $order: /orders[ id == $payment.orderId ]
+  then
+    // Prepare the payment data
+    CreditCardPaymentRequest request = new CreditCardPaymentRequest();
+    request.setAmount($payment.getAmount());
+    request.setCardNumber($payment.getCardNumber());
+    request.setExpiryDate($payment.getExpiryDate());
+    request.setCvv($payment.getCvv());
+    request.setOrderReference($order.getReference());
+
+    // Call the payment gateway
+    CreditCardPaymentResponse response = paymentGateway.processCreditCardPayment(request);
+
+    // Update the payment based on the response
+    $payment.setTransactionId(response.getTransactionId());
+    $payment.setStatus(response.isSuccessful() ? "COMPLETED" : "FAILED");
+    $payment.setResponseCode(response.getResponseCode());
+    $payment.setResponseMessage(response.getMessage());
+    payments.update($payment);
+
+    // Update the order
+    if (response.isSuccessful()) {
+        $order.setPaymentStatus("PAID");
+        $order.setStatus("PROCESSING");
+    } else {
+        $order.setPaymentStatus("FAILED");
+        $order.setPaymentFailureReason(response.getMessage());
+    }
+    orders.update($order);
+end
+```
+
+### Reusable Action Methods
+
+For complex operations that are used in multiple rules, consider extracting them to helper methods:
+
+```java
+rule "Process Standard Shipping"
+  when
+    $order: /orders[ shippingMethod == "STANDARD", shippingProcessed == false ]
+  then
+    processShipping($order, "STANDARD");
+end
+
+rule "Process Express Shipping"
+  when
+    $order: /orders[ shippingMethod == "EXPRESS", shippingProcessed == false ]
+  then
+    processShipping($order, "EXPRESS");
+end
+
+// Helper method defined in the same class or imported
+private void processShipping(Order order, String method) {
+    // Complex shipping logic here
+    ShippingRequest request = createShippingRequest(order, method);
+    ShippingResponse response = shippingService.createShipment(request);
+
+    // Update the order
+    order.setShippingProcessed(true);
+    order.setTrackingNumber(response.getTrackingNumber());
+    order.setEstimatedDeliveryDate(response.getEstimatedDelivery());
+    orders.update(order);
+
+    // Create a shipping notification
+    ShippingNotification notification = new ShippingNotification(
+        order.getCustomerId(),
+        order.getId(),
+        response.getTrackingNumber(),
+        method
+    );
+    notifications.add(notification);
+}
+```
+
+## Best Practices for Rule Actions
+
+To keep your rule system maintainable and efficient, follow these best practices:
+
+### 1. Keep Actions Simple and Focused
+
+Each rule should perform a single, well-defined action. If a rule needs to perform multiple operations, consider whether it should be split into multiple rules. Benefits of simple actions include:
+
+- **Easier to understand**: The purpose of the rule is clear
+- **Easier to maintain**: Changes to one aspect don't affect others
+- **Better performance**: Rules can be optimized more effectively
+- **Better reuse**: Simple actions are more likely to be reusable
+
+### 2. Use Declarative Style When Possible
+
+Prefer a declarative style (stating what should happen) over imperative style (stating how it should happen) where possible:
+
+```java
+// Declarative - preferred
+rule "Approve Low-Risk Application"
+  when
+    $application: /applications[ riskScore < 10 ]
+  then
+    $application.setStatus("APPROVED");
+    $application.setApprovalReason("Low risk score");
+    applications.update($application);
+end
+
+// Imperative - try to avoid complex logic
+rule "Process Application"
+  when
+    $application: /applications[ status == "PENDING" ]
+  then
+    if ($application.getRiskScore() < 10) {
+        $application.setStatus("APPROVED");
+        $application.setApprovalReason("Low risk score");
+    } else if ($application.getRiskScore() < 50) {
+        if ($application.getCreditScore() > 700) {
+            $application.setStatus("APPROVED");
+            $application.setApprovalReason("Acceptable risk with good credit");
+        } else {
+            $application.setStatus("REVIEW");
+            $application.setReviewReason("Medium risk score");
+        }
+    } else {
+        $application.setStatus("REJECTED");
+        $application.setRejectionReason("High risk score");
+    }
+    applications.update($application);
+end
+```
+
+If you find your rule actions contain complex conditional logic, consider splitting them into multiple rules with more specific conditions.
+
+### 3. Always Update Facts After Modification
+
+Remember to call `update()` after modifying facts or use the `modify` block:
+
+```java
+// Good - explicit update
+$customer.setStatus("GOLD");
+customers.update($customer);
+
+// Good - modify block (preferred)
+modify($customer) {
+    setStatus("GOLD")
+}
+
+// Bad - no update, other rules won't be triggered
+$customer.setStatus("GOLD");
+```
+
+Without the update, the rule engine won't recognize that the fact has changed, and other rules that depend on the modified properties won't be triggered.
+
+### 4. Be Careful with Side Effects
+
+Rule actions often have side effects like logging, sending emails, or updating databases. Handle these carefully:
+
+- **Idempotence**: Can the action safely be performed multiple times?
+- **Transactions**: Do you need transaction management for database operations?
+- **Error handling**: What happens if the side effect fails?
+- **Asynchronous operations**: Should the side effect be performed asynchronously?
+
+Consider using a flag to track whether a side effect has been performed:
+
+```java
+rule "Send Welcome Email"
+  when
+    $customer: /customers[ newAccount == true, welcomeEmailSent == false ]
+  then
+    try {
+        // Send the email
+        emailService.sendWelcomeEmail($customer.getEmail(), $customer.getName());
+
+        // Mark as sent
+        $customer.setWelcomeEmailSent(true);
+        customers.update($customer);
+    } catch (Exception e) {
+        // Log the error
+        System.err.println("Failed to send welcome email: " + e.getMessage());
+
+        // Don't mark as sent, so it will be retried
+    }
+end
+```
+
+### 5. Use Helper Methods for Complex Logic
+
+Extract complex logic into helper methods:
+
+```java
+rule "Calculate Risk Score"
+  when
+    $application: /applications[ riskScoreCalculated == false ]
+  then
+    // Use a helper method for the complex calculation
+    double riskScore = calculateRiskScore($application);
+
+    // Update the application
+    $application.setRiskScore(riskScore);
+    $application.setRiskScoreCalculated(true);
+    applications.update($application);
+end
+
+// Helper method with complex logic
+private double calculateRiskScore(LoanApplication application) {
+    // Complex risk calculation logic
+    double baseScore = 100 - (application.getCreditScore() / 8.0);
+    double incomeAdjustment = 20 - (application.getAnnualIncome() / 5000.0);
+    double loanToValueAdjustment = (application.getLoanAmount() / application.getPropertyValue()) * 30;
+
+    // Cap adjustments
+    incomeAdjustment = Math.max(0, Math.min(20, incomeAdjustment));
+    loanToValueAdjustment = Math.max(0, Math.min(30, loanToValueAdjustment));
+
+    // Final score
+    return Math.max(0, Math.min(100, baseScore + incomeAdjustment + loanToValueAdjustment));
+}
+```
+
+### 6. Handle Errors Gracefully
+
+Always include error handling in rule actions that interact with external systems:
+
+```java
+rule "Process Payment"
+  when
+    $payment: /payments[ status == "PENDING" ]
+  then
+    try {
+        // Process the payment
+        PaymentResult result = paymentService.process($payment);
+
+        // Update with success
+        $payment.setStatus("COMPLETED");
+        $payment.setTransactionId(result.getTransactionId());
+        payments.update($payment);
+    } catch (PaymentDeclinedException e) {
+        // Payment was declined - expected error
+        $payment.setStatus("DECLINED");
+        $payment.setDeclineReason(e.getReason());
+        $payment.setDeclineCode(e.getCode());
+        payments.update($payment);
+    } catch (PaymentGatewayException e) {
+        // System error - unexpected
+        $payment.setStatus("ERROR");
+        $payment.setErrorMessage("Payment system error: " + e.getMessage());
+        payments.update($payment);
+
+        // Create an alert for technical support
+        TechnicalAlert alert = new TechnicalAlert(
+            "PAYMENT_GATEWAY_ERROR",
+            e.getMessage(),
+            $payment.getId()
+        );
+        alerts.add(alert);
+    } catch (Exception e) {
+        // Unexpected general error
+        $payment.setStatus("ERROR");
+        $payment.setErrorMessage("Unexpected error: " + e.getMessage());
+        payments.update($payment);
+
+        // Log the error
+        System.err.println("Unexpected payment error: " + e.getMessage());
+        e.printStackTrace();
+    }
+end
+```
+
+### 7. Avoid Infinite Rule Activations
+
+Be careful not to create infinite loops. This can happen when a rule's actions trigger the same rule again:
+
+```java
+// Dangerous - can cause infinite loop
+rule "Increment Counter"
+  when
+    $counter: /counters[ ]
+  then
+    $counter.setValue($counter.getValue() + 1);
+    counters.update($counter);
+end
+```
+
+This rule will fire repeatedly because each time it updates the counter, it triggers itself again. Use rule attributes like `no-loop` or condition constraints to prevent this:
+
+```java
+// With no-loop attribute
+rule "Increment Counter"
+  no-loop true
+  when
+    $counter: /counters[ ]
+  then
+    $counter.setValue($counter.getValue() + 1);
+    counters.update($counter);
+end
+
+// With constraint
+rule "Increment Counter"
+  when
+    $counter: /counters[ value < 10 ]
+  then
+    $counter.setValue($counter.getValue() + 1);
+    counters.update($counter);
+end
+```
+
+## Real-World Examples
+
+Let's examine some comprehensive examples of rule actions in real-world scenarios.
+
+### E-commerce Order Processing
+
+```java
+rule "Process Confirmed Order"
+  when
+    $order: /orders[ status == "CONFIRMED", processed == false ]
+  then
+    // 1. Mark as processing
+    $order.setStatus("PROCESSING");
+
+    // 2. Generate invoice
+    Invoice invoice = new Invoice();
+    invoice.setOrderId($order.getId());
+    invoice.setCustomerId($order.getCustomerId());
+    invoice.setAmount($order.getTotal());
+    invoice.setTaxAmount($order.getTaxAmount());
+    invoice.setIssuedDate(new Date());
+    invoice.setDueDate(DateUtils.addDays(new Date(), 30));
+
+    // 3. Create fulfillment request
+    FulfillmentRequest fulfillment = new FulfillmentRequest();
+    fulfillment.setOrderId($order.getId());
+    fulfillment.setWarehouseId(warehouseSelector.selectWarehouse($order));
+    fulfillment.setPriority($order.isPriority() ? "HIGH" : "NORMAL");
+    fulfillment.setItems($order.getItems());
+
+    // 4. Add the new facts
+    invoices.add(invoice);
+    fulfillmentRequests.add(fulfillment);
+
+    // 5. Update the order
+    $order.setProcessed(true);
+    $order.setInvoiceId(invoice.getId());
+    $order.setFulfillmentRequestId(fulfillment.getId());
+    orders.update($order);
+
+    // 6. Log the action
+    System.out.println("Processed order " + $order.getId() +
+                       " with invoice " + invoice.getId() +
+                       " and fulfillment request " + fulfillment.getId());
+end
+```
+
+This rule demonstrates processing an order by creating related objects (invoice and fulfillment request) and updating the order status.
+
+### Loan Application Approval
+
+```java
+rule "Approve Prime Loan Application"
+  when
+    $application: /loanApplications[
+        status == "PENDING",
+        creditScore >= 720,
+        employmentVerified == true,
+        incomeVerified == true,
+        debtToIncomeRatio < 0.36,
+        loanToValueRatio < 0.8
+    ]
+  then
+    try {
+        // 1. Set approval details
+        $application.setStatus("APPROVED");
+        $application.setDecisionDate(new Date());
+        $application.setDecisionBy("AUTOMATED_SYSTEM");
+        $application.setDecisionReason("Meets prime loan criteria");
+
+        // 2. Calculate interest rate (using helper method)
+        double baseRate = rateService.getCurrentBaseRate();
+        double rate = calculateInterestRate($application, baseRate);
+        $application.setApprovedInterestRate(rate);
+
+        // 3. Set loan terms
+        $application.setApprovedLoanAmount($application.getRequestedAmount());
+        $application.setApprovedLoanTerm($application.getRequestedTerm());
+        $application.setMonthlyPayment(calculateMonthlyPayment(
+            $application.getApprovedLoanAmount(),
+            $application.getApprovedInterestRate(),
+            $application.getApprovedLoanTerm()
+        ));
+
+        // 4. Generate approval letter
+        LoanDocument approvalLetter = documentService.generateApprovalLetter(
+            $application.getId(),
+            $application.getApplicantName(),
+            $application.getApprovedLoanAmount(),
+            $application.getApprovedInterestRate(),
+            $application.getApprovedLoanTerm(),
+            $application.getMonthlyPayment()
+        );
+
+        // 5. Add the approval letter
+        $application.setApprovalLetterId(approvalLetter.getId());
+        documents.add(approvalLetter);
+
+        // 6. Update the application
+        applications.update($application);
+
+        // 7. Create notification for the applicant
+        Notification notification = new Notification(
+            $application.getApplicantId(),
+            "Your loan application has been approved!",
+            "EMAIL",
+            "LOAN_APPROVAL"
+        );
+        notifications.add(notification);
+
+        // 8. Log the approval
+        System.out.println("Automatically approved loan application " +
+                          $application.getId() + " for $" +
+                          $application.getApprovedLoanAmount());
+
+    } catch (Exception e) {
+        // Log the error
+        System.err.println("Error processing loan approval: " + e.getMessage());
+        e.printStackTrace();
+
+        // Mark for manual review instead
+        $application.setStatus("MANUAL_REVIEW");
+        $application.setDecisionDate(new Date());
+        $application.setDecisionBy("AUTOMATED_SYSTEM");
+        $application.setDecisionReason("System error during automatic approval");
+        applications.update($application);
+
+        // Create alert for loan officers
+        Alert alert = new Alert(
+            "SYSTEM_ERROR",
+            "Error processing automatic approval for application " + $application.getId(),
+            "HIGH"
+        );
+        alerts.add(alert);
+    }
+end
+```
+
+This comprehensive example shows:
+
+1. Setting multiple properties on the application
+2. Using helper methods for calculations
+3. Interacting with external services
+4. Error handling
+5. Creating related objects
+6. Logging
+
+### Insurance Claim Processing
+
+```java
+rule "Process Simple Auto Claim"
+  when
+    $claim: /claims[
+        type == "AUTO",
+        status == "SUBMITTED",
+        damageAmount < 2000,
+        policeReportFiled == true,
+        fraudCheckPassed == true
+    ]
+    $policy: /policies[
+        id == $claim.policyId,
+        status == "ACTIVE",
+        coverageType == "COMPREHENSIVE"
+    ]
+  then
+    // 1. Approve the claim
+    $claim.setStatus("APPROVED");
+    $claim.setDecisionDate(new Date());
+    $claim.setApprovedAmount($claim.getDamageAmount() - $policy.getDeductible());
+
+    // 2. Create payment
+    ClaimPayment payment = new ClaimPayment();
+    payment.setClaimId($claim.getId());
+    payment.setPolicyId($policy.getId());
+    payment.setAmount($claim.getApprovedAmount());
+    payment.setPaymentMethod($policy.getPreferredPaymentMethod());
+    payment.setStatus("PENDING");
+
+    // 3. Create event for claim history
+    ClaimEvent approvalEvent = new ClaimEvent(
+        $claim.getId(),
+        "APPROVAL",
+        "Claim automatically approved",
+        new Date()
+    );
+
+    // 4. Add facts to working memory
+    payments.add(payment);
+    claimEvents.add(approvalEvent);
+
+    // 5. Update the claim
+    claims.update($claim);
+
+    // 6. Update policy claim history
+    $policy.setLastClaimDate(new Date());
+    $policy.setClaimCount($policy.getClaimCount() + 1);
+    $policy.setTotalClaimAmount($policy.getTotalClaimAmount() + $claim.getApprovedAmount());
+    policies.update($policy);
+
+    // 7. Notify customer
+    CustomerNotification notification = new CustomerNotification(
+        $policy.getCustomerId(),
+        "Your claim #" + $claim.getId() + " has been approved for $" + $claim.getApprovedAmount(),
+        "EMAIL"
+    );
+    notifications.add(notification);
+end
+```
+
+This example demonstrates processing an insurance claim by approving it, creating a payment, and updating related objects.
+
+## Performance Considerations
+
+Rule actions can impact the performance of your rule system. Consider these tips:
+
+### 1. Minimize Working Memory Modifications
+
+Every time you update a fact, the rule engine must reevaluate rules that might be affected. Minimize unnecessary updates:
+
+```java
+// Inefficient - updates after each property change
+$customer.setStatus("GOLD");
+customers.update($customer);
+$customer.setLastUpdateDate(new Date());
+customers.update($customer);
+$customer.setDiscountPercentage(15);
+customers.update($customer);
+
+// Better - single update after all changes
+$customer.setStatus("GOLD");
+$customer.setLastUpdateDate(new Date());
+$customer.setDiscountPercentage(15);
+customers.update($customer);
+
+// Best - use modify block
+modify($customer) {
+    setStatus("GOLD"),
+    setLastUpdateDate(new Date()),
+    setDiscountPercentage(15)
+}
+```
+
+### 2. Use Property Reactivity
+
+Drools supports property reactivity, which means it only reevaluates rules that depend on the specific properties you've changed. Make sure your fact classes properly define getter methods for all properties used in rules.
+
+### 3. Avoid Expensive Operations in Rule Actions
+
+Expensive operations like database queries, web service calls, or complex calculations should be minimized or optimized:
+
+- **Caching**: Cache results of expensive operations
+- **Batching**: Group operations for batch processing
+- **Asynchronous processing**: Move expensive operations to background threads
+- **Precomputation**: Calculate values in advance when possible
+
+## Summary
+
+The `then` section of a rule is where your business logic comes to life. While the condition section determines when a rule should fire, the action section determines what happens when it does.
+
+Effective rule actions should be:
+
+- **Clear and focused**: Each rule should perform a specific, well-defined action
+- **Declarative**: State what should happen, not how it should happen
+- **Robust**: Include proper error handling and validation
+- **Efficient**: Minimize unnecessary working memory modifications
+- **Maintainable**: Use helper methods and consistent patterns
+
+By following the best practices outlined in this chapter, you can create rule actions that implement your business logic in a clear, maintainable, and efficient way.
+
+In the next chapter, we'll explore rule attributes, which provide additional control over how and when rules are executed.

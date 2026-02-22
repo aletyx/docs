@@ -1,0 +1,72 @@
+---
+title: "Introduction to Aletyx Components"
+description: "The Aletyx Enterprise Build of Kogito and Drools represents a comprehensive business automation platform built on the solid foundation of the Apache KIE open source projects (Drools, jBPM and..."
+---
+## The Aletyx Build Advantage
+
+The Aletyx Enterprise Build of Kogito and Drools represents a comprehensive business automation platform built on the solid foundation of the Apache KIE open source projects (Drools, jBPM and Kogito) combined with features designed for enterprises. We've enhanced the core capabilities with enterprise-ready features, improved integration points, and developer productivity tools that make building intelligent applications more accessible.
+
+As a Java developer working in business process and decision automation, you'll find our platform combines the reliability of established open source projects with innovative extensions designed specifically for complex enterprise environments.
+
+## Component Overview
+
+<!-- ![aletyx Component Architecture](/images/images/architecture)  -->
+
+The Aletyx ecosystem consists of several complementary components that work together seamlessly while maintaining flexibility for different use cases:
+
+### Core Components
+
+- **Aletyx Enterprise Build of Drools**: Enhanced decision runtime that powers dynamic business decisions
+- **Aletyx Enterprise Build of jBPM**: Robust business process management for orchestrating workflows
+- **Aletyx Enterprise Build of Kogito**: Cloud-native business automation with a modern architecture
+- **Aletyx Playground**: Interactive development environment for creating BPMN and DMN models
+
+## How Components Work Together
+
+Unlike traditional monolithic BPM suites, the Aletyx Enterprise Build of Kogito and Drools is designed with a modular architecture that allows you to:
+
+1. **Select the right components** for your specific business automation needs
+2. **Scale components independently** based on usage patterns
+3. **Deploy flexibly** across cloud, on-premises, or hybrid environments
+4. **Extend and customize** with well-defined APIs and integration points
+
+Let's look at a common scenario integrating multiple components:
+
+```
+Decision Service (Drools) ──► Process Orchestration (jBPM/Kogito) ──► User Tasks (jBPM) ──► External Systems
+```
+
+This architecture allows business rules to drive process execution while maintaining separation of concerns between decision logic and process flow.
+
+## Enhanced Integration Capabilities
+
+The Aletyx Enterprise Build of Kogito and Drools's integration capabilities with:
+
+- **Standardized messaging patterns** for event-driven architectures with no glue code to make it easy to drive processes from events
+- **API-first design** supporting both synchronous and asynchronous communication
+- **Containerization support** for modern deployments that scale as your needs grow
+
+## Component Deep Dives
+
+The following sections provide detailed information about each component in the Aletyx ecosystem. Each component page covers:
+
+- Core concepts and architecture
+- Installation and configuration
+- API reference and example usage
+- Best practices and performance considerations
+- Integration patterns with other components
+
+Whether you're building a simple decision service or a complex business automation solution, these guides will help you understand and leverage the full potential of the Aletyx Enterprise Build of Kogito and Drools.
+
+## Where to Start
+
+If you're new to business automation with Aletyx, we recommend the following learning path:
+
+1. Start with the [aletyx](/get-started/overview) guide for a hands-on introduction
+2. Explore the [Aletyx Playground](/platform/playground/overview) to create your first projects
+3. Dive into specific components based on your needs:
+   - For rules and decisions: [Drools](/platform/drools/overview)
+   - For process orchestration: [jBPM](/platform/jbpm) or [Kogito](/platform/kogito)
+4. Learn about [deployment options](/deploy/overview) for your production environment
+
+<!-- For those already familiar with the Apache KIE projects, our [Migration Guide](/migration-guide/) will help you transition to the aletyx build and take advantage of the additional features. -->

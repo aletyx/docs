@@ -1,0 +1,558 @@
+---
+title: "Decision Control Architecture"
+description: "Decision Control provides a unified platform for authoring, testing, versioning, and executing business decisions. This document covers the core architecture of Decision Control, deployment..."
+---
+Decision Control provides a unified platform for authoring, testing, versioning, and executing business decisions. This document covers the core architecture of Decision Control, deployment patterns, and the extended Aletyx Decision Control Tower capabilities available in the Keystone edition.
+
+## Architectural Overview
+
+At its core, Decision Control is a containerized application that combines:
+
+- **Frontend Layer**: React-based interfaces for authoring, testing, and management
+- **Backend Layer**: Spring Boot application with DMN execution engine
+- **AI Layer**: Natural language processing for decision testing (Innovator+)
+- **Data Layer**: PostgreSQL for persistent storage of models, versions, and execution history
+
+![Diagram](/images/diagrams/decision-control/architecture/flowchart-td-1.svg)
+
+## Key Architectural Principles
+
+### Single Unified Interface
+
+Decision Control consolidates decision management into one application:
+
+- **Author**: Create DMN decision models visually in your browser
+- **Test**: Validate decisions with sample data or natural language queries
+- **Publish**: Version and deploy models with one click
+- **Execute**: Run decisions via REST APIs with full traceability
+- **Manage**: Monitor execution history and performance
+
+This eliminates the need for separate tools or manual deployment pipelines.
+
+### Multi-Version Execution
+
+Unlike traditional Kogito deployments where you must manage version routing yourself, Decision Control handles this automatically:
+
+![Diagram](/images/diagrams/decision-control/architecture/flowchart-lr-2.svg)
+
+**Benefits:**
+
+- Deploy new versions without breaking existing integrations
+- Execute specific versions on demand
+- Compare execution results across versions
+- Roll back instantly by routing to previous versions
+- Audit trail shows which version handled each request
+
+### Built-In Auditing and Traceability
+
+Every decision execution is recorded with:
+
+- Input data provided
+- Output results generated
+- Model version used
+- Execution timestamp
+- Processing duration
+- User context (if applicable)
+
+This enables compliance reporting, debugging, and performance analysis without additional infrastructure.
+
+## Edition-Specific Architecture
+
+Decision Control editions build progressively on the core architecture:
+
+### Pioneer Edition
+
+Core decision management capabilities:
+
+![Diagram](/images/diagrams/decision-control/architecture/flowchart-td-3.svg)
+
+**Features:**
+
+- Visual DMN authoring and editing
+- Model versioning and publishing
+- Decision execution via REST API
+- Basic execution history
+- Single-user workflows
+
+### Innovator Edition
+
+Adds AI-powered capabilities:
+
+![Diagram](/images/diagrams/decision-control/architecture/flowchart-td-4.svg)
+
+**Additional Features:**
+
+- **Prompt UI**: Test decisions using natural language
+  - "What happens if income is $85,000 and credit score is 720?"
+  - AI translates to decision inputs and explains outputs
+- **MCP Server**: Act as a Model Context Protocol server for AI agent integration
+- Enhanced testing and validation capabilities
+- Basic analytics dashboard
+
+### Horizon Edition
+
+Adds enterprise scalability:
+
+![Diagram](/images/diagrams/decision-control/architecture/flowchart-td-5.svg)
+
+**Additional Features:**
+
+- **Horizontal Scaling**: Multiple container replicas behind load balancer
+- **Management UI**: Monitoring, analytics, and administration
+- **Enhanced Metrics**: Prometheus metrics for observability
+- **Connection Pooling**: Optimized database connections for high throughput
+- Works naturally with Kubernetes autoscaling
+
+### Keystone Edition
+
+Adds multi-environment governance with Aletyx Decision Control Tower (see [Aletyx Decision Control Tower Architecture](#control-tower-architecture-keystone) below):
+
+- All Horizon features
+- Aletyx Decision Control Tower unified portal
+- Governance API for approval workflows
+- Multi-environment coordination
+- Four-eyes principle enforcement
+- Complete audit trails
+
+## Core Components
+
+### REST API Layer
+
+Spring Boot application exposing decision management and execution:
+
+```yaml
+# Model Management
+POST   /api/runtime/units                    # Create decision unit
+GET    /api/runtime/units                    # List all units
+GET    /api/runtime/{unit}/versions          # List versions
+GET    /api/runtime/{unit}/{version}/models  # Get models
+POST   /api/runtime/{unit}/{version}/publish # Publish version
+
+# Decision Execution
+POST   /api/runtime/{unit}/{version}/execute # Execute decision
+GET    /api/runtime/{unit}/{version}/schema  # Get input schema
+
+# Execution History
+GET    /api/runtime/{unit}/executions        # Execution history
+GET    /api/runtime/executions/{id}          # Execution details
+
+# Health and Monitoring
+GET    /actuator/health                      # Health check
+GET    /actuator/metrics                     # Prometheus metrics
+```
+
+### DMN Execution Engine
+
+Built on Apache KIE DMN Engine:
+
+- **DMN 1.5 Compliant**: Full support for DMN standard
+- **FEEL Expression Language**: Business-friendly expression syntax
+- **Decision Tables**: Visual tabular logic
+- **Business Knowledge Models**: Reusable decision components
+- **Compiled Caching**: Models compiled once, executed many times
+
+### Version Manager
+
+Handles multi-version deployment and execution:
+
+- Maintains multiple active versions simultaneously
+- Routes execution requests to specified version
+- Manages version lifecycle (draft → published → archived)
+- Tracks version lineage and dependencies
+
+### PostgreSQL Data Store
+
+Persistent storage for all Decision Control data:
+
+```sql
+-- Units table (foundation table)
+CREATE TABLE units (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    tenant_id varchar(255),
+    date_created timestamp(6) without time zone NOT NULL,
+    description text,
+    name varchar(255) NOT NULL UNIQUE,
+    status varchar(255) NOT NULL,
+    CONSTRAINT units_status_check CHECK (status IN ('ENABLED', 'DISABLED', 'JUST_CREATED'))
+);
+
+-- Versions table (depends on units)
+CREATE TABLE versions (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    date_created timestamp(6) without time zone NOT NULL,
+    description text,
+    status varchar(255) NOT NULL,
+    version_number integer NOT NULL,
+    unit_id bigint NOT NULL,
+    commit_hash text,
+    ref_name text,
+    repository_url text,
+    is_latest_enabled boolean NOT NULL DEFAULT FALSE,
+    CONSTRAINT versions_status_check CHECK (status IN ('ENABLED', 'DISABLED', 'JUST_CREATED')),
+    CONSTRAINT fk_versions_unit FOREIGN KEY (unit_id) REFERENCES units(id)
+);
+
+-- Models table (depends on both units and versions)
+CREATE TABLE models (
+    model_hash varchar(255) NOT NULL PRIMARY KEY,
+    description text,
+    json_schema text,
+    model_content text NOT NULL,
+    model_name varchar(255) NOT NULL,
+    namespace varchar(255) NOT NULL
+);
+
+-- Models refs table (junction table between versions and models)
+CREATE TABLE models_refs (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    description text,
+    status varchar(255) NOT NULL,
+    unit_id bigint NOT NULL,
+    version_id bigint NOT NULL,
+    model_hash varchar(255) NOT NULL,
+    CONSTRAINT models_refs_status_check CHECK (status IN ('ENABLED', 'DISABLED', 'JUST_CREATED')),
+    CONSTRAINT fk_models_refs_unit FOREIGN KEY (unit_id) REFERENCES units(id),
+    CONSTRAINT fk_models_refs_version FOREIGN KEY (version_id) REFERENCES versions(id),
+    CONSTRAINT fk_models_refs_model FOREIGN KEY (model_hash) REFERENCES models(model_hash)
+);
+
+-- Execution logs table (for audit logging)
+CREATE TABLE execution_logs (
+    id uuid NOT NULL PRIMARY KEY,
+    business_key varchar(1000),
+    timestamp timestamp(6) with time zone NOT NULL,
+    oidc_identity varchar(255),
+    input jsonb NOT NULL,
+    output jsonb NOT NULL,
+    unit_id bigint NOT NULL,
+    unit_name varchar(255) NOT NULL,
+    version_id bigint NOT NULL,
+    version_number integer NOT NULL,
+    model_id bigint NOT NULL,
+    model_name_ref varchar(255) NOT NULL,
+    model_hash varchar(255),
+    status varchar(255),
+    description text,
+    CONSTRAINT execution_logs_status_check CHECK (status IN ('ERROR', 'SUCCESS', 'MODEL_NOT_EXISTS')),
+    CONSTRAINT fk_execution_logs_unit FOREIGN KEY (unit_id) REFERENCES units(id),
+    CONSTRAINT fk_execution_logs_version FOREIGN KEY (version_id) REFERENCES versions(id)
+);
+
+-- Create indexes for execution_logs table
+CREATE INDEX idx_timestamp ON execution_logs (timestamp);
+CREATE INDEX idx_business_key ON execution_logs (business_key);
+CREATE INDEX idx_model_hash ON execution_logs (model_hash);
+
+-- Refresh log table (depends on units)
+CREATE TABLE refresh_log (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    created_at timestamp(6) with time zone NOT NULL,
+    origin uuid NOT NULL,
+    unit_id bigint NOT NULL,
+    CONSTRAINT fk_refresh_log_unit FOREIGN KEY (unit_id) REFERENCES units(id)
+);
+
+-- Revisions table (for audit functionality)
+CREATE TABLE revisions (
+    id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    timestamp bigint NOT NULL,
+    username varchar(255)
+);
+```
+
+## Deployment Patterns
+
+### Development/Evaluation (H2 Database)
+
+For quick evaluation and development, Decision Control can run with an embedded H2 database:
+
+```bash
+docker run --rm --name decision-control \
+  -p 8080:8080 \
+  registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+```
+
+**Characteristics:**
+
+- In-memory database (data lost on restart)
+- Single container deployment
+- No external dependencies
+- Ideal for testing and demos
+
+<Warning title="Not for Production">
+H2 mode is designed for evaluation only. Data is not persisted between restarts.
+</Warning>
+### Production (PostgreSQL Database)
+
+For production deployments, use PostgreSQL for persistent storage:
+
+```bash
+docker run --rm --name decision-control \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=postgres \
+  -e POSTGRES_HOST=your-postgres-host \
+  -e POSTGRES_PORT=5432 \
+  -e POSTGRES_DB=decision_control \
+  -e POSTGRES_USER=dc_user \
+  -e POSTGRES_PASSWORD=secure_password \
+  registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+```
+
+**Characteristics:**
+
+- Persistent model and execution storage
+- Supports multiple concurrent users
+- Horizontal scaling with shared database
+- Backup and recovery capabilities
+
+### Kubernetes Deployment
+
+Decision Control is designed for container orchestration platforms:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decision-control
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: decision-control
+  template:
+    metadata:
+      labels:
+        app: decision-control
+    spec:
+      containers:
+      - name: decision-control
+        image: registry-innovator.aletyx.services/decision-control-innovator:1.2.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: postgres
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 2Gi
+          limits:
+            cpu: 4000m
+            memory: 4Gi
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+```
+
+**Benefits:**
+
+- Automatic scaling based on load
+- Self-healing with liveness/readiness probes
+- Rolling updates with zero downtime
+- Resource management and limits
+
+### AWS Marketplace Deployment
+
+Decision Control is available on AWS Marketplace with pre-configured deployment options:
+
+**Sandbox Mode:**
+
+- Single EC2 instance with H2 database
+- Quick setup for evaluation
+- Ideal for proof-of-concept
+
+**Production Mode:**
+
+- EKS deployment with multiple replicas
+- RDS PostgreSQL with automated backups
+- Application Load Balancer with TLS
+- CloudWatch integration for monitoring
+
+## Differentiators vs Traditional Kogito
+
+Decision Control addresses key limitations in traditional Kogito/Drools deployments:
+
+| Capability | Traditional Kogito | Decision Control |
+|------------|-------------------|------------------|
+| **Version Management** | Manual endpoint management per version | Automatic multi-version routing |
+| **Deployment** | Build JAR, deploy to server | Click to publish, instant deployment |
+| **Auditing** | Custom implementation required | Built-in execution history |
+| **Testing** | Write test code | Visual testing + natural language |
+| **Rollback** | Redeploy previous version | Route to previous version instantly |
+| **Scalability** | Manual configuration | Built-in with Horizon edition |
+
+### Why This Matters
+
+**Traditional Approach:**
+
+1. Build decision model
+2. Package as JAR/container
+3. Deploy to server
+4. Update application to call new endpoint
+5. Manage old endpoints for backward compatibility
+6. Build custom audit logging
+7. Handle version routing logic
+
+**Decision Control Approach:**
+
+1. Build decision model in browser
+2. Click "Publish"
+3. Done: API automatically serves new version while maintaining old ones
+
+## Performance Considerations
+
+### Caching Strategy
+
+- **Compiled Models**: DMN models compiled on first execution, cached indefinitely
+- **Metadata**: Unit/version lists cached with 5-minute TTL
+- **Execution Results**: Not cached (each execution is unique)
+
+### Database Optimization
+
+- **Connection Pooling**: HikariCP with configurable pool size
+- **Indexed Queries**: Primary keys, foreign keys, and common query patterns
+- **Batch Operations**: Bulk inserts for execution history
+
+### Resource Requirements
+
+| Component | CPU Request | Memory Request | CPU Limit | Memory Limit |
+|-----------|-------------|----------------|-----------|--------------|
+| Decision Control | 2 cores | 2 GB | 4 cores | 4 GB |
+| PostgreSQL | 0.5 cores | 512 MB | 1 core | 1 GB |
+
+---
+
+## Aletyx Decision Control Tower Architecture (Keystone)
+
+<Info title="Keystone Edition Only">
+Aletyx Decision Control Tower and the Governance API are available exclusively in the Keystone edition. They provide multi-environment governance and approval workflows for enterprise deployments.
+</Info>
+Aletyx Decision Control Tower extends Decision Control with centralized governance across multiple environments:
+
+![Diagram](/images/diagrams/decision-control/architecture/flowchart-td-6.svg)
+
+### Aletyx Decision Control Tower Components
+
+**Unified Portal:**
+
+- Single entry point to all environments
+- Role-based environment access
+- Model discovery across environments
+- Governance task management
+- Audit trail viewing
+
+**Governance API:**
+
+- Approval workflow orchestration
+- Four-eyes principle enforcement
+- Role-based task assignment
+- Complete audit logging
+- Model promotion between environments
+
+**Keycloak Integration:**
+
+- Centralized authentication
+- Role-based access control
+- SSO across all components
+
+### Governance Workflow
+
+![Diagram](/images/diagrams/decision-control/architecture/sequence-7.svg)
+
+### Multi-Environment Deployment
+
+Each environment runs its own Decision Control instance with isolated database:
+
+```yaml
+Namespace: decision-control
+  ├── decision-control-dev
+  │   └── PostgreSQL-dev
+  ├── decision-control-test
+  │   └── PostgreSQL-test
+  ├── decision-control-prod
+  │   └── PostgreSQL-prod
+  ├── governance-api
+  │   └── PostgreSQL-governance
+  ├── control-tower
+  └── keycloak
+```
+
+### Roles and Permissions
+
+| Role | Permissions | Environment Access |
+|------|-------------|-------------------|
+| Business Analyst | Author, test, submit for review | DEV, TEST |
+| Risk Manager | Approve risk-related changes | DEV, TEST, PROD |
+| Compliance Officer | Approve compliance-related changes | DEV, TEST, PROD |
+| Operations Manager | Deploy to production | DEV, TEST, PROD |
+| Administrator | Full access | All |
+
+For complete Aletyx Decision Control Tower setup instructions, see [Setup and Configuration](/platform/decision-control/setup#kubernetes-deployment).
+
+## Security Architecture
+
+### Authentication
+
+All Decision Control components use OAuth2/OIDC:
+
+- **Pioneer/Innovator/Horizon**: Basic auth or OAuth2
+- **Keystone**: Keycloak SSO with PKCE flow
+
+### Network Security
+
+![Diagram](/images/diagrams/decision-control/architecture/flowchart-lr-8.svg)
+
+- All external traffic over HTTPS (TLS 1.2+)
+- Database connections within private network
+- Kubernetes network policies for pod isolation
+
+### Data Security
+
+- **At Rest**: PostgreSQL encryption via storage layer
+- **In Transit**: TLS for external, plain HTTP within cluster
+- **Secrets**: Kubernetes Secrets for credentials
+
+## Observability
+
+### Health Checks
+
+```bash
+# Application health
+curl http://localhost:8080/actuator/health
+
+# Readiness check
+curl http://localhost:8080/actuator/health/readiness
+```
+
+### Metrics
+
+Prometheus metrics exposed at `/actuator/prometheus`:
+
+- `dmn_execution_duration_seconds`: Execution latency histogram
+- `dmn_executions_total`: Total executions by version
+- `http_server_requests_seconds`: HTTP request metrics
+- `jvm_memory_used_bytes`: JVM memory usage
+
+### Logging
+
+Structured JSON logs with:
+
+- Timestamp
+- Log level
+- Request ID
+- User context
+- Execution details
+
+## Next Steps
+
+- [Setup and Configuration](/platform/decision-control/setup): Deploy Decision Control
+- [Usage Scenarios](/platform/decision-control/usage-scenarios): Common usage patterns
+- [Integration and APIs](/platform/decision-control/apis): API reference and integration
+- [FAQ and Troubleshooting](/platform/decision-control/faq): Common issues

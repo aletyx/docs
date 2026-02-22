@@ -1,0 +1,758 @@
+---
+title: "Deploying Aletyx Enterprise Build of Kogito and Drools in Red Hat OpenShift"
+description: "This guide provides comprehensive instructions for deploying Aletyx Enterprise Build of Kogito and Drools applications to Red Hat OpenShift environments. It covers both development and production..."
+---
+This guide provides comprehensive instructions for deploying Aletyx Enterprise Build of Kogito and Drools applications to Red Hat OpenShift environments. It covers both development and production deployments, including the requirements, configuration options, and best practices.
+
+## Overview
+
+Aletyx Enterprise Build of Kogito and Drools leverages the Apache KIE ecosystem to provide a powerful business automation platform. Deploying to OpenShift provides several advantages:
+
+- Container orchestration and scaling
+- Built-in security features
+- Automated deployments and rollbacks
+- Integration with CI/CD pipelines
+- Persistent storage management
+
+This guide walks through the steps required to deploy your Aletyx Enterprise Build of Kogito and Drools applications to OpenShift, ensuring they run reliably in both development and production environments.
+
+## Requirements
+
+### Infrastructure Requirements
+
+To successfully deploy Aletyx Enterprise Build of Kogito and Drools on OpenShift, ensure your environment meets these minimum requirements:
+
+| Component | Development                | Production                  |
+| --------- | -------------------------- | --------------------------- |
+| OpenShift | 4.17+                      | 4.17+                       |
+| CPU       | 2 cores                    | 4+ cores                    |
+| Memory    | 4GB                        | 8GB+                        |
+| Storage   | 10GB                       | 20GB+                       |
+| Network   | Internet access for images | Load balancer configuration |
+
+<Note title="Note">
+
+The OpenShift 4.17+ requirement is based on support of OpenShift by the Quarkus runtime, others may work, please reach out to Aletyx support if you are at a different version
+</Note>
+### Software Requirements
+
+Your OpenShift cluster should have these components available:
+
+1. **PostgreSQL 16**
+    - Required for process persistence, job scheduling, and task management
+    - Earlier versions are not supported due to specific features needed for transaction management
+
+2. **OpenID Connect (OIDC) Provider**
+    - Required for authentication and authorization
+    - Keycloak 20+ is recommended but any OIDC-compliant provider should work. If concerned with your OIDC provider, reach out to Aletyx support!
+
+3. **Container Registry Access**
+    - Access to pull container images (Red Hat Registry, Docker Hub, etc.)
+    - Or ability to use OpenShift's internal registry
+
+4. **Additional Services**
+    - For production: Monitoring tools (Prometheus, Grafana)
+    - For production: Log aggregation (EFK stack)
+
+## Development Deployments
+
+For development environments, you can use a simplified deployment model that allows for rapid iteration and testing.
+
+### Setting Up PostgreSQL
+
+PostgreSQL 16 is one of the supported databases for Aletyx Enterprise Build of Kogito and Drools. Since it is available as a community release for trying in development purposes, this example will show how to use PostgreSQL.
+
+1. Deploy PostgreSQL using a template or operator:
+
+```bash
+# Using an OpenShift template
+oc new-app --template=postgresql-persistent \
+  -p POSTGRESQL_VERSION=16 \
+  -p POSTGRESQL_USER=kogito \
+  -p POSTGRESQL_PASSWORD=kogito123 \
+  -p POSTGRESQL_DATABASE=kogito \
+  -p VOLUME_CAPACITY=1Gi
+```
+
+Alternatively, you can use a deployment manifest:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kogito-postgresql
+  labels:
+    app: kogito-postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kogito-postgresql
+  template:
+    metadata:
+      labels:
+        app: kogito-postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: postgres:16
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: "kogito"
+        - name: POSTGRES_PASSWORD
+          value: "kogito123"
+        - name: POSTGRES_DB
+          value: "kogito"
+        volumeMounts:
+        - name: postgresql-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgresql-data
+        persistentVolumeClaim:
+          claimName: kogito-postgresql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kogito-postgresql
+spec:
+  selector:
+    app: kogito-postgresql
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kogito-postgresql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+### Deploying the Application
+
+There are two main approaches to deploying your Aletyx Enterprise Build of Kogito and Drools application to OpenShift:
+
+#### 1. Using Maven and the Quarkus OpenShift Extension
+
+The Quarkus OpenShift extension can handle the entire deployment process:
+
+1. Add the OpenShift extension to your `pom.xml`:
+
+    ```xml
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-openshift</artifactId>
+    </dependency>
+    ```
+
+2. Configure the extension in your `application.properties`:
+
+    ```properties
+    # OpenShift deployment configuration
+    quarkus.kubernetes-client.trust-certs=true
+    quarkus.openshift.deploy=true
+    quarkus.openshift.expose=true
+    quarkus.kubernetes.deployment-target=openshift
+    quarkus.openshift.build-strategy=docker
+    quarkus.container-image.build=true
+    quarkus.container-image.group=${env.NAMESPACE}
+    quarkus.application.name=${env.SERVICE_NAME}
+
+    # Database configuration
+    quarkus.datasource.db-kind=postgresql
+    quarkus.datasource.username=${POSTGRESQL_USER:kogito}
+    quarkus.datasource.password=${POSTGRESQL_PASSWORD:kogito123}
+    quarkus.datasource.jdbc.url=jdbc:postgresql://${POSTGRESQL_SERVICE:kogito-postgresql}:5432/${POSTGRESQL_DATABASE:kogito}
+
+    # Kogito service URLs
+    kogito.service.url=https://${env.SERVICE_NAME}-${env.NAMESPACE}.${env.BASE_URL}
+    kogito.jobs-service.url=https://${env.SERVICE_NAME}-${env.NAMESPACE}.${env.BASE_URL}
+    kogito.dataindex.http.url=https://${env.SERVICE_NAME}-${env.NAMESPACE}.${env.BASE_URL}
+    ```
+
+3. Deploy using Maven:
+
+    ```bash
+    export NAMESPACE=my-project
+    export SERVICE_NAME=kogito-app
+    export BASE_URL=apps.openshift.example.com
+
+    mvn clean package -Dquarkus.kubernetes.deploy=true
+    ```
+
+#### 2. Using OpenShift CLI and Container Images
+
+For more control over the deployment process, you can use container images and the OpenShift CLI:
+
+1. Build your application:
+
+    ```bash
+    mvn clean package -Dquarkus.container-image.build=true \
+      -Dquarkus.container-image.push=true \
+      -Dquarkus.container-image.registry=image-registry.openshift-image-registry.svc:5000 \
+      -Dquarkus.container-image.group=my-project \
+      -Dquarkus.container-image.name=kogito-app
+    ```
+
+2. Create a deployment:
+
+    ```bash
+    oc new-app --image-stream=my-project/kogito-app:latest \
+      -e POSTGRESQL_USER=kogito \
+      -e POSTGRESQL_PASSWORD=kogito123 \
+      -e POSTGRESQL_DATABASE=kogito \
+      -e POSTGRESQL_SERVICE=kogito-postgresql
+    ```
+
+3. Create a route:
+
+    ```bash
+    oc expose service kogito-app \
+      --name=kogito-app \
+      --port=8080 \
+      --tls-termination=edge
+    ```
+
+### Setting Up Authentication
+
+Secure your application using OpenID Connect (OIDC) authentication. Keycloak is recommended for development environments:
+
+1. Deploy Keycloak:
+
+    ```bash
+    oc new-app quay.io/keycloak/keycloak:20.0.5 \
+      -e KEYCLOAK_ADMIN=admin \
+      -e KEYCLOAK_ADMIN_PASSWORD=admin \
+      -e KC_FEATURES=preview \
+      -e KC_HTTP_RELATIVE_PATH=/auth
+    ```
+
+2. Configure OIDC in your `application.properties`:
+
+    ```properties
+    # Enable OIDC
+    quarkus.oidc.enabled=true
+    quarkus.oidc.auth-server-url=https://keycloak-my-project.apps.openshift.example.com/auth/realms/kogito
+    quarkus.oidc.client-id=kogito-app
+    quarkus.oidc.credentials.secret=your-client-secret
+    quarkus.oidc.application-type=service
+
+    # Secure endpoints
+    quarkus.http.auth.permission.authenticated.paths=/*
+    quarkus.http.auth.permission.authenticated.policy=authenticated
+    quarkus.http.auth.permission.public.paths=/q/*,/docs/*,/kogito/security/oidc/*
+    quarkus.http.auth.permission.public.policy=permit
+    ```
+
+3. Create realm and client in Keycloak:
+
+    ```bash
+    # Get token
+    TOKEN=$(curl -s -X POST \
+      "https://keycloak-my-project.apps.openshift.example.com/auth/realms/master/protocol/openid-connect/token" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "username=admin" \
+      -d "password=admin" \
+      -d "grant_type=password" \
+      -d "client_id=admin-cli" | grep -o '"access_token":"[^"]*"' | cut -d':' -f2 | tr -d '"' | tr -d ' ' | tr -d ',')
+
+    # Create realm
+    curl -X POST \
+      "https://keycloak-my-project.apps.openshift.example.com/auth/admin/realms" \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "realm": "kogito",
+        "enabled": true,
+        "sslRequired": "external",
+        "registrationAllowed": false,
+        "loginWithEmailAllowed": true,
+        "duplicateEmailsAllowed": false,
+        "resetPasswordAllowed": true,
+        "editUsernameAllowed": false,
+        "bruteForceProtected": true
+      }'
+
+    # Create client
+    curl -X POST \
+      "https://keycloak-my-project.apps.openshift.example.com/auth/admin/realms/kogito/clients" \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "clientId": "kogito-app",
+        "enabled": true,
+        "publicClient": false,
+        "secret": "your-client-secret",
+        "redirectUris": ["https://kogito-app-my-project.apps.openshift.example.com/*"],
+        "webOrigins": ["+"]
+      }'
+    ```
+
+## Production Deployments
+
+Production deployments require additional considerations for reliability, scalability, and security.
+
+### High Availability Setup
+
+For production environments, configure high availability for all components:
+
+1. **Aletyx Enterprise Build of Kogito and Drools Application**:
+
+    - Set up multiple replicas (at least 2-3)
+    - Configure health probes for liveness and readiness
+    - Set appropriate resource limits and requests
+
+    ```yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: kogito-app
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: kogito-app
+      template:
+        metadata:
+          labels:
+            app: kogito-app
+        spec:
+          containers:
+          - name: kogito-app
+            image: image-registry.openshift-image-registry.svc:5000/my-project/kogito-app:latest
+            ports:
+            - containerPort: 8080
+            readinessProbe:
+              httpGet:
+                path: /q/health/ready
+                port: 8080
+              initialDelaySeconds: 10
+              periodSeconds: 30
+            livenessProbe:
+              httpGet:
+                path: /q/health/live
+                port: 8080
+              initialDelaySeconds: 60
+              periodSeconds: 30
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+              limits:
+                memory: "1Gi"
+                cpu: "1000m"
+            env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-credentials
+                  key: username
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-credentials
+                  key: password
+    ```
+
+2. **PostgreSQL**:
+
+    - Use a production-grade PostgreSQL setup
+    - Consider using a managed PostgreSQL service or the Crunchy PostgreSQL Operator
+    - Configure proper backup and restore procedures
+
+3. **Keycloak**:
+
+    - Deploy with multiple replicas
+    - Use a production database backend
+    - Configure proper backup procedures
+
+### Resource Allocation
+
+Allocate appropriate resources based on expected workload:
+
+| Component              | CPU Requests | Memory Requests | CPU Limits | Memory Limits |
+| ---------------------- | ------------ | --------------- | ---------- | ------------- |
+| Aletyx Enterprise Build of Kogito and Drools App | 500m         | 512Mi           | 2000m      | 2Gi           |
+| PostgreSQL             | 500m         | 512Mi           | 1000m      | 1Gi           |
+| Keycloak               | 500m         | 1Gi             | 1000m      | 2Gi           |
+
+Adjust these values based on your specific workload and performance testing. These are just sample values and not meant to replace good sizing practices.
+
+### Security Considerations
+
+For production deployments, implement these security measures:
+
+1. **Network Policies**:
+
+    - Restrict communication between pods
+    - Allow only necessary ingress/egress traffic
+
+    ```yaml
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: kogito-app-network-policy
+    spec:
+      podSelector:
+        matchLabels:
+          app: kogito-app
+      ingress:
+      - from:
+        - podSelector:
+            matchLabels:
+              app: kogito-frontend
+        ports:
+        - protocol: TCP
+          port: 8080
+      egress:
+      - to:
+        - podSelector:
+            matchLabels:
+              app: postgresql
+        ports:
+        - protocol: TCP
+          port: 5432
+    ```
+
+2. **Secret Management**:
+
+    - Store credentials in OpenShift secrets
+    - Mount secrets as environment variables or files
+    - Consider using a vault service for sensitive information
+
+    ```bash
+    # Create secrets for database credentials
+    oc create secret generic postgresql-credentials \
+      --from-literal=username=kogito \
+      --from-literal=password=$(openssl rand -base64 20) \
+      --from-literal=database=kogito
+    ```
+
+3. **HTTPS and TLS**:
+
+    - Configure proper TLS termination for all routes
+    - Use valid certificates from trusted certificate authorities
+    - Configure TLS between services when possible
+
+    ```bash
+    # Update route with proper TLS configuration
+    oc patch route kogito-app -p '{"spec":{"tls":{"termination":"edge","insecureEdgeTerminationPolicy":"Redirect"}}}'
+    ```
+
+## Deployment Scripts
+
+### OpenShift Deployment Script
+
+Here's a comprehensive deployment script for OpenShift that handles the deployment of all necessary components:
+
+    ```bash
+    #!/bin/bash
+
+    # Configuration variables
+    export VERSION="10.1.0-aletyx"
+    export NAMESPACE="kogito-project"
+    export SERVICE_NAME="kogito-app"
+    export BASE_URL="apps.openshift.example.com"
+    export KEYCLOAK_BASE_URL="keycloak-${NAMESPACE}.${BASE_URL}"
+    export REALM="kogito-realm"
+    export APP_PART_OF="${SERVICE_NAME}-app"
+
+    # Setup OpenShift authentication
+    oc project ${NAMESPACE} || oc new-project ${NAMESPACE}
+
+    # Setup registry credentials
+    setup_registry_credentials() {
+        echo "Setting up registry credentials in namespace: ${NAMESPACE}"
+
+        local token
+        token=$(oc whoami -t)
+        if [ -z "$token" ]; then
+            echo "Failed to get OpenShift token. Please ensure you're logged in."
+            exit 1
+        fi
+
+        oc create secret docker-registry registry-credentials \
+            --docker-server=image-registry.openshift-image-registry.svc:5000 \
+            --docker-username=$(oc whoami) \
+            --docker-password=${token} || true
+
+        oc secrets link default registry-credentials --for=pull
+    }
+
+    # Function to set up PostgreSQL
+    deploy_postgresql() {
+        echo "Deploying PostgreSQL..."
+
+        # Create database credentials secret
+        oc create secret generic postgresql-credentials \
+            --from-literal=database-name=kogito \
+            --from-literal=database-user=kogito \
+            --from-literal=database-password=kogito123 \
+            || true
+
+        # Create PostgreSQL deployment
+        cat <<EOF | oc apply -f -
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: ${SERVICE_NAME}-postgresql
+      labels:
+        app: ${SERVICE_NAME}-postgresql
+        app.kubernetes.io/part-of: ${APP_PART_OF}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: ${SERVICE_NAME}-postgresql
+      template:
+        metadata:
+          labels:
+            app: ${SERVICE_NAME}-postgresql
+        spec:
+          containers:
+          - name: postgresql
+            image: postgres:16
+            ports:
+            - containerPort: 5432
+            env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-credentials
+                  key: database-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-credentials
+                  key: database-password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-credentials
+                  key: database-name
+            volumeMounts:
+            - name: postgresql-data
+              mountPath: /var/lib/postgresql/data
+          volumes:
+          - name: postgresql-data
+            persistentVolumeClaim:
+              claimName: ${SERVICE_NAME}-postgresql-pvc
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: ${SERVICE_NAME}-postgresql
+    spec:
+      selector:
+        app: ${SERVICE_NAME}-postgresql
+      ports:
+      - port: 5432
+        targetPort: 5432
+    ---
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: ${SERVICE_NAME}-postgresql-pvc
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+    EOF
+
+        # Wait for PostgreSQL to be ready
+        echo "Waiting for PostgreSQL to be ready..."
+        oc wait --for=condition=available deployment/${SERVICE_NAME}-postgresql --timeout=300s
+    }
+
+    # Function to deploy the main application
+    deploy_application() {
+        echo "Building and deploying the application..."
+
+        # Build the application using Maven
+        mvn clean package \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.kubernetes-client.namespace="${NAMESPACE}" \
+            -Dquarkus.openshift.deployment-kind=Deployment \
+            -Dquarkus.kubernetes-client.trust-certs=true \
+            -Dquarkus.openshift.deploy=true \
+            -Dquarkus.openshift.expose=true \
+            -Dquarkus.container-image.group=${NAMESPACE} \
+            -Dquarkus.application.name="${SERVICE_NAME}" \
+            -Dquarkus.kubernetes.deployment-target=openshift \
+            -Dquarkus.openshift.build-strategy=docker \
+            -Dkogito.service.url="https://${SERVICE_NAME}-${NAMESPACE}.${BASE_URL}" \
+            -Dkogito.jobs-service.url="https://${SERVICE_NAME}-${NAMESPACE}.${BASE_URL}" \
+            -Dkogito.dataindex.http.url="https://${SERVICE_NAME}-${NAMESPACE}.${BASE_URL}" \
+            -Dquarkus.openshift.labels.\"app.kubernetes.io/part-of\"=${APP_PART_OF} \
+            -Dquarkus.openshift.labels.\"app.openshift.io/runtime\"=java \
+            -Dquarkus.http.cors=true \
+            -Dquarkus.openshift.env-vars.POSTGRESQL_USER.valueFrom.secretKeyRef.name=postgresql-credentials \
+            -Dquarkus.openshift.env-vars.POSTGRESQL_USER.valueFrom.secretKeyRef.key=database-user \
+            -Dquarkus.openshift.env-vars.POSTGRESQL_PASSWORD.valueFrom.secretKeyRef.name=postgresql-credentials \
+            -Dquarkus.openshift.env-vars.POSTGRESQL_PASSWORD.valueFrom.secretKeyRef.key=database-password \
+            -Dquarkus.openshift.env-vars.POSTGRESQL_DATABASE.valueFrom.secretKeyRef.name=postgresql-credentials \
+            -Dquarkus.openshift.env-vars.POSTGRESQL_DATABASE.valueFrom.secretKeyRef.key=database-name \
+            -Dquarkus.openshift.env-vars.POSTGRESQL_SERVICE.value="${SERVICE_NAME}-postgresql" \
+            -Dquarkus.openshift.image-pull-secrets=registry-credentials
+
+        # Get the route host
+        ROUTE_HOST=$(oc get route "${SERVICE_NAME}" -o jsonpath='{.spec.host}')
+
+        # Configure environment variables for the application
+        oc set env deployment/"${SERVICE_NAME}" \
+            QUARKUS_HTTP_CORS=true \
+            QUARKUS_HTTP_CORS_ORIGINS="*" \
+            QUARKUS_HTTP_CORS_METHODS="GET,POST,PUT,PATCH,DELETE,OPTIONS" \
+            QUARKUS_HTTP_CORS_HEADERS="accept,authorization,content-type,x-requested-with"
+
+        # Set up TLS for the route
+        oc patch route "${SERVICE_NAME}" -p '{"spec":{"tls":{"termination":"edge"}}}'
+
+        echo "Application deployed at: https://${ROUTE_HOST}"
+    }
+
+    # Main execution
+    echo "Starting deployment process..."
+    setup_registry_credentials
+    deploy_postgresql
+    deploy_application
+
+    echo "Deployment completed successfully!"
+    ```
+
+### CI/CD Integration
+
+Integrate the deployment process with your CI/CD pipeline by:
+
+1. Adding the deployment script to your project's repository
+2. Configuring your CI/CD tool (Jenkins, GitHub Actions, etc.) to execute the script
+3. Setting up the necessary secrets and environment variables
+
+Example GitHub Actions workflow:
+
+    ```yaml
+    name: Deploy to OpenShift
+    on:
+      push:
+        branches: [main]
+      workflow_dispatch:
+        inputs:
+          namespace:
+            description: "OpenShift namespace"
+            required: true
+          service_name:
+            description: "Application name"
+            required: true
+            default: "kogito-app"
+
+    jobs:
+      build-and-deploy:
+        runs-on: ubuntu-latest
+        env:
+          SERVICE_NAME:  "kogito-app"
+          DOMAIN_NAME: "apps.openshift.example.com"
+          KEYCLOAK_BASE_URL: "keycloak.apps.openshift.example.com"
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v3
+
+          - name: Set up JDK 17
+            uses: actions/setup-java@v3
+            with:
+              java-version: "17"
+              distribution: "temurin"
+              cache: maven
+
+          - name: Set up OpenShift CLI
+            uses: redhat-actions/oc-installer@v1
+            with:
+              version: "4.12"
+
+          - name: Log in to OpenShift
+            uses: redhat-actions/oc-login@v1
+            with:
+              openshift_server_url: your_openshift_server
+              openshift_token: your_openshift_token
+              insecure_skip_tls_verify: true
+
+          - name: Deploy to OpenShift #replace with your namespace
+            run: |
+              export NAMESPACE=${namespace}
+              chmod +x .github/scripts/deploy-openshift.sh
+              .github/scripts/deploy-openshift.sh
+    ```
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+1. **Image Pull Failures**:
+
+    - Issue: Pods stuck in `ImagePullBackOff` state
+    - Solution: Verify registry credentials and image paths
+
+2. **Database Connection Issues**:
+
+    - Issue: Application fails to connect to PostgreSQL
+    - Solutions:
+      - Check PostgreSQL service name and credentials
+      - Verify network policies allow communication
+      - Check if PostgreSQL is running correctly
+
+3. **Route/Ingress Problems**:
+
+    - Issue: Unable to access application via URL
+    - Solutions:
+      - Verify route was created correctly
+      - Check TLS termination settings
+      - Ensure application is listening on the correct port
+
+4. **OIDC Authentication Failures**:
+
+    - Issue: Unable to authenticate using OIDC
+    - Solutions:
+      - Verify Keycloak realm and client configuration
+      - Check redirect URLs are correctly set up
+      - Ensure OIDC environment variables are correctly configured
+
+### Accessing Logs
+
+Use these commands to check logs for each component:
+
+    ```bash
+    # Application logs
+    oc logs deployment/kogito-app
+
+    # PostgreSQL logs
+    oc logs deployment/kogito-app-postgresql
+
+    # Keycloak logs (if deployed)
+    oc logs deployment/keycloak
+    ```
+
+### Health Checks
+
+Verify application health by accessing the health endpoints:
+
+    ```bash
+    # Get the route host
+    ROUTE_HOST=$(oc get route kogito-app -o jsonpath='{.spec.host}')
+
+    # Check liveness
+    curl -k https://$ROUTE_HOST/q/health/live
+
+    # Check readiness
+    curl -k https://$ROUTE_HOST/q/health/ready
+    ```
+
+These health endpoints are automatically included by Quarkus and provide valuable information about the application's status.

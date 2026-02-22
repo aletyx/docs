@@ -1,0 +1,135 @@
+---
+title: "GraphQL in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "GraphQL provides a powerful way to query and retrieve data about process instances and user tasks. This guide covers essential queries and filtering techniques to help you effectively manage your..."
+---
+### Introduction
+
+GraphQL provides a powerful way to query and retrieve data about process instances and user tasks. This guide covers essential queries and filtering techniques to help you effectively manage your workflow processes.
+
+### Key Query Types
+
+#### 1. Process Instance Queries
+
+Retrieve information about process instances including their state, variables, and related nodes.
+
+```graphql
+{
+  ProcessInstances {
+    id
+    processId
+    state
+    parentProcessInstanceId
+    rootProcessInstanceId
+    variables
+  }
+}
+```
+
+#### 2. User Task Queries
+
+Retrieve details about user tasks within process instances.
+
+```graphql
+{
+  UserTaskInstances {
+    id
+    name
+    actualOwner
+    description
+    priority
+    processId
+    processInstanceId
+    state
+  }
+}
+```
+
+### Filtering Techniques
+
+#### Available Operators by Data Type
+
+Summary of operators available
+
+| Operator           | String | String Array | ID  | Boolean | Numeric | Date |
+| ------------------ | ------ | ------------ | --- | ------- | ------- | ---- |
+| `equal`            | ✓      |              | ✓   | ✓       | ✓       | ✓    |
+| `in`               | ✓      |              | ✓   |         | ✓       |      |
+| `like`             | ✓      |              |     |         |         |      |
+| `isNull`           | ✓      | ✓            | ✓   | ✓       | ✓       | ✓    |
+| `contains`         |        | ✓            |     |         |         |      |
+| `containsAll`      |        | ✓            |     |         |         |      |
+| `containsAny`      |        | ✓            |     |         |         |      |
+| `greaterThan`      |        |              |     |         | ✓       | ✓    |
+| `greaterThanEqual` |        |              |     |         | ✓       | ✓    |
+| `lessThan`         |        |              |     |         | ✓       | ✓    |
+| `lessThanEqual`    |        |              |     |         | ✓       | ✓    |
+| `between`          |        |              |     |         | ✓       | ✓    |
+
+#### Basic Filtering with `where`
+Filter results based on specific criteria:
+
+```graphql
+{
+  UserTaskInstances(where: {processId: {equal: "travel-booking"}}) {
+    id
+    name
+    actualOwner
+    state
+  }
+}
+```
+
+#### Combining Filters with Logic Operators
+Use `and` and `or` operators to create complex filters:
+
+```graphql
+{
+  ProcessInstances(where: {
+    and: {
+      processId: {equal: "docReview"},
+      or: [
+        {state: {equal: ACTIVE}},
+        {state: {equal: PENDING}}
+      ]
+    }
+  }) {
+    id
+    processName
+    state
+  }
+}
+```
+
+### Sorting and Pagination
+
+#### Sorting with `orderBy`
+Sort results based on specific attributes:
+
+```graphql
+{
+  UserTaskInstances(
+    where: {state: {equal: "Ready"}},
+    orderBy: {priority: DESC}
+  ) {
+    id
+    name
+    priority
+  }
+}
+```
+
+#### Pagination
+Limit and offset results:
+
+```graphql
+{
+  ProcessInstances(
+    pagination: {limit: 10, offset: 0},
+    orderBy: {start: DESC}
+  ) {
+    id
+    processName
+    state
+  }
+}
+```

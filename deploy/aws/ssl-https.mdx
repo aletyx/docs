@@ -1,0 +1,422 @@
+---
+title: "SSL/HTTPS Configuration"
+description: "Configure custom domains with automatic Let's Encrypt SSL certificates for secure HTTPS access to your Decision Control deployment."
+---
+Configure custom domains with automatic Let's Encrypt SSL certificates for secure HTTPS access to your Decision Control deployment.
+
+## Overview
+
+Both [Sandbox](/deploy/aws/sandbox) and [Production](production) editions support automatic SSL/HTTPS configuration using:
+
+- **Custom Domains**: Use your own subdomain (e.g., `decision-control.example.com`)
+- **Route 53 Integration**: Automatic DNS record creation
+- **Let's Encrypt**: Free SSL certificates with auto-renewal
+- **nginx Reverse Proxy**: HTTPS termination on port 443
+- **HTTP Redirect**: Automatic redirect from HTTP to HTTPS
+
+## Prerequisites
+
+Before configuring SSL/HTTPS, you need:
+
+1. **Route 53 Hosted Zone**: You must own a domain with a hosted zone in AWS
+   - Example: `example.com.` (note the trailing dot)
+   - The hosted zone must exist in the same AWS account
+
+2. **Public Subnet**: Instance must have a public IP for Let's Encrypt validation
+
+3. **Port 80 Access**: Security group must allow HTTP from `0.0.0.0/0` for Let's Encrypt challenge
+   - This is temporarily required for certificate validation
+   - HTTPS (port 443) can be restricted to your IP/CIDR
+
+## Configuration During Deployment
+
+When creating your CloudFormation stack, provide these optional parameters:
+
+### Custom Domain Parameters
+
+```yaml
+CustomDomain: decision-control
+HostedZoneName: example.com.
+```
+
+**CustomDomain**:
+- The subdomain prefix for your application
+- Do NOT include the full domain name
+- Example: `decision-control` (not `decision-control.example.com`)
+- Valid characters: lowercase letters, numbers, hyphens
+- Must start with a letter
+
+**HostedZoneName**:
+- Your Route 53 hosted zone name
+- Must include the trailing dot (`.`)
+- Example: `example.com.` (not `example.com`)
+- Must match an existing hosted zone in your AWS account
+
+### Example Configuration
+
+For a final URL of `https://app.mycompany.com/`:
+
+```
+CustomDomain: app
+HostedZoneName: mycompany.com.
+```
+
+## What Happens Automatically
+
+When you provide custom domain parameters, the deployment automatically:
+
+1. **Creates Route 53 A Record**: `decision-control.example.com` → Instance Public IP
+   - DNS propagation takes 1-5 minutes
+
+2. **Waits for DNS Resolution**: Application startup waits for DNS to propagate
+
+3. **Obtains Let's Encrypt Certificate**: Using HTTP-01 challenge
+   - Let's Encrypt validates domain ownership via HTTP
+   - Certificate valid for 90 days
+   - Free certificate from trusted CA
+
+4. **Configures nginx**: Reverse proxy setup
+   - HTTPS on port 443 → Application on port 8080
+   - HTTP on port 80 → Redirects to HTTPS
+
+5. **Enables Auto-Renewal**: Daily cron job checks for renewal
+   - Automatically renews 30 days before expiration
+   - Zero downtime renewal process
+
+## Security Group Requirements
+
+### For Let's Encrypt HTTP-01 Challenge
+
+The security group must allow HTTP access from the internet for Let's Encrypt validation:
+
+**During Deployment** (Required for certificate issuance):
+```
+Port 80 (HTTP): 0.0.0.0/0
+```
+
+**After Certificate is Issued** (Optional - More Secure):
+```
+Port 80 (HTTP): YOUR_IP_CIDR (redirects to HTTPS anyway)
+Port 443 (HTTPS): YOUR_IP_CIDR
+```
+
+<Warning title="Let's Encrypt Requirement">
+Port 80 MUST be accessible from `0.0.0.0/0` during initial certificate issuance and renewals. Let's Encrypt validation servers need to reach `http://your-domain.com/.well-known/acme-challenge/TOKEN`.
+</Warning>
+## How Let's Encrypt Validation Works
+
+The HTTP-01 challenge process:
+
+1. **Certificate Request**: Your instance requests a certificate from Let's Encrypt
+
+2. **Challenge Issued**: Let's Encrypt provides a unique token
+   - Token saved to: `/var/www/html/.well-known/acme-challenge/TOKEN`
+
+3. **Validation Request**: Let's Encrypt makes HTTP request
+   ```
+   GET http://decision-control.example.com/.well-known/acme-challenge/TOKEN
+   ```
+
+4. **nginx Serves Challenge**: nginx serves the token file on port 80
+
+5. **Certificate Issued**: Let's Encrypt validates ownership and issues certificate
+   - Certificate stored in `/etc/letsencrypt/live/decision-control.example.com/`
+
+6. **nginx Reconfigured**: HTTPS enabled, HTTP redirects to HTTPS
+
+## Testing Your HTTPS Deployment
+
+### Verify DNS Resolution
+
+```bash
+# Check DNS is resolving correctly
+dig decision-control.example.com
+
+# Expected output shows your instance IP
+;; ANSWER SECTION:
+decision-control.example.com. 300 IN A 54.123.45.67
+```
+
+### Test HTTP Redirect
+
+```bash
+# Test HTTP redirect to HTTPS
+curl -I http://decision-control.example.com/
+
+# Expected output:
+HTTP/1.1 301 Moved Permanently
+Location: https://decision-control.example.com/
+```
+
+### Test HTTPS Connection
+
+```bash
+# Test HTTPS
+curl -I https://decision-control.example.com/
+
+# Expected output:
+HTTP/2 200
+```
+
+### Verify Certificate
+
+```bash
+# Check certificate details
+echo | openssl s_client -servername decision-control.example.com \
+  -connect decision-control.example.com:443 2>/dev/null | \
+  openssl x509 -noout -dates
+
+# Expected output:
+notBefore=Jan 15 10:00:00 2025 GMT
+notAfter=Apr 15 10:00:00 2025 GMT  # 90 days later
+```
+
+## Certificate Auto-Renewal
+
+Certificates automatically renew via daily cron job:
+
+### Renewal Configuration
+
+**Cron Job**: `/etc/cron.daily/certbot-renew`
+```bash
+#!/bin/bash
+certbot renew --quiet --post-hook "systemctl reload nginx"
+```
+
+**Renewal Timing**:
+- Checks daily at 2:00 AM local time
+- Renews when 30 days or less remain
+- Zero downtime (nginx reload, not restart)
+
+### Manual Renewal (Testing)
+
+To manually test renewal:
+
+```bash
+# SSH to instance
+ssh -i your-key.pem ec2-user@decision-control.example.com
+
+# Test renewal (dry-run)
+sudo certbot renew --dry-run
+
+# Force renewal (testing only)
+sudo certbot renew --force-renewal
+```
+
+## Troubleshooting SSL/HTTPS Issues
+
+### Issue: Certificate Validation Fails
+
+**Symptoms**:
+```
+Failed to verify challenge
+The client lacks sufficient authorization
+```
+
+**Causes**:
+1. Port 80 not accessible from internet
+2. DNS not resolving correctly
+3. Security group blocking Let's Encrypt servers
+
+**Solutions**:
+
+```bash
+# 1. Verify DNS resolution
+dig decision-control.example.com
+nslookup decision-control.example.com
+
+# 2. Check security group allows port 80 from 0.0.0.0/0
+aws ec2 describe-security-groups --group-ids sg-xxxxx \
+  --query 'SecurityGroups[0].IpPermissions[?FromPort==`80`]'
+
+# 3. Test port 80 accessibility from external
+curl -I http://decision-control.example.com/.well-known/acme-challenge/test
+```
+
+### Issue: DNS Not Resolving
+
+**Symptoms**:
+```
+DNS problem: NXDOMAIN looking up A for decision-control.example.com
+```
+
+**Causes**:
+1. Route 53 hosted zone doesn't exist
+2. Hosted zone name mismatch
+3. DNS propagation delay
+
+**Solutions**:
+
+```bash
+# Check Route 53 hosted zone exists
+aws route53 list-hosted-zones \
+  --query 'HostedZones[?Name==`example.com.`]'
+
+# Check A record was created
+aws route53 list-resource-record-sets \
+  --hosted-zone-id Z1234567890ABC \
+  --query "ResourceRecordSets[?Name=='decision-control.example.com.']"
+
+# Wait for DNS propagation (up to 5 minutes)
+watch -n 10 dig decision-control.example.com
+```
+
+### Issue: Certificate Expired
+
+**Symptoms**:
+```
+SSL certificate problem: certificate has expired
+```
+
+**Causes**:
+1. Auto-renewal cron job not running
+2. Port 80 blocked during renewal
+3. DNS changed after deployment
+
+**Solutions**:
+
+```bash
+# SSH to instance
+ssh -i your-key.pem ec2-user@decision-control.example.com
+
+# Check certbot cron job exists
+sudo cat /etc/cron.daily/certbot-renew
+
+# Check recent renewal attempts
+sudo grep -i renew /var/log/letsencrypt/letsencrypt.log | tail -20
+
+# Force renewal now
+sudo certbot renew --force-renewal
+
+# Reload nginx
+sudo systemctl reload nginx
+```
+
+### Issue: nginx Not Starting
+
+**Symptoms**:
+```
+nginx: [emerg] cannot load certificate
+```
+
+**Causes**:
+1. Certificate files not found
+2. Incorrect file permissions
+3. nginx configuration error
+
+**Solutions**:
+
+```bash
+# Check certificate files exist
+sudo ls -la /etc/letsencrypt/live/decision-control.example.com/
+
+# Expected files:
+# cert.pem chain.pem fullchain.pem privkey.pem
+
+# Test nginx configuration
+sudo nginx -t
+
+# Check nginx logs
+sudo journalctl -u nginx -n 50
+
+# Restart nginx
+sudo systemctl restart nginx
+```
+
+## Advanced SSL Configuration
+
+### Using Your Own SSL Certificate
+
+If you prefer to use your own SSL certificate instead of Let's Encrypt:
+
+1. **SSH to Instance**:
+```bash
+ssh -i your-key.pem ec2-user@decision-control.example.com
+```
+
+2. **Upload Certificate Files**:
+```bash
+# Create directory
+sudo mkdir -p /etc/nginx/ssl
+
+# Upload your certificate and key
+# (Use scp or S3 to transfer files)
+sudo cp your-cert.crt /etc/nginx/ssl/
+sudo cp your-cert.key /etc/nginx/ssl/
+```
+
+3. **Update nginx Configuration**:
+```bash
+sudo vi /etc/nginx/conf.d/decision-control.conf
+
+# Update SSL certificate paths:
+ssl_certificate /etc/nginx/ssl/your-cert.crt;
+ssl_certificate_key /etc/nginx/ssl/your-cert.key;
+```
+
+4. **Test and Reload**:
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### Custom SSL/TLS Settings
+
+Enhance security with custom nginx SSL settings:
+
+```nginx
+# Add to /etc/nginx/conf.d/decision-control.conf
+
+# Modern SSL protocols only
+ssl_protocols TLSv1.2 TLSv1.3;
+
+# Strong ciphers
+ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
+ssl_prefer_server_ciphers on;
+
+# OCSP stapling
+ssl_stapling on;
+ssl_stapling_verify on;
+
+# Security headers
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-Content-Type-Options "nosniff" always;
+```
+
+## Best Practices
+
+1. **Use Custom Domains for Production**: Always enable HTTPS for production deployments
+
+2. **Keep Port 80 Open**: Required for Let's Encrypt renewals every 60-90 days
+
+3. **Monitor Certificate Expiration**: Let's Encrypt certificates expire in 90 days
+   ```bash
+   # Add to CloudWatch monitoring
+   days_until_expiry=$(...)
+   aws cloudwatch put-metric-data --metric-name CertificateExpiry ...
+   ```
+
+4. **Test Renewal Process**: Run dry-run renewals monthly
+   ```bash
+   sudo certbot renew --dry-run
+   ```
+
+5. **Use HSTS Headers**: Enable HTTP Strict Transport Security (already included)
+
+6. **Plan for DNS Changes**: If you change instance IP, update Route 53 A record
+
+## Next Steps
+
+- **Sandbox Deployment**: [Sandbox Edition](/deploy/aws/sandbox)
+- **Production Deployment**: [Production Edition](production)
+- **Security Hardening**: [Security Best Practices](/deploy/aws/security)
+- **Troubleshooting**: [Troubleshooting Guide](/deploy/aws/troubleshooting)
+
+## Support
+
+For SSL/HTTPS issues:
+
+- **Let's Encrypt Status**: [https://letsencrypt.status.io/](https://letsencrypt.status.io/)
+- **AWS Route 53 Documentation**: [Route 53 Developer Guide](https://docs.aws.amazon.com/route53/)
+- **Aletyx Support**: aws-support@aletyx.com

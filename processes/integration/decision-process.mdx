@@ -1,0 +1,377 @@
+---
+title: "Decision Orchestration in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Decision orchestration brings together rule execution, decision logic, and process flows to create powerful automation solutions. Aletyx Enterprise Build of Kogito and Drools supports multiple..."
+---
+Decision orchestration brings together rule execution, decision logic, and process flows to create powerful automation solutions. Aletyx Enterprise Build of Kogito and Drools supports multiple approaches for orchestrating decisions—from modern Rule Units in Kogito to classic Ruleflow patterns in Drools KJARs—enabling teams to build sophisticated decision services that scale across enterprise environments.
+
+## Understanding Decision Orchestration
+
+Decision orchestration coordinates the execution of multiple decision components within a larger process flow. Instead of isolated rule evaluations, orchestration allows you to:
+
+- **Sequence decision logic** across multiple rule sets or DMN models
+- **Control execution flow** with conditional branching and parallel evaluation
+- **Integrate decisions with processes** using BPMN workflows
+- **Maintain state** across complex decision chains
+- **Handle exceptions** and recovery patterns systematically
+
+## Orchestration Approaches
+
+### Modern Approach: Rule Units in Kogito
+
+The recommended approach for new development uses **Rule Units** within Kogito applications. Rule Units provide a modular, type-safe way to organize and execute decision logic.
+
+**Key characteristics:**
+
+- **Code-centric design** with compile-time safety
+- **Native Quarkus and Spring Boot integration**
+- **Cloud-native deployment** with fast startup and low memory footprint
+- **Event-driven architecture** with built-in Kafka support
+- **OpenAPI-generated REST interfaces**
+
+**Example Rule Unit orchestration:**
+
+```java
+// Define a Rule Unit for credit scoring
+public class CreditScoringUnit implements RuleUnitData {
+    private final DataStore<LoanApplication> applications;
+    private final DataStore<CreditScore> scores;
+
+    public CreditScoringUnit() {
+        this.applications = DataSource.createStore();
+        this.scores = DataSource.createStore();
+    }
+
+    // Getters...
+}
+```
+
+```drl
+// Rules file for CreditScoringUnit
+package org.example.credit;
+unit CreditScoringUnit;
+
+rule "High Income Applicants"
+when
+    $app: /applications[income > 100000]
+then
+    scores.add(new CreditScore($app.getId(), 750));
+end
+
+rule "Standard Applicants"
+when
+    $app: /applications[income > 50000, income <= 100000]
+then
+    scores.add(new CreditScore($app.getId(), 650));
+end
+```
+
+**Invoking Rule Units via REST:**
+
+```bash
+curl -X POST http://localhost:8080/credit-scoring \
+  -H "Content-Type: application/json" \
+  -d '{
+    "applications": [
+      {"id": "A001", "income": 120000, "age": 35}
+    ]
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "scores": [
+    {"applicationId": "A001", "score": 750}
+  ]
+}
+```
+
+### Classic Approach: Ruleflows in Drools KJAR
+
+For enterprises migrating from earlier Drools versions, Aletyx Enterprise Build of Kogito and Drools provides continued support for **Ruleflow** orchestration patterns via the `startProcess` API in KJAR deployments.
+
+<Info title="Aletyx Enterprise Ruleflow Support">
+
+The `startProcess` method is available exclusively in Aletyx Enterprise for KJAR-packaged applications. See [Drools Ruleflow documentation](/platform/drools/ruleflow) for details.
+</Info>
+**Classic Ruleflow pattern:**
+
+```java
+KieSession session = kbase.newKieSession();
+
+// Insert facts
+session.insert(new LoanApplication("A001", 85000));
+session.insert(new Applicant("John Doe", 35, 700));
+
+// Start the ruleflow process to orchestrate rule execution
+session.startProcess("LoanApprovalRuleflow");
+
+// Fire all rules following the ruleflow sequence
+session.fireAllRules();
+
+// Extract results
+Collection<LoanDecision> decisions = session.getObjects(
+    new ClassObjectFilter(LoanDecision.class)
+);
+```
+
+**Ruleflow BPMN metadata requirement:**
+
+To enable classic ruleflow support in your BPMN process, add this metadata attribute:
+
+- **Name:** `ClassicRuleFlow`
+- **Value:** `true`
+
+Without this metadata, you may encounter:
+
+```
+java.lang.IllegalStateException: Illegal method call.
+This session was previously disposed.
+```
+
+**Ruleflow orchestration capabilities:**
+
+Ruleflows use BPMN process definitions to control decision execution:
+
+![Diagram](/images/diagrams/core/integration/decision-process/flowchart-lr-1.svg)
+
+Each **Ruleflow Group** contains related rules that execute together when that stage of the process is reached.
+
+### Hybrid Approach: Business Rule Tasks in BPMN
+
+Both Kogito and traditional jBPM processes support **Business Rule Tasks** to embed decision logic within larger process orchestrations.
+
+**Business Rule Task capabilities:**
+
+- **DMN integration:** Execute DMN decision models with specified inputs
+- **DRL integration:** Invoke Rule Units for complex rule evaluation
+- **Data mapping:** Transform process variables to/from decision inputs/outputs
+- **Synchronous execution:** Decision completes before process continues
+
+**Example BPMN with Business Rule Task:**
+
+![Diagram](/images/diagrams/core/integration/decision-process/flowchart-lr-2.svg)
+
+**Configuring a Business Rule Task:**
+
+1. Add a Business Rule Task to your BPMN process
+2. Configure the rule implementation:
+   - **DMN:** Specify namespace and model name
+   - **DRL:** Specify Rule Unit class name
+3. Map process variables to decision inputs
+4. Map decision outputs back to process variables
+5. Handle results in subsequent process steps
+
+See [BPMN Activities](/processes/bpmn/activities) for detailed configuration guidance.
+
+## Decision Orchestration Patterns
+
+### Sequential Decision Chain
+
+Execute decisions in a defined sequence where each decision may influence the next.
+
+**Use case:** Multi-stage approval process
+
+![Diagram](/images/diagrams/core/integration/decision-process/flowchart-lr-3.svg)
+
+**Implementation:**
+
+- **Kogito:** Chain multiple Rule Unit invocations within a BPMN process
+- **KJAR:** Use Ruleflow with sequential Ruleflow Groups
+- **BPMN:** Connect multiple Business Rule Tasks in sequence
+
+### Parallel Decision Evaluation
+
+Evaluate multiple independent decision sets concurrently for performance.
+
+**Use case:** Risk assessment from multiple perspectives
+
+![Diagram](/images/diagrams/core/integration/decision-process/flowchart-td-4.svg)
+
+**Implementation:**
+
+- **Kogito:** Use parallel gateways in BPMN with separate Business Rule Tasks
+- **KJAR:** Define parallel branches in Ruleflow process
+- **BPMN:** Configure parallel gateway with multiple rule evaluations
+
+### Conditional Decision Routing
+
+Route to different decision logic based on runtime conditions.
+
+**Use case:** Product-specific pricing rules
+
+![Diagram](/images/diagrams/core/integration/decision-process/flowchart-td-5.svg)
+
+**Implementation:**
+
+- **Kogito:** Use exclusive gateways in BPMN to route to appropriate Rule Units
+- **KJAR:** Use Ruleflow with conditional branching between Ruleflow Groups
+- **BPMN:** Configure gateway conditions based on process variables
+
+## Deployment Models
+
+### Kogito Microservices
+
+Deploy individual decision services as independent microservices.
+
+**Characteristics:**
+
+- **One service per bounded context:** Separate credit scoring, fraud detection, etc.
+- **Independent scaling:** Scale high-demand services independently
+- **Event-driven communication:** Services interact via Kafka topics
+- **Container deployment:** Docker, Kubernetes, OpenShift
+
+**Example service invocation:**
+
+```bash
+# Credit Scoring Service
+curl -X POST http://credit-scoring-service:8080/scores \
+  -H "Content-Type: application/json" \
+  -d '{"applicantId": "A001", "income": 85000}'
+
+# Fraud Detection Service
+curl -X POST http://fraud-detection-service:8080/check \
+  -H "Content-Type: application/json" \
+  -d '{"transactionId": "T5678", "amount": 50000}'
+```
+
+### Monolithic KJAR Deployment
+
+Deploy comprehensive decision logic as a single application.
+
+**Characteristics:**
+
+- **All rules in one KJAR:** Centralized rule repository
+- **Shared KieSession:** Efficient memory usage for related rules
+- **Spring Boot or standalone:** Flexible deployment options
+- **Traditional application server support:** WebSphere, WebLogic, JBoss EAP
+
+**Example configuration (Spring Boot):**
+
+```yaml
+# application.yml
+kie:
+  maven:
+    settings:
+      custom: /path/to/settings.xml
+  kjars:
+    - groupId: com.example
+      artifactId: decision-rules
+      version: 1.0.0
+```
+
+### Hybrid Architecture
+
+Combine Kogito microservices for new capabilities with KJAR systems during migration.
+
+**Migration strategy:**
+
+1. **Identify bounded contexts:** Determine logical separation of decision domains
+2. **Extract high-value decisions:** Move frequently changed rules to Kogito first
+3. **Maintain KJAR for stable logic:** Keep mature, stable rules in existing KJAR
+4. **Use event integration:** Connect systems via Kafka for loose coupling
+5. **Gradual migration:** Move rules incrementally as business value dictates
+
+See [Drools Ruleflow Migration](/platform/drools/ruleflow) for detailed migration guidance.
+
+## Integration with Processes
+
+### Event-Driven Process Integration
+
+Connect decision services with process workflows via events.
+
+**Architecture:**
+
+![Diagram](/images/diagrams/core/integration/decision-process/sequence-6.svg)
+
+**CloudEvents format:**
+
+```json
+{
+  "specversion": "1.0",
+  "type": "DecisionRequest",
+  "source": "loan-application-service",
+  "id": "A001-20250131-001",
+  "datacontenttype": "application/json",
+  "kogitodmnmodelnamespace": "https://example.com/dmn",
+  "kogitodmnmodelname": "CreditScoring",
+  "data": {
+    "applicantId": "A001",
+    "income": 85000,
+    "requestedAmount": 250000
+  }
+}
+```
+
+See [Event-Driven Integration](/processes/integration/event-driven) for comprehensive event patterns.
+
+### Service Orchestration Integration
+
+Embed decisions within service orchestration workflows.
+
+**Pattern:**
+
+- Process service invokes decision service via REST
+- Decision service returns results synchronously
+- Process continues with decision outputs
+
+See [Service Orchestration](/processes/integration/service-orchestration) for service task patterns.
+
+## Best Practices
+
+### Design Principles
+
+1. **Separate concerns:** Keep decision logic separate from process flow
+2. **Modular units:** Design Rule Units around bounded contexts
+3. **Stateless decisions:** Prefer stateless decision evaluations when possible
+4. **Clear interfaces:** Define explicit inputs and outputs for each decision point
+5. **Version control:** Track decision logic changes alongside code
+
+### Performance Optimization
+
+1. **Minimize state:** Reduce working memory size in rule sessions
+2. **Optimize rule conditions:** Place most selective conditions first (LHS)
+3. **Use parallel evaluation:** Execute independent decisions concurrently
+4. **Cache results:** Store decision outputs when inputs haven't changed
+5. **Monitor execution:** Track rule firing statistics and execution times
+
+### Testing Strategy
+
+1. **Unit test Rule Units:** Test individual Rule Units with comprehensive scenarios
+2. **Integration test orchestration:** Verify decision sequences in full flows
+3. **Performance test at scale:** Validate throughput under production load
+4. **Test decision correctness:** Validate business logic accuracy
+5. **Test error handling:** Ensure graceful degradation on failures
+
+## Monitoring and Observability
+
+### Key Metrics
+
+Track these metrics for decision orchestration health:
+
+- **Decision execution time:** Latency per decision evaluation
+- **Rule firing frequency:** Which rules execute most often
+- **Decision throughput:** Decisions processed per second
+- **Error rates:** Failed evaluations and exceptions
+- **Resource utilization:** CPU and memory consumption
+
+### Prometheus Metrics Example
+
+```bash
+# Query decision execution time
+sum(rate(decision_execution_seconds_sum[5m]))
+  by (decision_name)
+
+# Query rule firing counts
+sum(rate(rules_fired_total[5m]))
+  by (rule_unit)
+```
+
+## Next Steps
+
+- **Learn Rule Units:** [Understanding Rule Units](/decisions/drl/rule-units)
+- **Explore Ruleflows:** [Drools Ruleflow Guide](/platform/drools/ruleflow)
+- **Master BPMN:** [BPMN Activities](/processes/bpmn/activities)
+- **Event Integration:** [Event-Driven Architecture](/processes/integration/event-driven)
+- **Get Support:** [Contact Aletyx](https://aletyx.com/contact/) for migration assistance

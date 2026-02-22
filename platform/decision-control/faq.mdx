@@ -1,0 +1,747 @@
+---
+title: "FAQ and Troubleshooting"
+description: "This document provides answers to frequently asked questions and solutions to common issues encountered when using Decision Control. Topics are organized by functional area for quick reference."
+---
+This document provides answers to frequently asked questions and solutions to common issues encountered when using Decision Control. Topics are organized by functional area for quick reference.
+
+## Frequently Asked Questions
+
+### General Questions
+
+#### What is Decision Control?
+
+Decision Control is an enterprise-grade decision intelligence platform that enables organizations to author, test, deploy, and govern Decision Model and Notation (DMN) models across multiple environments. It provides visual DMN authoring, intelligent testing via natural language prompts, multi-environment management, role-based governance workflows, and comprehensive audit trails. Built on Apache KIE technology with enterprise enhancements, Decision Control manages business logic as versioned, auditable, and governable assets.
+
+#### What are the different editions of Decision Control?
+
+Decision Control is available in four tiers:
+
+- **Pioneer**: Core DMN authoring and execution for development teams
+- **Innovator**: Adds Prompt UI for natural language testing and business analyst collaboration
+- **Horizon**: Adds Management UI and governance features for multi-environment deployments
+- **Keystone**: Complete feature set with advanced analytics for enterprise-wide decision intelligence
+
+Each edition builds on the previous, with pricing and features aligned to organizational maturity.
+
+#### How does Decision Control differ from other DMN engines?
+
+Unlike standalone DMN execution engines, Decision Control provides end-to-end lifecycle management including:
+
+- Integrated authoring, testing, and management interfaces
+- Built-in governance workflows with four-eyes principle enforcement
+- Multi-environment deployment coordination (dev, test, prod)
+- Natural language testing via Prompt UI
+- Complete audit trails for regulatory compliance
+- OAuth2/OIDC authentication with role-based access control
+
+Decision Control is a complete platform, not just an execution engine.
+
+#### Can Decision Control integrate with my existing systems?
+
+Yes. Decision Control provides RESTful APIs with OpenAPI documentation for seamless integration. Common integration patterns include:
+
+- **API Integration**: REST endpoints for decision execution and model management
+- **Event-Driven**: Kafka connectors for asynchronous decision requests
+- **CI/CD**: Git-based model storage with automated testing pipelines
+- **SSO**: OAuth2/OIDC integration with enterprise identity providers
+
+See [Integration and APIs](/platform/decision-control/apis) for detailed integration guidance.
+
+#### Is Decision Control cloud-native?
+
+Yes. Decision Control is designed for Kubernetes deployment with:
+
+- Containerized microservices architecture
+- Horizontal scaling for high availability
+- Health checks and readiness probes
+- Prometheus metrics for observability
+- ConfigMap/Secret integration for configuration
+- Ingress-based routing with TLS termination
+
+All components run as stateless services with state in managed PostgreSQL databases.
+
+### Authentication and Security
+
+#### How does authentication work?
+
+Decision Control uses Keycloak for OAuth2/OIDC authentication. The authentication flow:
+
+1. User accesses Decision Control landing page
+2. System redirects to Keycloak login
+3. User provides credentials
+4. Keycloak issues access token, refresh token, and ID token
+5. User's browser stores tokens in localStorage
+6. All API calls include `Authorization: Bearer {token}` header
+7. Tokens automatically refresh before expiration
+
+See [Integration and APIs - Authentication](/platform/decision-control/apis#authentication) for implementation details.
+
+#### What roles are available?
+
+Decision Control defines five standard roles:
+
+| Role | Keycloak Role Name | Permissions |
+|------|-------------------|-------------|
+| Business Analyst | `decision-control-dev-users` | Create models, submit for review, access dev/test |
+| Risk Manager | `decision-control-risk-manager` | Approve risk reviews, access all environments |
+| Compliance Officer | `decision-control-compliance` | Approve compliance reviews, access all environments |
+| Operations Manager | `decision-control-prod-users` | Submit production deployments, access all environments |
+| Administrator | `decision-control-admin` | All permissions, emergency workflows, system config |
+
+Roles are assigned in Keycloak and mapped to permissions in Decision Control.
+
+#### How do I add custom roles?
+
+To create custom approval roles:
+
+1. **Create role in Keycloak**: Navigate to Realm `aletyx` → Roles → Create Role
+2. **Assign to users**: Add role to appropriate user accounts
+3. **Update workflows**: Add workflow steps requiring the new role (see [Governance Workflow](/platform/decision-control/governance#adding-custom-roles))
+4. **Deploy changes**: Update governance-api ConfigMap and restart pods
+
+#### What is the four-eyes principle?
+
+The four-eyes principle prevents a user from approving their own submission. Decision Control enforces this by:
+
+- Comparing submitter email with approver email
+- Rejecting approval attempts with `403 Forbidden` and error code `CANNOT_APPROVE_OWN_REQUEST`
+- Logging all attempts in audit trail
+- Requiring different users at each approval stage
+
+This ensures separation of duties and prevents single-person approval chains.
+
+#### How long do access tokens last?
+
+By default:
+
+- **Access tokens**: 5 minutes
+- **Refresh tokens**: 30 days
+- **ID tokens**: 5 minutes
+
+Tokens automatically refresh using the refresh token before expiration. If the refresh token expires, users must log in again.
+
+### Model Management
+
+#### What DMN versions are supported?
+
+Decision Control supports DMN 1.5 specification (which includes backward compatibility with DMN 1.1-1.4). Models created in any supported version can be executed. The Authoring UI generates DMN 1.5 by default.
+
+#### Can I import existing DMN models?
+
+Yes. Upload existing DMN files (.dmn extension) via:
+
+- **Authoring UI**: Click "Upload Model" and select file
+- **API**: POST to `/api/management/units/{unitId}/versions/{versionId}/models` with multipart/form-data
+
+The system validates DMN syntax and rejects invalid models with detailed error messages.
+
+#### How do I version my models?
+
+Decision Control automatically manages versioning for you. When you publish a model, the system automatically increments the version number within the Unit/Version/Models hierarchy. You don't need to manually specify version numbers.
+
+Published versions are immutable. To make changes, simply create and publish a new version, and the system will automatically assign the next version number.
+
+#### Can I delete a published version?
+
+No. Published versions are immutable to maintain audit trail integrity. If a version should not be used:
+
+1. **Disable the version**: Set status to `DISABLED` (prevents execution but retains for audit)
+2. **Document reason**: Add note in version changelog
+3. **Communicate**: Notify users and update documentation
+
+To remove all traces (not recommended), administrators can delete via database, but this breaks audit trails.
+
+#### What happens if my DMN model has errors?
+
+The system validates DMN models at upload and execution:
+
+**Upload Validation**:
+
+- XML syntax errors → `400 Bad Request` with error details
+- Missing required elements → Validation error message
+- Invalid FEEL expressions → Syntax error with line number
+
+**Execution Validation**:
+
+- Missing inputs → Error message listing missing input names
+- Type mismatches → Type conversion error
+- Logic errors → Decision evaluation failure with context
+
+Always test models before publishing to catch validation errors.
+
+### Decision Execution
+
+#### How do I execute a decision?
+
+Execute decisions via REST API:
+
+```bash
+curl -X POST https://decision-control-prod.../api/runtime/units/{unit}/versions/{version}/execute \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "modelName": "MyModel",
+    "decisionName": "MyDecision",
+    "context": {
+      "Input1": "value1",
+      "Input2": 123
+    }
+  }'
+```
+
+See [Integration and APIs - Decision Execution](/platform/decision-control/apis#decision-execution-api) for complete reference.
+
+### Governance and Workflows
+
+<Info title="Horizon/Keystone Edition">
+Governance features are available in Horizon and Keystone editions only.
+</Info>
+#### What workflows are available?
+
+Decision Control includes six pre-configured workflows:
+
+1. **Standard Dev → Test**: Business review → Risk review → Deploy
+2. **Fast-Track Dev → Test**: Admin quick review → Deploy
+3. **Standard Test → Prod**: Business → Risk → Compliance → Admin → Deploy
+4. **Emergency Test → Prod**: Admin approval → Deploy → Post-review
+5. **Multi-Approver Test → Prod**: Multiple approvers at each stage
+6. **Self-Service Dev → Test**: Automated validation → Deploy
+
+See [Governance Workflow](/platform/decision-control/governance#workflow-types) for complete descriptions.
+
+#### Can I create custom workflows?
+
+Yes. Edit the workflow configuration file and deploy changes:
+
+1. **Edit workflow JSON**: Define steps, roles, and conditions
+2. **Update ConfigMap**: `kubectl create configmap governance-workflows --from-file=promotion-workflows.json`
+3. **Restart governance-api**: `kubectl rollout restart deployment/governance-api`
+
+See [Governance Workflow - Creating Custom Workflows](/platform/decision-control/governance#creating-a-custom-workflow) for detailed instructions.
+
+#### How do I submit a model for review?
+
+From Aletyx Decision Control Tower landing page:
+
+1. Navigate to Models view
+2. Select source environment (dev or test)
+3. Expand unit and version to find model
+4. Click "Submit for Review"
+5. Choose workflow type and target environment
+6. Provide justification
+7. Submit
+
+See [Usage Scenarios - Scenario 3](/platform/decision-control/usage-scenarios#scenario-3-promoting-a-model-through-governance) for step-by-step tutorial.
+
+#### Why can't I approve my own request?
+
+Decision Control enforces the four-eyes principle: you cannot approve requests you submitted. This prevents single-person approval chains and ensures separation of duties. Have another user with the required role approve the request.
+
+#### How do I track approval status?
+
+Check approval status via:
+
+- **Aletyx Decision Control Tower Tasks View**: Shows all requests and current status
+- **Request Detail Page**: Complete timeline with all events
+- **API**: `GET /api/governance/requests/{requestId}`
+- **Email Notifications**: Automatic notifications on status changes (if configured)
+
+#### Can I cancel a governance request?
+
+Yes. Request submitters and administrators can cancel pending requests:
+
+1. Navigate to Tasks view
+2. Click on request
+3. Click "Cancel Request"
+4. Provide cancellation reason
+
+Canceled requests appear in audit trail with status `CANCELLED`.
+
+### Audit and Compliance
+
+#### How do I access audit trails?
+
+Access audit data via:
+
+- **Aletyx Decision Control Tower UI**: Audit view with filtering and export
+- **API**: `GET /api/governance/audit?requestId={id}`
+- **Database**: Direct PostgreSQL query (administrators only)
+
+See [Usage Scenarios - Scenario 4](/platform/decision-control/usage-scenarios#scenario-4-viewing-audit-trails) for detailed tutorial.
+
+#### Can audit records be deleted?
+
+No. Audit records are immutable to ensure compliance with regulatory requirements. The database enforces this with triggers that prevent DELETE operations on audit tables.
+
+Exports include all metadata required for regulatory audits.
+
+### Prompt UI and Testing
+
+#### What is Prompt UI?
+
+Prompt UI allows testing DMN models using natural language queries instead of technical API calls. Business users can test models by describing scenarios conversationally, making testing accessible to non-technical stakeholders.
+
+Available in Innovator edition and higher.
+
+#### How accurate is natural language parsing?
+
+Prompt UI uses language models to extract input values from natural language queries. Accuracy depends on query clarity:
+
+- **High accuracy** (>95%): Clear queries with explicit values ("age 35, income $75000")
+- **Medium accuracy** (80-95%): Conversational queries with some ambiguity
+- **Low accuracy** (<80%): Vague queries, missing values, or unclear context
+
+For critical testing, verify extracted inputs before execution.
+
+## Troubleshooting
+
+### Authentication Issues
+
+#### Error: "Token expired" (401 Unauthorized)
+
+**Symptom**: API calls fail with 401 status and message "Token expired".
+
+**Cause**: Access token has expired (default lifetime: 5 minutes).
+
+**Solution**:
+
+Implement automatic token refresh:
+
+```javascript
+async function refreshIfNeeded() {
+  const session = JSON.parse(localStorage.getItem('session'));
+  const now = Math.floor(Date.now() / 1000);
+
+  if (session.expires_at - now < 30) {
+    // Token expires in less than 30 seconds, refresh
+    const response = await fetch(
+      'https://keycloak.../realms/aletyx/protocol/openid-connect/token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: 'decision-control-ui',
+          refresh_token: session.refresh_token
+        })
+      }
+    );
+    const tokens = await response.json();
+    // Update session with new tokens
+  }
+}
+```
+
+#### Error: "Insufficient permissions" (403 Forbidden)
+
+**Symptom**: User can log in but cannot access certain features or approve requests.
+
+**Cause**: User lacks required Keycloak role or attempting to approve own request.
+
+**Solution**:
+
+1. **Verify user roles**: Decode JWT token to check roles:
+   ```bash
+   echo $TOKEN | cut -d. -f2 | base64 -d | jq .realm_access.roles
+   ```
+
+2. **Check role requirements**: Verify workflow step requires a role the user has.
+
+3. **Contact administrator**: Request role assignment if missing required role.
+
+4. **Four-eyes violation**: If approving own request, have different user approve.
+
+#### Error: "Redirect URI mismatch"
+
+**Symptom**: After Keycloak login, browser shows error "Invalid redirect URI".
+
+**Cause**: Keycloak client configuration doesn't include the application's redirect URI.
+
+**Solution**:
+
+1. Log in to Keycloak admin console
+2. Navigate to Realm `aletyx` → Clients → `decision-control-ui`
+3. Add redirect URI to **Redirect URIs** field:
+   - Development: `http://localhost:8080/*`
+   - Production: `https://landing-page.your-domain.com/*`
+4. Save changes
+
+### Model Execution Issues
+
+#### Error: "Model not found" (404 Not Found)
+
+**Symptom**: Decision execution fails with "Model not found" error.
+
+**Cause**: Model name, unit name, or version is incorrect, or version is not published.
+
+**Solution**:
+
+1. **Verify model exists**:
+   ```bash
+   curl https://decision-control-prod.../api/management/units \
+     -H "Authorization: Bearer $TOKEN"
+   ```
+
+2. **Check version status**: Ensure version is `PUBLISHED`, not `DRAFT`.
+
+3. **Verify exact names**: Model names are case-sensitive. Use exact names from API response.
+
+4. **Check environment**: Ensure querying correct environment (dev, test, prod).
+
+#### Error: "Type mismatch: expected number, got string"
+
+**Symptom**: Execution fails with type conversion error.
+
+**Cause**: Input value type doesn't match DMN model definition.
+
+**Solution**:
+
+1. **Check DMN model**: Verify data types for all inputs (number, string, boolean, date).
+
+2. **Provide correct types** in JSON:
+   - Numbers: `{"age": 35}` (no quotes)
+   - Strings: `{"name": "John"}` (with quotes)
+   - Booleans: `{"approved": true}` (no quotes)
+   - Dates: `{"dob": "1990-01-15"}` (ISO 8601 string)
+
+3. **Validate JSON**: Use JSON validator to ensure correct syntax.
+
+#### Slow execution performance
+
+**Symptom**: Decision execution takes longer than expected (>500ms).
+
+**Cause**: Complex models, large decision tables, or insufficient resources.
+
+**Solution**:
+
+1. **Optimize decision tables**: Reduce rules, use simpler conditions.
+
+2. **Simplify model structure**: Break complex decisions into smaller, focused decisions.
+
+3. **Increase resources**: Scale up CPU/memory limits:
+   ```yaml
+   resources:
+     requests:
+       cpu: 4000m
+       memory: 4Gi
+     limits:
+       cpu: 6000m
+       memory: 8Gi
+   ```
+
+4. **Use batch execution**: Process multiple inputs together to amortize overhead.
+
+5. **Monitor metrics**: Check Prometheus metrics for bottlenecks:
+   ```bash
+   curl https://decision-control-prod.../actuator/metrics/dmn.execution.duration.seconds
+   ```
+
+### Governance Workflow Issues
+
+#### Request stuck in "Pending" status
+
+**Symptom**: Governance request doesn't advance after approval.
+
+**Cause**: Four-eyes violation, role mismatch, or database transaction failure.
+
+**Solution**:
+
+1. **Check four-eyes principle**: Verify approver is different from submitter:
+   ```bash
+   curl https://governance-api.../api/governance/requests/42 \
+     | jq '{submitter: .submittedBy, approver: .timeline[-1].user}'
+   ```
+
+2. **Verify user role**: Ensure approver has required role for current step.
+
+3. **Check governance-api logs**:
+   ```bash
+   kubectl logs -f deployment/governance-api -n prod | grep "request_id=42"
+   ```
+
+4. **Retry approval**: If transient error, retry approval action.
+
+#### Deployment failed after approval
+
+**Symptom**: All approvals complete but deployment to target environment fails.
+
+**Cause**: Target environment unavailable, network issues, or authentication failure.
+
+**Solution**:
+
+1. **Check target environment health**:
+   ```bash
+   curl https://decision-control-test.../actuator/health
+   ```
+
+2. **Verify network connectivity**:
+   ```bash
+   kubectl exec -it deployment/governance-api -n prod -- \
+     curl -I https://decision-control-test...
+   ```
+
+3. **Check governance-api logs** for deployment errors:
+   ```bash
+   kubectl logs deployment/governance-api -n prod | grep "deployment"
+   ```
+
+4. **Retry deployment**: Administrators can manually trigger deployment via API.
+
+#### Cannot see pending tasks
+
+**Symptom**: User with correct role doesn't see pending tasks in Tasks view.
+
+**Cause**: Token doesn't include role, role name mismatch, or request already approved.
+
+**Solution**:
+
+1. **Decode JWT to verify roles**:
+   ```bash
+   echo $TOKEN | cut -d. -f2 | base64 -d | jq .realm_access.roles
+   ```
+
+2. **Check workflow configuration**: Verify step requires a role the user has.
+
+3. **Refresh token**: Log out and log in again to get updated roles.
+
+4. **Check request status**: Request may have been approved by another user with same role.
+
+### Database and Infrastructure Issues
+
+#### Database connection errors
+
+**Symptom**: Application logs show "Cannot connect to database" errors.
+
+**Cause**: PostgreSQL service down, incorrect credentials, or network policy blocking access.
+
+**Solution**:
+
+1. **Check PostgreSQL pod status**:
+   ```bash
+   kubectl get pods -n prod | grep postgres
+   ```
+
+2. **Verify database service**:
+   ```bash
+   kubectl get svc -n prod | grep postgres
+   ```
+
+3. **Test connectivity**:
+   ```bash
+   kubectl exec -it deployment/decision-control-dev -n dev -- \
+     psql -h postgres-dev -U decision_control -d decision_control
+   ```
+
+4. **Verify credentials**: Check Secret contains correct database password:
+   ```bash
+   kubectl get secret postgres-dev-secret -n prod -o jsonpath='{.data.password}' | base64 -d
+   ```
+
+5. **Check network policies**: Ensure pods can reach database service.
+
+#### Ingress not routing requests
+
+**Symptom**: Cannot access Decision Control URLs, getting 404 or 503 errors.
+
+**Cause**: Ingress misconfigured, DNS not resolving, or TLS certificate issues.
+
+**Solution**:
+
+1. **Check Ingress status**:
+   ```bash
+   kubectl get ingress -n prod
+   kubectl describe ingress decision-control-dev -n dev
+   ```
+
+2. **Verify DNS resolution**:
+   ```bash
+   nslookup decision-control-dev.example.com
+   ```
+
+3. **Test TLS certificate**:
+   ```bash
+   curl -v https://decision-control-dev.example.com
+   ```
+
+4. **Check backend service**:
+   ```bash
+   kubectl get svc decision-control-dev -n dev
+   ```
+
+5. **Review ingress controller logs**:
+   ```bash
+   kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
+   ```
+
+#### Pod crashes or restarts frequently
+
+**Symptom**: Pods enter CrashLoopBackOff or restart frequently.
+
+**Cause**: Out of memory, application errors, or failing health checks.
+
+**Solution**:
+
+1. **Check pod logs**:
+   ```bash
+   kubectl logs -f deployment/decision-control-dev -n dev --previous
+   ```
+
+2. **Describe pod for events**:
+   ```bash
+   kubectl describe pod decision-control-dev-xxxx -n prod
+   ```
+
+3. **Check resource usage**:
+   ```bash
+   kubectl top pod decision-control-dev-xxxx -n prod
+   ```
+
+4. **Increase resource limits** if OOMKilled:
+   ```yaml
+   resources:
+     limits:
+       memory: 6Gi
+   ```
+
+5. **Fix health check endpoints** if failing readiness/liveness probes.
+
+### Performance Issues
+
+#### High API latency
+
+**Symptom**: API requests take longer than expected (>1 second).
+
+**Cause**: Insufficient resources, database query performance, or network issues.
+
+**Solution**:
+
+1. **Check Prometheus metrics**:
+   ```bash
+   curl https://decision-control-prod.../actuator/metrics/http.server.requests \
+     | jq '.measurements[] | select(.statistic == "MAX")'
+   ```
+
+2. **Review database query performance**: Enable slow query logging in PostgreSQL.
+
+3. **Increase replicas** for horizontal scaling:
+   ```bash
+   kubectl scale deployment decision-control-prod --replicas=3 -n prod
+   ```
+
+4. **Add connection pooling**: Verify HikariCP configuration.
+
+5. **Enable caching**: Implement Redis cache for frequently accessed data.
+
+#### High memory usage
+
+**Symptom**: Pods consuming excessive memory, approaching limits.
+
+**Cause**: Memory leaks, large compiled models, or insufficient garbage collection.
+
+**Solution**:
+
+1. **Monitor JVM metrics**:
+   ```bash
+   curl https://decision-control-prod.../actuator/metrics/jvm.memory.used
+   ```
+
+2. **Trigger garbage collection**: Call actuator endpoint (if enabled).
+
+3. **Increase heap size**:
+   ```yaml
+   env:
+     - name: JAVA_OPTS
+       value: "-Xmx3g -Xms2g"
+   ```
+
+4. **Profile for memory leaks**: Use Java profiling tools.
+
+5. **Restart pods** as temporary mitigation:
+   ```bash
+   kubectl rollout restart deployment/decision-control-prod -n prod
+   ```
+
+### Common Error Codes Reference
+
+| Error Code | HTTP Status | Description | Common Cause | Solution |
+|-----------|-------------|-------------|--------------|----------|
+| `INVALID_TOKEN` | 401 | Token expired or invalid | Access token expired | Refresh token |
+| `INSUFFICIENT_PERMISSIONS` | 403 | Missing required role | User lacks role | Request role assignment |
+| `CANNOT_APPROVE_OWN_REQUEST` | 403 | Four-eyes violation | Submitter trying to approve | Different user approves |
+| `RESOURCE_NOT_FOUND` | 404 | Unit/version/model not found | Invalid ID or name | Verify resource exists |
+| `VERSION_ALREADY_PUBLISHED` | 409 | Cannot modify published version | Trying to edit published version | Create new version |
+| `DUPLICATE_UNIT_NAME` | 409 | Unit name exists | Name collision | Choose unique name |
+| `DMN_VALIDATION_ERROR` | 400 | Invalid DMN syntax | Malformed DMN XML | Fix DMN syntax |
+| `MISSING_REQUIRED_INPUT` | 400 | Execution missing input | Incomplete context | Include all inputs |
+| `TYPE_MISMATCH` | 400 | Wrong input type | Type conversion failure | Fix input types |
+| `DATABASE_CONNECTION_ERROR` | 503 | Cannot connect to database | DB service down | Check DB health |
+| `WORKFLOW_NOT_FOUND` | 404 | Invalid workflow type | Wrong workflow ID | Use valid workflow |
+
+## Getting Additional Help
+
+### Documentation Resources
+
+- [Overview](overview): Platform introduction and capabilities
+- [Architecture](/platform/decision-control/architecture): System design and component interactions
+- [Setup and Configuration](/platform/decision-control/setup): Deployment and configuration
+- [Governance Workflow](/platform/decision-control/governance): Approval workflows and customization
+- [Integration and APIs](/platform/decision-control/apis): API reference and integration patterns
+- [Usage Scenarios](/platform/decision-control/usage-scenarios): Step-by-step tutorials
+
+### Support Channels
+
+**Enterprise Support**:
+
+- Email: support@aletyx.com
+- SLA: based on your Aletyx Licensed Tier
+
+**Professional Services**:
+
+- Implementation consulting
+- Custom workflow development
+- Performance tuning and optimization
+- Training and enablement
+
+### Diagnostic Information to Provide
+
+When requesting support, include:
+
+1. **Version information**: Decision Control version and edition
+2. **Environment**: Kubernetes version, namespace, resource allocation
+3. **Error details**: Complete error message and stack trace
+4. **Steps to reproduce**: Detailed reproduction steps
+5. **Logs**: Relevant pod logs (anonymize sensitive data)
+6. **Configuration**: Relevant ConfigMaps and Secrets (redact passwords)
+7. **Network diagram**: Architecture and network policies (if relevant)
+
+### Useful Diagnostic Commands
+
+Collect diagnostic information:
+
+```bash
+# Get pod status and events
+kubectl get pods -n prod
+kubectl describe pod decision-control-dev-xxxx -n prod
+
+# Collect logs
+kubectl logs deployment/decision-control-dev -n dev --tail=500 > decision-control.log
+kubectl logs deployment/governance-api -n prod --tail=500 > governance-api.log
+
+# Export resource configurations
+kubectl get deployment decision-control-dev -n dev -o yaml > deployment.yaml
+kubectl get configmap -n prod -o yaml > configmaps.yaml
+
+# Check resource usage
+kubectl top pods -n prod
+kubectl top nodes
+
+# Verify networking
+kubectl exec -it deployment/decision-control-dev -n dev -- nslookup postgres-dev
+kubectl exec -it deployment/governance-api -n prod -- curl -I https://decision-control-test...
+```
+
+## Next Steps
+
+- [Overview](overview): Understand Decision Control capabilities
+- [Setup and Configuration](/platform/decision-control/setup): Deploy Decision Control
+- [Usage Scenarios](/platform/decision-control/usage-scenarios): Learn through step-by-step tutorials

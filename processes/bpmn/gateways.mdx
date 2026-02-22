@@ -1,0 +1,14 @@
+---
+title: "Gateways in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Gateways control how process paths diverge or converge. A diverging gateway can split one incoming flow into multiple paths based on conditions or events. A converging gateway merges multiple..."
+---
+Gateways control how process paths diverge or converge. A diverging gateway can split one incoming flow into multiple paths based on conditions or events. A converging gateway merges multiple incoming paths back into one. These decisions ensure that complex branching logic is clearly visualized and executed.
+
+Whether you need to pick only one valid path (Exclusive), merge multiple possibilities (Inclusive), run all branches in parallel (Parallel), or respond to whichever event happens first (Event-based), gateways give you the flexibility to model real-world decision points.
+
+Here are the supported gateways supported in Aletyx Enterprise Build of Kogito and Drools by jBPM
+
+- ![Exclusive Gateway Node](/images/core/processes/basic-bpmn/images/node-exclusive-gateway.png) Exclusive (XOR): Chooses exactly one valid path among many.
+- ![Inclusive Gateway Node](/images/core/processes/basic-bpmn/images/node-inclusive-gateway.png) Inclusive (OR): Can select one or more valid paths.
+- ![Parallel Gateway Node](/images/core/processes/basic-bpmn/images/node-parallel-gateway.png) Parallel (AND): Executes all paths simultaneously.
+- ![Event Gateway Node](/images/core/processes/basic-bpmn/images/node-event-gateway.png) Event-based: Awaits a particular event, and only the first occurring event triggers the flow.

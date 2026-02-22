@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 124 124">
+	<style>
+		/* Light mode styles */
+		.icon-primary {
+			fill: #000000;
+		}
+
+		.icon-secondary {
+			fill: #1a1a1a;
+		}
+
+		.icon-highlight {
+			stroke: #424242;
+		}
+
+		.icon-background {
+			fill: #b7b0b0;
+		}
+
+		.icon-container {
+			filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+		}
+	</style>
+
+	<!-- INSURANCE CLAIMS ICON -->
+	<g class="icon-container" transform="translate(60, 60)">
+		<circle class="icon-background" cx="0" cy="0" r="60" />
+		<!-- Document with shield -->
+		<path class="icon-primary" d="M-25,-35 h50 v70 h-50 v-70 z" />
+		<path class="icon-highlight" d="M-15,-25 h30 M-15,-15 h30 M-15,-5 h20" stroke-width="4"
+			stroke-linecap="round" />
+		<path class="icon-secondary"
+			d="M0,0 c15,-10 25,-5 25,10 c0,15 -25,25 -25,25 c0,0 -25,-10 -25,-25 c0,-15 10,-20 25,-10 z" />
+
+	</g>
+</svg>

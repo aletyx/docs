@@ -1,0 +1,174 @@
+---
+title: "Environment Setup in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "This guide will help you set up your development environment for Aletyx Enterprise Build of Kogito and Drools. We'll cover installation and configuration of all required tools and dependencies."
+---
+This guide will help you set up your development environment for Aletyx Enterprise Build of Kogito and Drools. We'll cover installation and configuration of all required tools and dependencies.
+
+## Prerequisites Overview
+
+The following tools are required for development:
+
+- Java 17 (Eclipse Temurin/AdoptOpenJDK, or other community distribution)
+- Maven 3.9.6 or higher
+- Git
+- Container runtime (Docker or Podman)
+- Kubernetes tools (Kubectl)
+- Red Hat OpenShift CLI (oc)
+- Visual Studio Code with extensions
+
+## Package Manager Setup
+
+If possible, to simplify the configurations, we recommend the usage of Package Managers like Homebrew, Chocolatey, or APT to get the required elements for your environment. This is not required, but greatly simplifies the process.
+
+<Tabs>
+  <Tab title="Package Manager">
+  </Tab>
+  <Tab title="Microsoft Windows (Chocolatey)">
+
+    	1.  Open PowerShell as Administrator (Right-click, "Run as Administrator")
+
+        2. Install Chocolatey:
+
+        	```powershell
+       		Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+        	```
+
+        3. Verify installation:
+
+        	```powershell
+        	choco --version
+        	```
+  </Tab>
+  <Tab title="MacOS (Homebrew)">
+
+    	1.  Install Homebrew:
+    	    	```bash
+    	    	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    	    	```
+
+    	2. Add Homebrew to your PATH:
+
+    	    1. For Apple Silicon Mac
+    	        	```bash
+    				echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zshrc
+    	        	```
+
+    		1. For Intel Macs
+    				```bash
+    	        	echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zshrc
+    				```
+
+
+    	3. Reload your shell configuration:
+    	        ```bash
+    	        source ~/.zshrc
+    	        ```
+  </Tab>
+  <Tab title="Linux (apt)">
+
+    Linux generally comes with its package manager, but ensure it's up to date:
+
+    ```bash
+        sudo apt update && sudo apt upgrade
+    ```
+  </Tab>
+</Tabs>
+## Initial Java Setup with Apache Maven
+
+You need a JDK 17 and for the distribution, we recommend using Eclipse Temurin (formerly AdoptOpenJDK)for development:
+
+<Tabs>
+  <Tab title="Java">
+  </Tab>
+  <Tab title="Homebrew">
+        ```bash
+        # Install Homebrew if not already installed
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+        # Install Java
+        brew install --cask temurin17
+
+        # Install Maven
+        brew install maven
+        ```
+  </Tab>
+  <Tab title="Linux">
+        ```bash
+        # Install Java
+        sudo apt-get update
+        sudo apt-get install -y temurin-17-jdk
+
+        # Install Maven
+        sudo apt-get install maven
+        ```
+  </Tab>
+  <Tab title="Windows">
+        ```powershell
+        # Using Chocolatey
+        choco install temurin17
+        choco install maven
+        ```
+  </Tab>
+  <Tab title="Using SDKMAN!">
+  </Tab>
+  <Tab title="macOS">
+        ```bash
+        # Install SDKMAN!
+        curl -s "https://get.sdkman.io" | bash
+        source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+        # Install Java and Maven
+        sdk install java 17.0.10-tem
+        sdk install maven 3.9.7
+        ```
+  </Tab>
+  <Tab title="Linux">
+        ```bash
+        # Install SDKMAN!
+        curl -s "https://get.sdkman.io" | bash
+        source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+        # Install Java and Maven
+        sdk install java 17.0.10-tem
+        sdk install maven 3.9.7
+        ```
+  </Tab>
+</Tabs>
+## Container Runtime
+
+<Tabs>
+  <Tab title="Docker">
+  </Tab>
+  <Tab title="macOS">
+        ```bash
+        brew install --cask docker
+        ```
+  </Tab>
+  <Tab title="Linux">
+        ```bash
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh get-docker.sh
+        ```
+  </Tab>
+  <Tab title="Windows">
+        Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop)
+  </Tab>
+  <Tab title="Podman">
+  </Tab>
+  <Tab title="macOS">
+        ```bash
+        brew install podman
+        podman machine init
+        podman machine start
+        ```
+  </Tab>
+  <Tab title="Linux">
+        ```bash
+        sudo apt-get update
+        sudo apt-get install -y podman
+        ```
+  </Tab>
+  <Tab title="Windows">
+        Download and install [Podman Desktop](https://podman-desktop.io/downloads)
+  </Tab>
+</Tabs>

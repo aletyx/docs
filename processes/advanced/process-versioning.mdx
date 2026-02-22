@@ -1,0 +1,585 @@
+---
+title: "Process Version Transition in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "This document outlines the recommended approach for managing process versioning in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx. Unlike some workflow engines that support direct..."
+---
+## Overview
+
+This document outlines the recommended approach for managing process versioning in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx. Unlike some workflow engines that support direct process instance migration between different process versions, Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx follows a parallel deployment pattern where different versions of a process coexist until older instances complete their lifecycle.
+
+<Warning title="Process Instance Migration is not a part of Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx">
+
+Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx does not support direct Process Instance Migration from one version to another while processes are running. The strategy outlined below is the recommended approach for process evolution in the current release of 10.1.0-aletyx
+</Warning>
+## Versioning Strategy
+
+### Parallel Deployment Pattern
+
+The recommended versioning approach follows these principles:
+
+1. **Immutable Process Definitions**: Once a process is deployed and instances are running, its definition should remain unchanged.
+2. **Parallel Version Deployment**: New process versions are deployed alongside existing versions with unique identifiers.
+3. **Instance Isolation**: Each process instance operates according to the version under which it was created.
+4. **Lifecycle Management**: After all instances of an old version complete, that version can be safely removed.
+
+## Version Transition Walkthrough
+
+This diagram illustrates the lifecycle of a process from initial deployment through version updates to cleanup:
+
+![Process SVG Transition](/images/core/processes/images/version-to-version.svg)
+
+### Initial Deployment (Version 1)
+
+1. Deploy a process definition file named `StatefulProcess.bpmn` with process ID `statefulProcess` in version 1.0.0 of your container.
+2. Applications create and interact with process instances using this definition.
+
+```xml
+<!-- StatefulProcess.bpmn -->
+<bpmn2:process id="statefulProcess" name="Stateful Process" ...>
+    <!-- Process definition -->
+</bpmn2:process>
+```
+
+### Updating Your Process (Version 2)
+
+When business requirements change and you need to update your process:
+
+1. Create a new file named `StatefulProcessV2.bpmn` with a new process ID `statefulProcessV2`.
+2. Deploy this alongside the existing process definition.
+3. The container now contains both process definitions.
+
+```xml
+<!-- StatefulProcessV2.bpmn -->
+<bpmn2:process id="statefulProcessV2" name="Stateful Process V2" ...>
+    <!-- Updated process definition -->
+</bpmn2:process>
+```
+
+### Routing Logic
+
+Applications must be updated to use the appropriate process version:
+
+- Existing process instances continue using `statefulProcess`
+- New process instances should be created using `statefulProcessV2`
+
+### Cleanup Phase
+
+Once all instances of the original version complete:
+
+1. Deploy a new container version that removes `StatefulProcess.bpmn`
+2. Retain `StatefulProcessV2.bpmn` as the active definition
+3. Future deployments would follow the same pattern: create `StatefulProcessV3.bpmn`, etc.
+
+## Implementation Best Practices
+
+### Process ID Versioning Convention
+
+We recommend adopting a consistent versioning strategy for process IDs:
+
+- Base name + version suffix: `processName` → `processNameV2` → `processNameV3`
+- Version in the process ID must match the file name for clarity
+
+### Client Application Adaptation
+
+To handle multiple versions, clients have several options:
+
+#### Option 1: Version-specific Endpoints
+
+Applications explicitly choose which version to call:
+
+```
+POST /statefulProcess      # Calls original version
+POST /statefulProcessV2    # Calls new version
+```
+
+#### Option 2: API Gateway Pattern
+
+Implement an API gateway that routes to the appropriate process version:
+
+```
+POST /process/stateful     # Gateway routes to latest version
+```
+
+The gateway pattern requires additional implementation but provides a cleaner abstraction for clients.
+
+#### Option 3: Process Client Facade
+
+Create a client-side wrapper that handles version selection logic:
+
+```java
+public class ProcessClient {
+    public void startProcess(String businessKey) {
+        // Logic to determine which version to use
+        if (shouldUseNewVersion(businessKey)) {
+            kieClient.startProcess("statefulProcessV2", params);
+        } else {
+            kieClient.startProcess("statefulProcess", params);
+        }
+    }
+}
+```
+
+## Containerization Strategy
+
+When using containers, consider the following approaches:
+
+### Approach 1: Single Container with Multiple Versions
+
+Deploy both process versions in the same container:
+
+```
+my-process-container:1.0.1
+  |-- StatefulProcess.bpmn (for existing instances)
+  |-- StatefulProcessV2.bpmn (for new instances)
+```
+
+**Pros:** Simplified deployment, single service endpoint
+**Cons:** Larger container size, less clear separation of versions
+
+![Single Container with Multiple Versions](/images/core/processes/images/container-single.svg)
+
+### Approach 2: Multiple Containers with Version-specific Routing
+
+Deploy each version in its own container and use service routing:
+
+```
+my-process-container-v1:1.0.0
+  |-- StatefulProcess.bpmn
+
+my-process-container-v2:1.0.0
+  |-- StatefulProcessV2.bpmn
+```
+
+**Pros:** Clean separation of versions, independent scaling, handles underlying model changes beyond process better
+**Cons:** More complex routing logic needed, more containers deployed
+
+![Multiple Containers with Version-specific Routing](/images/core/processes/images/container-strategy-2.svg)
+
+### Cleanup Approach: Regardless of Strategy
+
+After there are no more active instances, then cleanup can be performed to remove the V1.0.0 from the deployed container.
+
+![Single Container with Multiple Versions](/images/core/processes/images/container-strategy-1.svg)
+
+## Practical Example
+
+### Initial Deployment
+
+1. Create and deploy `StatefulProcess.bpmn` with ID `statefulProcess`
+2. Clients call `/statefulProcess` to create instances
+
+### Version Update
+
+1. Business requirements change, requiring process updates
+2. Create and deploy `StatefulProcessV2.bpmn` with ID `statefulProcessV2`
+3. Update client applications to use the new version for new instances
+4. Monitor completion of existing instances running under the original version
+
+### Final Cleanup
+
+1. Once all original instances complete, deploy a new version that removes `StatefulProcess.bpmn`
+2. Simplify client applications to only use the latest version
+
+## Future Considerations
+
+While Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx does not directly support process instance migration, future versions may add this capability. Until then, the parallel deployment pattern described in this document is the recommended approach for managing process evolution.
+
+## Implementation Example High Level
+
+<Tabs>
+  <Tab title="Process Client Facade">
+
+    ```java
+    package ai.aletyx.example.kogito.client;
+
+    import org.kie.kogito.process.ProcessInstance;
+    import org.kie.kogito.process.WorkItem;
+    import java.util.Map;
+    import java.util.Optional;
+    import java.time.LocalDateTime;
+    import java.util.HashMap;
+
+    /**
+     * Client facade that handles process version routing.
+     * This example shows how to route requests to appropriate process versions.
+     */
+    public class ProcessVersionClient {
+
+        private final StatefulProcessService v1Service;
+        private final StatefulProcessV2Service v2Service;
+        private final ProcessVersionConfig versionConfig;
+
+        public ProcessVersionClient(
+                StatefulProcessService v1Service,
+                StatefulProcessV2Service v2Service,
+                ProcessVersionConfig versionConfig) {
+            this.v1Service = v1Service;
+            this.v2Service = v2Service;
+            this.versionConfig = versionConfig;
+        }
+
+        /**
+         * Start a new process instance using the appropriate version.
+         *
+         * @param businessKey A unique business key for this process
+         * @param parameters Input parameters for the process
+         * @return The ID of the created process instance
+         */
+        public String startProcess(String businessKey, Map<String, Object> parameters) {
+            // Determine which version to use
+            if (shouldUseNewVersion(businessKey, parameters)) {
+                // Use V2 process
+                return v2Service.createProcessInstance(businessKey, parameters)
+                        .id()
+                        .toString();
+            } else {
+                // Use V1 process
+                return v1Service.createProcessInstance(businessKey, parameters)
+                        .id()
+                        .toString();
+            }
+        }
+
+        /**
+         * Get a process instance by ID, checking both versions.
+         *
+         * @param processInstanceId The process instance ID
+         * @return The process instance if found
+         */
+        public Optional<ProcessInstance<?>> getProcessInstance(String processInstanceId) {
+            // Try V1 first
+            Optional<ProcessInstance<?>> v1Instance = v1Service.getProcessInstance(processInstanceId);
+            if (v1Instance.isPresent()) {
+                return v1Instance;
+            }
+
+            // Try V2 if not found in V1
+            return v2Service.getProcessInstance(processInstanceId);
+        }
+
+        /**
+         * Determine whether to use the new version based on business rules.
+         * This could be based on various factors like feature flags, date cutoffs,
+         * or specific parameters in the request.
+         */
+        private boolean shouldUseNewVersion(String businessKey, Map<String, Object> parameters) {
+            // Option 1: Use configuration service to determine active version
+            if (versionConfig.isV2ActiveForAllRequests()) {
+                return true;
+            }
+
+            // Option 2: Use date-based cutoff
+            LocalDateTime createDate = LocalDateTime.now();
+            if (createDate.isAfter(versionConfig.getV2ActivationDate())) {
+                return true;
+            }
+
+            // Option 3: Use parameter-based decision
+            Boolean useV2Flag = (Boolean) parameters.getOrDefault("useV2", false);
+            if (useV2Flag) {
+                return true;
+            }
+
+            // Default to V1 for existing processes
+            return false;
+        }
+
+        /**
+         * Complete a human task in the process, regardless of version.
+         *
+         * @param processInstanceId The process instance ID
+         * @param taskId The task ID
+         * @param parameters The task output parameters
+         */
+        public void completeTask(String processInstanceId, String taskId, Map<String, Object> parameters) {
+            // Check which version holds this process instance
+            Optional<ProcessInstance<?>> v1Instance = v1Service.getProcessInstance(processInstanceId);
+
+            if (v1Instance.isPresent()) {
+                // Complete task in V1
+                Optional<WorkItem> workItem = v1Service.getWorkItem(processInstanceId, taskId);
+                if (workItem.isPresent()) {
+                    v1Service.completeWorkItem(processInstanceId, taskId, parameters);
+                } else {
+                    throw new IllegalArgumentException("Task not found: " + taskId);
+                }
+            } else {
+                // Try in V2
+                Optional<ProcessInstance<?>> v2Instance = v2Service.getProcessInstance(processInstanceId);
+                if (v2Instance.isPresent()) {
+                    Optional<WorkItem> workItem = v2Service.getWorkItem(processInstanceId, taskId);
+                    if (workItem.isPresent()) {
+                        v2Service.completeWorkItem(processInstanceId, taskId, parameters);
+                    } else {
+                        throw new IllegalArgumentException("Task not found: " + taskId);
+                    }
+                } else {
+                    throw new IllegalArgumentException("Process instance not found: " + processInstanceId);
+                }
+            }
+        }
+    }
+    ```
+
+    ```java
+    /**
+     * Configuration class for version management.
+     */
+    class ProcessVersionConfig {
+        private boolean v2ActiveForAllRequests;
+        private LocalDateTime v2ActivationDate;
+
+        public boolean isV2ActiveForAllRequests() {
+            return v2ActiveForAllRequests;
+        }
+
+        public void setV2ActiveForAllRequests(boolean active) {
+            this.v2ActiveForAllRequests = active;
+        }
+
+        public LocalDateTime getV2ActivationDate() {
+            return v2ActivationDate;
+        }
+
+        public void setV2ActivationDate(LocalDateTime date) {
+            this.v2ActivationDate = date;
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="API Gateway">
+
+    ```java
+    package ai.aletyx.example.kogito.gateway;
+
+    import org.springframework.boot.SpringApplication;
+    import org.springframework.boot.autoconfigure.SpringBootApplication;
+    import org.springframework.cloud.gateway.route.RouteLocator;
+    import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+    import org.springframework.context.annotation.Bean;
+    import org.springframework.web.bind.annotation.RestController;
+    import org.springframework.web.bind.annotation.PostMapping;
+    import org.springframework.web.bind.annotation.RequestBody;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.web.client.RestTemplate;
+    import org.springframework.beans.factory.annotation.Value;
+
+    import java.util.Map;
+    import java.time.LocalDateTime;
+
+    /**
+     * API Gateway for routing process requests to the appropriate version.
+     * This provides a version-agnostic interface for clients.
+     */
+    @SpringBootApplication
+    public class ProcessGatewayApplication {
+
+        public static void main(String[] args) {
+            SpringApplication.run(ProcessGatewayApplication.class, args);
+        }
+
+        /**
+         * Configure routes for the gateway.
+         */
+        @Bean
+        public RouteLocator customRouteLocator(RouteLocatorBuilder builder,
+                                            @Value("${process.v1.url}") String v1Url,
+                                            @Value("${process.v2.url}") String v2Url) {
+            return builder.routes()
+                // Route legacy requests to V1 directly
+                .route("v1_direct", r -> r.path("/statefulProcess/**")
+                    .uri(v1Url))
+                // Route v2 requests to V2 directly
+                .route("v2_direct", r -> r.path("/statefulProcessV2/**")
+                    .uri(v2Url))
+                .build();
+        }
+    }
+    ```
+
+    ```java
+    /**
+     * Controller for version-agnostic process API.
+     * This provides an abstraction that hides version details from clients.
+     */
+    @RestController
+    public class ProcessController {
+
+        private final RestTemplate restTemplate = new RestTemplate();
+
+        @Value("${process.v1.url}")
+        private String v1Url;
+
+        @Value("${process.v2.url}")
+        private String v2Url;
+
+        @Value("${process.v2.activationDate}")
+        private String v2ActivationDateStr;
+
+        /**
+         * Start a new process instance, routing to the appropriate version.
+         * Clients use this unified endpoint rather than version-specific endpoints.
+         */
+        @PostMapping("/api/statefulProcess")
+        public ResponseEntity<Map<String, Object>> startProcess(@RequestBody Map<String, Object> request) {
+            // Determine which version to use
+            String targetUrl;
+
+            if (shouldUseNewVersion(request)) {
+                targetUrl = v2Url + "/statefulProcessV2";
+            } else {
+                targetUrl = v1Url + "/statefulProcess";
+            }
+
+            // Forward the request to the appropriate service
+            ResponseEntity<Map<String, Object>> response =
+                restTemplate.postForEntity(targetUrl, request, Map.class);
+
+            return response;
+        }
+
+        /**
+         * Logic to determine which version to use.
+         * This could be based on various factors like feature flags, dates,
+         * or specific parameters in the request.
+         */
+        private boolean shouldUseNewVersion(Map<String, Object> request) {
+            // Option 1: Check for explicit version request
+            Boolean useV2Flag = (Boolean) request.getOrDefault("useV2", false);
+            if (useV2Flag) {
+                return true;
+            }
+
+            // Option 2: Use date-based cutoff
+            LocalDateTime v2ActivationDate = LocalDateTime.parse(v2ActivationDateStr);
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isAfter(v2ActivationDate)) {
+                return true;
+            }
+
+            // Option 3: Check for features that require V2
+            if (request.containsKey("newFeatureParameter")) {
+                return true;
+            }
+
+            // Default to V1 for compatibility
+            return false;
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Docker Compose">
+
+    Below is an example of how the multiple container strategy could be setup and shown, just note this is a scaffolded code and not meant to replace an actual strategy.
+
+    ```yaml
+    version: '3.8'
+
+    services:
+      # Process API Gateway
+      process-gateway:
+        image: process-gateway:1.0.0
+        build:
+          context: ./process-gateway
+          dockerfile: Dockerfile
+        ports:
+          - "8080:8080"
+        environment:
+          - PROCESS_V1_URL=http://process-service-v1:8080
+          - PROCESS_V2_URL=http://process-service-v2:8080
+          - PROCESS_V2_ACTIVATION_DATE=2025-04-21T00:00:00
+        depends_on:
+          - process-service-v1
+          - process-service-v2
+        networks:
+          - process-network
+
+      # Process Service V1
+      process-service-v1:
+        image: my-process-service:1.0.0
+        environment:
+          - KOGITO_SERVICE_URL=http://process-service-v1:8080
+          - QUARKUS_HTTP_PORT=8080
+          - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://process-db:5432/kogito
+          - QUARKUS_DATASOURCE_USERNAME=kogito
+          - QUARKUS_DATASOURCE_PASSWORD=kogito
+        volumes:
+          - ./process-definitions/v1:/deployments/processes
+        depends_on:
+          - process-db
+        networks:
+          - process-network
+
+      # Process Service V2
+      process-service-v2:
+        image: my-process-service:1.0.0
+        environment:
+          - KOGITO_SERVICE_URL=http://process-service-v2:8080
+          - QUARKUS_HTTP_PORT=8080
+          - QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://process-db:5432/kogito
+          - QUARKUS_DATASOURCE_USERNAME=kogito
+          - QUARKUS_DATASOURCE_PASSWORD=kogito
+        volumes:
+          - ./process-definitions/v2:/deployments/processes
+        depends_on:
+          - process-db
+        networks:
+          - process-network
+
+      # Shared database for process state
+      process-db:
+        image: postgres:16
+        environment:
+          - POSTGRES_USER=kogito
+          - POSTGRES_PASSWORD=kogito
+          - POSTGRES_DB=kogito
+        volumes:
+          - process-data:/var/lib/postgresql/data
+        ports:
+          - "5432:5432"
+        networks:
+          - process-network
+
+      # Monitoring for process instances
+      process-monitoring:
+        image: process-monitoring:1.0.0
+        ports:
+          - "8180:8080"
+        environment:
+          - PROCESS_V1_URL=http://process-service-v1:8080
+          - PROCESS_V2_URL=http://process-service-v2:8080
+        depends_on:
+          - process-service-v1
+          - process-service-v2
+        networks:
+          - process-network
+
+    volumes:
+      process-data:
+
+    networks:
+      process-network:
+        driver: bridge
+    ```
+
+    ``` bash
+    # Directory structure for volume mounts:
+
+     ./process-definitions/
+     ├── v1/
+     │   └── StatefulProcess.bpmn
+     └── v2/
+         └── StatefulProcessV2.bpmn
+    ```
+  </Tab>
+</Tabs>
+## Troubleshooting
+
+### Common Issues and Solutions
+
+1. **Version Confusion**: Ensure clear naming conventions and documentation of which version is active.
+2. **Endpoint Conflicts**: If using a service mesh or API gateway, verify routing rules are correctly configured.
+3. **Resource Overhead**: If running many versions in parallel causes resource issues, consider implementing a monitoring system to track when older versions can be safely removed.
+
+## Summary
+
+The parallel deployment pattern supports process evolution in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx without direct instance migration. By creating new versioned process definitions alongside existing ones, you can evolve your processes while ensuring running instances complete successfully under their original definitions.

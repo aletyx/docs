@@ -1,0 +1,210 @@
+---
+title: "Task Management"
+description: "Tasks are approval requests in the governance workflow. Aletyx Decision Control Tower provides a central view of all tasks assigned to your role."
+---
+Tasks are approval requests in the governance workflow. Aletyx Decision Control Tower provides a central view of all tasks assigned to your role.
+
+## Task Overview
+
+Tasks are created when:
+
+- A model is submitted for review
+- A deployment requires approval
+- A compliance check is needed
+
+Each task is assigned to specific roles based on the workflow configuration.
+
+## Task Types
+
+### Review Tasks
+
+Request for risk assessment review:
+
+- **Assigned to**: Risk Managers
+- **Action**: Approve or reject model for next environment
+- **Required**: Comment explaining decision
+
+### Compliance Tasks
+
+Request for compliance approval:
+
+- **Assigned to**: Compliance Officers
+- **Action**: Approve or reject for production
+- **Required**: Compliance verification
+
+### Deployment Tasks
+
+Request to deploy to production:
+
+- **Assigned to**: Operations Managers
+- **Action**: Execute deployment
+- **Required**: Deployment confirmation
+
+## Task Properties
+
+Each task contains:
+
+| Property | Description |
+|----------|-------------|
+| **ID** | Unique task identifier |
+| **Type** | REVIEW, COMPLIANCE, or DEPLOYMENT |
+| **Status** | OPEN, APPROVED, or REJECTED |
+| **Model** | Decision model name |
+| **Environment** | Source environment |
+| **Target Environment** | Destination environment |
+| **Assigned Roles** | Roles that can action the task |
+| **Created At** | Timestamp of creation |
+| **Created By** | User who submitted the request |
+| **Description** | Details about the request |
+
+## Viewing Tasks
+
+### Task List
+
+The Tasks view shows all tasks assigned to your role:
+
+- Filter by status (Open, Completed, All)
+- Sort by date or priority
+- Search by model name
+- Group by type
+
+### Task Details
+
+Click a task to see full details:
+
+- Model version information
+- Request justification
+- Audit history
+- Related tasks
+
+## Actioning Tasks
+
+### Approve Task
+
+1. Review the model and request details
+2. Click "Approve"
+3. Add required comment
+4. Confirm action
+
+![Diagram](/images/diagrams/decision-control/control-tower/tasks/sequence-1.svg)
+
+### Reject Task
+
+1. Review the model and request details
+2. Click "Reject"
+3. Add required comment explaining rejection
+4. Confirm action
+
+The submitter will be notified and can make corrections.
+
+## Four-Eyes Principle
+
+Aletyx Decision Control Tower enforces the four-eyes principle:
+
+- **Rule**: Submitter cannot approve their own task
+- **Enforcement**: Automatic validation by Governance API
+- **Audit**: All approval attempts logged
+
+Example:
+- Sarah (BA) submits model for review
+- Sarah cannot approve this task
+- Tom (Risk Manager) must approve or reject
+
+## Task Workflow
+
+![Diagram](/images/diagrams/decision-control/control-tower/tasks/state-2.svg)
+
+## Role-Based Task Assignment
+
+Tasks are automatically assigned based on workflow configuration:
+
+### Default Workflow
+
+| Step | Task Type | Assigned Roles |
+|------|-----------|----------------|
+| 1 | Risk Review | RISK_MANAGER |
+| 2 | Compliance Check | COMPLIANCE |
+| 3 | Production Deploy | OPERATIONS |
+
+### Custom Workflows
+
+Configure custom workflows in the Governance API:
+
+```json
+{
+  "workflow": {
+    "submitForReview": ["BUSINESS_ANALYST"],
+    "riskApproval": ["RISK_MANAGER"],
+    "complianceApproval": ["COMPLIANCE"],
+    "promoteToProduction": ["OPERATOR"]
+  }
+}
+```
+
+## Task Notifications
+
+Users receive notifications for:
+
+- New tasks assigned to their role
+- Task status changes
+- Approaching deadlines
+- Workflow completions
+
+## Task History
+
+All task actions are recorded in the audit trail:
+
+- Who performed the action
+- When it was performed
+- What action was taken
+- Comments provided
+
+## Bulk Operations
+
+For multiple tasks:
+
+- Select tasks using checkboxes
+- Choose action (approve/reject)
+- Add common comment
+- Execute batch operation
+
+<Warning title="Use Carefully">
+Bulk operations apply the same action to all selected tasks. Review each task before bulk actioning.
+</Warning>
+## Task Metrics
+
+Aletyx Decision Control Tower tracks task metrics:
+
+- Average approval time
+- Rejection rate
+- Tasks per role
+- Bottleneck identification
+
+## Troubleshooting
+
+### Task Not Appearing
+
+1. Verify you have the correct role
+2. Check task is still open
+3. Refresh the view
+4. Clear browser cache
+
+### Cannot Approve
+
+1. Check you're not the submitter (four-eyes)
+2. Verify your role has approval rights
+3. Ensure all required fields are completed
+4. Check session hasn't expired
+
+### Deployment Failed
+
+1. Check target environment health
+2. Verify database connectivity
+3. Review deployment logs
+4. Contact administrator
+
+## Next Steps
+
+- [Environment Management](/platform/decision-control/ct-environments): Understanding environments
+- [Dashboard](/platform/decision-control/ct-dashboard): Task overview
+- [Governance Workflow](/platform/decision-control/governance): Workflow configuration

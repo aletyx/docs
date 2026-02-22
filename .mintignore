@@ -5,3 +5,7 @@
 # Draft content
 drafts/
 *.draft.mdx
+
+# Migration tooling
+migrate.py
+migration-report.md

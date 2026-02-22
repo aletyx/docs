@@ -1,0 +1,253 @@
+---
+title: "Your First DMN Model: Vacation Days Calculation"
+description: "This tutorial will guide you through creating a complete DMN model for calculating employee vacation days. We'll start from scratch and build a decision model that considers an employee's age and..."
+---
+This tutorial will guide you through creating a complete DMN model for calculating employee vacation days. We'll start from scratch and build a decision model that considers an employee's age and years of service to determine their vacation entitlement.
+
+## Understanding the Business Requirements
+
+Before modeling, let's understand what we're trying to achieve. Our vacation days calculation follows these business rules:
+
+- All employees receive a base allocation of 22 vacation days for their [Base Vacation Days](#creating-the-base-vacation-days-decision)
+- Three additional day categories exist:
+
+  - [**Extra Days Case 1**](#extra-days-case-1):
+    - Employees younger than 18 or older than 60 get 5 extra days
+    - Employees with more than 30 years of service get 7 extra days
+  - [**Extra Days Case 2**](#extra-days-case-2):
+    - Employees older than 60 get 3 extra days
+    - Employees with more than 30 years of service get 4 extra days
+  - [**Extra Days Case 3**](#extra-days-case-3):
+    - Employees with 15-30 years of service get 3 extra days
+    - Employees aged 45 or older get 2 extra days
+- [**Total vacation days**](#creating-the-total-vacation-days-decision) are calculated as:
+    - Base days + maximum of (Case 1, Case 3) + Case 2
+
+## Setting Up Aletyx Playground
+
+1. Navigate to [Aletyx Playground](https://playground.aletyx.ai) in your browser
+
+2. From the landing page, click **New Decision** to create a new DMN model
+
+3. You'll be presented with an empty DMN model editor. This is where we'll design our decision model
+
+4. First, change the name of the model from "Untitled" to "vacation-days"
+
+## Creating Input Nodes
+
+Our decision model relies on two inputs: the employee's age and their years of service.
+
+1. Drag an **Input Data** node (oval shape) from the left palette onto the model editor
+
+2. Double-click the node and rename it to "Age"
+
+3. With the node selected, open the properties panel by clicking the "i" icon in the top right or pressing the "i" key
+
+4. Change the **Data Type** to "number"
+
+5. Repeat steps 1-4 to create another Input Data node named "Years of Service" with the data type "number"
+
+![Input nodes on DRD](/images/guides/examples/dmn/images/dmn-inputs.png)
+
+## Creating the Base Vacation Days Decision
+
+First, let's define the base vacation entitlement that all employees receive:
+
+1. Drag a **Decision** node (rectangle shape) onto the model editor
+
+2. Name the node "Base Vacation Days"
+
+3. Set its **Data Type** to "number"
+
+4. Click on the node and select **Edit** to define the decision logic
+
+5. In the expression editor, select **Literal expression** as the expression type. For reference on the different expressions see the below image with annotations or refer to the [Select Expression Reference](/reference/dmn/select-expression#expression-types)
+
+    
+    <img src="images/context-select-expression.png" class="annotated-image" alt="DMN Expression Types Menu">
+
+
+    Literal Expression</div>
+    The simplest expression type. Used for direct values, mathematical operations, or simple FEEL expressions. Example: <code>Base Premium * Risk Factor</code></div>
+
+    Relation</div>
+    Creates a table structure for organizing data. Unlike a decision table, relations don't contain logic but represent structured data with columns and rows. See: [RelationReference](/reference/dmn/select-expression#relation).</div>
+
+    Context</div>
+    Defines a set of key-value pairs (named variables) that can be referenced within the context. Useful for multi-step calculations that build on previous values. See: [Context Reference](/reference/dmn/select-expression#context).</div>
+
+    Decision Table</div>
+    The most widely used DMN expression. Organizes conditions (inputs) and conclusions (outputs) in a tabular format with hit policies determining how rules are applied. See: [Decision Table Reference](/reference/dmn/select-expression#decision-table).</div>
+
+    List</div>
+    Creates an ordered collection of values or expressions. Each list item can be a different type of expression, allowing for complex collections. See: [List Reference](/reference/dmn/select-expression#list).</div>
+
+    Invocation</div>
+    Calls a Business Knowledge Model (BKM) or function defined elsewhere in the model. Parameters can be passed to the function being called. See: [Invocation Reference](/reference/dmn/select-expression#invocation).</div>
+
+    Function</div>
+    Defines a reusable function with parameters. Can contain any FEEL expression type and be used within other expressions through Invocation. See: [Function Reference](/reference/dmn/select-expression#function).</div>
+
+    Conditional (If/Then/Else)</div>
+    Creates branching logic with if, then, else statements. Allows for different results based on specific conditions being met. See: [Conditional Reference](/reference/dmn/select-expression#conditional).</div>
+
+    For Loop</div>
+    Iterates over items in a list or collection, applying an expression to each item. Useful for transforming collections or aggregating values. See: [For Loop Reference](/reference/dmn/select-expression#for-loop).</div>
+
+    Some</div>
+    Tests when a condition is true for at least one item See: [Some reference](/reference/dmn/select-expression#some).</div>
+
+    Filter</div>
+    Filters a collection based on a given condition. See: [Filter Reference](/reference/dmn/select-expression#filter).</div>
+
+    Every</div>
+    Tests if a condition is true for every item in a collection. Returns a boolean result based on whether all items satisfy the condition. See: [Every Reference](/reference/dmn/select-expression#every)</div>
+
+
+6. Enter the value "22" in the expression editor
+
+7. Click **Back to Diagram** to return to the main model editor
+
+![Base Vacation Days Decision](/images/guides/examples/dmn/images/base-vacation-days.png)
+
+## Creating Extra Days Case Decisions
+
+Now we'll create the three decision nodes for calculating additional vacation days:
+
+### Extra Days Case 1
+
+1. Add a **Decision** node named "Extra days case-1" with data type "number"
+
+2. Connect both input nodes ("Age" and "Years of Service") to this decision node using the information requirement arrows
+
+3. Edit the decision node and select **Decision Table** as the expression type
+
+4. Create the following decision table:
+
+   | Age       | Years of Service | Extra days case-1 | Annotation                    |
+   | --------- | ---------------- | ----------------- | ----------------------------- |
+   | <18, >=60 | -                | 5                 | Less than 18 or older than 60 |
+   | -         | >30              | 7                 | More than 30 years of service |
+
+5. Change the hit policy from "U" (Unique) to "Collect Max" by:
+   - Clicking the "U" in the upper-left corner
+   - Selecting "Collect"
+   - Choosing "MAX" as the aggregator function
+
+6. Set a default value of "0" for the output column:
+   - Select the output column header
+   - Open the properties panel
+   - Find the "Default value" field and enter "0"
+
+7. Click **Back to Diagram** to return to the model editor
+
+![Extra Days Case 1](/images/guides/examples/dmn/images/extra-days-case-1.png)
+
+### Extra Days Case 2
+
+1. Add another **Decision** node named "Extra days case-2" with data type "number"
+
+2. Connect both input nodes to this decision node
+
+3. Create a decision table with the following rules:
+
+   | Age  | Years of Service | Extra days case-2 | Annotation                    |
+   | ---- | ---------------- | ----------------- | ----------------------------- |
+   | >=60 | -                | 3                 | Older than 60                 |
+   | -    | >30              | 4                 | More than 30 years of service |
+
+4. Set the hit policy to "Collect Max" as before
+
+5. Add a default value of "0" for the output column
+
+### Extra Days Case 3
+
+1. Add a third **Decision** node named "Extra days case-3" with data type "number"
+
+2. Connect both input nodes to this decision node
+
+3. Create a decision table with the following rules:
+
+   | Age  | Years of Service | Extra days case-3 | Annotation                     |
+   | ---- | ---------------- | ----------------- | ------------------------------ |
+   | -    | [15..30]         | 3                 | Between 15-30 years of service |
+   | >=45 | -                | 2                 | Older than 45                  |
+
+4. Set the hit policy to "Collect Max"
+
+5. Add a default value of "0" for the output column
+
+## Creating the Total Vacation Days Decision
+
+Now we'll create a final decision node that combines all the previous decisions:
+
+1. Add a **Decision** node named "Total Vacation Days" with data type "number"
+
+2. Connect all four previous decision nodes to this node using information requirement arrows
+
+3. Edit the node and select **Literal expression** as the expression type
+
+4. Enter the following FEEL expression:
+
+   ```java
+   Base Vacation Days + max(Extra days case-1, Extra days case-3) + Extra days case-2
+   ```
+
+5. Click **Back to Diagram** to return to the model editor
+
+![Complete Vacation Days Model](/images/guides/examples/dmn/images/complete-vacation-model.png)
+
+## Testing Your DMN Model
+
+Aletyx Playground includes a testing feature that allows you to validate your model with sample inputs:
+
+1. Click the **Run** button in the toolbar
+
+2. In the testing panel, enter values for "Age" and "Years of Service"
+
+3. Click **Run Test** to see the results for all decision nodes
+
+Try these test cases to validate your model:
+
+| Age | Years of Service | Expected Total Vacation Days       |
+| --- | ---------------- | ---------------------------------- |
+| 16  | 1                | 27 (22 base + 5 case 1 + 0 case 2) |
+| 25  | 5                | 22 (22 base + 0 from all cases)    |
+| 44  | 20               | 25 (22 base + 3 case 3 + 0 case 2) |
+| 44  | 30               | 29 (22 base + 3 case 3 + 4 case 2) |
+| 62  | 20               | 30 (22 base + 5 case 1 + 3 case 2) |
+
+## Understanding the Model Behavior
+
+Let's examine what happens in our model:
+
+1. **Independence of Base Decision**: The "Base Vacation Days" decision has no dependencies, so it's always 22
+
+2. **Case-by-Case Evaluation**: Each "Extra days" decision evaluates independently based on the input values
+
+3. **Collection with Maximum**: The "Collect Max" hit policy ensures we take the highest value when multiple rules match
+
+4. **Default Values**: The default value of "0" ensures we have a definite value when no rules match
+
+5. **Final Aggregation**: The "Total Vacation Days" decision combines all results according to our formula
+
+## Saving and Sharing Your Model
+
+In Aletyx Playground, your work is automatically saved in browser storage. To ensure you don't lose your work:
+
+1. Use the **Download** option to save your DMN file locally, or
+
+2. Connect to a Git repository by clicking the **Share** button (we'll cover this in more detail in the Accelerators guide)
+
+## What's Next?
+
+Congratulations! You've created your first DMN model. In this tutorial, you've learned:
+
+- How to create input nodes and decision nodes
+- How to define decision logic using literal expressions and decision tables
+- How to connect decisions with information requirements
+- How to test your decision model with sample inputs
+
+In the next guide, [Working with DMN Accelerators](/guides/dmn/accelerators), you'll learn how to turn your model into a fully functional decision service using accelerators.
+
+Ready to take your DMN model to the next level? Continue to the next guide!

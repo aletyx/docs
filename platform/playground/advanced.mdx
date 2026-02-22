@@ -1,0 +1,405 @@
+---
+title: "Advanced Accelerator Configuration"
+description: "This guide provides detailed technical information for customizing and creating your own Accelerators for Aletyx Playground. Accelerators are powerful templates that transform business models into..."
+---
+This guide provides detailed technical information for customizing and creating your own Accelerators for Aletyx Playground. Accelerators are powerful templates that transform business models into fully structured projects, and can be tailored to meet specific organizational requirements.
+
+## Table of Contents
+- [Accelerator Architecture](#accelerator-architecture)
+- [Creating Custom Accelerators](#creating-custom-accelerators)
+- [Configuring Accelerator Profiles](#configuring-accelerator-profiles)
+- [Customizing Project Structure](#customizing-project-structure)
+- [Advanced Customization Examples](#advanced-customization-examples)
+
+## Accelerator Architecture
+
+Accelerators in Aletyx Playground are Git-based templates that are applied to your business models (DMN, BPMN, etc.). Each Accelerator consists of:
+
+1. A Git repository with template files
+2. Configuration metadata that defines how the Accelerator appears and behaves
+3. Destination mappings that determine where your existing assets are placed
+
+When an Accelerator is applied, Aletyx Playground clones the repository at the specified branch and applies the templates to your project, placing your existing assets in the appropriate locations.
+
+## Creating Custom Accelerators
+
+### Step 1: Fork the Base Accelerator Repository
+
+Start by forking one of the existing Accelerator repositories:
+
+```bash
+git clone https://github.com/timwuthenow/sandbox-accelerators.git
+cd sandbox-accelerators
+```
+
+### Step 2: Configure Your Branch Structure
+
+Each Accelerator profile typically has its own branch. For example:
+- `main`: General-purpose accelerator
+- `dmn`: DMN-focused accelerator
+- `bpmn`: Process-focused accelerator
+
+Create a new branch for your custom Accelerator:
+
+```bash
+git checkout -b my-custom-accelerator
+```
+
+### Step 3: Customize the Template Files
+
+In your branch, you'll find template files that define the project structure. Common files to customize include:
+
+- `pom.xml`: Define dependencies and build configuration
+- `Dockerfile`: Container configuration
+- `application.properties`: Application configuration
+- `.github/workflows/`: CI/CD pipeline configurations
+
+## Configuring Accelerator Profiles
+
+Accelerators are registered in Aletyx Playground through environment variables or configuration files. The `KIE_SANDBOX_ACCELERATORS` environment variable accepts a JSON array of Accelerator profiles:
+
+```json
+[
+  {
+    "name": "Process Kogito jBPM Profile",
+    "iconUrl": "https://raw.githubusercontent.com/timwuthenow/sandbox-accelerators/refs/heads/main/quarkus-logo.png",
+    "gitRepositoryUrl": "https://github.com/timwuthenow/sandbox-accelerators.git",
+    "gitRepositoryGitRef": "main",
+    "dmnDestinationFolder": "src/main/resources/dmn",
+    "bpmnDestinationFolder": "src/main/resources/bpmn",
+    "otherFilesDestinationFolder": "src/main/resources/others"
+  },
+  {
+    "name": "Decisions Kogito jBPM Profile",
+    "iconUrl": "https://raw.githubusercontent.com/timwuthenow/sandbox-accelerators/refs/heads/main/quarkus-logo.png",
+    "gitRepositoryUrl": "https://github.com/timwuthenow/sandbox-accelerators.git",
+    "gitRepositoryGitRef": "dmn",
+    "dmnDestinationFolder": "src/main/resources/dmn",
+    "bpmnDestinationFolder": "src/main/resources/bpmn",
+    "otherFilesDestinationFolder": "src/main/resources/others"
+  }
+]
+```
+
+### Configuration Parameters Explained
+
+| Parameter                     | Description                                                         |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `name`                        | Display name of the Accelerator shown in the UI                     |
+| `iconUrl`                     | URL to the icon image displayed in the Accelerator selection dialog |
+| `gitRepositoryUrl`            | URL to the Git repository containing the Accelerator template       |
+| `gitRepositoryGitRef`         | Branch or tag to use from the repository                            |
+| `dmnDestinationFolder`        | Where DMN files will be placed in the generated project             |
+| `bpmnDestinationFolder`       | Where BPMN files will be placed in the generated project            |
+| `otherFilesDestinationFolder` | Default location for other assets                                   |
+
+## Customizing Project Structure
+
+### POM.XML Customization
+
+The `pom.xml` file is crucial as it defines all project dependencies. Here's an example of a customized `pom.xml` for a DMN-focused project:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.acme</groupId>
+  <artifactId>dmn-decisions</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+
+  <properties>
+    <quarkus.platform.version>3.0.0.Final</quarkus.platform.version>
+    <kogito.version>10.1.0</kogito.version>
+    <java.version>17</java.version>
+    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-bom</artifactId>
+        <version>${quarkus.platform.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kogito-quarkus-bom</artifactId>
+        <version>${kogito.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- Kogito Decision Dependencies -->
+    <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>kogito-quarkus-decisions</artifactId>
+    </dependency>
+
+    <!-- REST API -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-jackson</artifactId>
+    </dependency>
+
+    <!-- Health Checks -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+
+    <!-- Testing -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-maven-plugin</artifactId>
+        <version>${quarkus.platform.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+```
+
+### Application Properties
+
+The `application.properties` file configures your application's runtime behavior:
+
+```dockerfile
+# HTTP Configuration
+quarkus.http.port=8080
+quarkus.http.cors=true
+
+# Kogito Configuration
+kogito.decisions.validation=ENABLED
+
+# OpenAPI
+quarkus.swagger-ui.always-include=true
+quarkus.smallrye-openapi.path=/docs/openapi.json
+quarkus.swagger-ui.path=/docs
+
+# Logging
+quarkus.log.level=INFO
+quarkus.log.category."org.kie".level=DEBUG
+
+# Container Image
+quarkus.container-image.build=true
+quarkus.container-image.group=my-organization
+quarkus.container-image.name=${project.artifactId}
+quarkus.container-image.tag=${project.version}
+```
+
+### Dockerfile
+
+A custom Dockerfile for your Accelerator:
+
+```dockerfile
+FROM registry.access.redhat.com/ubi8/openjdk-17:latest
+
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+
+COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 target/quarkus-app/*.jar /deployments/
+COPY --chown=185 target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
+
+EXPOSE 8080
+USER 185
+ENV AB_JOLOKIA_OFF=""
+ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
+
+ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
+```
+
+### GitHub Actions Workflow
+
+Adding a CI/CD pipeline templates to your Accelerator is also a great way to improve the time to release! This can be done by creating a base template that could be stored in the `.github` folder like a standard GitHub action file. This provides ease of starting to provide the means to deploy.
+
+```yaml
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn -B package
+
+    - name: Run Tests
+      run: mvn -B test
+
+    - name: Build Container Image
+      run: mvn -B package -Dquarkus.container-image.build=true
+```
+
+## Advanced Customization Examples
+
+### Adding Kafka Integration
+
+To add Kafka messaging capabilities to your Accelerator, modify the `pom.xml` to include:
+
+```xml
+<!-- Kafka Integration -->
+<dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
+</dependency>
+```
+<!--
+And create event listeners in your template:
+
+ ```java
+package org.acme.events;
+
+import javax.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import io.smallrye.reactive.messaging.annotations.Broadcast;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@ApplicationScoped
+public class DecisionEventProcessor {
+
+    private static final Logger logger = LoggerFactory.getLogger(DecisionEventProcessor.class);
+
+    @Incoming("decisions-in")
+    @Outgoing("decisions-processed")
+    @Broadcast
+    public String processDecisionEvent(String payload) {
+        logger.info("Processing decision event: {}", payload);
+        // Process the incoming event
+        return payload;
+    }
+}
+``` -->
+
+If you are using Kafka, you will need to add some properties to your `application.properties` file that controls the connection to Kafka, an example of some of these integrations is included below:
+
+```python
+# Connection to Kafka Bootstrap Servers
+kafka.bootstrap.servers=localhost:9092
+
+
+mp.messaging.incoming.kogito_incoming_stream.group.id=dmn-event-driven-example
+mp.messaging.incoming.kogito_incoming_stream.connector=smallrye-kafka
+mp.messaging.incoming.kogito_incoming_stream.topic=my-topic
+mp.messaging.incoming.kogito_incoming_stream.value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+
+mp.messaging.outgoing.kogito_outgoing_stream.group.id=dmn-event-driven-example
+mp.messaging.outgoing.kogito_outgoing_stream.connector=smallrye-kafka
+mp.messaging.outgoing.kogito_outgoing_stream.topic=my-other-topic
+mp.messaging.outgoing.kogito_outgoing_stream.value.serializer=org.apache.kafka.common.serialization.StringSerializer
+```
+
+### Database Integration
+
+Add database support with:
+
+```xml
+<!-- Database -->
+<dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-hibernate-orm-panache</artifactId>
+</dependency>
+<dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-jdbc-postgresql</artifactId>
+</dependency>
+```
+
+### Kubernetes Deployment Templates
+
+Include Kubernetes manifests in your Accelerator:
+
+```yaml
+# kubernetes/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${project.artifactId}
+  labels:
+    app: ${project.artifactId}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${project.artifactId}
+  template:
+    metadata:
+      labels:
+        app: ${project.artifactId}
+    spec:
+      containers:
+      - name: ${project.artifactId}
+        image: ${quarkus.container-image.group}/${quarkus.container-image.name}:${quarkus.container-image.tag}
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+```
+
+## Conclusion
+
+Creating custom Accelerators allows you to embed organizational best practices, dependencies, deployment configurations, and CI/CD pipelines directly into the project templates. By forking the base repository and customizing the templates, you can create Accelerators tailored to your specific requirements and update as required. These provide an easy way to create standards across your projects utilizing Aletyx Enterprise Build of Kogito and Drools which helps increase confidence in running similar models across multiple projects consistently.
+
+For any organization looking to standardize their KIE project structure while accelerating development, custom Accelerators provide a powerful solution that can be continuously evolved and improved.
+
+To get started, fork the base repository at [our Accelerator Repository](https://github.com/timwuthenow/sandbox-accelerators.git) and begin customizing the templates to meet your organization's needs.

@@ -1,0 +1,31 @@
+---
+title: "Monitoring in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Monitoring is a critical aspect of managing business processes, providing insights into application performance, resource utilization, and potential bottlenecks. In Kogito, monitoring capabilities..."
+---
+Monitoring is a critical aspect of managing business processes, providing insights into application performance, resource utilization, and potential bottlenecks. In Kogito, monitoring capabilities are enhanced through integration with tools like Prometheus and Grafana, enabling developers and operators to track and visualize key metrics effectively.
+
+Operational metrics play a vital role in assessing process performance by offering quantitative data to identify issues such as slow responses or system failures. Kogito’s monitoring add-on exports Grafana dashboards for each process, displaying essential metrics, including:
+
+- Total number of created instances
+- Total number of running instances
+- Total number of completed instances
+- Total number of instances that violated Service Level Agreements (SLAs)
+- Average process execution time
+
+To enable this capability in your project, simply include the Prometheus add-on dependency:
+
+```xml
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kie-addons-quarkus-monitoring-prometheus</artifactId>
+</dependency>
+```
+
+There’s alternatively an elastic based monitoring add-on, but this has been less used.
+
+```xml
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kie-addons-quarkus-monitoring-elastic</artifactId>
+</dependency>
+```

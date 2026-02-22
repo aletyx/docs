@@ -1,0 +1,518 @@
+---
+title: "Advanced DMN Deployment Options in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Moving from development to production requires careful consideration of deployment options, performance optimization, and operational concerns. This guide builds on the basic deployment concepts..."
+---
+## Introduction
+
+Moving from development to production requires careful consideration of deployment options, performance optimization, and operational concerns. This guide builds on the basic deployment concepts to help you implement robust, scalable decision services for production environments.
+
+We'll explore cloud-native deployment approaches, containerization strategies, scaling options, and monitoring best practices to ensure your decision services perform reliably in enterprise settings.
+
+## Cloud-Native Deployment Approaches
+
+The modern approach to deploying decision services embraces cloud-native principles for greater flexibility, resilience, and scalability.
+
+### Traditional vs. Cloud-Native Deployment
+
+Traditional deployments often involved:
+
+- Monolithic applications with embedded decision logic
+- Manual deployment processes
+- Fixed infrastructure
+- Complex version management
+
+Cloud-native deployments offer significant advantages:
+
+- Lightweight, independently deployable services
+- Automated deployment pipelines
+- Dynamic, elastic infrastructure
+- Simplified versioning and updates
+
+### Shift to Containerization
+
+Containers have revolutionized deployment by providing:
+
+1. **Consistent environments**: The same container runs identically in all environments
+2. **Isolation**: Application dependencies don't conflict
+3. **Resource control**: Precise CPU and memory allocation
+4. **Fast startup**: Containers start in seconds, native builds in milliseconds
+5. **Microservice alignment**: Each decision service as a discrete container
+
+These benefits address the classic "works on my machine" syndrome that often plagued traditional deployments.
+
+## Deployment Scenarios for Decision Services
+
+Decision services generally fall into two deployment categories, each with its own optimal approach:
+
+### Long-Running Services
+
+Characteristics:
+
+- Continuously needed for applications
+- Steady, predictable workload
+- High throughput requirements
+
+Recommended approach:
+
+- Standard JVM containers
+- Benefit from JIT optimization over time
+- Scale horizontally based on traffic patterns
+- Configure for memory optimization
+- Implement proper monitoring
+
+Example use cases:
+
+- Credit scoring services
+- Insurance premium calculations
+- Customer eligibility determinations
+
+### On-Demand (Serverless) Functions
+
+Characteristics:
+
+- Sporadically invoked
+- Variable, unpredictable workload
+- Cold start requirements
+
+Recommended approach:
+
+- Native compilation for near-instant startup
+- Lower resource footprint when idle
+- Scale to zero when not in use
+- Optimize for startup performance
+- Consider memory constraints
+
+Example use cases:
+
+- Event-driven decision workflows
+- Periodic batch processing
+- Seldom-used administrative functions
+
+## JVM vs. Native Build Containers
+
+Aletyx Enterprise Build of Kogito and Drools supports both JVM and native builds, giving you flexibility in deployment:
+
+### JVM Containers
+
+**Advantages**:
+
+- Faster to build
+- Benefits from Just-In-Time (JIT) optimization
+- Easier to debug
+- Better long-term throughput for sustained workloads, the longer it is running, the better it will be
+
+**Best for**:
+
+- Long-running decision services with consistent usage
+- Complex decision models with large rule sets
+- Services requiring maximum throughput
+
+**Build command**:
+
+```bash
+mvn clean package
+```
+
+**Dockerfile example**:
+
+```dockerfile
+FROM eclipse-temurin:17
+
+COPY target/*.jar /deployments/app.jar
+
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/deployments/app.jar"]
+```
+
+### Native Containers
+
+**Advantages**:
+
+- Near-instant startup (milliseconds vs. seconds)
+- Lower memory footprint
+- Better initial performance
+- Reduced attack surface
+
+**Best for**:
+
+- Event-driven architectures
+- Serverless functions
+- Edge deployments
+- Cold-start sensitive scenarios
+
+**Build command**:
+
+```bash
+mvn clean package -Pnative
+```
+
+**Dockerfile example**:
+
+```dockerfile
+FROM quay.io/quarkus/quarkus-micro-image:2.0
+
+COPY target/*-runner /application
+
+EXPOSE 8080
+ENTRYPOINT ["./application"]
+```
+
+The beauty of the Aletyx Enterprise Build of Kogito and Drools architecture is that this choice is a build option, not a design-time decision. You can switch between JVM and native builds without changing your decision models.
+
+## Implementing CI/CD for Decision Services
+
+A robust CI/CD pipeline ensures reliable, repeatable deployments of your decision services:
+
+### Core Pipeline Components
+
+1. **Source Control Integration**:
+
+    - Webhooks for automated builds
+    - Branch protection for production models
+    - Pull request validation workflows
+
+2. **Automated Testing**:
+
+    - Unit tests for individual decisions
+    - Integration tests for decision services
+    - Performance and load testing
+
+3. **Image Building and Registry**:
+
+    - Automated container image building
+    - Versioned image tagging
+    - Security scanning
+
+4. **Deployment Automation**:
+
+    - Environment-specific configuration
+    - Canary or blue/green deployments
+    - Rollback capabilities
+
+### Sample CI/CD Workflow
+
+A typical workflow might include:
+
+1. Developer commits DMN changes to Git
+2. CI system builds and tests the decision service
+3. Docker image is created and tagged with version
+4. Image is published to container registry
+5. CD system deploys to staging environment
+6. Automated tests validate the deployment
+7. Manual approval promotes to production
+8. Monitoring confirms successful deployment
+
+## Scaling Decision Services
+
+As decision services move to production, scaling becomes a critical consideration:
+
+### Horizontal Scaling (More Instances)
+
+**Works best for**:
+
+- Stateless decision services
+- Services with higher concurrency needs
+- High availability requirements
+
+**Implementation**:
+
+- Deploy multiple instances behind a load balancer
+- Use Kubernetes Horizontal Pod Autoscaler (HPA)
+- Configure scaling metrics based on CPU, memory, or custom metrics
+- Set minimum/maximum instance counts
+
+**Example Kubernetes HPA configuration**:
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: insurance-pricing-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: insurance-pricing
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+### Vertical Scaling (More Resources)
+
+**Works best for**:
+
+- Complex rule evaluation with large working memory
+- Memory-intensive decision models
+- Single-tenant requirements
+- Native image deployments
+
+**Implementation**:
+
+- Allocate appropriate CPU and memory resources
+- Monitor resource utilization
+- Adjust based on performance testing
+- Consider appropriate JVM tuning
+
+**Example resource configuration**:
+
+```yaml
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "500m"
+  limits:
+    memory: "1Gi"
+    cpu: "1000m"
+```
+
+### Scaling Factors for Decision Services
+
+When planning capacity, consider:
+
+1. **Rule Complexity**: More complex rules require more processing power
+2. **Decision Table Size**: Larger tables need more memory
+3. **Concurrent Evaluations**: Higher concurrency requires more instances
+4. **Memory for Rule Cache**: Complex models benefit from larger caches
+5. **Data Volume**: The size of input/output data affects network and processing requirements
+
+## Configuration for Cloud Environments
+
+Proper configuration is critical for cloud deployments:
+
+### Externalizing Configuration
+
+Follow these principles:
+
+1. **All environment-specific values should be externalized**
+2. **Use profile-specific configurations** (e.g., %dev, %test, %prod in Quarkus)
+3. **Follow the Twelve-Factor App methodology**
+4. **Use reference variables with defaults**
+
+Example application.properties:
+
+```java
+# Service URLs with environment variable references
+kogito.service.url=${KOGITO_SERVICE_URL:http://localhost:8080}
+kogito.dataindex.http.url=${KOGITO_DATAINDEX_HTTP_URL:http://localhost:8180}
+
+# Database configuration
+quarkus.datasource.db-kind=postgresql
+quarkus.datasource.username=${POSTGRESQL_USER:kogito}
+quarkus.datasource.password=${POSTGRESQL_PASSWORD:kogito}
+quarkus.datasource.jdbc.url=jdbc:postgresql://${POSTGRESQL_SERVICE:localhost}:5432/${POSTGRESQL_DATABASE:kogito}
+```
+
+### Using ConfigMaps and Secrets in Kubernetes
+
+Separate configuration into:
+
+**ConfigMaps** (non-sensitive):
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: insurance-pricing-config
+data:
+  # Service URLs
+  KOGITO_SERVICE_URL: "http://insurance-pricing-service"
+  KOGITO_DATAINDEX_HTTP_URL: "http://dataindex-service"
+  # Database connection (non-sensitive parts)
+  POSTGRESQL_SERVICE: "postgresql"
+  POSTGRESQL_DATABASE: "kogito"
+```
+
+**Secrets** (sensitive):
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: insurance-pricing-secrets
+type: Opaque
+stringData:
+  # Database credentials
+  POSTGRESQL_USER: "kogito"
+  POSTGRESQL_PASSWORD: "changeme123!"
+  # OIDC configuration
+  QUARKUS_OIDC_CREDENTIALS_SECRET: "your-oidc-client-secret"
+```
+
+## Monitoring and Observability
+
+For production deployments, implement comprehensive monitoring:
+
+### Health Checks
+
+Configure proper health endpoints to allow platforms to monitor service health:
+
+```java
+# Enable health endpoints
+quarkus.health.enabled=true
+# Custom health checks
+quarkus.health.livenessPath=/q/health/live
+quarkus.health.readinessPath=/q/health/ready
+```
+
+### Metrics
+
+Expose metrics to track decision service performance:
+
+```java
+# Enable metrics
+quarkus.micrometer.enabled=true
+quarkus.micrometer.export.prometheus.enabled=true
+# Custom metrics path
+quarkus.micrometer.registry-prometheus.path=/q/metrics
+```
+
+Key metrics to monitor:
+
+- Decision execution count
+- Decision execution time
+- Rule activations
+- Memory usage
+- CPU utilization
+
+### Logging
+
+Implement structured logging for easier analysis:
+
+```java
+# Configure JSON logging for production
+%prod.quarkus.log.console.json=true
+# Set appropriate log levels
+quarkus.log.category."org.kie".level=INFO
+quarkus.log.category."org.drools".level=INFO
+```
+
+### Tracing
+
+Add distributed tracing for complex decision flows:
+
+```java
+# Enable OpenTelemetry tracing
+quarkus.opentelemetry.enabled=true
+quarkus.opentelemetry.tracer.exporter.otlp.endpoint=http://jaeger:4317
+```
+
+## Security Considerations
+
+Production deployments must address security requirements:
+
+### Authentication and Authorization
+
+Implement appropriate authentication:
+
+```java
+# Enable OpenID Connect
+quarkus.oidc.enabled=true
+quarkus.oidc.auth-server-url=${KEYCLOAK_URL}/realms/kogito
+quarkus.oidc.client-id=insurance-app
+quarkus.oidc.credentials.secret=${KEYCLOAK_CLIENT_SECRET}
+
+# Define security policies
+quarkus.http.auth.policy.role-policy1.roles-allowed=admin,decision-manager
+quarkus.http.auth.permission.roles1.paths=/decision/*
+quarkus.http.auth.permission.roles1.policy=role-policy1
+```
+
+### Additional Security Measures
+
+1. **Container Security**:
+
+    - Non-root users
+    - Read-only file systems
+    - Resource limitations
+    - Vulnerability scanning
+
+2. **Network Security**:
+
+    - TLS encryption
+    - Network policies
+    - API gateways
+    - Service meshes for advanced patterns
+
+3. **Data Security**:
+
+    - Input validation
+    - Output sanitization
+    - Sensitive data handling
+    - Audit logging
+
+## Advanced Deployment Patterns
+
+Consider these advanced patterns for complex scenarios:
+
+### Canary Deployments
+
+Gradually roll out new decision versions:
+
+```yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: insurance-pricing
+spec:
+  hosts:
+  - insurance-pricing
+  http:
+  - route:
+    - destination:
+        host: insurance-pricing
+        subset: v1
+      weight: 90
+    - destination:
+        host: insurance-pricing
+        subset: v2
+      weight: 10
+```
+
+### Blue/Green Deployments
+
+Switch traffic between old and new versions:
+
+1. Deploy new version alongside old version
+2. Verify new version functionality
+3. Switch traffic routing to new version
+4. Keep old version running temporarily as fallback
+5. Remove old version after successful transition
+
+### Service Mesh Integration
+
+Leverage service mesh capabilities:
+
+- Circuit breaking for resilience
+- Advanced traffic routing
+- Detailed metrics and tracing
+- Security policy enforcement
+
+## Best Practices for Production Deployments
+
+Follow these best practices when deploying decision services to production:
+
+1. **Start Simple**: Your first deployment is a learning opportunity
+2. **Involve All Stakeholders**: Include operations teams early
+3. **Implement Performance Testing**: Know how your service behaves at scale
+4. **Plan Security from the Beginning**: Authentication, authorization, and encryption
+5. **Use Pipelines for Deployment**: Automate the build and deployment process
+6. **Prepare for Failures**: Design for resilience with proper fallbacks
+7. **Document Everything**: Maintain clear deployment documentation
+8. **Monitor Proactively**: Establish baselines and alerts
+9. **Practice Recovery**: Regularly test failover and disaster recovery
+10. **Continuous Improvement**: Refine your deployment process over time
+
+## Conclusion
+
+Advanced deployment options provide the flexibility and robustness needed to run decision services in production environments. By applying cloud-native principles, implementing proper CI/CD pipelines, and addressing operational concerns, you can create reliable, scalable decision services that meet enterprise requirements.
+
+The Aletyx Enterprise Build of Kogito and Droolsplatform gives you the freedom to start with simple deployments and evolve into sophisticated production architectures as your needs grow.
+
+In our next guide, we'll explore best practices for DMN modeling to ensure your decision services remain maintainable and efficient over time.

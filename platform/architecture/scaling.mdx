@@ -1,0 +1,218 @@
+---
+title: "Scaling & Performance: Horizontal Process Scaling with Temporal Event Coordination"
+description: "The Adaptive Process Architecture provides a robust foundation for scaling business automation workloads across distributed environments. This design enables organizations to achieve both vertical..."
+---
+The Adaptive Process Architecture provides a robust foundation for scaling business automation workloads across distributed environments. This design enables organizations to achieve both vertical and horizontal scaling capabilities while maintaining transactional integrity and process consistency.
+
+## Introducing Horizontally Scalable Process Orchestration
+
+Modern process automation requires the ability to handle dynamic workloads efficiently. The Aletyx Enterprise Build of Kogito and Drools delivers best-in-class scaling capabilities that go beyond traditional process architectures.
+
+<Info title="Enterprise Exclusive: Horizontally Scalable Temporal Event Coordinator">
+Aletyx Enterprise Build introduces an enhanced version of the community Job Service, our **Temporal Event Coordinator**, with true horizontal scaling capabilities. This enterprise-exclusive feature enables multiple process runtime replicas to share workload processing while maintaining timer and event consistency.
+</Info>
+### Architectural Overview
+
+![Scalable Architecture Diagram](/images/brand/temporal-architect.svg)
+
+The Adaptive Process Architecture scales differently from traditional microservice architectures by intelligently co-locating related services while enabling horizontal scaling where it matters most:
+
+1. **Stateless Process Services**: Multiple identical replicas of your process applications can run simultaneously
+2. **Shared Persistence Layer**: A unified database layer provides consistent state across all replicas
+3. **Distributed Temporal Coordination**: Our enhanced Temporal Event Coordinator enables reliable timer and scheduled event processing across multiple nodes
+
+## Scaling Models
+
+The Adaptive Process Architecture supports two primary scaling models:
+
+### Vertical Scaling (Scale Up)
+
+Increasing resources within a single process container:
+
+- Allocating more CPU cores for parallel process execution
+- Increasing memory allocation for larger working sets
+- Enhanced IO capabilities for database operations
+
+**When to choose vertical scaling:**
+
+- For processing highly complex rule evaluations
+- When working with large decision models
+- For maintaining single-tenant isolation requirements
+- When preferring operational simplicity over distributed complexity
+
+### Horizontal Scaling (Scale Out)
+
+Adding multiple replicas of your process application:
+
+- Distributed workload processing across multiple containers
+- Enhanced resilience through redundant processing capability
+- Geographic distribution possibilities for global deployments
+
+**When to choose horizontal scaling:**
+
+- For handling high-volume process initiations
+- For providing consistent SLAs during peak demand periods
+- When requiring high availability across availability zones
+- For implementing blue/green deployment strategies
+
+## Exclusive: Temporal Event Coordinator
+
+The heart of Aletyx's scalable process architecture is our enhanced Temporal Event Coordinator, a significant advancement over the community version's Job Service.
+
+<Info title="Enterprise Innovation">
+While the community version constrains each process instance to a dedicated Job Service, our enhanced implementation allows true workload distribution across multiple process instances. This architectural breakthrough enables Kubernetes-native autoscaling scenarios while maintaining temporal event consistency.
+</Info>
+### Key Capabilities
+
+1. **Distributed Timer Management**:
+    - Reliable scheduling across multiple nodes
+    - Cluster-aware timer acquisition and execution
+    - Guaranteed single execution model with distributed locking
+
+2. **Workload Balancing**:
+    - Dynamic distribution of temporal events to available nodes
+    - Intelligent workload routing based on node capacity
+    - Automatic failover for node outages
+
+3. **Scalable Event Processing**:
+    - Parallel processing of timers and scheduled events
+    - Consistent timer handling even during scaling operations
+    - No timing drift during heavy load scenarios
+
+### Implementation Details
+
+The Temporal Event Coordinator uses a sophisticated database-backed coordination mechanism to ensure that scheduled events are processed exactly once, even when multiple process nodes are active. This system handles:
+
+- Timer registration from any process node
+- Distributed timer acquisition with optimistic locking
+- Execution acknowledgment and completion tracking
+- Automatic failover for interrupted timer processing
+
+## Getting Started with Scalable Deployments
+
+Implementing a scalable process architecture with the Aletyx Enterprise Build is straightforward:
+
+1. **Update your project's Bill of Materials**:
+
+    ```xml
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.kie.kogito</groupId>
+                <artifactId>kogito-bom</artifactId>
+                <version>10.1.0-aletyx</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    ```
+
+
+1. **Remove the community Job Service storage dependency**:
+
+    ```xml
+    <!-- Remove or replace this dependency -->
+    <!-- <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>jobs-service-storage-jpa</artifactId>
+    </dependency> -->
+    ```
+
+4. **Configure your deployment for scaling**:
+
+    ```yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: process-service
+    spec:
+      replicas: 3  # Start with multiple replicas
+      selector:
+        matchLabels:
+          app: process-service
+      template:
+        metadata:
+          labels:
+            app: process-service
+        spec:
+          containers:
+          - name: process-service
+            image: your-process-image:latest
+            env:
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: jdbc:postgresql://shared-db:5432/process_db
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+              limits:
+                memory: "1Gi"
+                cpu: "1000m"
+    ```
+
+5. **Implement horizontal autoscaling (optional)**:
+
+    ```yaml
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      name: process-service-hpa
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: process-service
+      minReplicas: 2
+      maxReplicas: 10
+      metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 70
+    ```
+
+## Performance Considerations
+
+When implementing scalable process architectures, consider these best practices:
+
+### Database Optimization
+
+- Use connection pooling with appropriate sizing
+- Implement proper indexing for temporal event tables
+- Consider database read replicas for heavy query workloads
+
+### Resource Allocation
+
+- Allocate sufficient memory for process state caching
+- Provide adequate CPU cores for parallel process execution
+- Configure appropriate JVM settings for container environments
+
+### Monitoring
+
+- Track timer execution metrics across all nodes
+- Monitor process throughput and latency during scaling events
+- Observe database connection utilization
+
+## Real-World Scaling
+
+The Adaptive Process Architecture is been proven to be effective for  production environments handling:
+
+- Many unique process instances simultaneously
+- Many different users working on tasks concurrently
+- Easy scalability using the benefits of Kubernetes for *true* Cloud Native Process
+
+## Conclusion
+
+The Aletyx Enterprise Build of Kogito and Drools horizontally scalable Temporal Event Coordinator represents a significant advancement in process automation technology. By enabling true horizontal scaling while maintaining temporal consistency, organizations can now implement cloud-native process orchestration that scales dynamically with business demand.
+
+This capability transforms how enterprises approach process automation, enabling:
+
+- Elastic scaling to meet variable demand
+- Enhanced reliability through redundant processing
+- Simplified operations with Kubernetes-native scaling
+- Optimized resource utilization through dynamic allocation
+
+The Adaptive Process Architecture delivers the operational benefits of distributed systems while maintaining the development simplicity of traditional process platforms—truly the best of both worlds for modern process automation.

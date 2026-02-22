@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 400">
+	<!-- No background -->
+
+	<!-- Top Rectangle (Decision) -->
+	<rect x="130" y="70" width="100" height="60" fill="white" stroke="#000000" stroke-width="10" />
+
+	<!-- Left Lower Rectangle -->
+	<rect x="65" y="170" width="80" height="60" fill="white" stroke="#000000" stroke-width="10" />
+
+	<!-- Right Lower Rectangle -->
+	<rect x="220" y="170" width="80" height="60" fill="white" stroke="#000000" stroke-width="10" />
+
+	<!-- Left Oval -->
+	<ellipse cx="100" cy="330" rx="50" ry="30" fill="white" stroke="#000000" stroke-width="10" />
+
+	<!-- Right Oval -->
+	<ellipse cx="260" cy="330" rx="50" ry="30" fill="white" stroke="#000000" stroke-width="10" />
+
+	<!-- Connection from Left Oval to Left Rectangle -->
+	<!-- <line x1="90" y1="280" x2="90" y2="230" stroke="black" stroke-width="0" /> -->
+	<line x1="100" y1="230" x2="100" y2="300" stroke="#000000" stroke-width="10" />
+	<!-- <polygon points="90,170 85,178 95,178" fill="black" /> -->
+
+	<!-- Connection from Right Oval to Right Rectangle -->
+	<line x1="260" y1="300" x2="260" y2="230" stroke="#000000" stroke-width="10" />
+	<!-- <line x1="240" y1="230" x2="240" y2="170" stroke="black" stroke-width="2" /> -->
+	<!-- <polygon points="240,170 235,178 245,178" fill="black" /> -->
+
+	<!-- Connection from Left Rectangle to Top Rectangle -->
+	<line x1="110" y1="170" x2="170" y2="130" stroke="#000000" stroke-width="10" />
+	<!-- <polygon points="170,130 162,132 167,140" fill="black" /> -->
+
+	<!-- Connection from Right Rectangle to Top Rectangle -->
+	<line x1="260" y1="170" x2="200" y2="130" stroke="#000000" stroke-width="10" />
+	<!-- <polygon points="200,130 200,138 208,135" fill="black" /> -->
+</svg>

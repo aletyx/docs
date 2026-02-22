@@ -1,0 +1,787 @@
+---
+title: "Drools Rule Language (DRL) Syntax Introduction"
+description: "Drools Rule Language (DRL) is a notation for defining and describing business rules. This guide provides a comprehensive overview of DRL syntax, components, and best practices."
+---
+Drools Rule Language (DRL) is a notation for defining and describing business rules. This guide provides a comprehensive overview of DRL syntax, components, and best practices.
+
+## Introduction to DRL
+
+DRL allows business analysts and developers to express business logic in a declarative format. Files with the `.drl` extension contain one or more rules, each defining conditions and actions.
+
+A rule in DRL consists of three main parts:
+
+- **Attributes**: Optional configurations that affect rule behavior (like priority, timing)
+- **Conditions (when)**: Patterns that match facts in working memory
+- **Actions (then)**: Operations to execute when conditions are met
+
+### Basic Rule Structure
+
+```java
+package org.example;
+unit ExampleRules;
+
+import org.example.Person;
+
+rule "Person is an adult"
+    when
+        $person: /persons[ age >= 18 ]
+    then
+        $person.setAdult(true);
+end
+```
+
+## Rule Units
+
+Rule units are a modern approach in Drools 10+ that provides a modular organization for rules and their associated data. A rule unit defines both the rules and the data sources they operate on.
+
+### Declaration Structure
+
+```java
+package org.example;
+unit PersonRules;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+
+declare PersonRules extends RuleUnitData
+    persons: DataStore<Person>
+    adults: DataStore<Person>
+end
+
+rule "Person is an adult"
+    when
+        $person: /persons[ age >= 18 ]
+    then
+        adults.add($person);
+end
+```
+
+### Data Sources
+
+Rule units support different data source types:
+
+- `DataStore`: Mutable collection that allows add/remove operations
+- `DataStream`: Append-only collection, ideal for event streams
+- `SingletonStore`: Holds a single value that can be updated
+
+Example of using multiple data sources:
+
+```java
+package org.example;
+unit MonitoringService;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStream;
+import org.drools.ruleunits.api.DataStore;
+
+declare MonitoringService extends RuleUnitData
+    temperatures: DataStream<Temperature>
+    alertData: DataStream<Alert>
+    configs: DataStore<Configuration>
+end
+
+rule "High Temperature Alert"
+    when
+        $config: /configs[ id == "temp-threshold" ]
+        $temp: /temperatures[ value > $config.threshold ]
+    then
+        alertData.append(new Alert("HIGH", "Temperature exceeds threshold: " + $temp.value));
+end
+```
+
+## Packages and Imports
+
+### Package Declaration
+
+Every DRL file must start with a package declaration:
+
+```java
+package org.example;
+```
+
+Packages group related rules and provide a namespace.
+
+### Import Statements
+
+Import statements specify the fully qualified paths for classes used in your rules:
+
+```java
+import org.example.Person;
+import org.example.Address;
+import java.util.List;
+```
+
+## Type Declarations
+
+You can define new fact types directly in DRL:
+
+```java
+declare Person
+    name: String
+    age: int
+    address: Address
+    adult: boolean
+end
+
+declare Address
+    street: String
+    city: String
+    zipCode: String
+    country: String
+end
+```
+
+### Metadata in Type Declarations
+
+Add metadata to types or fields:
+
+```java
+declare Person
+    @role(event)
+    @expires(1h)
+
+    name: String @key
+    age: int
+    dateOfBirth: java.util.Date @timestamp
+end
+```
+
+Common metadata includes:
+
+- `@role(event)`: Marks a type as an event (for CEP)
+- `@timestamp`: Specifies event timestamp field
+- `@duration`: Specifies event duration field
+- `@expires`: Sets automatic expiration time
+- `@key`: Marks fields used for equality comparison
+
+## Rule Conditions (When)
+
+Rule conditions use OOPath expressions to match patterns in working memory.
+
+### Basic Pattern Matching
+
+A pattern with constraints matches against a fact of the given type and the additional restrictions in brackets `[]` that are true or false. For example, the following condition is that the Persons RuleUnit's age is greater than 21.
+
+```java
+when
+    /persons[ age > 21 ]
+```
+
+### Binding Variables
+
+Typical DRL syntax involves binding variables typically using `$` before the variable name.
+
+```java
+when
+    $person: /persons[ age > 21 ]
+```
+
+### Multiple Constraints
+
+```java
+when
+    $person: /persons[ age > 21, name == "John" ]
+```
+
+### Nested Properties
+
+```java
+when
+    $person: /persons[ age > 21, address.city == "New York" ]
+```
+
+### Advanced Navigation
+
+```java
+when
+    $person: /persons[ name == "John" ]/address[ city == "New York" ]
+```
+
+## Operators in Conditions
+
+### Comparison Operators
+
+```java
+$person: /persons[ age > 21 ]  // Greater than
+$person: /persons[ age >= 21 ] // Greater than or equal
+$person: /persons[ age < 21 ]  // Less than
+$person: /persons[ age <= 21 ] // Less than or equal
+$person: /persons[ age == 21 ] // Equal
+$person: /persons[ age != 21 ] // Not equal
+```
+
+### Compound Conditions
+
+```java
+$person: /persons[ age > 18 && age < 65 ]  // AND
+$person: /persons[ age < 18 || age > 65 ]  // OR
+```
+
+### String Operators
+
+```java
+$person: /persons[ name matches "J.*" ]        // Regular expression match
+$person: /persons[ name not matches "J.*" ]    // Regex doesn't match
+$person: /persons[ name contains "oh" ]        // Contains substring
+$person: /persons[ name not contains "oh" ]    // Doesn't contain substring
+```
+
+### Collection Operators
+
+```java
+$person: /persons[ children contains "Alice" ]         // Collection contains item
+$person: /persons[ children not contains "Alice" ]     // Collection doesn't contain
+$person: /persons[ name memberOf $allowedNames ]       // Item is in collection
+$person: /persons[ name not memberOf $allowedNames ]   // Item is not in collection
+```
+
+## Rule Actions (Then)
+
+Rule actions define operations to perform when conditions match.
+
+### Basic Actions
+
+```java
+then
+    $person.setAdult(true);
+    System.out.println("Person is now an adult: " + $person.getName());
+end
+```
+
+### Working with Data Sources
+
+```java
+then
+    adults.add($person);
+    persons.remove($person);
+end
+```
+
+### Modifying Facts
+
+Using the `modify` block:
+
+```java
+then
+    modify($person) {
+        setAdult(true),
+        setCategory("ADULT")
+    }
+end
+```
+
+## Rule Attributes
+
+Rule attributes allow you to control rule behavior:
+
+```java
+rule "Adult classification"
+    salience 10
+    no-loop true
+    date-effective "1-Jan-2023"
+    date-expires "31-Dec-2023"
+    when
+        $person: /persons[ age >= 18, adult == false ]
+    then
+        modify($person) {
+            setAdult(true)
+        }
+end
+```
+
+Common attributes:
+- `salience`: Sets rule priority (higher executes first)
+- `no-loop`: Prevents rule re-activation if actions modify matching facts
+- `date-effective`: Rule only active after date
+- `date-expires`: Rule not active after date
+- `timer`: Schedule-based rule execution
+- `duration`: Delay rule execution
+- `enabled`: Enable or disable rule
+
+## Timers and Calendars
+
+### Timer Attribute
+
+```java
+rule "Send daily reminder"
+    timer (cron: 0 0 12 * * ?)
+    when
+        $person: /persons[ reminderNeeded == true ]
+    then
+        NotificationService.sendReminder($person);
+end
+```
+
+Timer formats:
+- Interval: `timer (int: <initial delay> <repeat interval>)`
+- Cron: `timer (cron: <cron expression>)`
+
+### Calendar Attribute
+
+```java
+rule "Business hours check"
+    calendars "weekdayOnly"
+    when
+        $request: /requests[ processed == false ]
+    then
+        processRequest($request);
+end
+```
+
+## Conditional Elements
+
+### exists
+
+Checks if at least one fact matches:
+
+```java
+when
+    exists /persons[ age < 18 ]
+then
+    System.out.println("At least one minor exists");
+end
+```
+
+### not
+
+Checks if no facts match:
+
+```java
+when
+    not /persons[ age < 18 ]
+then
+    System.out.println("No minors exist");
+end
+```
+
+### forall
+
+Checks if all facts that match the first pattern also match the remaining patterns:
+
+```java
+when
+    forall($emp: /employees[ department == "IT" ]
+           /employees[ this == $emp, securityTraining == true ])
+then
+    System.out.println("All IT employees completed security training");
+end
+```
+
+## Accumulate and GroupBy
+
+### Accumulate
+
+The accumulate element allows collecting and processing values from multiple facts:
+
+```java
+when
+    $order: /orders
+    accumulate(
+        $item: /orderItems[ order == $order, $price: price ],
+        $total: sum($price),
+        $count: count($item);
+        $total > 1000,
+        $count >= 5
+    )
+then
+    $order.setQualifiesForDiscount(true);
+end
+```
+
+Predefined accumulate functions:
+- `average`
+- `min`
+- `max`
+- `count`
+- `sum`
+- `collectList`
+- `collectSet`
+
+### GroupBy
+
+GroupBy allows performing accumulate functions on specific groups:
+
+```java
+when
+    groupby(
+        $item: /orderItems[ $category: category, $price: price ],
+        $group: $category,
+        $total: sum($price),
+        $count: count($item);
+        $total > 5000
+    )
+then
+    System.out.println("Category " + $group + " has high sales");
+end
+```
+
+## Queries
+
+Queries allow you to search the working memory for facts matching specific criteria:
+
+```java
+query "find adults"
+    $adult: /persons[ age >= 18 ]
+end
+
+query "find people by name"
+    $name: String()
+    $person: /persons[ name == $name ]
+end
+```
+
+With rule units, queries are automatically exposed as REST endpoints.
+
+## Performance Tuning for DRL
+
+Optimize rule performance with these practices:
+
+1. **Define constraints from left to right**:
+   ```java
+   // Better
+   /persons[ firstName == "John" ]
+
+   // Worse
+   /persons[ "John" == firstName ]
+   ```
+
+2. **Use equality operators (==) when possible**:
+   ```java
+   // More efficient
+   /persons[ firstName == "John" ]
+
+   // Less efficient
+   /persons[ firstName != "OtherName" ]
+   ```
+
+3. **List most restrictive conditions first**:
+   ```java
+   when
+       $person: /persons[ age == 25 ]  // More restrictive condition
+       /addresses[ owner == $person ]  // Less restrictive condition
+   ```
+
+4. **Avoid deep property access with excessive path expressions**:
+   ```java
+   // Better: Add both Person and Address to the knowledge base
+   $person: /persons
+   /addresses[ owner == $person, city == "New York" ]
+
+   // Less efficient
+   /persons/addresses[ city == "New York" ]
+   ```
+
+5. **Use event listeners for logging instead of System.out.println**
+
+## Decision Tables in Spreadsheets
+
+Drools supports defining rules in spreadsheet decision tables (XLS/XLSX).
+
+A decision table consists of:
+- `RuleSet` area: Global definitions and attributes
+- `RuleTable` areas: The actual rules, conditions, and actions
+
+### Basic Structure
+
+1. Label a cell `RuleSet` in column B
+2. Provide a rule set name in column C
+3. Add global attributes below the RuleSet cell
+4. Create a `RuleTable` section with a name
+5. Define rule attributes, object types, constraints, and conditions
+6. Add rule values in rows below the conditions
+
+### Example Decision Table
+
+Decision table for shipping charges based on order details:
+
+| RuleSet    | Shipping Charges |               |                      |                         |
+| ---------- | ---------------- | ------------- | -------------------- | ----------------------- |
+| Import     | ai.aletyx.Order  |               |                      |                         |
+|            |                  |               |                      |                         |
+| RuleTable  | Shipping Rules   |               |                      |                         |
+| CONDITION  | CONDITION        | CONDITION     | ACTION               |                         |
+| Order      |                  |               |                      |                         |
+| itemsCount | itemsCount       | deliverInDays | insert(new Charge()) | Description             |
+| > $1       | <= $2            | == $3         | $4                   |                         |
+| 0          | 3                | 1             | 35                   | Small priority package  |
+| 4          | 10               | 1             | 25                   | Medium priority package |
+| 11         | -                | 1             | 15                   | Large priority package  |
+| 0          | 3                | 2             | 15                   | Small standard package  |
+| 4          | 10               | 2             | 10                   | Medium standard package |
+| 11         | -                | 2             | 7                    | Large standard package  |
+
+## Complete Examples
+
+### Example 1: Loan Application Process
+
+```java
+package org.mortgages;
+unit MortgageRules;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+
+declare Applicant
+    name: String
+    age: int
+    creditScore: int
+end
+
+declare LoanApplication
+    applicant: String
+    amount: double
+    approved: boolean
+    explanation: String
+end
+
+declare Bankruptcy
+    name: String
+    yearOfOccurrence: int
+    amountOwed: double
+end
+
+declare MortgageRules extends RuleUnitData
+    bankruptcies: DataStore<Bankruptcy>
+    applicants: DataStore<Applicant>
+    loanApplications: DataStore<LoanApplication>
+end
+
+rule "Underage"
+    salience 15
+    when
+        /applicants[ applicantName: name, age < 21 ]
+        $application: /loanApplications[ applicant == applicantName ]
+    then
+        modify($application) {
+            setApproved(false),
+            setExplanation("Applicant is underage")
+        }
+end
+
+rule "Bankruptcy history"
+    salience 10
+    when
+        $a: /loanApplications[ applicantName: applicant ]
+        exists (/bankruptcies[ name == applicantName, yearOfOccurrence > 1990 || amountOwed > 100000 ])
+    then
+        modify($a) {
+            setApproved(false),
+            setExplanation("Applicant has bankruptcy history")
+        }
+end
+
+rule "Low credit score"
+    salience 5
+    when
+        /applicants[ applicantName: name, creditScore < 600 ]
+        $application: /loanApplications[ applicant == applicantName ]
+    then
+        modify($application) {
+            setApproved(false),
+            setExplanation("Credit score too low")
+        }
+end
+
+rule "Approve loan"
+    salience 0
+    when
+        $application: /loanApplications[ approved == null ]
+    then
+        modify($application) {
+            setApproved(true),
+            setExplanation("All checks passed")
+        }
+end
+```
+
+### Example 2: Temperature Monitoring System
+
+```java
+package ai.aletyx;
+unit MonitoringService;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStream;
+import org.drools.ruleunits.api.DataStore;
+
+declare Temperature
+    value: double
+    timestamp: java.time.LocalDateTime
+    location: String
+end
+
+declare Alert
+    severity: String
+    message: String
+    timestamp: java.time.LocalDateTime
+end
+
+declare Threshold
+    location: String
+    minValue: double
+    maxValue: double
+end
+
+declare MonitoringService extends RuleUnitData
+    temperatures: DataStream<Temperature>
+    alertData: DataStream<Alert>
+    thresholds: DataStore<Threshold>
+end
+
+rule "Temperature too high"
+    when
+        $temp: /temperatures[ $loc: location, $val: value ]
+        $threshold: /thresholds[ location == $loc, maxValue < $val ]
+    then
+        alertData.append(new Alert("HIGH",
+            "Temperature at " + $loc + " exceeds maximum: " + $val,
+            java.time.LocalDateTime.now()));
+end
+
+rule "Temperature too low"
+    when
+        $temp: /temperatures[ $loc: location, $val: value ]
+        $threshold: /thresholds[ location == $loc, minValue > $val ]
+    then
+        alertData.append(new Alert("LOW",
+            "Temperature at " + $loc + " below minimum: " + $val,
+            java.time.LocalDateTime.now()));
+end
+
+query "high-alerts"
+    $alert: /alertData[ severity == "HIGH" ]
+end
+```
+
+### Example 3: Order Processing with Discounts
+
+```java
+package ai.aletyx;
+unit OrderProcessing;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+import java.util.Date;
+
+declare Customer
+    id: String
+    name: String
+    category: String
+end
+
+declare Product
+    id: String
+    name: String
+    price: double
+    category: String
+end
+
+declare OrderItem
+    orderId: String
+    productId: String
+    quantity: int
+    unitPrice: double
+end
+
+declare Order
+    id: String
+    customerId: String
+    date: Date
+    totalAmount: double
+    discount: double
+    discountReason: String
+    processed: boolean
+end
+
+declare OrderProcessing extends RuleUnitData
+    customers: DataStore<Customer>
+    products: DataStore<Product>
+    orderItems: DataStore<OrderItem>
+    orders: DataStore<Order>
+end
+
+rule "Calculate order total"
+    salience 100
+    when
+        $order: /orders[ processed == false, $orderId: id ]
+        accumulate(
+            $item: /orderItems[ orderId == $orderId, $qty: quantity, $price: unitPrice ],
+            $total: sum($qty * $price)
+        )
+    then
+        modify($order) {
+            setTotalAmount($total),
+            setDiscount(0.0)
+        }
+end
+
+rule "Premium customer discount"
+    salience 50
+    when
+        $order: /orders[ processed == false, discount == 0.0, $custId: customerId, totalAmount > 100 ]
+        /customers[ id == $custId, category == "PREMIUM" ]
+    then
+        modify($order) {
+            setDiscount(totalAmount * 0.1),
+            setDiscountReason("Premium customer discount")
+        }
+end
+
+rule "Bulk order discount"
+    salience 40
+    when
+        $order: /orders[ processed == false, discount == 0.0, $orderId: id, totalAmount > 200 ]
+        accumulate(
+            /orderItems[ orderId == $orderId ],
+            $count: count(1);
+            $count >= 5
+        )
+    then
+        modify($order) {
+            setDiscount(totalAmount * 0.05),
+            setDiscountReason("Bulk order discount")
+        }
+end
+
+rule "Process order"
+    salience 0
+    when
+        $order: /orders[ processed == false ]
+    then
+        modify($order) {
+            setProcessed(true)
+        }
+        System.out.println("Order " + $order.getId() + " processed. " +
+                          "Total: $" + $order.getTotalAmount() + ", " +
+                          "Discount: $" + $order.getDiscount() + " (" + $order.getDiscountReason() + ")");
+end
+```
+
+## References and Resources
+
+- [Drools Documentation](https://docs.drools.org/)
+- [Apache Drools GitHub](https://github.com/apache/incubator-kie-drools)
+- [Rules Execution API](https://docs.drools.org/latest/drools-docs/docs/rule-engine/rules-api.html)
+
+## Language Levels
+
+Drools supports different DRL language levels:
+- **DRL6** (default): Compatible with previous Drools versions
+- **DRL10**: Introduces clarity-improving changes
+- **DRL5**, **DRL6_STRICT**: Deprecated and will be removed
+
+To specify a language level, use kmodule.xml or system property:
+
+```xml
+<kmodule xmlns="http://www.drools.org/xsd/kmodule">
+  <configuration>
+    <property key="drools.lang.level" value="DRL10"/>
+  </configuration>
+</kmodule>
+```
+
+Or in Java:
+
+```java
+System.setProperty("drools.lang.level", "DRL10");
+```

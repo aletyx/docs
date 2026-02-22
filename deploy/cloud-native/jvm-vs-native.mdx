@@ -1,0 +1,483 @@
+---
+title: "JVM vs Native Image Deployment for Kogito Services in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "As you deploy decision and process services built with Aletyx Enterprise Build of Kogito and Drools, choosing between traditional JVM deployment and Native Image compilation is a critical decision..."
+---
+As you deploy decision and process services built with Aletyx Enterprise Build of Kogito and Drools, choosing between traditional JVM deployment and Native Image compilation is a critical decision that impacts performance, resource usage, and scaling capabilities. This guide will help you understand both approaches and choose the right one for your specific use case.
+
+## Understanding Container Deployments
+
+Before diving into specific deployment strategies, let's understand why container-based deployments have become the standard for modern applications.
+
+### What are Containers?
+
+Containers are lightweight, standalone packages that include everything needed to run an application:
+
+- Application code and runtime
+- System tools and libraries
+- Configuration settings
+- Dependencies
+
+Containers are isolated from each other and the host system while sharing the host OS kernel. They run as isolated processes and are built from layered, immutable images.
+
+### Benefits of Containerization for Decision and Process Services
+
+Containerization provides several key advantages for Aletyx Enterprise Build of Kogito and Drools services:
+
+1. **Consistency across environments**: The same container image runs identically in development, testing, staging, and production
+2. **Rapid startup and recovery**: Containers typically start in seconds, enabling quick scaling and recovery
+3. **Microservice architecture support**: Natural fit for breaking down monolithic process applications
+4. **Resource efficiency**: Precise control over CPU, memory, and storage allocation
+5. **Scalability**: Easy horizontal and vertical scaling
+
+### Why Containerize Process and Decision Services?
+
+Containerizing Aletyx Enterprise Build of Kogito and Drools services delivers specific benefits:
+
+- **Modular deployment**: Break free from monolithic process engines
+- **Independent scaling**: Scale specific process instances or decision services as needed
+- **Environment-specific variants**: Deploy different process variants to different environments
+- **A/B testing**: Test different decision rule versions in production
+- **Isolation**: Keep long-running processes separate from short-lived decisions
+
+## Deployment Strategies: JVM vs Native Image
+
+Aletyx Enterprise Build of Kogito and Drools services can be deployed in two primary ways: as traditional JVM applications or as Native Images compiled with GraalVM.
+
+### JVM Deployment
+
+The traditional approach runs your Kogito service on the Java Virtual Machine:
+
+![Diagram](/images/diagrams/deployment/cloud-native/jvm-vs-native/flowchart-td-1.svg)
+
+### Native Image Deployment
+
+The GraalVM Native Image approach compiles your application to a standalone executable:
+
+![Diagram](/images/diagrams/deployment/cloud-native/jvm-vs-native/flowchart-td-2.svg)
+
+## Key Differences
+
+| Factor                     | JVM Deployment              | Native Image                      |
+| -------------------------- | --------------------------- | --------------------------------- |
+| **Build Time**             | Faster (seconds to minutes) | Slower (minutes to hours)         |
+| **Startup Time**           | Slower (seconds)            | Near-instantaneous (milliseconds) |
+| **Peak Performance**       | Higher after warm-up        | Lower but consistent              |
+| **Memory Footprint**       | Higher                      | Significantly lower               |
+| **Reflection Support**     | Full dynamic support        | Limited to configured classes     |
+| **Resource Consumption**   | Higher                      | Lower                             |
+| **Deployment Size**        | Larger                      | Smaller                           |
+| **Development Experience** | Standard Java tooling       | Requires special configuration    |
+
+## When to Choose JVM Deployment
+
+JVM deployment is ideal for:
+
+- **Long-running services**: Services that remain active for extended periods benefit from JVM's Just-In-Time (JIT) optimization
+- **Complex rule evaluation**: Decision services with complex rule sets that benefit from runtime optimization
+- **Large working memory**: Applications needing significant working memory for rule evaluation
+- **Faster build times**: Development environments where rapid iteration is critical
+- **Dynamic class loading**: Services that need to load classes dynamically at runtime
+
+## When to Choose Native Image
+
+Native Image deployment excels for:
+
+- **On-demand services**: Decision services called infrequently with cold start times under 100ms
+- **Event-driven orchestrators**: Process services that scale to zero between events
+- **Serverless environments**: Functions that need to start quickly and efficiently
+- **Resource-constrained environments**: Edge computing or IoT devices with limited resources
+- **Microservice architectures**: Where many small services run independently
+- **CLI tools**: Process-enabled command-line tools with minimal footprint
+
+## Practical Example: Decision Service Deployment
+
+Let's walk through how to set up a simple decision service for both JVM and Native Image deployment.
+
+### Prerequisites
+
+- Java 17 or later
+- Maven 3.9.0 or later
+- Docker or Podman
+- GraalVM Community Edition 22.3 or later (for Native Image)
+- Aletyx Enterprise Build of Kogito and Drools version 10.1.0-aletyx
+
+### Creating a Decision Service Project
+
+First, let's create a simple decision service project using the ake Quarkus archetype:
+
+```bash
+mvn archetype:generate \
+    -DarchetypeGroupId=ai.aletyx \
+    -DarchetypeArtifactId=quarkus-kogito-jbpm-archetype \
+    -DarchetypeVersion=1.0.0 \
+    -DgroupId=com.example \
+    -DartifactId=insurance-pricing-service \
+    -Dversion=1.0.0-SNAPSHOT
+```
+
+### Project Structure
+
+The generated project includes:
+
+```bash
+insurance-pricing-service/
+├── mvnw
+├── mvnw.cmd
+├── pom.xml
+└── src/
+    ├── main/
+    │   ├── java/
+    │   │   └── com/
+    │   │       └── example/
+    │   │           ├── InsurancePricingModel.java
+    │   │           └── InsurancePricingService.java
+    │   └── resources/
+    │       ├── application.properties
+    │       └── pricing.dmn
+    └── test/
+        └── java/
+            └── com/
+                └── example/
+                    └── InsurancePricingTest.java
+```
+
+### Building for JVM Deployment
+
+To build your decision service for JVM deployment:
+
+```bash
+# Navigate to project directory
+cd insurance-pricing-service
+
+# Build the application
+mvn clean package
+
+# Build a container image
+docker build -f src/main/docker/Dockerfile.jvm -t insurance-pricing-service:jvm .
+```
+
+### Building for Native Image
+
+To build your decision service as a Native Image:
+
+```bash
+# Using Maven with native profile
+mvn clean package -Pnative
+
+# Or build a container with native image
+docker build -f src/main/docker/Dockerfile.native -t insurance-pricing-service:native .
+```
+
+### Deployment Configuration
+
+For both deployment types, you'll need to configure environment variables appropriately. Here's an example `deployment.yaml` for Kubernetes:
+
+#### JVM Deployment Configuration
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insurance-pricing-jvm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: insurance-pricing
+      deployment: jvm
+  template:
+    metadata:
+      labels:
+        app: insurance-pricing
+        deployment: jvm
+    spec:
+      containers:
+      - name: insurance-pricing
+        image: insurance-pricing-service:jvm
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        env:
+        - name: QUARKUS_PROFILE
+          value: "prod"
+        - name: KOGITO_SERVICE_URL
+          value: "http://insurance-pricing-jvm:8080"
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+```
+
+#### Native Image Deployment Configuration
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insurance-pricing-native
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: insurance-pricing
+      deployment: native
+  template:
+    metadata:
+      labels:
+        app: insurance-pricing
+        deployment: native
+    spec:
+      containers:
+      - name: insurance-pricing
+        image: insurance-pricing-service:native
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        env:
+        - name: QUARKUS_PROFILE
+          value: "prod"
+        - name: KOGITO_SERVICE_URL
+          value: "http://insurance-pricing-native:8080"
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+```
+
+Note the differences in resource allocations between JVM and Native deployments.
+
+## Performance Comparison
+
+Let's compare the performance characteristics of both deployment strategies:
+
+### Startup Time
+
+| Deployment Type | Avg. Startup Time | Notes                              |
+| --------------- | ----------------- | ---------------------------------- |
+| JVM             | 3-5 seconds       | Varies with application complexity |
+| Native Image    | 50-200ms          | 10-20x faster startup              |
+
+### Memory Footprint
+
+| Deployment Type | Idle Memory Usage | Peak Memory Usage |
+| --------------- | ----------------- | ----------------- |
+| JVM             | 250-500MB         | 500MB-1GB         |
+| Native Image    | 50-120MB          | 150-300MB         |
+
+### Request Latency
+
+| Deployment Type | Cold Start | Warm (p95) | Notes                       |
+| --------------- | ---------- | ---------- | --------------------------- |
+| JVM             | 500-1000ms | 50-100ms   | Improves over time with JIT |
+| Native Image    | 200-300ms  | 70-120ms   | Consistent performance      |
+
+## Best Practices for Quarkus Kogito Deployments
+
+Regardless of which deployment strategy you choose, follow these best practices:
+
+### Configuration Management
+
+1. **Externalize environment-specific variables**:
+
+    ```java
+    kogito.service.url=${KOGITO_SERVICE_URL:http://localhost:8080}
+    ```
+
+2. **Leverage Quarkus profiles**:
+
+    ```java
+    %dev.quarkus.log.level=DEBUG
+    %prod.quarkus.log.level=INFO
+    ```
+
+3. **Follow the Twelve-Factor App methodology** for configuration, especially for secrets
+
+### Secrets vs ConfigMaps
+
+Use Kubernetes resources appropriately:
+
+```yaml
+# ConfigMap for non-sensitive configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: insurance-pricing-config
+data:
+  # Service URLs (non-sensitive)
+  KOGITO_SERVICE_URL: "http://insurance-pricing:8080"
+  KOGITO_DATAINDEX_HTTP_URL: "http://data-index-service:8080"
+
+  # Database connection (non-sensitive parts)
+  POSTGRESQL_SERVICE: "postgresql"
+  POSTGRESQL_DATABASE: "kogito"
+
+---
+# Secret for sensitive information
+apiVersion: v1
+kind: Secret
+metadata:
+  name: insurance-pricing-secrets
+type: Opaque
+stringData:
+  # Database credentials
+  POSTGRESQL_USER: "kogito"
+  POSTGRESQL_PASSWORD: "your-secure-password"
+
+  # Optional: OIDC configuration
+  QUARKUS_OIDC_CREDENTIALS_SECRET: "your-oidc-client-secret"
+```
+
+### Scaling Considerations
+
+How to scale your decision and process services:
+
+#### Horizontal Scaling (More Containers)
+
+For Aletyx Enterprise Build of Kogito and Drools version 10.1.0-aletyx, full horizontal scaling is supported for:
+
+- Decision Services (DRL and DMN)
+- Stateless BPMN processes
+
+Note that stateful processes require additional configuration for proper scaling.
+
+#### Vertical Scaling (More CPU/RAM per pod)
+
+Consider these factors when scaling decision services vertically:
+
+- **Rule complexity**: More complex rules require more CPU
+- **Decision table size**: Large tables need more memory
+- **Concurrent evaluations**: Higher concurrency demands more resources
+- **Memory for rule cache**: JVM deployment benefits from larger cache
+
+## Using CI/CD Pipelines
+
+Integrate both JVM and Native Image builds into your CI/CD pipelines:
+
+```yaml
+# Example GitHub Actions workflow
+name: Build and Deploy Decision Service
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Build JVM Container
+      run: |
+        mvn clean package
+        docker build -f src/main/docker/Dockerfile.jvm -t insurance-pricing:jvm-${ your_github.sha } .
+
+    - name: Build Native Image Container
+      run: |
+        mvn clean package -Pnative
+        docker build -f src/main/docker/Dockerfile.native -t insurance-pricing:native-${ your_github.sha } .
+
+    - name: Push images to registry
+      run: |
+        docker tag insurance-pricing:jvm-${ your_github.sha } your-registry/insurance-pricing:jvm-${ github.sha }
+        docker tag insurance-pricing:native-${ your_github.sha } your-registry/insurance-pricing:native-${ your_github.sha }
+        docker push your-registry/insurance-pricing:jvm-${ your_github.sha }
+        docker push your-registry/insurance-pricing:native-${ your_github.sha }
+```
+
+## Common Pitfalls and How to Avoid Them
+
+| Pitfall                              | Description                               | Solution                                                  |
+| ------------------------------------ | ----------------------------------------- | --------------------------------------------------------- |
+| Over-engineering initial deployments | Starting with too complex a setup         | Begin with JVM deployment and migrate to Native as needed |
+| "Toss-over-wall" development         | Developers build without operations input | Involve all stakeholders throughout development           |
+| Neglecting performance testing       | Not testing at scale before deployment    | Test with realistic loads and data volumes                |
+| Late security planning               | Adding security as an afterthought        | Incorporate security from the beginning                   |
+| Inappropriate deployment choice      | Using Native for long-running services    | Match deployment strategy to service characteristics      |
+
+## Real-World Examples
+
+### Case Study: On-Demand Credit Decision Service
+
+**Challenge**: A financial institution needed to process credit decisions through an API that was called infrequently but required rapid response times.
+
+**Solution**: Deployed as a Native Image service in a serverless environment.
+
+**Results**:
+
+- Cold start time reduced from 3.5 seconds to 120ms
+- Memory usage decreased by 78%
+- Able to scale to zero between requests, reducing costs by 65%
+
+### Case Study: Insurance Claims Processing
+
+**Challenge**: An insurance company needed to process claims through a complex workflow with multiple decision points and integrations.
+
+**Solution**: Deployed as a JVM service with horizontal scaling.
+
+**Results**:
+
+- Sustained throughput of 200 claims per second after JIT warm-up
+- 99.99% uptime with no degradation over time
+- Successfully handled peak loads by scaling horizontally
+
+## Conclusion
+
+Choosing between JVM and Native Image deployment for your Aletyx Enterprise Build of Kogito and Drools services depends on your specific use case, performance requirements, and operational constraints:
+
+- **Use JVM deployment** for long-running, complex services that benefit from JIT optimization
+- **Use Native Image deployment** for on-demand, event-driven services that need fast startup and lower resource consumption
+
+The real benefit of Aletyx Enterprise Build of Kogito and Drools is the flexibility to choose either approach without changing your application code—simply by changing your build profile and Dockerfile:
+
+```bash
+# JVM Build
+mvn clean package
+
+# Native Image Build
+mvn clean package -Pnative
+```
+
+By understanding the strengths and limitations of each approach, you can optimize your decision and process services for performance, cost, and scalability.
+
+## Additional Resources
+
+- [Quarkus Guide to Native Images](https://quarkus.io/guides/building-native-image)
+- [GraalVM Native Image Configuration Reference](https://www.graalvm.org/reference-manual/native-image/)
+- [Kogito Quarkus Extensions](https://docs.jboss.org/kogito/release/latest/html_single/#_quarkus_extensions)
+- [Twelve-Factor App Methodology](https://12factor.net/)
+- [Aletyx Enterprise Build of Kogito and Drools Deployment Guide](../deployment/kubernetes)

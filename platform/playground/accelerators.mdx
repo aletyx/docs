@@ -1,0 +1,814 @@
+---
+title: "Creating and Deploying Aletyx Playground Accelerators"
+description: "This guide provides a comprehensive walkthrough for creating, customizing, and deploying project accelerators for the Aletyx Playground. Accelerators allow you to quickly bootstrap projects with..."
+---
+This guide provides a comprehensive walkthrough for creating, customizing, and deploying project accelerators for the Aletyx Playground. Accelerators allow you to quickly bootstrap projects with predefined configurations, dependencies, and structure, making it easier for developers to get started with business automation projects.
+
+## What are Accelerators?
+
+Accelerators in Aletyx Playground serve as project templates that can enable:
+
+- Provide a predefined project structure
+- Include necessary dependencies
+- Configure proper Maven settings
+- Set up deployment configurations
+- Establish CI/CD pipelines
+- Add custom branding and organizational standards
+
+Accelerators are superior to traditional archetypes because they allow for complete customization beyond just the initial project creation, including environment-specific configurations and pipeline setups.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- [Git](https://git-scm.com/downloads) installed
+- [Java 17](https://adoptium.net/) or later installed
+- [Maven 3.9.6+](https://maven.apache.org/download.cgi) installed
+- [Docker](https://www.docker.com/products/docker-desktop/) for testing your accelerator locally
+- Access to Aletyx Playground - either at {{ product.playground }} or
+
+## Accelerator Structure
+
+A typical accelerator repository has the following structure:
+
+```
+sandbox-accelerator/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml      # GitHub Actions workflow file
+├── src/
+│   ├── main/
+│   │   ├── java/           # Java source files
+│   │   └── resources/
+│   │       ├── META-INF/   # Quarkus configuration
+│   │       ├── processes/  # BPMN process definitions
+│   │       └── decisions/  # DMN decision models
+│   └── test/
+│       └── java/           # Test source files
+├── .dockerignore
+├── .gitignore
+├── .kie-sandbox            # Sandbox configuration
+├── README.md
+├── docker-compose.yml      # For local testing
+├── pom.xml                 # Project dependencies
+└── application.properties  # Project configuration
+```
+
+## Step 1: Setting Up the Base Project
+
+Start by creating a basic repository structure:
+
+```bash
+mkdir -p my-accelerator/{src/{main/{java,resources/{META-INF,processes,decisions}},test/java},.github/workflows}
+cd my-accelerator
+```
+
+### Initialize Git Repository
+
+```bash
+git init
+echo "# My Aletyx Playground Accelerator" > README.md
+git add README.md
+git commit -m "Initial commit"
+```
+
+### Create Basic .gitignore
+
+```bash
+cat > .gitignore << 'EOF'
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Quarkus
+.quarkus/
+
+# Misc
+.DS_Store
+*.log
+node_modules/
+EOF
+```
+
+## Step 2: Create the POM.xml File
+
+Create a `pom.xml` file with dependencies for Apache KIE projects. Below is a template to start with:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>ai.aletyx.example</groupId>
+    <artifactId>aletyx-accelerator</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <properties>
+        <compiler-plugin.version>3.10.1</compiler-plugin.version>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+        <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+        <quarkus.platform.version>3.8.4</quarkus.platform.version>
+        <kogito.bom.version>10.1.0-aletyx</kogito.bom.version>
+        <kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
+        <version.org.kie.kogito>10.1.0-aletyx</version.org.kie.kogito>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.kie.kogito</groupId>
+                <artifactId>${kogito.bom.artifact-id}</artifactId>
+                <version>${kogito.bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Core dependencies -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-jackson</artifactId>
+        </dependency>
+
+        <!-- Apache KIE dependencies -->
+        <dependency>
+            <groupId>org.jbpm</groupId>
+            <artifactId>jbpm-with-drools-quarkus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-addons-quarkus-process-svg</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-addons-quarkus-process-management</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-addons-quarkus-source-files</artifactId>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>generate-code</goal>
+                            <goal>generate-code-tests</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler-plugin.version}</version>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+## Step 3: Configure Application Properties
+
+Create an `application.properties` file in the `src/main/resources` directory:
+
+```properties
+# Common Configuration
+quarkus.http.port=8080
+quarkus.http.root-path=/
+quarkus.http.cors=true
+
+# API Documentation
+quarkus.smallrye-openapi.path=/docs/openapi.json
+quarkus.swagger-ui.always-include=true
+quarkus.smallrye-graphql.ui.always-include=true
+
+# Development Mode Configuration
+%dev.quarkus.devservices.enabled=true
+%dev.quarkus.kogito.devservices.enabled=true
+%dev.quarkus.datasource.devservices.enabled=true
+%dev.quarkus.datasource.devservices.port=5432
+%dev.quarkus.datasource.db-kind=postgresql
+
+# Development URLs
+%dev.kogito.service.url=http://localhost:${quarkus.http.port}
+%dev.kogito.jobs-service.url=http://localhost:${quarkus.http.port}
+%dev.kogito.dataindex.http.url=http://localhost:${quarkus.http.port}
+
+# Production Configuration
+%prod.quarkus.devservices.enabled=false
+%prod.quarkus.kogito.devservices.enabled=false
+%prod.kogito.service.url=${KOGITO_SERVICE_URL}
+%prod.kogito.jobs-service.url=${KOGITO_JOBS_SERVICE_URL}
+%prod.kogito.dataindex.http.url=${KOGITO_DATAINDEX_HTTP_URL}
+
+# Database Configuration (Production)
+%prod.quarkus.datasource.db-kind=postgresql
+%prod.quarkus.datasource.username=${POSTGRESQL_USER:kogito}
+%prod.quarkus.datasource.password=${POSTGRESQL_PASSWORD:kogito123}
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://${POSTGRESQL_SERVICE:localhost}:5432/${POSTGRESQL_DATABASE:kogito}
+
+# Hibernate Configuration
+quarkus.hibernate-orm.database.generation=update
+quarkus.hibernate-orm.log.sql=false
+```
+
+## Step 4: Add a GitHub Actions Workflow
+
+Create a workflow file for CI/CD in `.github/workflows/deploy.yml` if you use GitHub actions. A sample can be found at updateThis
+
+## Step 5: Add a Docker Compose File for Local Testing
+
+Create a `docker-compose.yml` file for testing the accelerator locally. The below is an example that can be used as a builder that utilizes the ${artifactId} that should be whatever you would want to call it for your implementation:
+
+```yaml
+version: "3.8"
+
+services:
+  ${artifactId}-postgres:
+    build:
+      context: ./docker-compose/postgres
+    platform: linux/amd64
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: kogito
+      POSTGRES_PASSWORD: kogito
+      LANG: en_US.utf8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ${artifactId}:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      QUARKUS_PROFILE: compose
+      POSTGRESQL_SERVICE: ${artifactId}-postgres
+      QUARKUS_DATASOURCE_USERNAME: kogito
+      QUARKUS_DATASOURCE_PASSWORD: kogito
+      QUARKUS_DATASOURCE_DATABASE: kie
+      QUARKUS_DATASOURCE_PORT: 5432
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://${artifactId}-postgres:5432/kie
+      KOGITO_SERVICE_URL: http://localhost:8080
+      KOGITO_JOBS_SERVICE_URL: http://localhost:8080
+      KOGITO_DATAINDEX_HTTP_URL: http://localhost:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      ${artifactId}-pgadmin:
+        condition: service_started
+
+  ${artifactId}-management-console:
+    container_name: ${artifactId}-management-console
+    # Default: quay.io/kiegroup/kogito-management-console:latest
+    #image: ${MANAGEMENT_CONSOLE_IMAGE}
+    image: apache/incubator-kie-kogito-management-console:main
+    ports:
+      - 8280:8080
+    depends_on:
+      ${artifactId}:
+        condition: service_started
+
+  ${artifactId}-pgadmin:
+    container_name: ${artifactId}-pgadmin
+    image: dpage/pgadmin4:9.1
+    ports:
+      - 8055:80
+    depends_on:
+      - ${artifactId}-postgres
+    volumes:
+      - ./docker-compose/pgadmin/servers.json:/pgadmin4/servers.json
+      - ./docker-compose/pgadmin/pgpass:/pgadmin4/pgpass
+    entrypoint: >
+      /bin/sh -c "
+      cp -f /pgadmin4/pgpass /var/lib/pgadmin/;
+      chmod 600 /var/lib/pgadmin/pgpass;
+      /entrypoint.sh
+      "
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user@kie.org
+      PGADMIN_DEFAULT_PASSWORD: pass
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      GUNICORN_ACCESS_LOGFILE: "/dev/null"
+
+volumes:
+  postgres_data:
+
+```
+
+## Step 6: Create the Sandbox Configuration
+
+Create a `.kie-sandbox` directory with a configuration file to specify how the Sandbox should handle this accelerator:
+
+```bash
+mkdir -p .kie-sandbox
+```
+
+Create a `.kie-sandbox/accelerator.yaml` file:
+
+```yaml
+# Accelerator configuration
+name: Aletyx Business Automation
+description: A comprehensive template for building business automation solutions with Apache KIE
+tags:
+  - process
+  - decision
+  - business-automation
+  - quarkus
+icon: https://raw.githubusercontent.com/yourusername/your-accelerator/main/icon.png
+maintainer: Aletyx
+repositoryUrl: https://github.com/yourusername/your-accelerator
+gitProviders:
+  - github
+  - gitlab
+  - bitbucket
+```
+
+## Step 7: Add Sample DMN and BPMN Models
+
+### Sample DMN Model
+
+Create a sample DMN file in `src/main/resources/decisions/simple-decision.dmn` to demonstrate decision modeling capabilities.
+
+### Sample BPMN Process
+
+Create a sample BPMN file in `src/main/resources/processes/simple-process.bpmn` to demonstrate process modeling capabilities.
+
+## Step 8: Create a Dockerfile for Container Builds
+
+Create a Dockerfile in `src/main/docker/Dockerfile.jvm`:
+
+```dockerfile
+FROM registry.access.redhat.com/ubi8/openjdk-17:latest
+
+ENV LANGUAGE='en_US:en'
+
+COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 target/quarkus-app/*.jar /deployments/
+COPY --chown=185 target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
+
+EXPOSE 8080
+USER 185
+
+ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
+
+ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
+```
+
+## Step 9: Add Deployment Scripts
+
+Create deployment scripts for Kubernetes in the `.github/scripts` directory:
+
+### Example of a Keycloak Configuration Script using Community
+
+Create `.github/scripts/deploy-keycloak.sh`:
+
+```bash
+#!/bin/bash
+# deploy-keycloak.sh - Handles Keycloak setup to add users to the realm and redirect URIs
+
+# Source configuration
+if [ -f deploy.config ]; then
+    source deploy.config
+else
+    echo "Configuration file not found!"
+    exit 1
+fi
+
+# Function to extract value from JSON response
+extract_json_value() {
+    local json="$1"
+    local key="$2"
+    echo "$json" | grep -o "\"$key\":[^,}]*" | cut -d':' -f2- | tr -d '"' | tr -d ' '
+}
+
+# Function to get Keycloak access token
+get_token() {
+    echo "Attempting to get token from: https://${KEYCLOAK_BASE_URL}/auth/realms/master/protocol/openid-connect/token"
+
+    local token_response
+    token_response=$(curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/realms/master/protocol/openid-connect/token" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "username=${ADMIN_USERNAME}" \
+      -d "password=${ADMIN_PASSWORD}" \
+      -d "grant_type=password" \
+      -d "client_id=admin-cli")
+
+    TOKEN=$(extract_json_value "$token_response" "access_token")
+
+    if [ -z "$TOKEN" ] || [ "$TOKEN" == "null" ]; then
+        echo "Failed to obtain access token. Response:"
+        echo "$token_response"
+        exit 1
+    fi
+
+    echo "Successfully obtained access token"
+}
+
+# Additional functions for realm and user setup would be included here
+# ...
+
+# Main execution
+REALM="aletyx-kogito"
+# Task console and management console names
+TASK_CONSOLE_NAME="${SERVICE_NAME}-task-console"
+MGMT_CONSOLE_NAME="${SERVICE_NAME}-management-console"
+# Define the application group name
+APP_PART_OF="${SERVICE_NAME}-app"
+
+# Configure Keycloak
+echo "Configuring Keycloak..."
+get_token
+# Additional setup code would be added here
+```
+
+### Components Deployment Script
+
+Create `.github/scripts/deploy-components.sh`:
+
+```bash
+#!/bin/bash
+# deploy-components.sh - Handles PostgreSQL and application deployments
+
+# Source configuration
+if [ -f deploy.config ]; then
+    source deploy.config
+else
+    echo "Configuration file not found!"
+    exit 1
+fi
+
+# Function to create secure ingress with TLS certificate
+create_secure_ingress() {
+    local service_name=$1
+    local service_port=$2
+    local host="${service_name}.${DOMAIN_NAME}"
+
+    echo "Creating secure ingress for $service_name (port $service_port) at $host"
+
+    # Create the ingress with TLS configuration
+    cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: $service_name
+  namespace: $NAMESPACE
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /\$1
+spec:
+  tls:
+  - hosts:
+    - $host
+    secretName: $service_name-tls
+  rules:
+  - host: $host
+    http:
+      paths:
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: $service_name
+            port:
+              number: $service_port
+EOF
+
+    echo "Secure ingress created for $service_name"
+    echo "Your service will be available at https://$host once the certificate is issued"
+}
+
+# Additional functions for PostgreSQL and application deployment would be included here
+# ...
+
+# Main execution
+TASK_CONSOLE_NAME="${SERVICE_NAME}-task-console"
+MGMT_CONSOLE_NAME="${SERVICE_NAME}-management-console"
+APP_PART_OF="${SERVICE_NAME}-app"
+REGISTRY_URL="${REGISTRY_URL:-your.container-registry}"
+REALM="aletyx-kogito"
+
+# Deployment steps would be added here
+```
+
+## Step 10: Add Maven Profiles
+
+Update the `pom.xml` file to include profiles for different deployment scenarios:
+
+```xml
+<profiles>
+    <profile>
+        <id>kubernetes</id>
+        <activation>
+            <property>
+                <name>kubernetes</name>
+            </property>
+            <activeByDefault>true</activeByDefault>
+        </activation>
+        <properties>
+            <quarkus.kubernetes.deploy>true</quarkus.kubernetes.deploy>
+            <quarkus.kubernetes.deployment-target>kubernetes</quarkus.kubernetes.deployment-target>
+            <quarkus.kubernetes.ingress.expose>true</quarkus.kubernetes.ingress.expose>
+            <quarkus.container-image.registry>${env.CONTAINER_REGISTRY:your.container-registry}</quarkus.container-image.registry>
+            <quarkus.container-image.group>your-image-group</quarkus.container-image.group>
+            <quarkus.container-image.name>${project.artifactId}</quarkus.container-image.name>
+            <quarkus.container-image.build>true</quarkus.container-image.build>
+        </properties>
+        <dependencies>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-kubernetes</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-container-image-jib</artifactId>
+            </dependency>
+        </dependencies>
+    </profile>
+
+    <profile>
+        <id>openshift</id>
+        <activation>
+            <property>
+                <name>openshift</name>
+            </property>
+        </activation>
+        <properties>
+            <!-- OpenShift specific properties -->
+            <quarkus.kubernetes-client.trust-certs>true</quarkus.kubernetes-client.trust-certs>
+            <quarkus.openshift.deploy>true</quarkus.openshift.deploy>
+            <quarkus.openshift.expose>true</quarkus.openshift.expose>
+            <quarkus.kubernetes.deployment-target>openshift</quarkus.kubernetes.deployment-target>
+        </properties>
+        <dependencies>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-openshift</artifactId>
+            </dependency>
+        </dependencies>
+    </profile>
+
+    <profile>
+        <id>dev</id>
+        <activation>
+            <property>
+                <name>dev</name>
+            </property>
+        </activation>
+        <properties>
+            <quarkus.devservices.enabled>true</quarkus.devservices.enabled>
+            <quarkus.kogito.devservices.enabled>true</quarkus.kogito.devservices.enabled>
+            <quarkus.datasource.devservices.enabled>true</quarkus.datasource.devservices.enabled>
+        </properties>
+    </profile>
+</profiles>
+```
+
+## Step 11: Add Persistence Configuration
+
+Update the `pom.xml` to include persistence-related dependencies:
+
+```xml
+<!-- Persistence -->
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-jdbc-postgresql</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-agroal</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-addons-quarkus-persistence-jdbc</artifactId>
+</dependency>
+
+<!-- Data-Index -->
+<dependency>
+    <groupId>org.kie</groupId>
+    <artifactId>kogito-addons-quarkus-data-index-postgresql</artifactId>
+</dependency>
+
+<!-- Jobs Service -->
+<dependency>
+    <groupId>org.kie</groupId>
+    <artifactId>kogito-addons-quarkus-jobs</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.kie.kogito</groupId>
+    <artifactId>jobs-service-storage-jpa</artifactId>
+</dependency>
+
+<!-- Data-Audit -->
+<dependency>
+    <groupId>org.kie</groupId>
+    <artifactId>kogito-addons-quarkus-data-audit</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.kie</groupId>
+    <artifactId>kogito-addons-quarkus-data-audit-jpa</artifactId>
+</dependency>
+```
+
+## Step 12: Publishing and Using Your Accelerator
+
+After creating and testing your accelerator, publish it to GitHub and make it available for use in Aletyx Playground. To see how this can be incorporated into your
+
+### Publishing to GitHub
+
+```bash
+git remote add origin https://github.com/yourusername/your-accelerator.git
+git push -u origin main
+```
+
+### Using the Accelerator in Aletyx Playground
+
+1. Open Aletyx Playground at https://playground.aletyx.ai
+2. Create a new project
+3. Click on "Apply Accelerator"
+4. Choose "Add Custom Accelerator"
+5. Enter your GitHub repository URL
+6. Follow the wizard to configure your new project
+
+## Advanced Configuration Options
+
+### Custom Environment Variables
+
+Add environment-specific configuration using Quarkus profiles:
+
+```properties
+# Development-specific configuration
+%dev.quarkus.log.level=DEBUG
+%dev.quarkus.http.port=8080
+
+# Test-specific configuration
+%test.quarkus.log.level=INFO
+%test.quarkus.http.port=8081
+
+# Production-specific configuration
+%prod.quarkus.log.level=WARN
+%prod.quarkus.http.port=8080
+%prod.quarkus.datasource.url=jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:kogito}
+```
+
+### Configuring Database Migrations
+
+Add Flyway database migration support:
+
+```xml
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-flyway</artifactId>
+</dependency>
+```
+
+```properties
+# Flyway configuration
+quarkus.flyway.migrate-at-start=true
+quarkus.flyway.baseline-on-migrate=true
+quarkus.flyway.out-of-order=true
+quarkus.flyway.baseline-version=0.0
+quarkus.flyway.locations=classpath:/db/migration
+quarkus.flyway.table=FLYWAY_SCHEMA_HISTORY
+```
+
+### Handling Secrets
+
+Add secrets management through Kubernetes:
+
+```bash
+kubectl create secret generic app-secrets \
+  --from-literal=db-password=your-password \
+  --from-literal=keycloak-secret=your-secret \
+  --namespace=your-namespace
+```
+
+Reference these secrets in your Kubernetes deployment:
+
+```yaml
+env:
+  - name: QUARKUS_DATASOURCE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: app-secrets
+        key: db-password
+  - name: QUARKUS_OIDC_CREDENTIALS_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: app-secrets
+        key: keycloak-secret
+```
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+1. **Image Build Failures**
+   - Issue: Docker image build fails with authentication errors
+   - Solution: Ensure Docker is logged in to your registry with `docker login`
+
+2. **Kubernetes Deployment Issues**
+   - Issue: "Error: ImagePullBackOff" in Kubernetes pods
+   - Solution: Check registry credentials and image path
+
+3. **Quarkus Application Startup Problems**
+   - Issue: Application fails to start due to database connection issues
+   - Solution: Verify database connection properties and ensure the database is accessible
+
+4. **Maven Build Failures**
+   - Issue: "Could not resolve dependencies" error
+   - Solution: Check network connectivity and Maven repository configuration
+
+### Accessing Logs
+
+Access deployment logs to diagnose issues:
+
+```bash
+# For Kubernetes
+kubectl logs -f deployment/<service-name> -n <namespace>
+
+# For applications running in Docker Compose
+docker-compose logs -f <service-name>
+```
+
+## Best Practices
+
+1. **Externalizing Configuration**
+   - Use environment variables for configuration that varies between environments
+   - Leverage Quarkus profiles (%dev, %test, %prod) for environment-specific settings
+
+2. **Security Practices**
+   - Never commit sensitive information (passwords, tokens) to your repository
+   - Use Kubernetes secrets for sensitive data
+   - Enable and configure OIDC authentication in production
+
+3. **Performance Tuning**
+   - Configure appropriate memory settings for containerized applications
+   - Set up proper connection pooling for database connections
+   - Enable response compression for API endpoints
+
+4. **CI/CD Pipeline Efficiency**
+   - Use Maven caching in CI/CD pipelines
+   - Create optimized container images
+   - Implement multi-stage builds where appropriate

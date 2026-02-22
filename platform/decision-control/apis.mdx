@@ -1,0 +1,1309 @@
+---
+title: "Integration and APIs"
+description: "Decision Control exposes comprehensive RESTful APIs for model management, decision execution, governance workflows, and system monitoring. This document provides complete API reference..."
+---
+Decision Control exposes comprehensive RESTful APIs for model management, decision execution, governance workflows, and system monitoring. This document provides complete API reference documentation, authentication patterns, integration examples, and error handling guidance for integrating Decision Control into your enterprise architecture.
+
+## API Architecture
+
+Decision Control provides three distinct API surfaces:
+
+**Decision Control Management API**: Model lifecycle operations (create, version, publish, execute) exposed by each Decision Control environment instance.
+
+**Governance API**: Workflow orchestration, approval management, and audit trail operations for multi-environment promotion.
+
+**Actuator API**: Health checks, metrics, and operational endpoints for monitoring and observability.
+
+All APIs require OAuth2 Bearer token authentication via Keycloak and return JSON responses with standard HTTP status codes.
+
+## Authentication
+
+### Obtaining an Access Token
+
+Decision Control uses OAuth2 Authorization Code flow with PKCE for browser-based clients and Client Credentials flow for service-to-service integration.
+
+<Tabs>
+  <Tab title="Browser (PKCE)">
+
+    ```javascript
+    // Step 1: Generate PKCE challenge
+    const verifier = generateRandomString(64);
+    const challenge = await sha256(verifier);
+
+    // Step 2: Redirect to Keycloak
+    const authUrl = 'https://keycloak.your-domain.com/realms/aletyx/protocol/openid-connect/auth';
+    const params = new URLSearchParams({
+      client_id: 'decision-control-ui',
+      redirect_uri: 'https://your-app.com/callback',
+      response_type: 'code',
+      scope: 'openid profile email',
+      state: generateRandomString(24),
+      code_challenge: challenge,
+      code_challenge_method: 'S256'
+    });
+
+    window.location.href = `${authUrl}?${params}`;
+
+    // Step 3: Exchange code for tokens (in callback handler)
+    const tokenResponse = await fetch(
+      'https://keycloak.your-domain.com/realms/aletyx/protocol/openid-connect/token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: 'decision-control-ui',
+          code: authCode,
+          code_verifier: verifier,
+          redirect_uri: 'https://your-app.com/callback'
+        })
+      }
+    );
+
+    const tokens = await tokenResponse.json();
+    // tokens.access_token, tokens.refresh_token, tokens.id_token
+    ```
+  </Tab>
+  <Tab title="Service Account">
+
+    ```bash
+    # Request access token using client credentials
+    curl -X POST https://keycloak.your-domain.com/realms/aletyx/protocol/openid-connect/token \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "grant_type=client_credentials" \
+      -d "client_id=decision-control-service" \
+      -d "client_secret=your-client-secret"
+    ```
+
+    Response:
+    ```json
+    {
+      "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI...",
+      "expires_in": 300,
+      "refresh_expires_in": 0,
+      "token_type": "Bearer",
+      "not-before-policy": 0,
+      "scope": "profile email"
+    }
+    ```
+  </Tab>
+</Tabs>
+### Using Access Tokens
+
+Include the access token in the Authorization header for all API requests:
+
+```bash
+curl https://decision-control-dev.example.com/api/management/units \
+  -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI..."
+```
+
+<Warning title="Token Expiration">
+Access tokens expire after 5 minutes by default. Implement automatic token refresh using the refresh token to avoid authentication failures. See [Token Refresh](#token-refresh) for details.
+</Warning>
+### Token Refresh
+
+Refresh tokens before expiration to maintain continuous authentication:
+
+```bash
+curl -X POST https://keycloak.your-domain.com/realms/aletyx/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=refresh_token" \
+  -d "client_id=decision-control-ui" \
+  -d "refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI..."
+```
+
+## Decision Control Management API
+
+The Management API provides operations for creating, versioning, publishing, and executing DMN models. Each environment (dev, test, prod) exposes its own Management API instance.
+
+### Base URLs
+
+| Environment | Base URL |
+|-------------|----------|
+| Development | `https://decision-control-dev.example.com` |
+| Test (UAT) | `https://decision-control-test.example.com` |
+| Production | `https://decision-control-prod.example.com` |
+
+### Units API
+
+Units are top-level organizational containers for decision models. They represent logical groupings like business domains, applications, or functional areas.
+
+#### List All Units
+
+```bash
+GET /api/management/units
+```
+
+**Response**:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "financial-services",
+    "dateCreated": [2025, 1, 15, 10, 30, 0, 0],
+    "description": "Financial services decision models",
+    "status": "ENABLED"
+  },
+  {
+    "id": 2,
+    "name": "compliance",
+    "dateCreated": [2025, 1, 20, 14, 15, 30, 500000000],
+    "description": "Regulatory compliance models",
+    "status": "ENABLED"
+  }
+]
+```
+
+<Info title="Date Format">
+The `dateCreated` field uses Java LocalDateTime array format: `[year, month, day, hour, minute, second, nanosecond]`. Convert to ISO 8601 for display: `2025-01-15T10:30:00.000Z`.
+</Info>
+**Example**:
+
+```bash
+curl -X GET https://decision-control-dev.example.com/api/management/units \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+```
+
+#### Create New Unit
+
+```bash
+POST /api/management/units
+Content-Type: application/json
+
+{
+  "name": "customer-onboarding",
+  "description": "Customer onboarding decision models",
+  "status": "ENABLED"
+}
+```
+
+**Response**: `201 Created`
+
+```json
+{
+  "id": 3,
+  "name": "customer-onboarding",
+  "dateCreated": [2025, 1, 25, 9, 45, 12, 123456000],
+  "description": "Customer onboarding decision models",
+  "status": "ENABLED"
+}
+```
+
+**Example**:
+
+```bash
+curl -X POST https://decision-control-dev.example.com/api/management/units \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "risk-assessment",
+    "description": "Risk assessment and scoring models",
+    "status": "ENABLED"
+  }'
+```
+
+#### Get Unit by ID
+
+```bash
+GET /api/management/units/{unitId}
+```
+
+**Response**:
+
+```json
+{
+  "id": 1,
+  "name": "financial-services",
+  "dateCreated": [2025, 1, 15, 10, 30, 0, 0],
+  "description": "Financial services decision models",
+  "status": "ENABLED"
+}
+```
+
+#### Update Unit
+
+```bash
+PUT /api/management/units/{unitId}
+Content-Type: application/json
+
+{
+  "name": "financial-services",
+  "description": "Updated description for financial services",
+  "status": "ENABLED"
+}
+```
+
+#### Delete Unit
+
+```bash
+DELETE /api/management/units/{unitId}
+```
+
+**Response**: `204 No Content`
+
+<Warning title="Cascade Delete">
+Deleting a unit removes all associated versions and models. This operation cannot be undone. Consider setting `status: "DISABLED"` instead for soft deletion.
+</Warning>
+### Versions API
+
+Versions represent numbered releases of decision models within a unit. They enable versioning, rollback capabilities, and environment promotion tracking.
+
+#### List Versions for Unit
+
+```bash
+GET /api/management/units/{unitId}/versions
+```
+
+**Response**:
+
+```json
+[
+  {
+    "id": 1,
+    "unitId": 1,
+    "version": "1.0.0",
+    "dateCreated": [2025, 1, 15, 11, 0, 0, 0],
+    "publishedAt": [2025, 1, 15, 11, 30, 0, 0],
+    "publishedBy": "sarah@demo.local",
+    "status": "PUBLISHED",
+    "changeLog": "Initial release"
+  },
+  {
+    "id": 2,
+    "unitId": 1,
+    "version": "1.1.0",
+    "dateCreated": [2025, 1, 20, 9, 15, 0, 0],
+    "publishedAt": null,
+    "publishedBy": null,
+    "status": "DRAFT",
+    "changeLog": "Added fraud detection rules"
+  }
+]
+```
+
+**Example**:
+
+```bash
+curl -X GET https://decision-control-dev.example.com/api/management/units/1/versions \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.[] | select(.status == "PUBLISHED")'
+```
+
+#### Create New Version
+
+```bash
+POST /api/management/units/{unitId}/versions
+Content-Type: application/json
+
+{
+  "version": "1.2.0",
+  "changeLog": "Updated credit scoring thresholds",
+  "status": "DRAFT"
+}
+```
+
+**Response**: `201 Created`
+
+```json
+{
+  "id": 3,
+  "unitId": 1,
+  "version": "1.2.0",
+  "dateCreated": [2025, 1, 25, 10, 0, 0, 0],
+  "publishedAt": null,
+  "publishedBy": null,
+  "status": "DRAFT",
+  "changeLog": "Updated credit scoring thresholds"
+}
+```
+
+#### Publish Version
+
+Marks a version as published and ready for execution or promotion.
+
+```bash
+POST /api/management/units/{unitId}/versions/{versionId}/publish
+Content-Type: application/json
+
+{
+  "publishedBy": "sarah@demo.local"
+}
+```
+
+**Response**: `200 OK`
+
+```json
+{
+  "id": 3,
+  "unitId": 1,
+  "version": "1.2.0",
+  "dateCreated": [2025, 1, 25, 10, 0, 0, 0],
+  "publishedAt": [2025, 1, 25, 14, 30, 0, 0],
+  "publishedBy": "sarah@demo.local",
+  "status": "PUBLISHED",
+  "changeLog": "Updated credit scoring thresholds"
+}
+```
+
+**Example**:
+
+```bash
+curl -X POST https://decision-control-dev.example.com/api/management/units/1/versions/3/publish \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"publishedBy": "sarah@demo.local"}'
+```
+
+### Models API
+
+Models are individual DMN files within a version. Each model contains decision logic, decision tables, and business knowledge models.
+
+#### List Models for Version
+
+```bash
+GET /api/management/units/{unitId}/versions/{versionId}/models
+```
+
+**Response**:
+
+```json
+[
+  {
+    "id": 1,
+    "versionId": 1,
+    "name": "CreditScoring",
+    "fileName": "CreditScoring.dmn",
+    "dateCreated": [2025, 1, 15, 11, 0, 0, 0],
+    "lastModified": [2025, 1, 15, 11, 0, 0, 0],
+    "modifiedBy": "sarah@demo.local",
+    "description": "Credit risk scoring model",
+    "namespace": "https://aletyx.com/dmn/financial-services/credit-scoring",
+    "decisionCount": 5,
+    "inputCount": 8
+  }
+]
+```
+
+**Example**:
+
+```bash
+curl -X GET https://decision-control-dev.example.com/api/management/units/1/versions/1/models \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.[0] | {name, decisionCount, inputCount}'
+```
+
+#### Get Model Content
+
+Retrieves the complete DMN XML for a model.
+
+```bash
+GET /api/management/units/{unitId}/versions/{versionId}/models/{modelId}/content
+```
+
+**Response**: `200 OK`
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+             id="CreditScoring"
+             name="Credit Scoring Model"
+             namespace="https://aletyx.com/dmn/financial-services/credit-scoring">
+
+  <inputData id="InputData_Age" name="Applicant Age">
+    <variable name="Applicant Age" typeRef="number"/>
+  </inputData>
+
+  <decision id="Decision_RiskScore" name="Risk Score">
+    <variable name="Risk Score" typeRef="number"/>
+    <informationRequirement>
+      <requiredInput href="#InputData_Age"/>
+    </informationRequirement>
+    <decisionTable id="DecisionTable_RiskScore">
+      <!-- Decision table logic -->
+    </decisionTable>
+  </decision>
+
+</definitions>
+```
+
+#### Upload Model
+
+Creates or updates a model within a version.
+
+```bash
+POST /api/management/units/{unitId}/versions/{versionId}/models
+Content-Type: multipart/form-data
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="CreditScoring.dmn"
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions ...>
+  ...
+</definitions>
+------WebKitFormBoundary--
+```
+
+**Response**: `201 Created`
+
+**Example**:
+
+```bash
+curl -X POST https://decision-control-dev.example.com/api/management/units/1/versions/2/models \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@CreditScoring.dmn"
+```
+
+### Decision Execution API
+
+Execute published DMN models with input data and receive decision results.
+
+#### Execute Decision
+
+```bash
+POST /api/runtime/units/{unitName}/versions/{version}/execute
+Content-Type: application/json
+
+{
+  "modelName": "CreditScoring",
+  "decisionName": "Risk Score",
+  "context": {
+    "Applicant Age": 35,
+    "Annual Income": 75000,
+    "Credit History Length": 10,
+    "Existing Debt": 15000,
+    "Loan Amount": 50000
+  }
+}
+```
+
+**Response**: `200 OK`
+
+```json
+{
+  "executionId": "exec-123e4567-e89b-12d3-a456-426614174000",
+  "timestamp": "2025-01-25T14:30:00.000Z",
+  "modelName": "CreditScoring",
+  "decisionName": "Risk Score",
+  "result": {
+    "Risk Score": 720,
+    "Risk Category": "LOW",
+    "Approval Recommended": true
+  },
+  "executionTimeMs": 42,
+  "status": "SUCCESS"
+}
+```
+
+**Example**:
+
+```bash
+curl -X POST https://decision-control-prod.example.com/api/runtime/units/financial-services/versions/1.2.0/execute \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "modelName": "CreditScoring",
+    "decisionName": "Risk Score",
+    "context": {
+      "Applicant Age": 28,
+      "Annual Income": 55000,
+      "Credit History Length": 5,
+      "Existing Debt": 8000,
+      "Loan Amount": 25000
+    }
+  }' | jq .result
+```
+
+#### Batch Execution
+
+Execute decisions for multiple input contexts in a single request.
+
+```bash
+POST /api/runtime/units/{unitName}/versions/{version}/batch-execute
+Content-Type: application/json
+
+{
+  "modelName": "CreditScoring",
+  "decisionName": "Risk Score",
+  "contexts": [
+    {
+      "Applicant Age": 35,
+      "Annual Income": 75000,
+      "Credit History Length": 10,
+      "Existing Debt": 15000,
+      "Loan Amount": 50000
+    },
+    {
+      "Applicant Age": 28,
+      "Annual Income": 55000,
+      "Credit History Length": 5,
+      "Existing Debt": 8000,
+      "Loan Amount": 25000
+    }
+  ]
+}
+```
+
+**Response**: `200 OK`
+
+```json
+{
+  "batchId": "batch-789e0123-e45b-67c8-d901-234567890abc",
+  "results": [
+    {
+      "index": 0,
+      "result": {"Risk Score": 720, "Risk Category": "LOW"},
+      "status": "SUCCESS"
+    },
+    {
+      "index": 1,
+      "result": {"Risk Score": 680, "Risk Category": "MEDIUM"},
+      "status": "SUCCESS"
+    }
+  ],
+  "totalExecutionTimeMs": 78,
+  "successCount": 2,
+  "failureCount": 0
+}
+```
+
+## Governance API
+
+The Governance API orchestrates approval workflows, enforces four-eyes principles, and maintains audit trails for model promotions between environments.
+
+### Base URL
+
+```
+https://governance-api.example.com
+```
+
+### Governance Requests
+
+#### Submit Request for Review
+
+Creates a new governance request to promote a model from one environment to another.
+
+```bash
+POST /api/governance/requests
+Content-Type: application/json
+
+{
+  "modelName": "CreditScoring",
+  "modelVersion": "1.2.0",
+  "unitName": "financial-services",
+  "sourceEnv": "dev",
+  "targetEnv": "test",
+  "workflowType": "standard-dev-to-test",
+  "submittedBy": "sarah@demo.local",
+  "justification": "Updated credit score thresholds per new policy guidelines"
+}
+```
+
+**Response**: `201 Created`
+
+```json
+{
+  "requestId": 42,
+  "modelName": "CreditScoring",
+  "modelVersion": "1.2.0",
+  "unitName": "financial-services",
+  "sourceEnv": "dev",
+  "targetEnv": "test",
+  "status": "PENDING_REVIEW",
+  "workflowType": "standard-dev-to-test",
+  "submittedBy": "sarah@demo.local",
+  "submittedAt": "2025-01-25T10:00:00.000Z",
+  "justification": "Updated credit score thresholds per new policy guidelines",
+  "currentStep": {
+    "stepId": "business-review",
+    "name": "Business Review",
+    "requiredRole": "decision-control-dev-users",
+    "status": "PENDING"
+  }
+}
+```
+
+**Example**:
+
+```bash
+curl -X POST https://governance-api.example.com/api/governance/requests \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "modelName": "FraudDetection",
+    "modelVersion": "2.0.0",
+    "unitName": "compliance",
+    "sourceEnv": "test",
+    "targetEnv": "prod",
+    "workflowType": "standard-test-to-prod",
+    "submittedBy": "ops@demo.local",
+    "justification": "Production deployment after successful UAT testing"
+  }'
+```
+
+#### List Governance Requests
+
+```bash
+GET /api/governance/requests?role={role}&status={status}&env={env}
+```
+
+**Query Parameters**:
+
+- `role` (optional): Filter by required role (e.g., `decision-control-risk-manager`)
+- `status` (optional): Filter by status (`PENDING_REVIEW`, `APPROVED`, `REJECTED`, `DEPLOYED`)
+- `env` (optional): Filter by target environment (`test`, `prod`)
+
+**Response**:
+
+```json
+[
+  {
+    "requestId": 42,
+    "modelName": "CreditScoring",
+    "modelVersion": "1.2.0",
+    "unitName": "financial-services",
+    "sourceEnv": "dev",
+    "targetEnv": "test",
+    "status": "PENDING_REVIEW",
+    "submittedBy": "sarah@demo.local",
+    "submittedAt": "2025-01-25T10:00:00.000Z",
+    "currentStep": {
+      "stepId": "business-review",
+      "name": "Business Review",
+      "requiredRole": "decision-control-dev-users"
+    }
+  }
+]
+```
+
+**Example**:
+
+```bash
+# Get all requests pending my role
+curl -X GET "https://governance-api.example.com/api/governance/requests?role=decision-control-risk-manager&status=PENDING_REVIEW" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.[] | {requestId, modelName, submittedBy}'
+```
+
+#### Get Request Details
+
+```bash
+GET /api/governance/requests/{requestId}
+```
+
+**Response**:
+
+```json
+{
+  "requestId": 42,
+  "modelName": "CreditScoring",
+  "modelVersion": "1.2.0",
+  "unitName": "financial-services",
+  "sourceEnv": "dev",
+  "targetEnv": "test",
+  "status": "DEPLOYED",
+  "workflowType": "standard-dev-to-test",
+  "submittedBy": "sarah@demo.local",
+  "submittedAt": "2025-01-25T10:00:00.000Z",
+  "justification": "Updated credit score thresholds per new policy guidelines",
+  "timeline": [
+    {
+      "event": "SUBMITTED",
+      "timestamp": "2025-01-25T10:00:00.000Z",
+      "user": "sarah@demo.local",
+      "details": "Request created"
+    },
+    {
+      "event": "BUSINESS_REVIEW_APPROVED",
+      "timestamp": "2025-01-25T11:30:00.000Z",
+      "user": "maria@demo.local",
+      "comment": "Business logic validated. Thresholds align with policy."
+    },
+    {
+      "event": "RISK_REVIEW_APPROVED",
+      "timestamp": "2025-01-25T14:00:00.000Z",
+      "user": "tom@demo.local",
+      "comment": "Risk assessment complete. No concerns."
+    },
+    {
+      "event": "DEPLOYED",
+      "timestamp": "2025-01-25T14:01:00.000Z",
+      "system": "governance-api",
+      "targetEnv": "test"
+    }
+  ]
+}
+```
+
+#### Approve Request
+
+Approves the current workflow step for a governance request.
+
+```bash
+POST /api/governance/requests/{requestId}/approve
+Content-Type: application/json
+
+{
+  "approvedBy": "tom@demo.local",
+  "comment": "Risk assessment complete. All checks passed. Approved for deployment."
+}
+```
+
+**Response**: `200 OK`
+
+```json
+{
+  "requestId": 42,
+  "status": "APPROVED",
+  "message": "Request approved successfully. Deploying to test environment.",
+  "nextStep": {
+    "stepId": "deploy",
+    "name": "Deploy to Test",
+    "status": "IN_PROGRESS"
+  }
+}
+```
+
+**Example**:
+
+```bash
+curl -X POST https://governance-api.example.com/api/governance/requests/42/approve \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "approvedBy": "tom@demo.local",
+    "comment": "Risk assessment complete. No significant concerns identified."
+  }'
+```
+
+<Warning title="Four-Eyes Principle">
+The system enforces four-eyes principle: you cannot approve a request you submitted. Attempting to do so returns `403 Forbidden` with error `CANNOT_APPROVE_OWN_REQUEST`.
+</Warning>
+#### Reject Request
+
+Rejects a governance request with a reason.
+
+```bash
+POST /api/governance/requests/{requestId}/reject
+Content-Type: application/json
+
+{
+  "rejectedBy": "tom@demo.local",
+  "reason": "Credit score thresholds require additional review with legal team before deployment."
+}
+```
+
+**Response**: `200 OK`
+
+```json
+{
+  "requestId": 42,
+  "status": "REJECTED",
+  "message": "Request rejected",
+  "rejectedBy": "tom@demo.local",
+  "rejectedAt": "2025-01-25T15:00:00.000Z",
+  "reason": "Credit score thresholds require additional review with legal team."
+}
+```
+
+### Audit Trail
+
+#### Get Audit Log for Request
+
+```bash
+GET /api/governance/audit?requestId={requestId}
+```
+
+**Response**:
+
+```json
+[
+  {
+    "auditId": 101,
+    "requestId": 42,
+    "eventType": "REQUEST_SUBMITTED",
+    "timestamp": "2025-01-25T10:00:00.000Z",
+    "userEmail": "sarah@demo.local",
+    "userRoles": ["decision-control-dev-users"],
+    "ipAddress": "192.168.1.100",
+    "userAgent": "Mozilla/5.0...",
+    "details": {
+      "modelName": "CreditScoring",
+      "workflowType": "standard-dev-to-test"
+    }
+  },
+  {
+    "auditId": 102,
+    "requestId": 42,
+    "eventType": "STEP_APPROVED",
+    "timestamp": "2025-01-25T11:30:00.000Z",
+    "userEmail": "maria@demo.local",
+    "userRoles": ["decision-control-dev-users"],
+    "ipAddress": "192.168.1.105",
+    "details": {
+      "stepId": "business-review",
+      "comment": "Business logic validated"
+    }
+  }
+]
+```
+
+**Example**:
+
+```bash
+curl -X GET "https://governance-api.example.com/api/governance/audit?requestId=42" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.[] | {timestamp, eventType, user: .userEmail, comment: .details.comment}'
+```
+
+## Health and Monitoring API
+
+### Health Checks
+
+```bash
+GET /actuator/health
+```
+
+**Response**:
+
+```json
+{
+  "status": "UP",
+  "components": {
+    "db": {
+      "status": "UP",
+      "details": {
+        "database": "PostgreSQL",
+        "validationQuery": "isValid()"
+      }
+    },
+    "diskSpace": {
+      "status": "UP",
+      "details": {
+        "total": 107374182400,
+        "free": 53687091200,
+        "threshold": 10485760
+      }
+    },
+    "ping": {
+      "status": "UP"
+    }
+  }
+}
+```
+
+**Example**:
+
+```bash
+curl https://decision-control-dev.example.com/actuator/health \
+  | jq '.status'
+```
+
+### Metrics
+
+```bash
+GET /actuator/metrics
+```
+
+Returns list of available metrics:
+
+```json
+{
+  "names": [
+    "dmn.execution.duration.seconds",
+    "http.server.requests",
+    "jvm.memory.used",
+    "system.cpu.usage"
+  ]
+}
+```
+
+Get specific metric:
+
+```bash
+GET /actuator/metrics/dmn.execution.duration.seconds
+```
+
+**Response**:
+
+```json
+{
+  "name": "dmn.execution.duration.seconds",
+  "description": "Time taken to execute DMN decisions",
+  "baseUnit": "seconds",
+  "measurements": [
+    {"statistic": "COUNT", "value": 1247},
+    {"statistic": "TOTAL_TIME", "value": 52.341},
+    {"statistic": "MAX", "value": 0.142}
+  ],
+  "availableTags": [
+    {"tag": "model", "values": ["CreditScoring", "FraudDetection"]},
+    {"tag": "status", "values": ["SUCCESS", "FAILURE"]}
+  ]
+}
+```
+
+## Error Handling
+
+### HTTP Status Codes
+
+Decision Control APIs use standard HTTP status codes:
+
+| Status Code | Meaning | Common Causes |
+|-------------|---------|---------------|
+| `200 OK` | Request successful | - |
+| `201 Created` | Resource created successfully | POST operations |
+| `204 No Content` | Resource deleted successfully | DELETE operations |
+| `400 Bad Request` | Invalid request data | Missing required fields, invalid JSON |
+| `401 Unauthorized` | Authentication required | Missing or invalid access token |
+| `403 Forbidden` | Insufficient permissions | User lacks required role, four-eyes violation |
+| `404 Not Found` | Resource not found | Invalid unit/version/model ID |
+| `409 Conflict` | Resource conflict | Duplicate name, version already published |
+| `500 Internal Server Error` | Server error | Database connectivity, system failure |
+| `503 Service Unavailable` | Service temporarily unavailable | Maintenance, overload |
+
+### Error Response Format
+
+All errors return a consistent JSON structure:
+
+```json
+{
+  "timestamp": "2025-01-25T14:30:00.000Z",
+  "status": 403,
+  "error": "Forbidden",
+  "errorCode": "CANNOT_APPROVE_OWN_REQUEST",
+  "message": "You cannot approve a request you submitted (four-eyes principle violation)",
+  "path": "/api/governance/requests/42/approve",
+  "requestId": "req-123e4567-e89b-12d3-a456-426614174000"
+}
+```
+
+### Common Error Codes
+
+| Error Code | HTTP Status | Description | Resolution |
+|------------|-------------|-------------|------------|
+| `INVALID_TOKEN` | 401 | Access token expired or invalid | Refresh token and retry |
+| `INSUFFICIENT_PERMISSIONS` | 403 | User lacks required role | Contact administrator for role assignment |
+| `CANNOT_APPROVE_OWN_REQUEST` | 403 | Four-eyes principle violation | Have another user with required role approve |
+| `RESOURCE_NOT_FOUND` | 404 | Unit, version, or model not found | Verify resource ID exists |
+| `VERSION_ALREADY_PUBLISHED` | 409 | Cannot modify published version | Create new version |
+| `DUPLICATE_UNIT_NAME` | 409 | Unit name already exists | Choose unique name |
+| `DMN_VALIDATION_ERROR` | 400 | Invalid DMN XML | Fix DMN model syntax errors |
+| `WORKFLOW_NOT_FOUND` | 404 | Invalid workflow type | Use valid workflow ID from config |
+| `DATABASE_CONNECTION_ERROR` | 503 | Cannot connect to database | Check database health, retry |
+
+### Retry Strategy
+
+For transient errors (5xx status codes), implement exponential backoff:
+
+```javascript
+async function executeWithRetry(fn, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (error.status < 500 || attempt === maxRetries - 1) {
+        throw error; // Don't retry client errors or final attempt
+      }
+      const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
+// Usage
+const result = await executeWithRetry(() =>
+  fetch('https://decision-control-dev.../api/management/units', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+);
+```
+
+## Integration Examples
+
+### Node.js Integration
+
+```javascript
+const fetch = require('node-fetch');
+
+class DecisionControlClient {
+  constructor(baseUrl, keycloakConfig) {
+    this.baseUrl = baseUrl;
+    this.keycloakConfig = keycloakConfig;
+    this.accessToken = null;
+  }
+
+  async authenticate() {
+    const response = await fetch(
+      `${this.keycloakConfig.authServerUrl}/realms/${this.keycloakConfig.realm}/protocol/openid-connect/token`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: this.keycloakConfig.clientId,
+          client_secret: this.keycloakConfig.clientSecret
+        })
+      }
+    );
+    const data = await response.json();
+    this.accessToken = data.access_token;
+  }
+
+  async listUnits() {
+    if (!this.accessToken) await this.authenticate();
+
+    const response = await fetch(`${this.baseUrl}/api/management/units`, {
+      headers: { 'Authorization': `Bearer ${this.accessToken}` }
+    });
+    return response.json();
+  }
+
+  async executeDecision(unitName, version, modelName, decisionName, context) {
+    if (!this.accessToken) await this.authenticate();
+
+    const response = await fetch(
+      `${this.baseUrl}/api/runtime/units/${unitName}/versions/${version}/execute`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ modelName, decisionName, context })
+      }
+    );
+    return response.json();
+  }
+}
+
+// Usage
+const client = new DecisionControlClient(
+  'https://decision-control-prod.example.com',
+  {
+    authServerUrl: 'https://keycloak.your-domain.com',
+    realm: 'aletyx',
+    clientId: 'decision-control-service',
+    clientSecret: 'your-client-secret'
+  }
+);
+
+const result = await client.executeDecision(
+  'financial-services',
+  '1.2.0',
+  'CreditScoring',
+  'Risk Score',
+  { 'Applicant Age': 35, 'Annual Income': 75000 }
+);
+console.log('Risk Score:', result.result['Risk Score']);
+```
+
+### Python Integration
+
+```python
+import requests
+from typing import Dict, Any
+
+class DecisionControlClient:
+    def __init__(self, base_url: str, keycloak_config: Dict[str, str]):
+        self.base_url = base_url
+        self.keycloak_config = keycloak_config
+        self.access_token = None
+
+    def authenticate(self):
+        token_url = f"{self.keycloak_config['auth_server_url']}/realms/{self.keycloak_config['realm']}/protocol/openid-connect/token"
+        response = requests.post(token_url, data={
+            'grant_type': 'client_credentials',
+            'client_id': self.keycloak_config['client_id'],
+            'client_secret': self.keycloak_config['client_secret']
+        })
+        response.raise_for_status()
+        self.access_token = response.json()['access_token']
+
+    def _headers(self) -> Dict[str, str]:
+        if not self.access_token:
+            self.authenticate()
+        return {'Authorization': f'Bearer {self.access_token}'}
+
+    def list_units(self) -> list:
+        response = requests.get(
+            f"{self.base_url}/api/management/units",
+            headers=self._headers()
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def execute_decision(self, unit_name: str, version: str, model_name: str,
+                        decision_name: str, context: Dict[str, Any]) -> Dict:
+        response = requests.post(
+            f"{self.base_url}/api/runtime/units/{unit_name}/versions/{version}/execute",
+            headers={**self._headers(), 'Content-Type': 'application/json'},
+            json={
+                'modelName': model_name,
+                'decisionName': decision_name,
+                'context': context
+            }
+        )
+        response.raise_for_status()
+        return response.json()
+
+# Usage
+client = DecisionControlClient(
+    'https://decision-control-prod.example.com',
+    {
+        'auth_server_url': 'https://keycloak.your-domain.com',
+        'realm': 'aletyx',
+        'client_id': 'decision-control-service',
+        'client_secret': 'your-client-secret'
+    }
+)
+
+result = client.execute_decision(
+    'financial-services', '1.2.0', 'CreditScoring', 'Risk Score',
+    {'Applicant Age': 35, 'Annual Income': 75000}
+)
+print(f"Risk Score: {result['result']['Risk Score']}")
+```
+
+### Java Integration
+
+```java
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.http.*;
+import java.net.URI;
+import java.util.Map;
+
+public class DecisionControlClient {
+    private final String baseUrl;
+    private final KeycloakConfig keycloakConfig;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
+    private String accessToken;
+
+    public DecisionControlClient(String baseUrl, KeycloakConfig keycloakConfig) {
+        this.baseUrl = baseUrl;
+        this.keycloakConfig = keycloakConfig;
+        this.httpClient = HttpClient.newHttpClient();
+        this.objectMapper = new ObjectMapper();
+    }
+
+    public void authenticate() throws Exception {
+        String tokenUrl = String.format(
+            "%s/realms/%s/protocol/openid-connect/token",
+            keycloakConfig.getAuthServerUrl(),
+            keycloakConfig.getRealm()
+        );
+
+        String body = String.format(
+            "grant_type=client_credentials&client_id=%s&client_secret=%s",
+            keycloakConfig.getClientId(),
+            keycloakConfig.getClientSecret()
+        );
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(tokenUrl))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
+
+        HttpResponse<String> response = httpClient.send(
+            request, HttpResponse.BodyHandlers.ofString()
+        );
+
+        Map<String, Object> tokenResponse = objectMapper.readValue(
+            response.body(), Map.class
+        );
+        this.accessToken = (String) tokenResponse.get("access_token");
+    }
+
+    public Map<String, Object> executeDecision(
+        String unitName, String version, String modelName,
+        String decisionName, Map<String, Object> context
+    ) throws Exception {
+        if (accessToken == null) authenticate();
+
+        String url = String.format(
+            "%s/api/runtime/units/%s/versions/%s/execute",
+            baseUrl, unitName, version
+        );
+
+        Map<String, Object> requestBody = Map.of(
+            "modelName", modelName,
+            "decisionName", decisionName,
+            "context", context
+        );
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Authorization", "Bearer " + accessToken)
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(
+                objectMapper.writeValueAsString(requestBody)
+            ))
+            .build();
+
+        HttpResponse<String> response = httpClient.send(
+            request, HttpResponse.BodyHandlers.ofString()
+        );
+
+        return objectMapper.readValue(response.body(), Map.class);
+    }
+}
+
+// Usage
+DecisionControlClient client = new DecisionControlClient(
+    "https://decision-control-prod.example.com",
+    new KeycloakConfig(
+        "https://keycloak.your-domain.com",
+        "aletyx",
+        "decision-control-service",
+        "your-client-secret"
+    )
+);
+
+Map<String, Object> result = client.executeDecision(
+    "financial-services", "1.2.0", "CreditScoring", "Risk Score",
+    Map.of("Applicant Age", 35, "Annual Income", 75000)
+);
+System.out.println("Risk Score: " + result.get("result"));
+```
+
+## Rate Limiting
+
+Decision Control enforces rate limits to prevent abuse and ensure fair resource allocation:
+
+| API Category | Rate Limit | Time Window |
+|-------------|------------|-------------|
+| Decision Execution | 1000 requests | per minute per client |
+| Management Operations | 100 requests | per minute per client |
+| Governance Workflows | 50 requests | per minute per client |
+
+Rate limit headers are included in all responses:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 847
+X-RateLimit-Reset: 1706194200
+```
+
+When rate limit is exceeded, API returns `429 Too Many Requests`:
+
+```json
+{
+  "status": 429,
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded. Try again in 42 seconds.",
+  "retryAfter": 42
+}
+```
+
+## Next Steps
+
+- [Usage Scenarios](/platform/decision-control/usage-scenarios): Common integration patterns and workflows
+- [Architecture](/platform/decision-control/architecture): Deep dive into system design
+- [FAQ and Troubleshooting](/platform/decision-control/faq): Common issues and solutions

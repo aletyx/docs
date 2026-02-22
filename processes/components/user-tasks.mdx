@@ -1,0 +1,25 @@
+---
+title: "User Task Subsystem in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "BPMN is widely used for human-centric workflows, where human intervention is required at various stages of a process. Within Apache KIE, the User Task Subsystem is designed to manage User Task..."
+---
+**BPMN** is widely used for **human-centric workflows**, where human intervention is required at various stages of a process. Within Apache KIE, the **User Task Subsystem** is designed to manage **User Task nodes**, ensuring seamless execution and API-driven interaction.
+
+### How User Task Nodes Work
+
+- **User Task nodes** define tasks requiring human action, including **assignees, deadlines, and escalation rules**.
+- When a **User Task node** is triggered, it interacts with the **User Task Subsystem**, which manages task lifecycles and execution contexts.
+
+### Dedicated API and Lifecycle Management
+
+Apache KIE prioritizes developer-centric automation, and the **User Task Subsystem** provides a dedicated **API** to facilitate task management. This API enables:
+
+- **Task assignment & delegation**
+- **Task state transitions (e.g., start, complete, suspend, resume)**
+- **Deadline management and notifications**
+
+### Upcoming Changes in Apache KIE 10.1.0
+
+- **Task Console (Deprecated in 10.0.0)**: Previously provided a UI for task management but will be removed in future releases.
+- **New Subsystem in 10.1.0**: Enhances the current architecture to improve scalability and feature support.
+
+By leveraging the **User Task Subsystem**, developers can seamlessly integrate **human tasks** into their workflow automation, ensuring greater flexibility and control over task execution.

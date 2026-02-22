@@ -1,0 +1,130 @@
+---
+title: "BPMN Activities in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Tasks (or Activities) are the smallest unit of work within a BPMN process. Each Task represents a single action—whether executed by a system, a human, or a specialized rule engine. The Aletyx..."
+---
+Tasks (or Activities) are the smallest unit of work within a BPMN process. Each Task represents a single action—whether executed by a system, a human, or a specialized rule engine. The Aletyx Enterprise Build of Kogito and Drools supports several types of Tasks, making it easy to incorporate different actions and responsibilities into your process flow without losing clarity.
+
+Tasks keep your workflow modular. You can combine them with Gateways, Start/End Events, and Throwing/Catching Events to represent any business process, from simple to highly complex.
+
+## Task Types Overview
+
+In the Aletyx Enterprise Build of Kogito and Drools, tasks are categorized based on who or what performs them:
+
+### Business Rule Task
+
+![Business Rule Task Node](/images/core/processes/basic-bpmn/images/business-rule-task-node.png)
+
+Executes a decision or rule set, either through a DMN model or DRL (Drools Rule Language).
+
+**Key features:**
+
+- **DMN Integration**: Runs a DMN decision with specified inputs
+- **DRL Integration**: Invokes a designated rule unit, which processes all relevant rules before continuing the flow
+- **Stateless Execution**: Results are calculated based solely on the provided inputs
+
+**When to use:**
+
+- Implementing complex business logic or decision tables
+- Enforcing consistent rule execution across processes
+- Separating decision logic from process flow
+
+### Script Task
+
+![Script Task Node](/images/core/processes/basic-bpmn/images/script-task-node.png)
+
+Runs a script to manipulate variables or perform simple operations directly within the process flow.
+
+**Key features:**
+
+- **Multiple Languages**: Supports Java, JavaScript, and MVEL scripts
+- **Direct Variable Access**: Can read and modify process variables
+- **Synchronous Execution**: Executes immediately within the process engine
+
+**Best practices:**
+
+- Keep scripts small and focused on simple operations
+- Use primarily for development, debugging, and simple transformations
+- For complex operations, prefer Service Tasks over Script Tasks
+- Avoid resource-intensive operations that could block the process engine
+
+### User Task
+
+![User Task Node](/images/core/processes/basic-bpmn/images/user-task-node.png)
+
+Assigns work to a human actor or group, pausing the process until the human completes their work.
+
+**Key features:**
+
+- **Assignment Options**: Can be assigned to specific users, groups, or dynamically based on process data
+- **Task Lifecycle**: Supports claiming, starting, completing, and other human workflow transitions
+- **Forms**: Can present forms to collect human input and decisions
+- **Deadlines**: Supports notifications and escalations based on time
+
+**Assignment patterns:**
+
+- **Direct Assignment**: Assign to a specific user for action
+- **Group Assignment**: Make visible to a group of users until claimed by one
+- **Dynamic Assignment**: Calculate assignment at runtime based on process data
+
+### Service Task
+
+![Service Task Node](/images/core/processes/basic-bpmn/images/service-task-node.png)
+
+Connects the process to external systems or services, allowing automated integration with other applications.
+
+**Key features:**
+
+- **External Integration**: Calls APIs, services, or custom Java code
+- **Asynchronous Option**: Can be configured to run asynchronously for long-running operations
+- **Data Mapping**: Transforms process data for the service and maps results back
+
+**When to use:**
+
+- Integrating with external systems or services
+- Performing complex operations that should be encapsulated outside the process
+- Implementing reusable business logic that can be tested independently
+
+### Milestone (Custom Task)
+
+![Milestone Node](/images/core/processes/basic-bpmn/images/milestone-node.png)
+
+Represents a significant achievement or checkpoint within the process instance. Milestones are useful for tracking progress and triggering additional activities.
+
+**Key features:**
+
+- **Condition-Based**: Can be configured to complete when a specified condition is met
+- **Automatic or Triggered**: Can be automatically achieved when reached or triggered by signals
+- **Progress Tracking**: Useful for monitoring process status and KPIs
+
+## Common Task Properties
+
+All task types share certain fundamental properties:
+
+- **Name and Documentation**: Identifies and describes the task's purpose
+- **Data I/O**: Defines what data flows in and out of the task
+- **Is Async**: Determines whether execution happens in a separate transaction
+- **AdHoc Autostart**: Controls whether the task starts automatically in ad hoc contexts
+- **SLA Due Date**: Specifies service level agreement deadlines
+- **Metadata Attributes**: Supports custom attributes for extending functionality
+
+## Key Concepts for Working with Tasks
+
+When implementing and managing tasks, keep these concepts in mind:
+
+1. **Task Granularity**: Choose the appropriate level of detail for your tasks based on your process goals
+2. **Task Ownership**: Consider who or what should be responsible for each task
+3. **Error Handling**: Plan for how errors in tasks will be detected and managed
+4. **Data Flow**: Design how data moves between tasks and is transformed along the way
+5. **Monitoring**: Consider how tasks will be tracked and measured in production
+
+## Getting Started with Tasks
+
+To add tasks to your process:
+
+1. Open your process in the BPMN editor
+2. Drag the desired task type from the palette onto the BPMN editor
+3. Connect the task to your process flow using sequence flows
+4. Configure the task properties using the properties panel
+5. Define any necessary data mappings for input and output
+
+In the following sections, we'll explore each task type in more detail and provide examples of how they can be used effectively in your processes.

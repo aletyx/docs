@@ -1,0 +1,407 @@
+---
+title: "DRL Building Blocks"
+description: "In this section, we'll explore the foundational components that make up DRL files. Understanding these building blocks is essential for creating well-structured and maintainable rule systems."
+---
+In this section, we'll explore the foundational components that make up DRL files. Understanding these building blocks is essential for creating well-structured and maintainable rule systems.
+
+## DRL File Structure
+
+A typical DRL file contains the following components, usually in this order:
+
+```
+package ai.aletyx;
+unit ExampleRules;
+
+import ai.aletyx.model.Customer;
+import ai.aletyx.model.Order;
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+
+declare ExampleRules extends RuleUnitData
+  customers: DataStore<Customer>
+  orders: DataStore<Order>
+end
+
+declare NewCustomerDiscount
+  customerId: String
+  discountPercentage: int
+end
+
+rule "First-time Customer Discount"
+  when
+    $customer: /customers[ orderCount == 0 ]
+    $order: /orders[ customerId == $customer.id ]
+  then
+    $order.applyDiscount(10);
+    NewCustomerDiscount discount = new NewCustomerDiscount();
+    discount.setCustomerId($customer.getId());
+    discount.setDiscountPercentage(10);
+    orders.update($order);
+end
+```
+
+Let's explore each of these components in detail.
+
+## Packages in DRL
+
+The package declaration is required at the beginning of every DRL file and serves two important purposes:
+
+1. **Organizational structure**: Packages group related rules together, similar to Java packages
+2. **Namespace definition**: Provides a unique namespace for rules, queries, and declared types
+
+### Syntax
+
+```
+package packageName;
+```
+
+The package name follows Java package naming conventions, typically using reverse domain notation.
+
+### Example
+
+```
+package ai.aletyx.banking.loans;
+```
+
+### Best Practices
+
+- **Logical grouping**: Organize rules into packages based on business domain or functionality
+- **Consistency with Java**: Align DRL packages with your Java package structure
+- **Avoid default package**: Always specify a package explicitly for clarity and organization
+
+### Package Scope
+
+Rules, queries, and declared types are scoped to their package. This means:
+
+- Rule names must be unique within a package
+- Imported classes are available to all rules in the package
+- Global variables are accessible throughout the package
+
+## Rule Units in DRL
+
+Rule units are a modern approach to organizing related rules and their data sources. A rule unit:
+
+1. Defines the data sources that rules can act upon
+2. Groups related rules into a cohesive unit
+3. Provides clear boundaries and encapsulation
+4. Enables more targeted rule execution
+
+### Declaring a Rule Unit
+
+```
+unit UnitName;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+
+declare UnitName extends RuleUnitData
+  dataSource1: DataStore<FactType1>
+  dataSource2: DataStore<FactType2>
+end
+```
+
+### Unit Implementation in Java
+
+For each rule unit declared in DRL, you'll need a corresponding Java class:
+
+```java
+package ai.aletyx;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+import org.drools.ruleunits.api.DataSource;
+
+public class ExampleRules implements RuleUnitData {
+    private final DataStore<Customer> customers;
+    private final DataStore<Order> orders;
+
+    public ExampleRules() {
+        this.customers = DataSource.createStore();
+        this.orders = DataSource.createStore();
+    }
+
+    public DataStore<Customer> getCustomers() {
+        return customers;
+    }
+
+    public DataStore<Order> getOrders() {
+        return orders;
+    }
+}
+```
+
+### Data Sources
+
+Rule units work with three types of data sources:
+
+1. **DataStore**: A mutable collection that supports adding, removing, and updating facts
+2. **DataStream**: An append-only stream of facts, similar to a queue
+3. **SingletonStore**: A container for a single value that can be set or cleared
+
+```
+// In DRL
+declare UnitName extends RuleUnitData
+  store: DataStore<FactType>     // Mutable collection
+  stream: DataStream<EventType>  // Append-only stream
+  singleton: SingletonStore<ConfigType> // Single value
+end
+```
+
+### Using Data Sources in Rules
+
+To reference facts from a data source, use the OOPath syntax with a leading slash:
+
+```
+rule "Example Rule"
+  when
+    $customer: /customers[ status == "ACTIVE" ]
+  then
+    // Actions using $customer
+end
+```
+
+### Benefits of Rule Units
+
+- **Encapsulation**: Related rules and data are bundled together
+- **Modularity**: Units can be developed, tested, and deployed independently
+- **Clarity**: Clear boundaries for rule scope and data access
+- **Performance**: Rules only react to relevant data sources
+- **REST Integration**: Units can be automatically exposed as REST endpoints
+
+## Import Statements in DRL
+
+Import statements in DRL work similarly to Java imports, allowing you to use external classes without their fully qualified names.
+
+### Syntax
+
+```
+import packageName.ClassName;
+import packageName.subpackage.*;
+```
+
+### Examples
+
+```
+import java.util.List;
+import ai.aletyx.examples.loan.LoanApplication;
+import ai.aletyx.examples.loan.model.*;
+import function ai.aletyx.functions.RiskCalculator.calculateRiskScore;
+import accumulate org.drools.custom.MinAccumulateFunction min;
+```
+
+### Types of Imports
+
+1. **Class Imports**: Standard Java class imports
+   ```
+   import java.util.Date;
+   ```
+
+2. **Package Imports**: Import all classes from a package
+   ```
+   import ai.aletyx.model.*;
+   ```
+
+3. **Static Imports**: Import static methods or fields
+   ```
+   import static ai.aletyx.Constants.MAX_LOAN_AMOUNT;
+   ```
+
+4. **Function Imports**: Import functions for use in rules
+   ```
+   import function ai.aletyx.utils.DateUtils.daysBetween;
+   ```
+
+5. **Accumulate Function Imports**: Import custom accumulate functions
+   ```
+   import accumulate ai.aletyx.functions.WeightedAverage weightedAvg;
+   ```
+
+### Automatic Imports
+
+Drools automatically imports:
+- Classes from the same package as the DRL file
+- Classes from the `java.lang` package
+
+### Best Practices
+
+- Explicitly import classes for clarity
+- Use fully qualified names for occasional usage to avoid unnecessary imports
+- Group imports logically (Java standard, domain-specific, etc.)
+- Consider package organization to minimize import complexity
+
+## Type Declarations
+
+Type declarations allow you to define new fact types directly in DRL files. This is useful when:
+
+- You don't want to create Java classes for simple fact types
+- You need to add metadata to existing types
+- You're prototyping and want to quickly define a data model
+
+### Declaring a New Type
+
+```
+declare TypeName
+    field1: FieldType
+    field2: FieldType
+end
+```
+
+### Example
+
+```
+declare LoanApplicant
+    name: String
+    age: int
+    creditScore: int
+    monthlyIncome: double
+    existingDebt: double
+end
+```
+
+### Adding Metadata to Types
+
+```
+declare Person
+    @role( event )
+    @timestamp( dateOfBirth )
+
+    name: String
+    dateOfBirth: java.util.Date
+    address: Address
+end
+```
+
+### Extending Types
+
+```
+declare Student extends Person
+    school: String
+    graduationYear: int
+end
+```
+
+### Using Declared Types
+
+Once declared, you can use these types in your rules:
+
+```
+rule "Check Student Eligibility"
+  when
+    $student: /students[ graduationYear > 2022 ]
+  then
+    // Actions using $student
+end
+```
+
+### Common Type Metadata
+
+- **@role(fact|event)**: Specifies if the type is a regular fact or an event
+- **@timestamp**: Defines which field contains the event timestamp
+- **@duration**: Specifies which field defines the event duration
+- **@expires**: Sets a time after which events automatically expire
+- **@key**: Marks fields to be used in equals and hashCode methods
+
+## Rule Structure
+
+Now let's examine the structure of individual rules in detail:
+
+```
+rule "Rule Name"
+    // Attributes
+    salience 10
+    no-loop true
+    when
+        // Conditions (LHS)
+        $customer: /customers[ status == "GOLD", orderTotal > 1000 ]
+        not /discounts[ customerId == $customer.id, applied == true ]
+    then
+        // Actions (RHS)
+        Discount discount = new Discount($customer.getId(), 15.0);
+        discounts.add(discount);
+        System.out.println("Applied discount for gold customer: " + $customer.getName());
+end
+```
+
+### Rule Name
+
+Every rule must have a unique name within its rule unit. Names can contain spaces and should be descriptive of the rule's purpose.
+
+```
+rule "Gold Customer Large Order Discount"
+```
+
+### Rule Attributes
+
+Rule attributes modify the behavior of the rule. They are optional and are placed before the `when` section:
+
+```
+rule "High Priority Rule"
+    salience 100
+    no-loop true
+    date-effective "1-Jan-2023"
+```
+
+Common attributes include:
+- **salience**: Sets rule priority (higher executes first)
+- **no-loop**: Prevents the rule from re-activating due to its own actions
+- **date-effective/date-expires**: Time window when the rule is active
+- **duration**: Delay before rule actions execute
+- **timer**: Schedule-based execution timing
+- **lock-on-active**: Stronger version of no-loop
+
+### Conditions (when)
+
+The `when` section defines the conditions under which the rule should fire. It consists of one or more patterns that match against facts in working memory:
+
+```
+when
+    $order: /orders[ total > 1000, customer.status == "VIP" ]
+    not /inventoryAlerts[ itemId == $order.itemId ]
+```
+
+Patterns can include:
+- Data source matching (`/orders`)
+- Constraints (`total > 1000`)
+- Bindings to variables (`$order: /orders`)
+- Property access (`customer.status`)
+- Conditional elements (`and`, `or`, `not`, `exists`, etc.)
+
+### Actions (then)
+
+The `then` section defines the actions to take when the conditions are met. This is Java code that executes when the rule is triggered. Unlike the `when` section, which uses its own pattern matching syntax, the `then` section contains plain Java code:
+
+```
+then
+    // Create a new discount object
+    Discount discount = new Discount($customer.getId(), 15.0);
+
+    // Add it to the discounts data store
+    discounts.add(discount);
+
+    // Update the original customer object
+    $customer.setDiscountApplied(true);
+    customers.update($customer);
+
+    // Optional: log the action
+    System.out.println("Applied discount for customer: " + $customer.getName());
+end
+```
+
+Common actions include:
+- Modifying matched facts
+- Creating new facts
+- Adding/removing facts from data sources
+- Logging or sending notifications
+- Calling external services
+
+## Summary
+
+In this section, we've covered the fundamental building blocks of DRL:
+
+- **Packages**: Namespaces that organize related rules
+- **Rule Units**: Containers for related rules and data sources
+- **Imports**: References to external classes and functions
+- **Type Declarations**: Definitions for fact types
+- **Rule Structure**: The components of individual rules
+
+Understanding these building blocks provides the foundation for creating well-structured and maintainable rule systems. In the next sections, we'll dive deeper into rule conditions and actions, exploring the rich expression capabilities of DRL.

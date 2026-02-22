@@ -1,0 +1,14 @@
+---
+title: "Start Events in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "A Start Event is where the process flow begins. It does not have any incoming connections, ensuring it is the first node the engine executes. Different types of Start Events (such as simple,..."
+---
+A Start Event is where the process flow begins. It does not have any incoming connections, ensuring it is the first node the engine executes. Different types of Start Events (such as simple, message, signal, or timer) help model how and when a process is triggered. For instance, you can start a process immediately, wait for a message to arrive, or trigger it at a specific time.
+
+Properly choosing the right Start Event type ensures that your process aligns with real-world triggers. This clarity is especially useful when integrating with external systems or scheduling tools.
+
+Here are some of the supported start events supported in Aletyx Enterprise Build of Kogito and Drools by jBPM
+
+- ![Simple Start Node](/images/core/processes/basic-bpmn/images/node-simple-start.png) Simple Start: Begins automatically without an explicit trigger.
+- ![Message Start Node](/images/core/processes/basic-bpmn/images/node-message-start.png)  Message Start: Waits for a specific message before launching the process.
+- ![Timer Start Node](/images/core/processes/basic-bpmn/images/node-timer-start.png)  Timer Start: Uses time-based conditions, like a scheduled start.
+- ![Signal Start Node](/images/core/processes/basic-bpmn/images/node-signal-start.png)  Signal Start: Reacts to a broadcast signal, enabling multiple processes to start simultaneously if needed.

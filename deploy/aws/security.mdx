@@ -1,0 +1,477 @@
+---
+title: "Security Best Practices"
+description: "Comprehensive security guidelines for deploying and operating Aletyx Decision Control on AWS Marketplace."
+---
+Comprehensive security guidelines for deploying and operating Aletyx Decision Control on AWS Marketplace.
+
+## Network Security
+
+### 1. Restrict Access by IP
+
+**Recommendation**: Always limit application access to trusted IP ranges.
+
+**Sandbox Edition**:
+```
+AllowedCidr: YOUR_IP/32
+```
+
+Example: `203.0.113.45/32` (single IP address)
+
+**Production Edition**:
+```
+AllowedCidr: YOUR_OFFICE_CIDR
+```
+
+Example: `10.0.0.0/8` (corporate network)
+
+**Important**:
+- Never use `0.0.0.0/0` except for Let's Encrypt validation on port 80
+- Use VPN or corporate network CIDR for team access
+- Update CIDR when your IP changes
+
+### 2. Use Private Subnets (Production)
+
+For production deployments, consider this architecture:
+
+- **EC2 in Private Subnet**: No direct internet access
+- **NAT Gateway**: For outbound internet (updates, Docker pulls)
+- **Application Load Balancer**: In public subnet
+- **RDS in Private Subnet**: Never publicly accessible
+
+**Benefits**:
+- EC2 instances not directly exposed to internet
+- Defense in depth security model
+- Better compliance posture
+
+### 3. Enable VPC Flow Logs
+
+Monitor network traffic for security analysis:
+
+```bash
+aws ec2 create-flow-logs \
+  --resource-type VPC \
+  --resource-ids vpc-xxxxx \
+  --traffic-type ALL \
+  --log-destination-type cloud-watch-logs \
+  --log-group-name /aws/vpc/flowlogs
+```
+
+**Use Cases**:
+- Detect unusual traffic patterns
+- Investigate security incidents
+- Meet compliance requirements
+
+## IAM Security
+
+### 1. Prefer SSM Session Manager Over SSH
+
+**Why**:
+- No SSH keys to manage or lose
+- All access logged to CloudTrail
+- IAM-based access control
+- No need to open port 22
+
+**How to Connect**:
+```bash
+aws ssm start-session \
+  --target i-xxxxx \
+  --region us-east-1
+```
+
+**Benefits**:
+- Centralized access management
+- Automatic session logging
+- Works without public IP
+- No key rotation needed
+
+### 2. Least Privilege IAM Policies
+
+The CloudFormation templates create minimal IAM roles:
+
+**Instance Role Permissions**:
+- `AmazonSSMManagedInstanceCore` - SSM Session Manager
+- `CloudWatchAgentServerPolicy` - Log shipping
+- `AWS MarketplaceMetering` - Billing integration
+
+**Do NOT add**:
+- Admin permissions
+- S3 full access
+- EC2 instance manipulation
+- IAM policy modification
+
+### 3. Enable CloudTrail
+
+Track all API calls for audit and compliance:
+
+```bash
+aws cloudtrail create-trail \
+  --name aletyx-audit \
+  --s3-bucket-name my-cloudtrail-bucket
+
+aws cloudtrail start-logging \
+  --name aletyx-audit
+```
+
+**What Gets Logged**:
+- Instance start/stop
+- Security group changes
+- IAM role modifications
+- SSM session starts
+- Database access patterns
+
+## Data Protection
+
+### 1. EBS Encryption
+
+**Default**: Enabled in all CloudFormation templates
+
+Verify encryption:
+```bash
+aws ec2 describe-volumes \
+  --volume-ids vol-xxxxx \
+  --query 'Volumes[0].Encrypted'
+```
+
+**Benefits**:
+- Data encrypted at rest
+- No performance impact
+- Automatic key management via AWS KMS
+
+### 2. RDS Encryption (Production)
+
+**Enable in CloudFormation**:
+```yaml
+StorageEncrypted: true
+```
+
+**Verify**:
+```bash
+aws rds describe-db-instances \
+  --db-instance-identifier mydb \
+  --query 'DBInstances[0].StorageEncrypted'
+```
+
+**What's Encrypted**:
+- Database storage
+- Automated backups
+- Read replicas
+- Snapshots
+
+### 3. RDS Automated Backups
+
+**Configure Retention**:
+```
+BackupRetentionPeriod: 7  # days
+```
+
+**Recommendations**:
+- **Development**: 7 days
+- **Production**: 14-30 days
+- **Compliance**: 30-35 days
+
+**Backup Window**:
+```yaml
+PreferredBackupWindow: "03:00-04:00"  # UTC
+```
+
+Choose low-traffic hours for your timezone.
+
+### 4. Multi-AZ RDS (Production High Availability)
+
+**Enable**:
+```yaml
+MultiAZ: true
+```
+
+**Benefits**:
+- Automatic failover (30-120 seconds)
+- Synchronous replication
+- Zero data loss
+- 99.95% uptime SLA
+- Automated backups from standby
+
+## Application Security
+
+### 1. Change Default Database Password
+
+**After Deployment**:
+```bash
+# Connect to RDS
+psql -h $DB_ENDPOINT -U aletyxadmin -d decision_control
+
+# Change password
+ALTER USER aletyxadmin WITH PASSWORD 'new-strong-password-here';
+```
+
+**Password Requirements**:
+- Minimum 12 characters
+- Mix of uppercase, lowercase, numbers, special characters
+- No dictionary words
+- Rotate every 90 days
+
+### 2. Enable HTTPS for Production
+
+Always use custom domain with SSL/HTTPS for production:
+
+```
+CustomDomain: app
+HostedZoneName: example.com.
+```
+
+See [SSL/HTTPS Configuration](/deploy/aws/ssl-https) for details.
+
+**Why**:
+- Encrypt data in transit
+- Prevent man-in-the-middle attacks
+- Meet compliance requirements
+- Build user trust
+
+### 3. Keep AMI Updated
+
+**Subscribe to Updates**:
+- AWS Marketplace notifications
+- Aletyx security bulletins
+- CVE database alerts
+
+**Update Process**:
+1. Review release notes
+2. Test in non-production
+3. Schedule maintenance window
+4. Update CloudFormation stack
+5. Verify application functionality
+
+### 4. Regular Security Patching
+
+**OS Updates** (via SSH/SSM):
+```bash
+sudo yum update -y
+sudo reboot
+```
+
+**Docker Image Updates**:
+- New AMI versions include updated containers
+- Update to latest AMI for security patches
+
+## Access Control
+
+### 1. Security Group Best Practices
+
+**Production Security Group Rules**:
+
+| Port | Protocol | Source | Purpose | Risk Level |
+|------|----------|--------|---------|------------|
+| 443 | TCP | `YOUR_CIDR` | HTTPS access | Low |
+| 80 | TCP | `0.0.0.0/0` | Let's Encrypt only | Medium |
+| 22 | TCP | `YOUR_CIDR` | SSH (prefer SSM) | High |
+| 5432 | TCP | EC2 SG only | RDS access | Low |
+
+**Never Allow**:
+- Port 22 from `0.0.0.0/0` (SSH to internet)
+- Port 3306/5432 from `0.0.0.0/0` (database to internet)
+- Outbound to suspicious IPs
+
+### 2. Database Access Control
+
+**Best Practices**:
+- RDS only accepts connections from EC2 security group
+- No public IP on RDS instance
+- Use IAM database authentication where possible
+- Enable SSL/TLS for database connections
+
+**Verify RDS is Private**:
+```bash
+aws rds describe-db-instances \
+  --db-instance-identifier mydb \
+  --query 'DBInstances[0].PubliclyAccessible'
+# Should return: false
+```
+
+### 3. SSH Key Management
+
+If using SSH access:
+
+**Protect Keys**:
+```bash
+chmod 400 ~/.ssh/your-key.pem
+```
+
+**Rotate Keys**:
+1. Create new EC2 key pair
+2. Add public key to `~/.ssh/authorized_keys` on instance
+3. Test new key works
+4. Remove old key
+5. Delete old key pair from AWS
+
+**Better**: Use SSM Session Manager (no keys needed)
+
+## Monitoring and Auditing
+
+### 1. Enable CloudWatch Alarms
+
+Production templates include automatic alarms:
+
+- **High CPU**: CPU > 80% for 5 minutes
+- **High Database Connections**: > 80% of max connections
+- **Low Disk Space**: Free storage < 10%
+
+**Add Custom Alarms**:
+```bash
+aws cloudwatch put-metric-alarm \
+  --alarm-name failed-login-attempts \
+  --metric-name FailedLoginCount \
+  --threshold 10 \
+  --comparison-operator GreaterThanThreshold
+```
+
+### 2. Review CloudWatch Logs
+
+**Application Logs**:
+```bash
+# View recent errors
+aws logs filter-log-events \
+  --log-group-name /aletyx/application \
+  --filter-pattern "ERROR"
+```
+
+**System Logs**:
+```bash
+# SSH to instance
+sudo journalctl -xe | grep -i error
+```
+
+### 3. Enable AWS Config
+
+Track configuration changes:
+
+```bash
+aws configservice put-configuration-recorder \
+  --configuration-recorder name=default \
+  --recording-group allSupported=true
+
+aws configservice put-delivery-channel \
+  --delivery-channel name=default \
+  --s3-bucket-name my-config-bucket
+```
+
+**Tracks**:
+- Security group changes
+- IAM policy modifications
+- Resource deletions
+- Compliance deviations
+
+## Compliance
+
+### 1. Data Residency
+
+**Control Data Location**:
+- Deploy in specific AWS regions
+- Use region-locked S3 buckets
+- Configure RDS in desired region
+- Verify no cross-region replication
+
+### 2. Encryption Requirements
+
+**At Rest**:
+- EBS volumes encrypted (default)
+- RDS storage encrypted (enable)
+- S3 buckets encrypted (if used)
+
+**In Transit**:
+- HTTPS for application access
+- SSL/TLS for database connections
+- VPC peering for private networks
+
+### 3. Audit Trail
+
+**Maintain Logs For**:
+- Access attempts (CloudTrail)
+- Configuration changes (AWS Config)
+- Application events (CloudWatch Logs)
+- Database queries (RDS logs)
+
+**Retention**:
+- Development: 30 days
+- Production: 90 days
+- Compliance: 1-7 years
+
+## Incident Response
+
+### 1. Isolate Compromised Instance
+
+```bash
+# Remove from load balancer
+aws elbv2 deregister-targets \
+  --target-group-arn arn:... \
+  --targets Id=i-xxxxx
+
+# Update security group (block all)
+aws ec2 modify-instance-attribute \
+  --instance-id i-xxxxx \
+  --groups sg-emergency-quarantine
+```
+
+### 2. Collect Forensics
+
+```bash
+# Create snapshot before stopping
+aws ec2 create-snapshot \
+  --volume-id vol-xxxxx \
+  --description "Forensic snapshot $(date)"
+
+# Export logs
+aws logs create-export-task \
+  --log-group-name /aletyx/application \
+  --from $(date -d '7 days ago' +%s)000 \
+  --to $(date +%s)000 \
+  --destination my-security-bucket
+```
+
+### 3. Recovery Process
+
+1. **Isolate**: Remove instance from production
+2. **Investigate**: Analyze logs, snapshots, network traffic
+3. **Remediate**: Patch vulnerability, update AMI
+4. **Deploy**: Launch new instance from clean AMI
+5. **Monitor**: Watch for reinfection signs
+6. **Document**: Create incident report
+
+## Security Checklist
+
+Before going to production:
+
+- [ ] IP restrictions configured (`AllowedCidr` not `0.0.0.0/0`)
+- [ ] HTTPS enabled with valid SSL certificate
+- [ ] Database password changed from default
+- [ ] EBS encryption verified
+- [ ] RDS encryption enabled (production)
+- [ ] Multi-AZ RDS configured (production)
+- [ ] Automated backups enabled (7-30 days retention)
+- [ ] CloudWatch alarms configured
+- [ ] CloudTrail logging enabled
+- [ ] VPC Flow Logs enabled
+- [ ] Security groups follow least privilege
+- [ ] RDS not publicly accessible
+- [ ] SSM Session Manager tested
+- [ ] SSH keys secured (chmod 400) or disabled
+- [ ] AMI up to date with security patches
+- [ ] Incident response plan documented
+
+## Resources
+
+- **AWS Security Best Practices**: [AWS Well-Architected Security Pillar](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/)
+- **CIS AWS Foundations Benchmark**: [CIS Benchmarks](https://www.cisecurity.org/benchmark/amazon_web_services)
+- **Aletyx Security Documentation**: [https://docs.aletyx.ai/security/](https://docs.aletyx.ai/security/)
+
+## Next Steps
+
+- **SSL/HTTPS Configuration**: [SSL/HTTPS Guide](/deploy/aws/ssl-https)
+- **Troubleshooting**: [Troubleshooting Guide](/deploy/aws/troubleshooting)
+- **Sandbox Deployment**: [Sandbox Edition](/deploy/aws/sandbox)
+- **Production Deployment**: [Production Edition](production)
+
+## Support
+
+For security concerns:
+- **Email**: security@aletyx.com
+- **AWS Support**: Via AWS Support Console for infrastructure issues
+- **Documentation**: [https://docs.aletyx.ai](https://docs.aletyx.ai)

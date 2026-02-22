@@ -1,0 +1,72 @@
+---
+title: "Drools Rule Language (DRL) Structure"
+description: "A Drools rule consists of three main parts:"
+---
+## Rule Structure Comparison
+
+A Drools rule consists of three main parts:
+
+- **Rule Declaration**: Defines the rule name and optional attributes
+- **Conditions (LHS)**: The 'when' section that defines what conditions must be true for the rule to fire
+- **Actions (RHS)**: The 'then' section that defines what actions to take when the rule fires
+
+```java
+rule "Rule Name"
+// Optional attributes (salience, no-loop, agenda-group, etc.)
+salience 10 // (1)
+no-loop true // (2)
+
+when
+// Conditions (Left-Hand Side)
+$customer: Customer(age > 18, status == "active")
+    $order: Order(customer == $customer, total > 100) // (3)
+then
+    // Actions (Right-Hand Side)
+    $order.applyDiscount(10); // (4)
+    update($order);
+System.out.println("Discount applied to order " + $order.getId());
+end
+```
+
+1. Has a priority of 10 (higher than default)
+2. Will not re-trigger even if its actions modify objects (no-loop true)
+3. Fires when finding an active customer over 18 with an order over $100
+4. Applies a 10% discount to the matching order
+
+The rule above:
+
+- Has a priority of 10 (higher than default)
+- Will not re-trigger even if its actions modify objects (no-loop true)
+- Fires when finding an active customer over 18 with an order over $100
+- Applies a 10% discount to the matching order
+
+Notice how variables are bound with the $ prefix for clarity.
+
+## Writing Your First Rule
+
+Let's create a simple rule for a discount system:
+
+```java
+rule "First-time Customer Discount"
+    when
+        $customer: Customer(orderCount == 0)
+        $order: Order(customer == $customer)
+    then
+        $order.applyDiscount(15);
+        System.out.println("Applied 15% first-time customer discount");
+        update($order);
+end
+```
+
+This rule matches when:
+
+1. We have a customer with no previous orders (first-time customer)
+2. We have an order associated with this customer
+
+When these conditions are met, it applies a 15% discount to the order.
+
+## Additional Resources
+
+- [Rule Attributes](rule-attributes)
+- [Pattern Matching](pattern-matching)
+- [Rule Execution Control](rule-execution)

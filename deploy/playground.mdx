@@ -1,0 +1,337 @@
+---
+title: "Customizing Aletyx Playground in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "This section is going to be focused on showing how you can work with Aletyx Playground to fully make it your enterprise's own."
+---
+This section is going to be focused on showing how you can work with Aletyx Playground to fully make it your enterprise's own.
+
+### Deploying in a Containerized Environment
+
+```python
+KIE_SANDBOX_CORS_PROXY_URL="https://aletyx-cors-proxy.ai"
+KIE_SANDBOX_EXTENDED_SERVICES_URL="https://aletyx-extended-services.ai"
+KIE_SANDBOX_ACCELERATORS="[
+					 {
+   "name": "{{ product.kogito }} Project Accelerator",
+   "iconUrl": "https://raw.githubusercontent.com/timwuthenow/sandbox-accelerators/refs/heads/main/quarkus-logo.png",
+   "gitRepositoryUrl": "https://github.com/timwuthenow/sandbox-accelerators.git",
+   "gitRepositoryGitRef": "kubernetes",
+   "dmnDestinationFolder": "src/main/resources/dmn",
+   "bpmnDestinationFolder": "src/main/resources/bpmn",
+   "otherFilesDestinationFolder": "src/main/resources/others"
+ },
+ {
+   "name": "{{product.drools }} Project Accelerator",
+   "iconUrl": "https://raw.githubusercontent.com/timwuthenow/sandbox-accelerators/refs/heads/main/quarkus-logo.png",
+   "gitRepositoryUrl": "https://github.com/timwuthenow/sandbox-accelerators.git",
+   "gitRepositoryGitRef": "dmn",
+   "dmnDestinationFolder": "src/main/resources/dmn",
+   "bpmnDestinationFolder": "src/main/resources/bpmn",
+   "otherFilesDestinationFolder": "src/main/resources/others"
+ }
+]
+"
+KIE_SANDBOX_AUTH_PROVIDERS="[
+ {
+	 "id": "github_dot_com",
+	 "domain": "github.com",
+	 "supportedGitRemoteDomains": [
+		 "github.com",
+		 "gist.github.com"
+	 ],
+	 "type": "github",
+	 "name": "GitHub",
+	 "enabled": true,
+	 "iconPath": "",
+	 "group": "git"
+ },
+ {
+	 "id": "bitbucket_dot_com",
+	 "domain": "bitbucket.com",
+	 "supportedGitRemoteDomains": [
+		 "bitbucket.com"
+	 ],
+	 "type": "bitbucket",
+	 "name": "Bitbucket",
+	 "enabled": true,
+	 "iconPath": "images/bitbucket-logo.svg",
+	 "group": "git"
+ },
+ {
+	 "enabled": true,
+	 "id": "openshift",
+	 "type": "openshift",
+	 "name": "OpenShift",
+	 "iconPath": "images/openshift-logo.svg",
+	 "group": "cloud"
+ },
+ {
+	 "enabled": true,
+	 "id": "kubernetes",
+	 "type": "kubernetes",
+	 "name": "Kubernetes",
+	 "iconPath": "images/kubernetes-logo.svg",
+	 "group": "cloud"
+ }
+
+]
+"
+```
+
+### Customizing the Git Providers for Aletyx Playground
+
+Today Aletyx Playground provides support for the following Git providers with plans to expand to more in the future:
+
+- GitHub
+- BitBucket Cloud
+- GitHub Enterprise
+
+#### To Add a Supported Git Provider
+
+To add a supported Git Provider, your environment variable passed into Aletyx Playground would look similar to the sample.
+
+```yaml
+KIE_SANDBOX_AUTH_PROVIDERS
+{
+	"id": "github_dot_com",
+	  "domain": "github.com",
+	  "supportedGitRemoteDomains":
+		   ["github.com",  "gist.github.com"],
+	  "type": "github",
+	  "name": "GitHub",
+	  "enabled": true,
+	  "iconPath": "",
+	  "group": "git"
+}
+```
+
+
+### Configuring Architecture Connections between Aletyx Playground and CORS-Proxy and Extended Services
+
+KIE_SANDBOX_EXTENDED_SERVICES_URL
+KIE_SANDBOX_CORS_PROXY_URL
+
+### Building a Custom Commit Validation Message Checking Service
+
+KIE_SANDBOX_CUSTOM_COMMIT_MESSAGE_VALIDATION_SERVICE_URL: http://localhost:3000/validate
+
+Service must return:
+
+```json
+{“result”: true| false,
+“reasons”: “String” }
+```
+
+####  Custom Commit Validation Service Build
+
+The following is a sample service that can obviously be extended far further than a character counting message, but does provide a lot of the basis for creating a commit message validation service.
+
+1. Set up your project:
+
+   ```bash
+   mkdir commit-validator
+   cd commit-validator
+   ```
+
+2. Copy both main.go and go.mod files into the directory:
+
+   ```go
+
+   package main
+
+   import (
+   	"io/ioutil"
+   	"net/http"
+   	"os"
+
+   	"github.com/gin-contrib/cors"
+   	"github.com/gin-gonic/gin"
+   )
+
+   // Metadata holds configuration values
+   type Metadata struct {
+   	Port string
+   }
+
+   // ValidationResult represents the result of commit message validation
+   type ValidationResult struct {
+   	Result  bool     `json:"result"`
+   	Reasons []string `json:"reasons,omitempty"`
+   }
+
+   // Validate checks if a commit message meets the required criteria
+   func Validate(message string) ValidationResult {
+   	messageLength := len(message)
+   	var reasons []string
+
+   	// Check if message is too short (less than 5 characters)
+   	if messageLength < 5 {
+   		reasons = append(reasons, "Commit message is too short. Minimum length is 5 characters.")
+   	}
+
+   	// Check if message is too long (more than 72 characters)
+   	if messageLength > 72 {
+   		reasons = append(reasons, "Commit message is too long. Maximum length is 72 characters.")
+   	}
+
+   	// Message is valid if there are no reasons for failure
+   	return ValidationResult{
+   		Result:  len(reasons) == 0,
+   		Reasons: reasons,
+   	}
+   }
+
+   func main() {
+   	// Set up metadata
+   	metadata := Metadata{
+   		Port: os.Getenv("PORT"),
+   	}
+
+   	// Default to port 8080 if not specified
+   	if metadata.Port == "" {
+   		metadata.Port = "3000"
+   	}
+
+   	// Set up Gin router
+   	router := gin.Default()
+   	router.Use(cors.Default())
+
+   	// Define validation endpoint
+   	router.POST("/validate", func(context *gin.Context) {
+   		body, err := ioutil.ReadAll(context.Request.Body)
+   		if err != nil {
+   			context.String(http.StatusBadRequest, "Wrong input")
+   			return
+   		}
+   		context.JSON(http.StatusOK, Validate(string(body)))
+   	})
+
+   	// Start the server
+   	router.Run(":" + metadata.Port)
+   }
+   ```
+
+   ```bash
+   module commit-validator
+
+   go 1.17
+
+   require (
+   	github.com/gin-contrib/cors v1.4.0
+   	github.com/gin-gonic/gin v1.8.1
+   )
+
+   require (
+   	github.com/gin-contrib/sse v0.1.0 // indirect
+   	github.com/go-playground/locales v0.14.0 // indirect
+   	github.com/go-playground/universal-translator v0.18.0 // indirect
+   	github.com/go-playground/validator/v10 v10.10.0 // indirect
+   	github.com/goccy/go-json v0.9.7 // indirect
+   	github.com/json-iterator/go v1.1.12 // indirect
+   	github.com/leodido/go-urn v1.2.1 // indirect
+   	github.com/mattn/go-isatty v0.0.14 // indirect
+   	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
+   	github.com/modern-go/reflect2 v1.0.2 // indirect
+   	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
+   	github.com/ugorji/go/codec v1.2.7 // indirect
+   	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
+   	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110 // indirect
+   	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
+   	golang.org/x/text v0.3.6 // indirect
+   	google.golang.org/protobuf v1.28.0 // indirect
+   	gopkg.in/yaml.v2 v2.4.0 // indirect
+   )
+   ```
+
+3. Create a `Dockerfile` to run the Go Application within:
+
+   ```Dockerfile
+   # Start from a Golang 1.17 base image to match your go.mod
+   FROM golang:1.17-alpine
+
+   # Add git for go mod commands
+   RUN apk add --no-cache git
+
+   # Set working directory inside the container
+   WORKDIR /app
+
+   # Copy go mod file and the source code
+   COPY go.mod main.go ./
+
+   # Generate go.sum file and get dependencies
+   RUN go mod tidy
+   RUN go get github.com/gin-contrib/cors@v1.4.0
+   RUN go get github.com/gin-gonic/gin@v1.8.1
+
+   # Build the application
+   RUN go build -o /commit-validator
+
+   # Expose port 5555
+   EXPOSE 5555
+
+   # Set environment variable
+   ENV PORT=5555
+
+   # Run the executable
+   CMD ["/commit-validator"]
+   ```
+
+4. Build the application:
+
+   ```bash
+   docker build -t commit-validator .
+   ```
+
+5. Run the service:
+
+   ```bash
+   docker run -p 5555:5555 commit-validator
+   ```
+
+6. Test with a sample request:
+
+   ```bash
+   curl -X POST http://localhost:5555/validate -d "This is a test commit message"
+   ```
+
+   ```json
+   {"result":true}
+   ```
+
+Now that this service is setup, change your Aletyx Playground's `KIE_SANDBOX_CUSTOM_COMMIT_MESSAGE_VALIDATION_SERVICE_URL` variable to having `http://localhost:5555/validate` to enable git commit message validation!
+
+### Branding Customization
+
+You can customize the appearance of Aletyx Playground by replacing logo images:
+
+- Replace `app_logo_rgb_fullcolor_reverse.svg` for the homepage logo
+- Replace `app_logo_rgb_fullcolor_default.svg` for the info screen logo
+- SVGs should have a maximum height of 38 pixels
+
+Example:
+```dockerfile
+
+COPY branding/your-logo-light.svg images/app_logo_rgb_fullcolor_reverse.svg
+COPY branding/your-logo-dark.svg images/app_logo_rgb_fullcolor_default.svg
+```
+
+### Custom Dev Deployment Images
+
+Organizations can create custom deployment images with specific configurations:
+
+- Based on the `apache/incubator-kie-sandbox-dev-deployment-quarkus-blank-app:10.0.0` image or custom images
+- Must include the Dev Deployment Upload Service
+- Must implement a `/q/health` endpoint
+- Can pre-configure asset extraction locations
+
+### Custom Accelerators
+
+Accelerators can be customized to implement organization-specific templates:
+
+- Define project structures tailored to your organization
+- Include CI/CD pipelines for your deployment environment
+- Apply coding standards and best practices
+- Incorporate security configurations and dependencies
+
+![Applying DMN Accelerator](/images/deployment/playground/images/apply-dmn-accelerator.gif)
+
+### Working with VSCode and Aletyx Playground

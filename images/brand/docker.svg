@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <!-- Background -->
+  <rect width="300" height="300" fill="#FFFFFF" rx="15" ry="15" />
+  
+  <!-- Docker Logo - Inspired by but not copying Docker's whale -->
+  <g transform="translate(50, 80)">
+    <!-- Base Platform -->
+    <rect x="0" y="80" width="200" height="20" rx="5" ry="5" fill="#000000" />
+    
+    <!-- Stacked Containers -->
+    <!-- Bottom Row -->
+    <rect x="20" y="40" width="40" height="40" rx="3" ry="3" fill="#FFFFFF" stroke="#1a1a1a" stroke-width="2" />
+    <rect x="65" y="40" width="40" height="40" rx="3" ry="3" fill="#FFFFFF" stroke="#1a1a1a" stroke-width="2" />
+    <rect x="110" y="40" width="40" height="40" rx="3" ry="3" fill="#FFFFFF" stroke="#1a1a1a" stroke-width="2" />
+    <rect x="155" y="40" width="40" height="40" rx="3" ry="3" fill="#FFFFFF" stroke="#1a1a1a" stroke-width="2" />
+    
+    <!-- Second Row -->
+    <rect x="20" y="0" width="40" height="40" rx="3" ry="3" fill="#FFFFFF" stroke="#1a1a1a" stroke-width="2" />
+    <rect x="65" y="0" width="40" height="40" rx="3" ry="3" fill="#FFFFFF" stroke="#1a1a1a" stroke-width="2" />
+    <rect x="110" y="0" width="40" height="40" rx="3" ry="3" fill="#FFFFFF" stroke="#1a1a1a" stroke-width="2" />
+    
+    <!-- Container Details (lines) -->
+    <line x1="30" y1="15" x2="50" y2="15" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="30" y1="25" x2="50" y2="25" stroke="#1a1a1a" stroke-width="2" />
+    
+    <line x1="75" y1="15" x2="95" y2="15" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="75" y1="25" x2="95" y2="25" stroke="#1a1a1a" stroke-width="2" />
+    
+    <line x1="120" y1="15" x2="140" y2="15" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="120" y1="25" x2="140" y2="25" stroke="#1a1a1a" stroke-width="2" />
+    
+    <line x1="30" y1="55" x2="50" y2="55" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="30" y1="65" x2="50" y2="65" stroke="#1a1a1a" stroke-width="2" />
+    
+    <line x1="75" y1="55" x2="95" y2="55" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="75" y1="65" x2="95" y2="65" stroke="#1a1a1a" stroke-width="2" />
+    
+    <line x1="120" y1="55" x2="140" y2="55" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="120" y1="65" x2="140" y2="65" stroke="#1a1a1a" stroke-width="2" />
+    
+    <line x1="165" y1="55" x2="185" y2="55" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="165" y1="65" x2="185" y2="65" stroke="#1a1a1a" stroke-width="2" />
+  </g>
+</svg>

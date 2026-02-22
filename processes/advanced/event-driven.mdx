@@ -1,0 +1,54 @@
+---
+title: "Event-Driven Architecture with Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx in Quarkus"
+description: "Modern applications thrive on real-time data and responsiveness—needs perfectly addressed by Event-Driven Architecture (EDA). Instead of tightly coupling services, EDA relies on loosely connected..."
+---
+Modern applications thrive on real-time data and responsiveness—needs perfectly addressed by **Event-Driven Architecture (EDA)**. Instead of tightly coupling services, EDA relies on loosely connected components that produce and react to events, thus enabling scalability, resilience, and flexibility in cloud-native environments.
+
+**Kogito** leverages the power of Drools (rules), jBPM (processes), and DMN (decisions) to provide a **next-generation business automation toolkit**. When running on **Quarkus**, a Kubernetes-native Java framework, Kogito services start quickly, use minimal memory, and seamlessly integrate with **Apache Kafka** out of the box. Below, we explore how Kogito’s rules, decisions, and processes interact through **CloudEvents**, enabling both message consumption and production without extra glue code.
+
+## Out-of-the-Box Kafka and CloudEvents Integration
+
+Kogito natively supports **Kafka** with minimal configuration. By default, it **consumes** and **produces** events following the **CloudEvents** standard, embedding metadata such as `type` and `source` to ensure the correct Kogito component receives each event. This means:
+
+- **Rules** typically expect `type="RulesRequest"`.
+- **DMN** expects `type="DecisionRequest"`, `kogitodmnmodelnamespace`, and `kogitodmnmodelname`.
+- **Processes** match events based on the **type** specified in their **message node** definitions.
+
+Even when multiple services share a single Kafka topic, CloudEvents metadata ensures proper routing to the correct engine or workflow node, drastically reducing boilerplate routing logic.
+
+## Event-Driven Rules (DRL)
+
+![DRL EDA](/images/core/processes/advanced-bpmn/images/drl-eda.png)
+
+When building event-driven rules, **Drools** in Kogito continuously listens for relevant events in a specified topic:
+
+1. An event arrives with `type="RulesRequest"`.
+2. Kogito inserts the payload as a fact into the Drools session.
+3. All matching rules are evaluated (or “fired”).
+4. When a rule triggers, new facts can be asserted, and a **resulting event** can be produced to a Kafka topic.
+
+## Event-Driven Decisions (DMN)
+
+![DMN EDA](/images/core/processes/advanced-bpmn/images/dmn-eda.png)
+
+For **Decision Model and Notation (DMN)** use cases, Kogito listens for events with `type="DecisionRequest"`, expecting the **namespace** (`kogitodmnmodelnamespace`) and **model name** (`kogitodmnmodelname`). Upon receiving such an event:
+
+1. Kogito routes the payload to the correct DMN model based on the namespace and name.
+2. The DMN engine evaluates the incoming data against your decision logic.
+3. The decision result is either returned synchronously or published as a CloudEvent to another Kafka topic.
+
+## Event-Driven Processes
+
+![Process EDA](/images/core/processes/advanced-bpmn/images/bpmn-eda.png)
+
+Kogito’s **jBPM-based process engine** provides **event-driven processes** that start or proceed upon receiving a CloudEvent:
+
+1. A message matches the **type** defined in the **message node** in your BPMN process.
+2. Kogito injects the data into the process context.
+3. The process executes its tasks or sub-processes in sequence.
+4. At key points, the process can produce new events that trigger actions in other services.
+
+
+## Conclusion
+
+Together, **Kogito** and **Quarkus** provide a robust, cloud-native platform for building **event-driven** services that incorporate **rules**, **decisions**, and **processes**. By leveraging **Kafka integration** out of the box, you can develop scalable, maintainable, and responsive event-driven applications with minimal boilerplate. Whether you are streaming data for rules evaluation, orchestrating business workflows, or automating decisions, Kogito on Quarkus offers a powerful toolkit to handle events from start to finish.

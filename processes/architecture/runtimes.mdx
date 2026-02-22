@@ -1,0 +1,18 @@
+---
+title: "The Runtimes in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "While runtimes are not inherently tied to workflow execution, they play a crucial role in defining the execution environment for Apache KIE components. Understanding their relationship within the..."
+---
+![The Runtimes](/images/core/processes/images/runtimes.png)
+
+While **runtimes** are not inherently tied to workflow execution, they play a crucial role in defining the execution environment for Apache KIE components. Understanding their relationship within the ecosystem is essential for deployment and integration.
+
+### Supported Runtimes
+
+In the Apache KIE context, **runtime** refers to the underlying platform where the software runs. Currently, two primary runtimes are supported:
+
+1. **Quarkus** – The preferred and most mature integration, benefiting from historical affinity with Red Hat technologies.
+2. **Spring Boot** – A supported alternative but not as feature-complete as Quarkus.
+
+For **Drools**, Apache KIE also supports an **embedded mode**, allowing direct execution via a simple **Java main** method without requiring a full runtime framework.
+
+By aligning with **Quarkus** as the preferred runtime, Apache KIE ensures optimized performance, efficient resource utilization, and seamless cloud-native integration.

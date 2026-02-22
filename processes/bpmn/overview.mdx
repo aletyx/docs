@@ -1,0 +1,21 @@
+---
+title: "Basic BPMN Nodes in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "BPMN (Business Process Model and Notation) is a standard for modeling business processes as defined by the Object Management Group (OMG) in the BPMN 2.0 specification. It provides a graphical..."
+---
+BPMN (Business Process Model and Notation) is a standard for modeling business processes **as defined by the Object Management Group (OMG) in the BPMN 2.0 specification**. It provides a **graphical notation** that represents process flows visually, allowing business analysts and technical users to collaborate on process design. BPMN uses graphical elements—**nodes and connectors**—to depict how tasks, events, and decision points are orchestrated.
+
+However, it's important to note that BPMN is **mostly a visual specification that defines expected behavior**; it does not define runtime execution semantics. This means that **each BPMN engine may interpret and execute BPMN diagrams differently**, requiring **vendor-specific extensions** to fully support execution. Because of this, workflow engines such as **jBPM from Apache KIE** extend the BPMN model to enable real-time execution of workflows, bridging the gap between design and execution.
+
+### BPMN Basics for jBPM
+
+When working with BPMN in jBPM, there are two key concepts to understand.
+
+**Flow Objects**: The fundamental building blocks of a process, including:
+
+- **Events**: Represent occurrences that trigger or impact the process (e.g., start, intermediate, and end events).
+- **Activities**: Define tasks or subprocesses that need to be performed.
+- **Gateways**: Control the decision logic and flow branching.
+
+**Sequence Flow**: The **arrows** that define the order of execution between flow objects.
+
+Understanding these elements allows users to design processes that can be **interpreted by BPMN-compatible engines like jBPM**, while also recognizing that vendor-specific behaviors and extensions are required to achieve full execution support.

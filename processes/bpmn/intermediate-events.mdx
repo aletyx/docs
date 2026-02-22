@@ -1,0 +1,15 @@
+---
+title: "Throwing and Catching Events in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Throwing and Catching Events serve as intermediate markers in a process flow. A Throwing Event sends out a signal, message, or error, while a Catching Event waits for a matching trigger. This..."
+---
+Throwing and Catching Events serve as intermediate markers in a process flow. A Throwing Event sends out a signal, message, or error, while a Catching Event waits for a matching trigger. This mechanism allows you to coordinate complex interactions within or across processes.
+
+For instance, a Throwing Message Event might notify another part of your system that a certain milestone is reached, while a Catching Message Event waits for that exact notification before continuing.
+
+- ![Timer Event Node](/images/core/processes/basic-bpmn/images/node-catch-timer-event.png) Timer: Waits for a specific time-based event to occur (like a specific date, duration, or cycle pattern)
+- ![Throw Message Event Node](/images/core/processes/basic-bpmn/images/node-throw-message-event.png) Throw Message: Sends a message to a specific participant or process within the collaboration
+- ![Catch Message Event Node](/images/core/processes/basic-bpmn/images/node-catch-message-event.png) Catch Message: Waits to receive a specific message from another participant or process
+- ![Throw Compensation Event Node](/images/core/processes/basic-bpmn/images/node-throw-compensation-event.png) Throw Compensation: Triggers compensation handling for a successfully completed activity
+- ![Catch Compensation Event Node](/images/core/processes/basic-bpmn/images/node-catch-compesation-event.png) Catch Compensation: Handles compensation activities when compensation is triggered
+- ![Throw Signal Event Node](/images/core/processes/basic-bpmn/images/node-throw-signal-event.png) Throw Signal: Broadcasts a signal that can be caught by multiple receivers across process instances
+- ![Catch Signal Event Node](/images/core/processes/basic-bpmn/images/node-catch-signal-event.png) Catch Signal: Waits for a specific broadcast signal from any source in the process ecosystem

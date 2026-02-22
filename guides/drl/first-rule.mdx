@@ -1,0 +1,499 @@
+---
+title: "Getting Started with Drools Rule Language (DRL) in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Let's create a simple loan approval rule to demonstrate the basics of DRL. This example will help you understand the fundamental structure and components of Drools rules."
+---
+## Your First DRL Rule
+
+Let's create a simple loan approval rule to demonstrate the basics of DRL. This example will help you understand the fundamental structure and components of Drools rules.
+
+### Step 1: Set Up Your Project
+
+First, create a new Java project with the required dependencies. If you're using Maven, add the following to your `pom.xml`:
+
+```xml
+<dependencies>
+    <!-- Aletyx Enterprise Build of Kogito and Drools -->
+    <dependency>
+        <groupId>ai.aletyx</groupId>
+        <artifactId>kie-api</artifactId>
+        <version>10.1.0-aletyx</version>
+    </dependency>
+    <dependency>
+        <groupId>ai.aletyx</groupId>
+        <artifactId>kie-internal</artifactId>
+        <version>10.1.0-aletyx</version>
+    </dependency>
+    <dependency>
+        <groupId>ai.aletyx</groupId>
+        <artifactId>drools-core</artifactId>
+        <version>10.1.0-aletyx</version>
+    </dependency>
+    <dependency>
+        <groupId>ai.aletyx</groupId>
+        <artifactId>drools-compiler</artifactId>
+        <version>10.1.0-aletyx</version>
+    </dependency>
+</dependencies>
+```
+
+### Step 2: Create Your Fact Model
+
+Let's define simple Java classes that our rules will work with:
+
+```java
+package ai.aletyx.examples.loan;
+
+/**
+ * This class represents a loan application in our system.
+ * It contains all the information needed for loan processing rules.
+ *
+ * In Drools, these domain objects are called "facts" - they're the data
+ * that the rules engine reasons about.
+ */
+public class LoanApplication {
+    // Core applicant information
+    private String applicantName;
+    private int amount;
+    private int creditScore;
+
+    // Decision information - these will be modified by our rules
+    private boolean approved;
+    private String explanation;
+
+    /**
+     * Creates a new loan application with initial values.
+     * Note that approved is set to false by default -
+     * it will be changed by rules if the application meets criteria.
+     */
+    public LoanApplication(String applicantName, int amount, int creditScore) {
+        this.applicantName = applicantName;
+        this.amount = amount;
+        this.creditScore = creditScore;
+        this.approved = false; // Default to not approved
+    }
+
+    // Getters and setters - these will be used by the rules engine
+    // to both check conditions and modify the fact
+    public String getApplicantName() { return applicantName; }
+    public void setApplicantName(String applicantName) { this.applicantName = applicantName; }
+
+    public int getAmount() { return amount; }
+    public void setAmount(int amount) { this.amount = amount; }
+
+    public int getCreditScore() { return creditScore; }
+    public void setCreditScore(int creditScore) { this.creditScore = creditScore; }
+
+    public boolean isApproved() { return approved; }
+    public void setApproved(boolean approved) { this.approved = approved; }
+
+    public String getExplanation() { return explanation; }
+    public void setExplanation(String explanation) { this.explanation = explanation; }
+
+    /**
+     * String representation for debugging purposes.
+     * This is helpful when printing rule execution results.
+     */
+    @Override
+    public String toString() {
+        return "LoanApplication{" +
+                "applicantName='" + applicantName + '\'' +
+                ", amount=" + amount +
+                ", creditScore=" + creditScore +
+                ", approved=" + approved +
+                ", explanation='" + explanation + '\'' +
+                '}';
+    }
+}
+```
+
+### Step 3: Create Your First DRL File
+
+Create a file named `loan-rules.drl` in the `src/main/resources` directory:
+
+```java
+// Package declaration - this defines the namespace for our rules
+package ai.aletyx.examples.loan
+
+// Unit declaration - this defines a self-contained group of rules
+
+unit LoanRules;
+
+// Import statements - bringing in Java classes we'll need in our rules
+import ai.aletyx.examples.loan.LoanApplication;
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+
+/**
+ * Rule: High Credit Score Approval
+ * Purpose: Automatically approve applications with excellent credit
+ * Criteria: Credit score of 700 or higher
+ */
+rule "High Credit Score Approval"
+  when
+    // Pattern matching: Find applications with high credit scores
+    // The $application variable will reference each matching application
+    $application: /applications[ creditScore >= 700 ]
+  then
+    // Actions to take when the condition is met
+    $application.setApproved(true);  // Approve the application
+    $application.setExplanation("Automatically approved due to high credit score");
+    System.out.println("Approved application for " + $application.getApplicantName());
+end
+
+/**
+ * Rule: Low Credit Score Rejection
+ * Purpose: Automatically reject applications with poor credit
+ * Criteria: Credit score below 600
+ */
+rule "Low Credit Score Rejection"
+  when
+    // Pattern matching: Find applications with low credit scores
+    $application: /applications[ creditScore < 600 ]
+  then
+    // Actions to take when the condition is met
+    $application.setApproved(false);  // Reject the application
+    $application.setExplanation("Automatically rejected due to low credit score");
+    System.out.println("Rejected application for " + $application.getApplicantName());
+end
+
+/**
+ * Rule: Medium Credit Score Review
+ * Purpose: Flag applications with moderate credit for manual review
+ * Criteria: Credit score between 600 and 699
+ */
+rule "Medium Credit Score Review"
+  when
+    // Pattern matching: Find applications with medium credit scores
+    // Note the comma between constraints acts as AND
+    $application: /applications[ creditScore >= 600, creditScore < 700 ]
+  then
+    // We don't explicitly approve or reject - these need human review
+    $application.setExplanation("Requires manual review - medium credit score");
+    System.out.println("Flagged for review: application for " + $application.getApplicantName());
+end
+```
+
+### Step 4: Create Your Rule Unit Class
+
+Now create the Java class that implements the rule unit:
+
+```java
+package ai.aletyx.examples.loan;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+import org.drools.ruleunits.api.DataSource;
+
+/**
+ * This Java class is the implementation of our Rule Unit.
+ * It must match the unit declaration in our DRL file and
+ * implement the RuleUnitData interface.
+ *
+ * Rule Units encapsulate the data sources that rules operate on.
+ * They provide clean separation between different sets of rules.
+ */
+public class LoanRules implements RuleUnitData {
+    // This data store will hold all loan applications
+    // The name must match what we declared in our DRL
+    private final DataStore<LoanApplication> applications;
+
+    /**
+     * Constructor initializes the data store.
+     * We use DataSource.createStore() to create a mutable collection
+     * that allows adding, removing, and updating facts.
+     */
+    public LoanRules() {
+        this.applications = DataSource.createStore();
+    }
+
+    /**
+     * Getter method for the applications data store.
+     * This method name must match the field name in the DRL unit declaration.
+     * The rules engine uses this getter to access the data store.
+     */
+    public DataStore<LoanApplication> getApplications() {
+        return applications;
+    }
+}
+```
+
+### Step 5: Create a Test Application
+
+Finally, create a simple Java application to test your rules:
+
+```java
+package ai.aletyx.examples.loan;
+
+import org.drools.ruleunits.api.RuleUnitInstance;
+import org.drools.ruleunits.api.RuleUnitProvider;
+
+/**
+ * This class demonstrates how to use the Drools rule engine
+ * to process loan applications using our rules.
+ */
+public class LoanRulesTest {
+
+    public static void main(String[] args) {
+        // Step 1: Create a new rule unit
+        // This holds our data stores that rules will operate on
+        LoanRules loanRules = new LoanRules();
+
+        // Step 2: Create a rule unit instance
+        // This is the entry point to the rules engine
+        RuleUnitInstance<LoanRules> instance = RuleUnitProvider.get()
+            .createRuleUnitInstance(loanRules);
+
+        try {
+            // Step 3: Create the facts (domain objects) that rules will evaluate
+            // Create three applications with different credit scores:
+            // - High credit score (750) - should be auto-approved
+            // - Low credit score (550) - should be auto-rejected
+            // - Medium credit score (650) - should require manual review
+            LoanApplication application1 = new LoanApplication("John Doe", 10000, 750);
+            LoanApplication application2 = new LoanApplication("Jane Smith", 15000, 550);
+            LoanApplication application3 = new LoanApplication("Bob Johnson", 5000, 650);
+
+            // Step 4: Insert the facts into the data store
+            // This makes them available to the rules engine
+            loanRules.getApplications().add(application1);
+            loanRules.getApplications().add(application2);
+            loanRules.getApplications().add(application3);
+
+            // Step 5: Execute all matching rules
+            // The fire() method activates the rule engine to evaluate
+            // all rules against the facts we've provided
+            instance.fire();
+
+            // Step 6: Check the results
+            // The facts have been modified by the rules that fired
+            System.out.println("\nFinal application statuses after rules execution:");
+            System.out.println(application1); // Should be approved
+            System.out.println(application2); // Should be rejected
+            System.out.println(application3); // Should need review
+        } finally {
+            // Step 7: Clean up resources
+            // Always dispose of the rule unit instance when done
+            // to free resources properly
+            instance.close();
+        }
+    }
+}
+```
+
+### Step 6: Run Your Application
+
+Execute the `LoanRulesTest` class. You should see output showing which rules fired and the final state of each loan application.
+
+## Basic Rule Structure
+
+Let's break down the structure of a DRL rule:
+
+```java
+rule "Rule Name"
+    // Optional attributes
+    when
+        // Conditions (Left Hand Side, LHS)
+    then
+        // Actions (Right Hand Side, RHS)
+end
+```
+
+### Components Explained:
+
+1. **`rule "Rule Name"`**: Every rule starts with the `rule` keyword followed by a unique name in double quotes.
+
+2. **Attributes**: Optional specifications that modify rule behavior, like priority (`salience`), activation timing (`date-effective`), etc.
+
+3. **`when`**: Marks the beginning of the conditions section.
+
+4. **Conditions**: Patterns that match facts in working memory. In our loan example:
+   ```
+   $application: /applications[ creditScore >= 700 ]
+   ```
+   This pattern:
+   - Binds the matching `LoanApplication` object to variable `$application`
+   - Searches the `applications` data source
+   - Matches only applications with a credit score of 700 or higher
+
+5. **`then`**: Marks the beginning of the actions section.
+
+6. **Actions**: Java code that executes when the conditions are met. In our example:
+   ```
+   $application.setApproved(true);
+   $application.setExplanation("Automatically approved due to high credit score");
+   ```
+   These actions modify the matched fact by setting properties.
+
+7. **`end`**: Marks the end of the rule.
+
+## Common Rule Patterns
+
+Let's look at some common rule patterns:
+
+### 1. Simple Constraint Matching
+
+```java
+rule "Simple Constraint"
+  when
+    $application: /applications[ amount < 5000 ]
+  then
+    $application.setCategory("Small Loan");
+end
+```
+
+### 2. Multiple Constraints
+
+```java
+rule "Multiple Constraints"
+  when
+    $application: /applications[ amount < 5000, creditScore > 700 ]
+  then
+    $application.setCategory("Low-Risk Small Loan");
+end
+```
+
+### 3. Multiple Patterns
+
+```java
+rule "Co-signer Rule"
+  when
+    $application: /applications[ creditScore < 600 ]
+    $cosigner: /cosigners[ applicationId == $application.id, creditScore > 700 ]
+  then
+    $application.setApproved(true);
+    $application.setExplanation("Approved with qualified co-signer");
+end
+```
+
+### 4. Nested Property Access
+
+```java
+rule "Address Verification"
+  when
+    $application: /applications[ address.state == "CA", address.yearsAtAddress > 2 ]
+  then
+    $application.setAddressVerified(true);
+end
+```
+
+## Common Use Cases for DRL
+
+DRL excels in a variety of business scenarios. Here are four important use cases where Drools really shines:
+
+### 1. Validation Rules
+
+Rules can validate data against business constraints and requirements.
+
+```java
+/**
+ * Validation Rule: Check for valid application data
+ * Purpose: Ensure applications contain reasonable values before processing
+ *
+ * In validation rules, we typically look for invalid conditions
+ * and flag the object accordingly.
+ */
+rule "Validate Loan Application"
+  when
+    // Find applications with invalid data
+    // The || operator works as a logical OR
+    $app: /applications[ amount <= 0 || creditScore <= 0 ]
+  then
+    // Mark the application as invalid with an explanation
+    $app.setValid(false);
+    $app.setExplanation("Invalid amount or credit score");
+
+    // We could also log the validation failure
+    System.out.println("Validation failed for: " + $app.getApplicantName());
+end
+```
+
+### 2. Classification Rules
+
+Rules can categorize data based on multiple criteria.
+
+```java
+/**
+ * Classification Rule: High Risk Application
+ * Purpose: Label applications that carry elevated risk
+ *
+ * Classification rules help categorize objects to enable
+ * different downstream processing.
+ */
+rule "Classify as High Risk"
+  when
+    // Find applications meeting high-risk criteria
+    $app: /applications[ creditScore < 600 || bankruptcies > 0 ]
+  then
+    // Set the risk category
+    $app.setRiskCategory("HIGH");
+
+    // We could also assign a numerical risk score
+    $app.setRiskScore(calculateRiskScore($app));
+end
+```
+
+### 3. Decision Making
+
+Rules can determine values and outcomes based on sophisticated criteria.
+
+```java
+/**
+ * Decision Rule: Interest Rate Determination
+ * Purpose: Calculate the appropriate interest rate for approved loans
+ *
+ * Decision rules evaluate conditions to generate a specific
+ * value or outcome.
+ */
+rule "Determine Interest Rate"
+  when
+    // Only apply to approved applications with excellent credit
+    $app: /applications[ approved == true, creditScore >= 750 ]
+  then
+    // Set a preferred interest rate for excellent credit
+    $app.setInterestRate(3.75);
+
+    // We could also calculate a rate based on multiple factors
+    // $app.setInterestRate(calculateBaseRate() -
+    //    (($app.getCreditScore() - 700) * 0.001));
+end
+```
+
+### 4. Workflow Routing
+
+Rules can determine the next steps in a business process.
+
+```java
+/**
+ * Workflow Rule: Senior Underwriter Assignment
+ * Purpose: Route high-value or higher-risk loans to senior staff
+ *
+ * Workflow rules direct items through appropriate business processes
+ * based on their characteristics.
+ */
+rule "Route to Senior Underwriter"
+  when
+    // Complex condition for high-value or moderate-value/higher-risk loans
+    $app: /applications[ amount > 500000 ||
+                         (creditScore < 650 && amount > 250000) ]
+  then
+    // Assign to the appropriate team and set priority
+    $app.setAssignedTeam("SENIOR_UNDERWRITING");
+    $app.setPriority("HIGH");
+
+    // We could also notify the team lead or update a workflow system
+    notifySeniorUnderwritingTeam($app);
+end
+```
+
+## Next Steps
+
+Now that you've created your first DRL rules and understand the basic patterns, you're ready to explore:
+
+- [DRL Building Blocks](/decisions/drl/building-blocks): Diving deeper into packages, imports, and rule units
+- [Working with Data in DRL](/core/decisions/drl/data-objects): Understanding fact types and data binding
+- [Advanced Condition Elements](/decisions/drl/conditions): Using exists, not, forall, and accumulate
+- [Rule Attributes](/decisions/drl/building-blocks#rule-attributes): Controlling rule execution with salience, no-loop, and more
+- [Decision Tables](/decisions/tables/overview): Spreadsheet-based rule authoring for business users
+- [Implementing Decision Services](/decisions/drl/decision-services): Best practices for production systems
+
+For hands-on practice with more complex scenarios, explore our [Rule Unit Guide](/core/tutorials/rule-unit-guide) and [Decision Tables Tutorial](/guides/drl/decision-tables).

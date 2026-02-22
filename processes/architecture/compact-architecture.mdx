@@ -1,0 +1,186 @@
+---
+title: "Adaptive Process Architecture: The Future of Stateful Workflows"
+description: "Adaptive Process Architecture represents a fundamental shift in how we design and deploy business automation solutions. This architecture delivers a cloud-native approach to process orchestration..."
+---
+## Introduction
+
+Adaptive Process Architecture represents a fundamental shift in how we design and deploy business automation solutions. This architecture delivers a cloud-native approach to process orchestration while addressing the challenges of modern deployments.
+
+Rather than forcing developers to choose between the simplicity of monolithic applications and the flexibility of microservices, Adaptive Process Architecture offers the best of both worlds. By intelligently co-locating related services within a unified deployment, this architecture provides enterprise-grade scalability with significantly reduced operational complexity.
+
+## Strategic Advantages
+
+### Optimal Balance of Scalability and Operational Simplicity
+
+While fully distributed architectures may offer theoretical maximum scalability, they introduce exponential complexity in deployment, monitoring, and troubleshooting. Adaptive Process Architecture strikes an optimal balance by intelligently co-locating related services while maintaining clean service boundaries. This approach delivers near-linear scalability with significantly reduced operational overhead.
+
+### Drastically Reduced Operational Complexity
+
+By carefully packaging contextually related services together, the operational overhead is drastically reduced. This makes sophisticated process orchestration accessible to organizations without requiring specialized microservice expertise, while still preserving the cloud-native benefits that modern enterprises demand.
+
+### Perfect Alignment with Domain-Driven Design (DDD)
+
+The architecture naturally supports bounded contexts where each business service encapsulates its complete functionality. This alignment with DDD principles ensures that your technical architecture mirrors your business domains, creating a unified language between technical and business stakeholders.
+
+### Intelligent Context Management
+
+Modern business processes require sophisticated context management across multiple components. Co-location dramatically reduces the challenges of distributed context coordination, allowing your processes to maintain rich contextual information without the complexity of distributed state synchronization.
+
+### Optimized Performance for Critical Paths
+
+Critical process operations execute through in-memory or local service calls rather than network calls, delivering significant performance improvements. This architecture ensures consistent sub-millisecond response times for critical operations while maintaining the flexibility of distributed communications where appropriate.
+
+## Core Components
+
+The following diagram illustrates the key components of Adaptive Process Architecture:
+
+![The different components of Adaptive Process Architecture](/images/core/processes/images/wf-compact-arch.png)
+
+The table below details the different components, indicating whether they are mandatory or optional:
+
+| Component             | Type               | Stateful (Adaptive Process Architecture) | Stateless (Straight Through Processing) |
+| --------------------- | ------------------ | -------------------------------- | --------------------------------------- |
+| Workflow models       | BPMN files         | Mandatory                        | Mandatory                               |
+| Workflow Engine       | System             | Mandatory                        | Mandatory                               |
+| Runtime               | System             | Mandatory                        | N/A                                     |
+| Data-Index            | Subsystem (add-on) | Optional                         | N/A                                     |
+| Data-Audit            | Subsystem (add-on) | Optional                         | N/A                                     |
+| Jobs Service          | Subsystem (add-on) | Mandatory                        | N/A                                     |
+| User Tasks            | Subsystem (add-on) | Mandatory                        | N/A                                     |
+| Storage (Persistence) | External system    | Mandatory                        | N/A                                     |
+
+### Process Definition Models
+
+The Business Process Model and Notation (BPMN) artifacts serve as the digital blueprint of your business processes. These models transcend traditional software specifications by providing a visual representation that both business and technical stakeholders can understand and refine.
+
+During compilation, the Kogito build chain transforms these models into highly optimized executable code, generating specialized components tailored to your specific process requirements. This bridge between business design and technical implementation enables true collaborative development where domain experts and engineers work with a unified understanding.
+
+### Orchestration Engine
+
+The intelligent core of your process applications, powered by the battle-tested jBPM engine reimagined for cloud-native environments. This sophisticated engine coordinates the flow of activities across your entire process landscape, making intelligent routing decisions and dynamically delegating specialized capabilities to purpose-built subsystems.
+
+The engine handles complex orchestration patterns including:
+- Parallel execution paths
+- Conditional branching logic
+- Event-driven flow control
+- Compensation handling
+
+All while maintaining transactional integrity across distributed components. Its modular architecture allows seamless interaction with other specialized subsystems like the Human Collaboration Framework for human-in-the-loop scenarios and the Temporal Event Coordinator for time-based orchestration.
+
+### Cloud-Native Runtime
+
+The Kogito-powered foundation provides essential enterprise capabilities required for mission-critical deployments. This runtime layer elegantly handles cross-cutting concerns including:
+- Transaction management
+- API exposure
+- Resource pooling
+- Security controls
+- Component lifecycle management
+
+Built on Quarkus, the runtime delivers exceptional startup performance and memory efficiency, whether deployed in containers, Kubernetes clusters, or serverless environments. The cloud-native design ensures your process applications can scale elastically to meet demand spikes while maintaining consistent performance characteristics.
+
+### Data Intelligence Layer (Data-Index)
+
+A sophisticated real-time snapshot of process state that enables immediate process visibility across your organization. This component receives incremental state change events from the Orchestration Engine and efficiently computes the current state by intelligently integrating these changes with existing contextual data.
+
+The Data Intelligence Layer exposes powerful GraphQL interfaces that allow both systems and users to query process data using flexible, domain-specific queries. This capability enables dashboards, monitoring tools, and advanced analytics to provide real-time insights into your processes without impacting operational performance.
+
+![Graphical view of the Data-Index subsystem](/images/core/processes/architecture/images/data-index.png)
+
+[Learn more about the Data Intelligence Layer](../data-index)
+
+### Process History Service (Data-Audit)
+
+A comprehensive temporal view of process execution that captures the complete evolution of process instances throughout their lifecycle. This component maintains an immutable record of every significant event, creating a trusted audit trail for compliance, analysis, and process improvement initiatives.
+
+The rich historical data enables authorized users to:
+- Replay processes from any point in time
+- Understand decision paths
+- Identify optimization opportunities
+
+Through its flexible GraphQL interface, the Process History Service supports complex historical queries that can reveal insights for performance analysis and business intelligence.
+
+[Learn more about the Process History Service](../data-audit)
+
+### Temporal Event Coordinator (Jobs Service)
+
+An intelligent scheduling system that manages the time-dependent aspects of your business processes. This component handles various temporal patterns including:
+- Timers
+- Deadlines
+- SLA enforcement
+- Scheduled notifications
+
+The Temporal Event Coordinator maintains execution guarantees even in distributed environments, ensuring time-based events trigger reliably despite infrastructure changes or restarts. It seamlessly integrates with other components to initiate time-based process actions or trigger escalation paths when activities exceed their expected duration.
+
+[Learn more about the Temporal Event Coordinator](/processes/components/job-service)
+
+### Human Collaboration Framework (User Tasks)
+
+A sophisticated system for seamlessly integrating human judgment and expertise into automated processes. This framework implements a comprehensive lifecycle for tasks requiring human input, approval, or decision-making.
+
+The Human Collaboration Framework manages:
+- Task assignment strategies
+- Permission controls
+- State transitions using a well-defined task lifecycle
+
+It supports rich interaction patterns including attachments, comments, forms, and notifications - creating an intuitive collaboration experience that connects human expertise with automated process execution.
+
+[Learn more about the Human Collaboration Framework](/processes/components/user-tasks)
+
+### Persistent Context Store (Storage)
+
+The resilient foundation that maintains process context across all components. This storage layer ensures process consistency and durability, protecting against data loss even during system failures or maintenance windows.
+
+Using a relational database, it maintains a consistent view of process state that can be accessed by all components within the architecture. This shared storage approach dramatically simplifies deployment while providing strong data consistency guarantees. The Temporal Event Coordinator and Data Intelligence layer work seamlessly with the Persistent Context Store to provide realtime process updates and interactions.
+
+[Learn more about Data & Persistence](/processes/components/data)
+
+## Architecture Principles
+
+The Adaptive Process Architecture is built upon several key architectural principles:
+
+### 1. Co-location of Related Services
+
+By placing related services together within the same deployment unit, we eliminate many of the complexities of distributed systems while retaining the benefits of modular architecture. This co-location principle dramatically reduces latency, simplifies transaction management, and eliminates many distributed system failure modes.
+
+### 2. Shared Persistence Layer
+
+The architecture leverages a shared database for state management across components, which eliminates the need for complex state synchronization mechanisms while providing a single source of truth for process data. This approach significantly simplifies the operational model while maintaining data consistency.
+
+### 3. Clean Component Boundaries
+
+Despite co-location, components maintain clean boundaries with well-defined interfaces. This design choice preserves modularity and allows components to evolve independently over time. It also maintains the option for future distribution if specific scalability requirements demand it.
+
+### 4. Cloud-Native by Design
+
+The architecture is built from the ground up for modern cloud environments, supporting containerization, orchestration, and observability. The design embraces principles like immutability, elasticity, and resilience while abstracting infrastructure complexity from business logic.
+
+### 5. Developer-First Experience
+
+A core principle of the architecture is its developer-friendly nature, with a focus on productivity, rapid iteration, and accessible learning curve. This approach allows development teams to focus on business logic rather than infrastructure concerns.
+
+## When to Use Adaptive Process Architecture
+
+The Adaptive Process Architecture is particularly well-suited for:
+
+- **Enterprise Business Processes**: Complex, long-running business processes that require human interaction, business rules, and system integration
+- **Stateful Microservices**: Services that need to maintain significant state across multiple interactions or time periods
+- **Human-in-the-Loop Workflows**: Processes where human judgment, approval, or input is required at specific steps
+- **Event-Driven Business Applications**: Applications that respond to events from multiple sources and maintain contextual state
+- **Regulated Environments**: Situations requiring comprehensive audit trails, process visibility, and compliance monitoring
+
+## Getting Started
+
+To quickly get started with Adaptive Process Architecture, see the [Getting Started Guide](../../../components/compact-architecture/getting-started) which covers:
+
+- Setting up a new project with the required dependencies
+- Configuring your application for development and production
+- Creating your first stateful workflow
+- Deploying your application to a cloud environment
+
+## See Also
+
+- [Key Components](../../../components/compact-architecture/key-components)
+- [Configuration Guide](../../../components/compact-architecture/configuration)
+- [Scaling & Performance](/platform/architecture/scaling)
+- [Best Practices](../../../components/compact-architecture/best-practices)
+- [Deployment Guide](../../../deployment/compact-architecture/basic-setup)

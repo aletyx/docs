@@ -1,0 +1,150 @@
+---
+title: "Visual Studio Code and Aletyx Developer Tools Configuration in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+---
+<Tabs>
+  <Tab title="Windows">
+
+    1. Download and install VSCode:
+        - Visit [Visual Studio Code](https://code.visualstudio.com/download)
+        - Download the Microsoft Windows installer (.exe)
+        - Run the installer and follow the installation wizard
+        - Ensure "Add to PATH" is selected during installation
+
+    2. Install Aletyx Developer Tools:
+        ```
+        1. Open VSCode
+        2. Press Ctrl + Shift + X to open Extensions
+        3. Search for "Aletyx"
+        4. Install the following extensions:
+           - BPMN Editor
+           - DMN Editor
+        ```
+
+    3. Configure Aletyx Developer Tools Settings:
+        ```
+        1. Press Ctrl + ,
+        2. Click "Open Settings (JSON)" icon in top-right
+        3. Add the following to settings.json:
+        ```
+        ```json
+        {
+            "workbench.editorAssociations": {
+                "*.dmn": "kieToolsDmnEditor"
+            },
+            "kogito.bpmn.runOnSave": "extension.kogito.silentlyGenerateSvgBpmn",
+            "kogito.bpmn.svgFilenameTemplate": "${fileBasenameNoExtension}.svg",
+            "kogito.bpmn.svgFilePath": "${workspaceFolder}/src/main/resources/META-INF/processSVG/"
+        }
+        ```
+  </Tab>
+  <Tab title="MacOS">
+
+    1. Install VSCode using Homebrew:
+        ```sh
+        brew install --cask visual-studio-code
+        ```
+
+        Alternatively, download from [Visual Studio Code](https://code.visualstudio.com/download)
+
+    2. Install Aletyx Developer Tools:
+        ```
+        1. Open VSCode
+        2. Press Cmd + Shift + X to open Extensions
+        3. Search for "Aletyx"
+        4. Install the following extensions:
+           - BPMN Editor
+           - DMN Editor
+        ```
+
+    3. Configure Settings:
+        ```
+        1. Press Cmd + ,
+        2. Click "Open Settings (JSON)" icon in top-right
+        3. Add the following to settings.json:
+        ```
+        ```json
+        {
+            "kogito.bpmn.svgFilenameTemplate": "${fileBasenameNoExtension}.svg",
+            "kogito.bpmn.svgFilePath": "${workspaceFolder}/src/main/resources/META-INF/processSVG/"
+        }
+        ```
+  </Tab>
+  <Tab title="Linux">
+
+    1. Install VSCode:
+
+        Ubuntu/Debian:
+        ```sh
+        sudo apt-get install wget gpg
+        wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+        sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+        sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+        sudo apt-get update
+        sudo apt-get install code
+        ```
+
+        Fedora/Red Hat Enterprise Linux:
+        ```sh
+        sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+        sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+        sudo dnf install code
+        ```
+
+    2. Install Aletyx Developer Tools:
+        ```
+        1. Open VSCode
+        2. Press Ctrl + Shift + X to open Extensions
+        3. Search for "Aletyx"
+        4. Install the following extensions:
+           - BPMN Editor
+           - DMN Editor
+        ```
+
+    3. Configure Settings:
+        ```
+        1. Press Ctrl + ,
+        2. Click "Open Settings (JSON)" icon in top-right
+        3. Add the following to settings.json:
+        ```
+        ```json
+        {
+            "kogito.bpmn.svgFilenameTemplate": "${fileBasenameNoExtension}.svg",
+            "kogito.bpmn.svgFilePath": "${workspaceFolder}/src/main/resources/META-INF/processSVG/"
+        }
+        ```
+  </Tab>
+</Tabs>
+## Troubleshooting
+
+<Tabs>
+  <Tab title="Windows">
+
+    - If VSCode doesn't appear in PATH:
+        1. Open System Properties (Win + R, type `sysdm.cpl`)
+        2. Click "Environment Variables"
+        3. Verify Path includes VSCode installation directory
+        4. Open new command prompt to test `code --version`
+  </Tab>
+  <Tab title="macOS">
+
+    - If `code` command is not available:
+        1. Open VSCode
+        2. Press Cmd + Shift + P
+        3. Type "shell command"
+        4. Select "Install 'code' command in PATH"
+  </Tab>
+  <Tab title="Linux">
+
+    - Package signing key issues:
+        ```sh
+        # Refresh Microsoft's GPG key
+        curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+        sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+        ```
+
+    - Missing dependencies:
+        ```sh
+        sudo apt-get install software-properties-common apt-transport-https wget
+        ```
+  </Tab>
+</Tabs>

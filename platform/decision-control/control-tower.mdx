@@ -1,0 +1,138 @@
+---
+title: "Aletyx Decision Control Tower"
+description: "Aletyx Decision Control Tower is a unified portal that provides centralized access to all Decision Control environments, governance workflows, and audit capabilities. It serves as the command..."
+---
+<Info title="Keystone Edition Only">
+Aletyx Decision Control Tower is exclusively available in the **Keystone Edition** of Decision Control. It provides enterprise-grade multi-environment governance and centralized management capabilities.
+</Info>
+## Overview
+
+Aletyx Decision Control Tower is a unified portal that provides centralized access to all Decision Control environments, governance workflows, and audit capabilities. It serves as the command center for managing decision models across your entire organization.
+
+![Diagram](/images/diagrams/decision-control/control-tower/index/flowchart-td-1.svg)
+
+## Key Capabilities
+
+### Unified Environment Access
+
+Access all Decision Control environments from a single interface:
+
+- **Development**: Author and experiment with decision models
+- **Test/UAT**: Validate models with business stakeholders
+- **Production**: Execute live decisions with full governance
+
+Each environment is isolated with its own database and configuration, ensuring production stability.
+
+### Governance Workflows
+
+Implement enterprise approval processes:
+
+- **Submit for Review**: Business analysts submit models for approval
+- **Multi-Step Approval**: Risk managers and compliance officers review
+- **Four-Eyes Principle**: No self-approval allowed
+- **Audit Trail**: Complete history of all actions
+
+### Role-Based Access Control
+
+Aletyx Decision Control Tower integrates with Keycloak for enterprise authentication:
+
+| Role | Capabilities | Environments |
+|------|-------------|--------------|
+| **Business Analyst** | Author, test, submit for review | DEV, TEST |
+| **Risk Manager** | Review risk aspects, approve/reject | DEV, TEST, PROD |
+| **Compliance Officer** | Review compliance, approve/reject | DEV, TEST, PROD |
+| **Operations Manager** | Deploy to production | DEV, TEST, PROD |
+| **Administrator** | Full access, configuration | All |
+
+### Model Discovery
+
+Discover and track models across all environments:
+
+- View all published models
+- Compare versions across environments
+- Track model lifecycle and history
+- Search and filter by name, unit, or status
+
+### Task Management
+
+Manage approval tasks efficiently:
+
+- View pending tasks assigned to your role
+- Approve or reject with comments
+- Track task history and status
+- Receive notifications for new assignments
+
+## Architecture
+
+Aletyx Decision Control Tower consists of three main components:
+
+### 1. Landing Page (Frontend)
+
+Static HTML/CSS/JavaScript application served via nginx:
+
+- No backend dependencies
+- OAuth2 PKCE authentication flow
+- Client-side role extraction from JWT tokens
+- Responsive design for desktop and mobile
+
+### 2. Governance API (Backend)
+
+Node.js Express application managing workflows:
+
+- Task creation and management
+- Approval workflow orchestration
+- Four-eyes principle enforcement
+- Audit trail logging
+- PostgreSQL database for persistence
+
+### 3. Keycloak Integration
+
+Enterprise SSO and access control:
+
+- Centralized authentication
+- Role-based authorization
+- Token-based API security
+- Session management
+
+## Use Cases
+
+### Enterprise Decision Management
+
+Organizations with multiple teams and environments benefit from:
+
+- Centralized visibility into all decision models
+- Standardized approval workflows
+- Audit compliance for regulators
+- Separation of duties
+
+### Regulated Industries
+
+Financial services, healthcare, and insurance organizations require:
+
+- Four-eyes principle for all production changes
+- Complete audit trails
+- Role-based access control
+- Environment isolation
+
+### Large Development Teams
+
+Teams with multiple business analysts and reviewers need:
+
+- Task assignment and tracking
+- Parallel workflow processing
+- Notification and alerts
+- Progress monitoring
+
+## Getting Started
+
+1. **Deploy Aletyx Decision Control Tower**: See [Setup Guide](/platform/decision-control/ct-setup)
+2. **Configure Environments**: See [Environment Management](/platform/decision-control/ct-environments)
+3. **Set Up Users and Roles**: Configure Keycloak realm
+4. **Create Governance Workflows**: See [Governance Workflow](/platform/decision-control/governance)
+
+## Next Steps
+
+- [Dashboard and Navigation](/platform/decision-control/ct-dashboard): Learn the Aletyx Decision Control Tower interface
+- [Environment Management](/platform/decision-control/ct-environments): Configure and manage environments
+- [Task Management](/platform/decision-control/ct-tasks): Work with approval tasks
+- [Setup Guide](/platform/decision-control/ct-setup): Deploy Aletyx Decision Control Tower in your Kubernetes cluster

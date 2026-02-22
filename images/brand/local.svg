@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <!-- Background -->
+  <rect width="300" height="300" fill="#FFFFFF" rx="15" ry="15" />
+  
+  <!-- Local Development Icon -->
+  <g transform="translate(50, 50)">
+    <!-- Laptop Base -->
+    <rect x="20" y="100" width="160" height="10" rx="2" ry="2" fill="#000000" />
+    <path d="M20,100 L0,120 L200,120 L180,100 Z" fill="#1a1a1a" />
+    
+    <!-- Laptop Screen -->
+    <rect x="30" y="30" width="140" height="70" rx="3" ry="3" fill="#FFFFFF" stroke="#000000" stroke-width="2" />
+    
+    <!-- Screen Content -->
+    <rect x="40" y="40" width="120" height="50" rx="2" ry="2" fill="#f8f9fa" stroke="#e0e0e0" stroke-width="1" />
+    
+    <!-- Code Lines -->
+    <line x1="50" y1="50" x2="100" y2="50" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="50" y1="60" x2="130" y2="60" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="50" y1="70" x2="90" y2="70" stroke="#1a1a1a" stroke-width="2" />
+    <line x1="50" y1="80" x2="110" y2="80" stroke="#1a1a1a" stroke-width="2" />
+    
+    <!-- Home/Local Symbol -->
+    <path d="M100,140 L60,170 L60,220 L140,220 L140,170 Z" fill="#FFFFFF" stroke="#000000" stroke-width="2" />
+    <path d="M100,140 L60,170 L140,170 L100,140" fill="#000000" />
+    
+    <!-- Door -->
+    <rect x="90" y="190" width="20" height="30" fill="#FFFFFF" stroke="#1a1a1a" stroke-width="1" />
+    <circle cx="105" cy="205" r="2" fill="#1a1a1a" />
+  </g>
+</svg>

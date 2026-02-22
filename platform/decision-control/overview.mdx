@@ -1,0 +1,224 @@
+---
+title: "Example: Check loan eligibility"
+description: "Aletyx Decision Control transforms how organizations manage business decisions. Instead of scattering business logic across code, spreadsheets, and documents, Decision Control provides a unified..."
+---
+<span class="product-badge">NEW RELEASE</span>
+  <span class="product-badge aws-badge">Available on AWS</span>
+  <h1>Aletyx Decision Control</h1>
+  <p class="product-tagline">Enterprise Decision Management • Lifecycle Governance • Natural Language Testing</p>
+  
+    [Get Started](setup-and-config/)
+    [Try on AWS](https://aws.amazon.com/marketplace/pp/prodview-weakaemafiris)
+    [Setup on AWS](aws/sandbox/)
+
+
+Aletyx Decision Control transforms how organizations manage business decisions. Instead of scattering business logic across code, spreadsheets, and documents, Decision Control provides a unified platform where business analysts and developers collaborate to author, test, and deploy decision models with enterprise-grade governance and full lifecycle management.
+
+## What is Decision Control?
+
+Decision Control is your complete solution for managing business decisions as reusable, testable, and governable assets. Think of it as version control and CI/CD for your business rules, but specifically designed for decision models used by business teams.
+
+**What You Can Do:**
+
+- **Author Decisions Visually**: Create decision models using industry-standard DMN notation in your browser with no coding required
+- **Test Naturally**: Ask questions in plain English to test your decisions and see instant results
+- **Deploy Safely**: Move models through Dev → Test → Production with automated governance checks
+- **Stay Compliant**: Built-in approval workflows ensure no one can approve their own changes (four-eyes principle)
+- **Integrate Easily**: REST APIs let any application execute your decisions in milliseconds
+- **Audit Everything**: See who changed what, when, and why, which is essential for regulatory compliance
+
+**Why Decision Control Matters:**
+
+Traditional decision management requires developers to hand-code business logic, making changes slow and error-prone. Decision Control lets business analysts directly model and test decisions, then deploy them through governed workflows, eliminating the developer bottleneck.
+
+## Core Capabilities
+
+### Work the Way You Think
+
+Decision Control adapts to how different roles work:
+
+**For Business Analysts:**
+
+- **Authoring UI**: Visual editor for creating decision tables and logic, similar to Excel but with validation built in
+- **Prompt UI**: Test your decisions by asking questions in plain English: "What happens if income is $85,000 and credit score is 720?"
+
+**For Compliance & Risk Teams:**
+
+- **Management UI**: See all models across environments, track who approved what, and ensure nothing goes to production without proper review
+
+**For Developers:**
+
+- **REST APIs**: Call any decision from your application with a simple HTTP request
+- **Standard DMN Format**: Models use open standards, not proprietary formats
+
+All three interfaces work together, and changes in one are immediately reflected in the others.
+
+### Choose Your Edition
+
+Decision Control grows with your organization. Each edition builds on the previous, adding capabilities as your needs expand:
+
+| Edition | What You Get | Best For |
+|---------|--------------|----------|
+| **Pioneer** | Core DMN authoring and execution | Teams starting with decision automation |
+| **Innovator** | + Natural language testing (Prompt UI) | Enabling business analysts to test without technical knowledge |
+| **Horizon** | + Multi-environment management + Governance workflows | Organizations requiring compliance and audit trails |
+| **Keystone** | + Advanced analytics + Priority support | Enterprise-wide decision management at scale |
+
+### Governed Progression Through Environments <span class="badge badge-keystone">Keystone</span> <span class="badge badge-horizon">Horizon</span>
+
+Like software code, your decision models move through standard environments with governance at each step:
+
+![Governance Flow](/images/decision-control/images/governance-flow.svg){ .no-lightbox }
+
+#### How It Works:
+
+1. **Development**: Business analysts create and test models freely
+2. **Test/UAT**: Subject matter experts validate with real scenarios
+3. **Production**: Only approved models serve live traffic
+
+Each environment is completely isolated, so you cannot accidentally break production while experimenting in dev.
+
+### Built-In Compliance
+
+Decision Control enforces governance without requiring manual oversight:
+
+**Four-Eyes Principle**: Sarah cannot approve her own model. Tom (with the right role) must review it. This separation of duties is automatic.
+
+**Flexible Workflows**:
+
+- **Standard Workflow**: Normal path with business + risk review
+- **Fast-Track**: Emergency changes with mandatory post-review
+- **Self-Service**: Pre-approved changes for low-risk updates
+
+**Complete History**: Every change is tracked:
+
+- **Who**: Which user made the change
+- **When**: Exact timestamp
+- **What**: Which model and version changed
+- **Why**: Required justification for the change
+
+Perfect for audits, compliance reviews, and understanding "what happened?"
+
+## Architecture at a Glance
+
+Decision Control is built on three major components that work together to deliver comprehensive decision management:
+
+![Decision Control Architecture](/images/decision-control/images/architecture-overview.svg){ .no-lightbox }
+
+**The Three Pillars:**
+
+1. **Aletyx Decision Control Tower**: Your central command center providing unified access to all Decision Control capabilities across environments
+2. **Decision Control Application**: The core DMN execution engine with integrated authoring, testing, and management interfaces (deployed per environment)
+3. **Governance API**: Orchestrates approval workflows, enforces compliance policies, and maintains complete audit trails
+
+All components run as containerized workloads in Kubernetes with enterprise-grade security and authentication via Keycloak.
+
+## Real-World Use Cases
+
+### Financial Services
+
+**The Challenge**: A regional bank has loan officers making approval decisions differently across 50 branches. Regulators require consistent, auditable decisions.
+
+**With Decision Control**:
+
+- Risk managers create standardized credit scoring models in the Authoring UI
+- Branch managers test scenarios using natural language: "30-year mortgage, $300k, income $85k, credit score 720"
+- Compliance approves models for production after review
+- All 50 branches use the same logic, with every decision fully auditable
+
+**Result**: Consistent decisions, faster approvals, and audit-ready documentation.
+
+### Healthcare
+
+**The Challenge**: Insurance company processes thousands of prior authorization requests. Clinical guidelines change frequently, causing delays and errors.
+
+**With Decision Control**:
+
+- Clinical staff model authorization rules based on current guidelines
+- Nurses test with real patient scenarios before deployment
+- Updates go live in days (not months) with full approval history
+- Every authorization decision is explainable and traceable
+
+**Result**: Faster patient care, reduced administrative burden, regulatory compliance.
+
+### Regulatory Compliance
+
+**The Challenge**: A financial services firm must prove to auditors that no unauthorized person changed production risk rules.
+
+**With Decision Control**:
+
+- Every rule change requires two-person approval (four-eyes principle)
+- Complete audit trail shows who changed what, when, and why
+- Auditors can see the exact model version used on any date
+- Reports demonstrate separation of duties and change control
+
+**Result**: Audit passes with minimal preparation, compliance team works efficiently.
+
+## How Decision Control Fits Your Architecture
+
+Decision Control is designed to work with your existing systems:
+
+**Call Decisions from Any Application**: Simple REST API calls execute decisions. Your Java, Python, Node.js, or .NET application sends JSON, gets a decision back in milliseconds.
+
+```bash
+# Example: Check loan eligibility
+curl -X POST https://decision-control.yourcompany.com/api/execute \
+  -H "Content-Type: application/json" \
+  -d '{"income": 85000, "creditScore": 720, "loanAmount": 250000}'
+```
+
+**Event-Driven Architecture**: Integrate with Kafka for high-volume, asynchronous decision processing, which is perfect for streaming data scenarios.
+
+**Use Your Existing Identity Provider**: Decision Control integrates with your SSO (Single Sign-On) via OAuth2/OIDC. Users log in with their corporate credentials.
+
+**Deploy Where You Need**: Runs in your Kubernetes cluster (on-premises or cloud). You control where your decision logic lives.
+
+See [Integration and APIs](/platform/decision-control/apis) for detailed integration patterns and examples.
+
+## Try It Now
+
+Want to see Decision Control in action right now? Get up and running in under 2 minutes:
+
+```bash
+docker run --rm --name decision-control \
+  -p 8080:8080 \
+  registry-innovator.aletyx.services/decision-control-innovator:1.1.7
+```
+
+Then open [http://localhost:8080](http://localhost:8080) to start creating decision models!
+
+For detailed Docker setup instructions including PostgreSQL, Docker Compose, and configuration options, see the [Docker Deployment section in Setup and Configuration](/platform/decision-control/setup#docker-deployment).
+
+---
+
+## Getting Started
+
+Choose your path based on your role:
+
+
+  
+    
+    <h3>For DevOps/Platform Teams</h3>
+    <p>Deploy Decision Control in your Kubernetes cluster. Learn how to deploy all components, configure authentication, and set up environments.</p>
+    [Setup and Configuration →](setup-and-config/)
+
+    <h3>For Business Analysts & Decision Modelers</h3>
+    <p>Create and test your first decision model. Learn how to author decision tables, test with natural language, and submit for approval.</p>
+    [Usage Scenarios →](usage-scenarios/)
+
+    <h3>For Compliance & Risk Managers</h3>
+    <p>Understand approval workflows and audit capabilities. Learn how approval processes work, the four-eyes principle, and audit trail features.</p>
+    [Governance Workflow →](governance-workflow/)
+
+    <h3>For Application Developers</h3>
+    <p>Integrate decision execution into your application. Learn how to call decisions via REST API and integrate with your systems.</p>
+    [Integration and APIs →](integration-and-apis/)
+
+
+## Learn More
+
+- **[Architecture](/platform/decision-control/architecture)**: Understand how Decision Control components work together
+- **[Control Tower](/platform/decision-control/control-tower)**: Unified portal for multi-environment governance (Keystone Edition)
+- **[Deploy on AWS](/platform/decision-control/aws)**: Get started with Decision Control on AWS Marketplace
+- **[FAQ & Troubleshooting](/platform/decision-control/faq)**: Common questions and solutions
+- **Contact Sales**: Ready to deploy? Contact Aletyx for licensing and support options

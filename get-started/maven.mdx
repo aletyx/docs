@@ -1,0 +1,203 @@
+---
+title: "Configuring Maven Settings for Aletyx Enterprise Build"
+description: "Maven configuration is a crucial step in setting up your development environment for the Aletyx Enterprise Build of Apache KIE. This guide explains how to properly configure your Maven settings to..."
+---
+Maven configuration is a crucial step in setting up your development environment for the Aletyx Enterprise Build of Apache KIE. This guide explains how to properly configure your Maven settings to access the Aletyx Maven repositories.
+
+## Understanding Maven Configuration
+
+Maven uses the `settings.xml` file to configure repository access, authentication, and other build settings. This file can be configured at two levels:
+
+- **Global level**: Located at `$MAVEN_HOME/conf/settings.xml`
+- **User level**: Located at `~/.m2/settings.xml` (recommended)
+
+The user-level configuration overrides the global configuration and is recommended for most developers.
+
+## Prerequisites
+
+- Apache Maven 3.9.7 or higher
+- JDK 17
+- Valid Aletyx subscription credentials
+
+<Info title="Don't have subscription credentials, reach out to us!">
+
+If you don't have subscription credentials, reach out to us [to get access](https://aletyx.ai/contact-us/).
+</Info>
+## Setting Up Your Maven Settings File
+
+### 1. Locate or Create Your Settings File
+
+First, check if you already have a user-level `settings.xml` file:
+
+```bash
+ls -la ~/.m2/settings.xml
+```
+
+If the file doesn't exist, you can create one:
+
+```bash
+mkdir -p ~/.m2
+touch ~/.m2/settings.xml
+```
+
+### 2. Configure the Aletyx Maven Repository
+
+Edit your `settings.xml` file with the following configuration:
+
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <!-- Server authentication for Aletyx Maven repository -->
+  <servers>
+    <server>
+      <id>maven-aletyx</id>
+      <configuration>
+        <httpHeaders>
+          <property>
+            <name>Authorization</name>
+            <value>Bearer YOUR_AUTH_TOKEN</value><!--(1)-->
+          </property>
+        </httpHeaders>
+      </configuration>
+    </server>
+  </servers>
+
+  <!-- Repository profiles -->
+  <profiles>
+    <profile>
+      <id>aletyx</id>
+
+      <!-- Main repositories -->
+      <repositories>
+        <repository>
+          <id>maven-aletyx</id>
+          <url>https://maven-innovator.aletyx.services</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+
+        <repository>
+          <id>central</id>
+          <url>https://repo.maven.apache.org/maven2</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+      </repositories>
+
+      <!-- Plugin repositories -->
+      <pluginRepositories>
+        <pluginRepository>
+          <id>maven-aletyx</id>
+          <url>https://maven-innovator.aletyx.services</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+        </pluginRepository>
+
+        <pluginRepository>
+          <id>central</id>
+          <url>https://repo.maven.apache.org/maven2</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>false</enabled></snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+
+  <!-- Activate the Aletyx profile -->
+  <activeProfiles>
+    <activeProfile>aletyx</activeProfile>
+	<activeProfile><!--(2)--></activeProfile>
+  </activeProfiles>
+</settings>
+```
+
+1. Replace `YOUR_AUTH_TOKEN` with your actual Aletyx authentication token provided with your subscription.
+2. Leave any active profiles you currently have
+
+### 3. Token Format
+
+Your authentication token is provided as part of your Aletyx subscription. If you don't have your token:
+
+The token format will be similar to: `email@domain.com|generatedTokenString`
+
+## Verifying Your Configuration
+
+To verify your Maven settings configuration is working correctly:
+
+```bash
+mvn help:effective-settings
+```
+
+This command displays the effective settings Maven will use, including the repository information and active profiles.
+
+To test repository access:
+
+```bash
+mvn dependency:get -Dartifact=org.kie.kogito:kogito-bom:10.1.0-aletyx:pom
+```
+
+If successful, Maven will download the BOM file from the Aletyx repository.
+
+## Common Issues and Troubleshooting
+
+### Authentication Failures
+
+If you see errors like:
+
+```log
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-dependency-plugin:3.1.2:get (default-cli) on project standalone-pom:
+Couldn't download artifact: Could not transfer artifact org.kie.kogito:kogito-bom:pom:10.1.0-aletyx from/to maven-aletyx (https://maven-innovator.aletyx.services):
+authentication failed for https://maven-innovator.aletyx.services/org/kie/kogito/kogito-bom/10.1.0-aletyx/aletyx-enterprise-build-bom-10.1.0-aletyx.pom, status: 401 Unauthorized
+```
+
+Check:
+- Your authentication token is correctly entered in the settings.xml file
+- Your subscription is active
+- The server ID in `<servers>` matches the repository ID in `<repositories>`
+
+### Network Issues
+
+If you're behind a corporate firewall or proxy, you may need additional configuration:
+
+```xml
+<proxies>
+  <proxy>
+    <id>corporate-proxy</id>
+    <active>true</active>
+    <protocol>http</protocol>
+    <host>proxy.company.com</host>
+    <port>8080</port>
+    <nonProxyHosts>localhost|127.0.0.1</nonProxyHosts>
+  </proxy>
+</proxies>
+```
+
+## Enterprise Configuration Considerations
+
+### Repository Manager Integration
+
+In enterprise environments, you may want to configure your organizational Maven repository manager (like Nexus or Artifactory) to proxy the Aletyx repository, rather than each developer configuring direct access.
+
+### Secure Token Storage
+
+For improved security in team environments, consider:
+
+1. Using encrypted passwords in Maven settings
+2. Using environment variables with the [Maven Environment Variables Extension](https://github.com/qaware/maven-environment-extension)
+3. Implementing a custom settings security solution for your organization
+
+## Next Steps
+
+Now that you've configured Maven, you're ready to:
+
+1. [Start a Project from start.aletyx.ai](../guides/getting-started/getting-start-aletyx)
+2. [Explore the Aletyx Playground](/get-started/playground-overview)
+3. [Learn about the core components](../core)
+
+## Related Information
+
+- [Maven Settings Reference](https://maven.apache.org/settings.html)
+- [Environment Setup](/get-started/environment-setup)
+- [Java Setup](/get-started/java)

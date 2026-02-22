@@ -1,0 +1,26 @@
+---
+title: "Embedded Subprocesses in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Embedded subprocesses, also known as inline subprocesses, are defined within the parent process and cannot exist independently. They are used to create a boundary around a set of actions, allowing..."
+---
+Embedded subprocesses, also known as inline subprocesses, are defined within the parent process and cannot exist independently. They are used to create a boundary around a set of actions, allowing for better organization and management of related tasks.
+
+ ![Embedded Subprocesses](/images/core/processes/advanced-bpmn/images/sub-embedded.png)
+
+## Key Characteristics
+
+- Scope: Contained entirely within the parent process.
+- Variable Access: Shares variables with the parent process. But you can declare scoped variables not visible outside to subprocess.
+- Boundaries: Allows for boundary events (e.g., message or timer events) to manage the subprocess as a whole, rather than attaching events to individual tasks.
+
+## When to Use
+
+Use embedded subprocesses when you need to group a set of related activities that are only relevant within the context of a specific parent process. They are ideal for scenarios where you want to apply boundary events to a collection of tasks collectively.
+
+## Example
+
+Consider a Loan Application Compliance Processing workflow where there is a time limit for compliance review, involving multiple steps such as:
+
+- Risk Evaluation
+- Compliance Check
+
+By encapsulating these steps within an embedded subprocess, you can attach a boundary timer event to enforce the compliance time limit. This ensures that if the entire compliance process takes too long, appropriate actions—such as sending notifications or canceling the loan application—can be triggered.

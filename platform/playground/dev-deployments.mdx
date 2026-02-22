@@ -1,0 +1,79 @@
+---
+title: "Development Deployment Guide"
+description: "Development deployments provide a way to quickly test your decision and process assets in a containerized environment. These deployments are strictly for development purposes only and are not..."
+---
+## Overview
+
+Development deployments provide a way to quickly test your decision and process assets in a containerized environment. These deployments are **strictly for development purposes only** and are not intended to replace proper production releases. With a Development Deployment, when Aletyx Playground builds the image to be deployed it creates a unique service to be called, this does not replace any existing services that are deployed. This is a great way to test champion challenger of a model, but not meant to replace the actual deployment of the model to the higher environments.
+
+!!!danger " **Important**: Dev deployments are intended for early stage development and testing only. They should never be used in production environments. The images released are heavily restricted in their capabilities with how the containers operate."
+
+## Deployment Options
+
+### Standard Deployment Image
+
+The standard deployment image is the recommended option for most development scenarios.
+
+**Advantages**:
+- Preconfigured for immediate use
+- Predictable behavior
+- Simpler overall setup
+- Automatically updated with the latest fixes and improvements
+
+### Custom Deployment Image
+
+Custom deployment images should only be used when there are specific organizational requirements that prevent the use of standard images.
+
+**Advantages**:
+- Use organization-approved base images
+- Configure asset extraction location (DMN/BPMN)
+- Control environment setup
+
+**Usage**:
+```bash
+# Example of creating a custom deployment image
+FROM my-org/approved-base:latest
+
+# Additional configuration here
+# ...
+
+# Required components
+COPY --from=aletyx/dev-deployment:latest /deployment /deployment
+```
+
+## ⚠️ Key Limitations ⚠️
+
+**Warning**: Dev deployments have significant limitations compared to production deployments.
+
+1. **Command Override**: The Sandbox environment overwrites your CMD instruction with `dev-deployment-upload-service`
+
+2. **Health Endpoint Requirement**: All custom images must implement a `/q/health` endpoint for proper integration
+
+3. **Limited Flexibility**: Dev deployments offer less flexibility than typical container deployments:
+
+    - Limited configuration options
+    - Restricted networking capabilities
+    - Fixed logging behavior
+
+4. **Use Case Restrictions**: Custom deployment images primarily benefit organizations with specific image compliance requirements, but are generally discouraged
+
+5. **Development Only**: These deployments are designed for quick testing during development:
+
+    - Not suitable for performance testing
+    - Not designed for high availability
+    - Not intended for production use
+
+## Best Practices
+
+- For most development scenarios, use the standard deployment image for a simpler experience
+- Only use custom deployment images when absolutely necessary due to organizational policies
+- Always follow up development testing with proper release testing
+- Document any custom modifications thoroughly
+- Test your deployment in an isolated environment before sharing with team members
+
+
+## Conclusion
+
+Dev deployments provide a valuable tool for early testing but have intentional limitations. For robust, production-ready deployments, use the full release process and proper deployment pipeline.
+
+Remember that dev deployments are for **development purposes only** and should be treated as a temporary testing solution, not a production deployment option.

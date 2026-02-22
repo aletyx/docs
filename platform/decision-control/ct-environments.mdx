@@ -1,0 +1,219 @@
+---
+title: "Environment Management"
+description: "Aletyx Decision Control Tower provides centralized access to all Decision Control environments with environment-specific configuration and governance."
+---
+Aletyx Decision Control Tower provides centralized access to all Decision Control environments with environment-specific configuration and governance.
+
+## Environment Overview
+
+Standard enterprise deployment includes three environments:
+
+| Environment | Purpose | Access Level | Features |
+|-------------|---------|--------------|----------|
+| **Development** | Model authoring and testing | Business Analysts | Full authoring UI |
+| **Test/UAT** | Stakeholder validation | BA + Risk Managers | Authoring + Governance |
+| **Production** | Live decision execution | Operations + Compliance | Execution only |
+
+## Environment Configuration
+
+Each environment is configured in Aletyx Decision Control Tower via the `config.json` file:
+
+```json
+{
+  "environments": {
+    "dev": {
+      "name": "Development",
+      "baseUrl": "https://decision-control-dev.your-domain.com",
+      "enabled": true,
+      "features": {
+        "submitForReview": true,
+        "governance": true
+      },
+      "apis": {
+        "units": "/api/runtime/units",
+        "versions": "/api/runtime/units/{unitId}/versions",
+        "models": "/api/runtime/units/{unitId}/versions/{versionId}/models",
+        "health": "/actuator/health"
+      }
+    },
+    "test": {
+      "name": "Testing",
+      "baseUrl": "https://decision-control-test.your-domain.com",
+      "enabled": true,
+      "features": {
+        "submitForReview": true,
+        "governance": true
+      }
+    },
+    "prod": {
+      "name": "Production",
+      "baseUrl": "https://decision-control-prod.your-domain.com",
+      "enabled": true,
+      "features": {
+        "submitForReview": false,
+        "governance": true
+      }
+    }
+  }
+}
+```
+
+## Environment Isolation
+
+Each environment runs as an independent Decision Control instance:
+
+### Separate Databases
+
+Each environment has its own PostgreSQL database:
+
+- `decision_control_dev`
+- `decision_control_test`
+- `decision_control_prod`
+
+This ensures:
+
+- No cross-environment data contamination
+- Independent scaling
+- Separate backup and recovery
+
+### Separate Deployments
+
+Each environment is a distinct Kubernetes deployment:
+
+```yaml
+# decision-control-dev
+replicas: 1
+resources:
+  requests:
+    cpu: 2000m
+    memory: 2Gi
+
+# decision-control-prod
+replicas: 3  # Higher availability
+resources:
+  requests:
+    cpu: 4000m
+    memory: 4Gi
+```
+
+## Accessing Environments
+
+### From Aletyx Decision Control Tower
+
+Click "Launch" on any environment card to open it in a new tab. Your authentication is shared via SSO.
+
+### Direct Access
+
+Access environments directly via their URLs:
+
+- Dev: `https://decision-control-dev.your-domain.com`
+- Test: `https://decision-control-test.your-domain.com`
+- Prod: `https://decision-control-prod.your-domain.com`
+
+## Environment Health Monitoring
+
+Aletyx Decision Control Tower monitors environment health via the `/actuator/health` endpoint:
+
+### Health Status
+
+- **Healthy**: All components operational
+- **Degraded**: Some components with issues
+- **Unhealthy**: Environment unavailable
+
+### Monitored Components
+
+- Application status
+- Database connectivity
+- Memory usage
+- Response time
+
+## Model Promotion
+
+Models are promoted between environments through governance workflows:
+
+![Diagram](/images/diagrams/decision-control/control-tower/environments/flowchart-lr-1.svg)
+
+### Promotion Process
+
+1. **Publish in DEV**: Business analyst publishes model version
+2. **Submit for Review**: Request promotion to TEST
+3. **Risk Review**: Risk manager approves/rejects
+4. **Deploy to TEST**: Model copied to TEST environment
+5. **UAT Testing**: Stakeholders validate model
+6. **Compliance Review**: Compliance officer approves for PROD
+7. **Deploy to PROD**: Model copied to PROD environment
+
+### Version Tracking
+
+Aletyx Decision Control Tower tracks which versions are deployed where:
+
+| Unit | Model | DEV | TEST | PROD |
+|------|-------|-----|------|------|
+| acme/loan-approval | credit-decision | 2.0.0 | 1.5.0 | 1.0.0 |
+| Sample.dmn | risk-assessment | 3.1.0 | 3.0.0 | 2.5.0 |
+
+## Environment-Specific Features
+
+### Development
+
+- Full authoring UI enabled
+- Prompt UI for testing
+- Management UI for monitoring
+- Submit for review capability
+
+### Test/UAT
+
+- Authoring UI (for fixes)
+- Prompt UI for validation
+- Management UI for monitoring
+- Submit for production capability
+
+### Production
+
+- Authoring UI hidden (read-only)
+- Prompt UI for verification
+- Management UI for monitoring
+- No submit capability (final destination)
+
+## Adding New Environments
+
+To add a new environment:
+
+1. Deploy Decision Control instance
+2. Configure PostgreSQL database
+3. Update `config.json` with environment details
+4. Restart Aletyx Decision Control Tower to pick up changes
+
+```json
+"staging": {
+  "name": "Staging",
+  "baseUrl": "https://decision-control-staging.your-domain.com",
+  "enabled": true,
+  "features": {
+    "submitForReview": true,
+    "governance": true
+  }
+}
+```
+
+## Troubleshooting
+
+### Environment Not Accessible
+
+1. Check environment health in Aletyx Decision Control Tower
+2. Verify Kubernetes pods are running
+3. Check ingress configuration
+4. Verify TLS certificates
+
+### Model Not Appearing
+
+1. Ensure model is published (not draft)
+2. Check correct environment selected
+3. Verify API connectivity
+4. Clear browser cache
+
+## Next Steps
+
+- [Task Management](/platform/decision-control/ct-tasks): Manage approval workflows
+- [Dashboard](/platform/decision-control/ct-dashboard): Monitor all environments
+- [Setup Guide](/platform/decision-control/ct-setup): Deploy new environments

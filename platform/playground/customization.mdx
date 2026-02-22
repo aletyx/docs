@@ -1,0 +1,364 @@
+---
+title: "Customizing Aletyx Playground"
+description: "Aletyx Playground can be fully customized to meet your organization's branding, security, and development needs. This guide covers all aspects of Aletyx Playground customization, from simple..."
+---
+Aletyx Playground can be fully customized to meet your organization's branding, security, and development needs. This guide covers all aspects of Aletyx Playground customization, from simple branding changes to advanced features like custom accelerators and authentication providers.
+
+## Environment Setup
+
+Before customizing Aletyx Playground, ensure you have:
+
+- Docker and Docker Compose installed
+- Git installed
+- Access to a container registry (if deploying to Kubernetes/OpenShift)
+- Basic understanding of environment variables and container concepts
+
+## Basic Customization
+
+### Branding
+
+Aletyx Playground supports complete branding customization, allowing you to replace the default logos with your organization's own branding.
+
+#### Logo Customization
+
+You can replace the following files in the container image:
+
+| Component    | File Path                                                    | Specifications          |
+| ------------ | ------------------------------------------------------------ | ----------------------- |
+| Header Logo  | `/kie-sandbox/app/images/app_logo_rgb_fullcolor_reverse.svg` | Fixed height of 38px    |
+| Colored Logo | `/kie-sandbox/app/images/app_logo_rgb_fullcolor_default.svg` | Fixed height of 80px    |
+| Favicon      | `/kie-sandbox/app/favicon.svg`                               | Standard favicon format |
+
+<Note title="Note">
+
+Favicon is an `.svg` not a `.ico`
+</Note>
+#### Example Dockerfile for Branding
+
+```docker
+FROM aletyx/playground:latest
+
+# Copy your custom logo files
+COPY branding/your-logo-light.svg /var/www/html/images/app_logo_rgb_fullcolor_reverse.svg
+COPY branding/your-logo-dark.svg /var/www/html/images/app_logo_rgb_fullcolor_default.svg
+COPY branding/your-favicon.svg /var/www/html/favicon.svg
+```
+
+### Application Name
+
+You can change the application name displayed throughout the UI using an environment variable:
+
+```bash
+KIE_SANDBOX_APP_NAME="Your Company Automation Studio"
+```
+
+### Container-Based Deployment
+
+The easiest way to set up a customized Aletyx Playground is using Docker Compose:
+
+1. Create a directory for your customization project:
+
+    ```bash
+    mkdir custom-sandbox && cd custom-sandbox
+    ```
+
+2. Create a `docker-compose.yml` file (see the [Docker Compose Example](#docker-compose-example) section)
+
+3. Create a `Dockerfile` for your customizations (see the [Containerfile/Dockerfile Example](#containerfiledockerfile-example) section)
+
+4. Create a `branding` directory with your custom logos
+
+5. Start the environment:
+
+    ```bash
+    docker compose up --build -d
+    ```
+
+## Advanced Customization
+
+### Services Configuration
+
+Aletyx Playground relies on two additional services for full functionality:
+
+1. **Extended Services**: Provides validation and runtime capabilities for your models
+2. **CORS Proxy**: Facilitates communication with external Git providers
+
+Configure these services using environment variables:
+
+```bash
+# Extended Services URL (validation and runtime)
+KIE_SANDBOX_EXTENDED_SERVICES_URL=http://extended-services:21345
+
+# CORS Proxy URL (Git provider communication)
+KIE_SANDBOX_CORS_PROXY_URL=http://cors-proxy:7081
+```
+
+### Git Provider Integration
+
+Aletyx Playground can integrate with various Git providers. Configure them using the `KIE_SANDBOX_AUTH_PROVIDERS` environment variable:
+
+```bash
+KIE_SANDBOX_AUTH_PROVIDERS='[
+  {
+    "id": "github_dot_com",
+    "domain": "github.com",
+    "supportedGitRemoteDomains": ["github.com", "gist.github.com"],
+    "type": "github",
+    "name": "GitHub",
+    "enabled": true,
+    "iconPath": "",
+    "group": "git"
+  },
+  {
+    "id": "gitlab_dot_com",
+    "domain": "gitlab.com",
+    "supportedGitRemoteDomains": ["gitlab.com"],
+    "type": "gitlab",
+    "name": "GitLab",
+    "enabled": true,
+    "iconPath": "",
+    "group": "git"
+  }
+]'
+```
+
+#### GitHub Enterprise Integration
+
+For GitHub Enterprise instances, add a custom provider:
+
+```bash
+KIE_SANDBOX_AUTH_PROVIDERS='[
+  {
+    "id": "github_enterprise",
+    "domain": "github.mycompany.com",
+    "supportedGitRemoteDomains": ["github.mycompany.com"],
+    "type": "github",
+    "name": "GitHub Enterprise",
+    "enabled": true,
+    "iconPath": "",
+    "group": "git"
+  }
+]'
+```
+
+### Accelerators
+
+Accelerators allow you to quickly bootstrap projects with predefined configurations. Configure accelerators using the `KIE_SANDBOX_ACCELERATORS` environment variable. For more information on Accelerators see the [Accelerators](/platform/playground/accelerators) and [Accelerators Advanced](advanced-accelerators) in the documentation on how to build them. To incorporate these into your build you will customize like the example:
+
+```bash
+KIE_SANDBOX_ACCELERATORS='[
+  {
+    "name": "Quarkus Process",
+    "iconUrl": "https://raw.githubusercontent.com/yourorg/accelerators/main/quarkus-logo.png",
+    "gitRepositoryUrl": "https://github.com/yourorg/process-accelerator.git",
+    "gitRepositoryGitRef": "main",
+    "dmnDestinationFolder": "src/main/resources/dmn",
+    "bpmnDestinationFolder": "src/main/resources/bpmn",
+    "otherFilesDestinationFolder": "src/main/resources/others"
+  },
+  {
+    "name": "Quarkus Decision",
+    "iconUrl": "https://raw.githubusercontent.com/yourorg/accelerators/main/dmn-logo.png",
+    "gitRepositoryUrl": "https://github.com/yourorg/decision-accelerator.git",
+    "gitRepositoryGitRef": "main",
+    "dmnDestinationFolder": "src/main/resources/dmn",
+    "bpmnDestinationFolder": "src/main/resources/bpmn",
+    "otherFilesDestinationFolder": "src/main/resources/others"
+  }
+]'
+```
+
+#### Accelerator Structure
+
+Each accelerator is a Git repository containing:
+
+- Project structure (src directories, pom.xml, etc.)
+- Configuration files
+- Deployment scripts
+- README and documentation
+
+Each accelerator definition requires:
+
+- **name**: Display name shown in the UI
+- **iconUrl**: URL to an icon image (displayed in the UI)
+- **gitRepositoryUrl**: URL to the Git repository
+- **gitRepositoryGitRef**: Branch, tag, or commit to use
+- **dmnDestinationFolder**: Where DMN files should be placed
+- **bpmnDestinationFolder**: Where BPMN files should be placed
+- **otherFilesDestinationFolder**: Where other files should be placed
+
+### Custom Commit Messages
+
+You can enforce custom commit messages and validate them against your organization's standards:
+
+```bash
+# Require custom commit messages (instead of default ones)
+KIE_SANDBOX_REQUIRE_CUSTOM_COMMIT_MESSAGE=true
+
+# Optional: URL to a validation service
+KIE_SANDBOX_CUSTOM_COMMIT_MESSAGE_VALIDATION_SERVICE_URL=http://commit-validator:8090/validate
+```
+
+#### Commit Message Validation Service
+
+If you implement a validation service, it should:
+
+1. Accept POST requests with the commit message in the body
+2. Return JSON with:
+   - `result`: Boolean (true for valid, false for invalid)
+   - `reasons`: Array of strings explaining validation failures
+
+Example response for an invalid message:
+
+```json
+{
+  "result": false,
+  "reasons": [
+    "Message exceeds the maximum length of 72 characters.",
+    "Missing required prefix with issue number in the format: my-issue#123."
+  ]
+}
+```
+
+### Editors Configuration
+
+You can enable or disable specific editors using the `KIE_SANDBOX_EDITORS` environment variable:
+
+```bash
+KIE_SANDBOX_EDITORS='[
+  {
+    "extension": "bpmn",
+    "filePathGlob": "**/*.bpmn?(2)",
+    "editor": {
+      "resourcesPathPrefix": "gwt-editors/bpmn",
+      "path": "bpmn-envelope.html",
+    },
+    "card": {
+      "title": "Workflow",
+      "description": "BPMN files are used to generate business workflows.",
+    },
+  },
+  {
+    "extension": "dmn",
+    "filePathGlob": "**/*.dmn",
+    "editor": {
+      "resourcesPathPrefix": "gwt-editors/dmn",
+      "path": "dmn-envelope.html",
+    },
+    "card": {
+      "title": "Decision",
+      "description": "DMN files are used to generate decision models",
+    },
+  }
+]'
+```
+
+## Docker Compose Example
+
+Here's a complete Docker Compose example with all customization options:
+
+```yaml
+version: '3.8'
+
+services:
+  kie_sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9090:8080"
+    environment:
+      - KIE_SANDBOX_APP_NAME=Aletyx Enterprise Build of Kogito and Drools
+      - KIE_SANDBOX_EXTENDED_SERVICES_URL=http://extended_services:21345
+      - KIE_SANDBOX_CORS_PROXY_URL=http://cors:7081
+      - KIE_SANDBOX_REQUIRE_CUSTOM_COMMIT_MESSAGE=false
+      - KIE_SANDBOX_AUTH_PROVIDERS=[{"id":"github_dot_com","domain":"github.com","supportedGitRemoteDomains":["github.com","gist.github.com"],"type":"github","name":"GitHub","enabled":true,"iconPath":"","group":"git"},{"id":"gitlab_dot_com","domain":"gitlab.com","supportedGitRemoteDomains":["gitlab.com"],"type":"gitlab","name":"GitLab","enabled":true,"iconPath":"","group":"git"},{"id":"bitbucket_dot_org","domain":"bitbucket.org","supportedGitRemoteDomains":["bitbucket.org"],"type":"bitbucket","name":"Bitbucket","enabled":true,"iconPath":"","group":"git"},{"id":"kubernetes","name":"Kubernetes","type":"kubernetes","group":"cloud","enabled":true,"iconPath":""},{"id":"openshift","name":"OpenShift","type":"openshift","group":"cloud","enabled":true,"iconPath":""}]
+      - KIE_SANDBOX_ACCELERATORS=[{"name":"Process Kogito jBPM Profile","iconUrl":"https://raw.githubusercontent.com/yourorg/sandbox-accelerators/main/quarkus-logo.png","gitRepositoryUrl":"https://github.com/yourorg/sandbox-accelerators.git","gitRepositoryGitRef":"main","dmnDestinationFolder":"src/main/resources/dmn","bpmnDestinationFolder":"src/main/resources/bpmn","otherFilesDestinationFolder":"src/main/resources/others"},{"name":"Decisions Kogito jBPM Profile","iconUrl":"https://raw.githubusercontent.com/yourorg/sandbox-accelerators/main/quarkus-logo.png","gitRepositoryUrl":"https://github.com/yourorg/sandbox-accelerators.git","gitRepositoryGitRef":"dmn","dmnDestinationFolder":"src/main/resources/dmn","bpmnDestinationFolder":"src/main/resources/bpmn","otherFilesDestinationFolder":"src/main/resources/others"}]
+      - KIE_SANDBOX_DEV_DEPLOYMENT_DMN_FORM_WEBAPP_IMAGE_URL=apache/incubator-kie-sandbox-dev-deployment-dmn-form-webapp:latest
+      - KIE_SANDBOX_DEV_DEPLOYMENT_QUARKUS_BLANK_APP_IMAGE_URL=apache/incubator-kie-sandbox-dev-deployment-quarkus-blank-app:10.0.0
+    depends_on:
+      - extended_services
+      - cors
+
+  extended_services:
+    image: quay.io/aletyx/extended-services:latest
+    ports:
+      - "21345:21345"
+
+  cors:
+    image: quay.io/aletyx/cors:latest
+    ports:
+      - "7081:7081"
+```
+
+## Containerfile/Dockerfile Example
+
+```dockerfile
+FROM apache/incubator-kie-sandbox-webapp:latest
+
+# Copy your custom logo files
+COPY branding/your-logo-light.svg /var/www/html/images/app_logo_rgb_fullcolor_reverse.svg
+COPY branding/your-logo-dark.svg /var/www/html/images/app_logo_rgb_fullcolor_default.svg
+COPY branding/your-favicon.svg /var/www/html/favicon.svg
+
+# Set environment variables
+ENV KIE_SANDBOX_APP_NAME="Aletyx Enterprise Build of Kogito and Drools"
+ENV KIE_SANDBOX_EXTENDED_SERVICES_URL="http://extended_services:21345"
+ENV KIE_SANDBOX_CORS_PROXY_URL="http://cors:7081"
+```
+
+## Troubleshooting
+
+Common issues and solutions:
+
+### Service Connectivity
+
+If Aletyx Playground cannot connect to Extended Services or CORS Proxy:
+
+1. Check that the services are running:
+   ```bash
+   docker compose ps
+   ```
+
+2. Verify network connectivity:
+
+   ```bash
+   docker compose exec kie_sandbox ping extended_services
+   docker compose exec kie_sandbox ping cors
+   ```
+
+3. Check service logs:
+
+   ```bash
+   docker compose logs extended_services
+   docker compose logs cors
+   ```
+
+### Git Provider Authentication
+
+If authentication with Git providers fails:
+
+1. Verify CORS Proxy is running correctly
+2. Check the browser console for CORS-related errors
+3. Ensure the Git provider configuration is correct in `KIE_SANDBOX_AUTH_PROVIDERS`
+
+### Accelerator Issues
+
+If accelerators don't appear or fail to apply:
+
+1. Verify the Git repository URLs are accessible
+2. Check the correct branch/tag is specified in `gitRepositoryGitRef`
+3. Ensure the JSON syntax in `KIE_SANDBOX_ACCELERATORS` is valid
+
+### Browser Cache Issues
+
+If changes don't appear after updating the container:
+
+1. Clear browser cache
+2. Try incognito/private browsing mode
+3. Rebuild and restart the container:
+
+   ```bash
+   docker compose down
+   docker compose up --build -d
+   ```

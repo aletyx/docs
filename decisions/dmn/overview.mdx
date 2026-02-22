@@ -1,0 +1,157 @@
+---
+title: "Decision Model and Notation (DMN)"
+description: "Decision Model and Notation (DMN) is an industry standard created by the Object Management Group (OMG) for modeling and executing business decisions. DMN offers a unified way to document,..."
+---
+## Introduction to DMN
+
+Decision Model and Notation (DMN) is an industry standard created by the Object Management Group (OMG) for modeling and executing business decisions. DMN offers a unified way to document, implement, and execute decision logic that is both accessible to business stakeholders and precise enough for technical implementation.
+
+The Aletyx Enterprise Build of Kogito and Drools provides robust support for DMN models, allowing you to design and execute complex decision services with minimal coding, reducing the gap between business requirements and technical implementation.
+
+<Note title="Think of DMN like BPMN, but the Object Management Group (OMG) learned from it!">
+
+DMN is to decision management what BPMN is to process management - a standard notation that bridges the gap between business and IT. Where OMG improved with DMN over BPMN is the inclusion of an execution specification within it, so compliance is beyond just a few icons represented in an XML file now!
+</Note>
+### Key Benefits of DMN
+
+DMN offers several advantages for organizations implementing decision automation:
+
+- **Business-IT Alignment**: A shared language between business and IT stakeholders
+- **Reduced Maintenance Costs**: Clear separation of decision logic from application code
+- **Increased Agility**: Quick updates to decision logic without code changes
+- **Enhanced Transparency**: Visual documentation of decision requirements and logic
+- **Standardized Exchange**: Vendor-neutral format for decision models
+- **Executable Models**: Direct execution of business-defined models
+
+## DMN Support in Aletyx Enterprise Build of Kogito and Drools
+
+The Aletyx Enterprise Build of Kogito and Drools provides comprehensive support for DMN:
+
+- **Runtime Support**: Full support for DMN 1.1, 1.2, 1.3, 1.4 and 1.5 models at conformance level 3
+- **Design Support**: Visual DMN 1.5 modeling at conformance level 3 through the Aletyx Playground
+- **Integration**: Seamless integration with Java applications and business processes
+- **Extensions**: Enhanced functionality beyond the DMN specification
+
+## DMN Conformance Levels
+
+The DMN standard defines three incremental levels of conformance:
+
+| Level       | Description             | Features                               |
+| ----------- | ----------------------- | -------------------------------------- |
+| **Level 1** | Basic decision modeling | DRDs, decision tables (non-executable) |
+| **Level 2** | Executable expressions  | S-FEEL support, executable models      |
+| **Level 3** | Full DMN support        | FEEL, all boxed expressions, execution |
+
+The Aletyx Enterprise Build of Kogito and Drools supports DMN at conformance level 3, providing the most complete implementation of the DMN standard.
+
+## Core Components of DMN
+
+DMN consists of two key aspects:
+
+1. **Decision Requirements Diagram (DRD)**: A graphical notation showing the relationships between decisions, input data, knowledge sources, and business knowledge models.
+
+2. **Decision Logic**: Precise specifications of how decisions are made, expressed in decision tables, FEEL expressions, and other boxed expressions.
+
+### Decision Requirements Diagram (DRD)
+
+A DRD visualizes the structure of a decision model using the following components:
+
+| Component                | Description                                          | Notation                       |
+| ------------------------ | ---------------------------------------------------- | ------------------------------ |
+| Decision                 | Determines an output based on defined decision logic | Rectangle                      |
+| Input Data               | Information used in decisions                        | Oval                           |
+| Business Knowledge Model | Reusable decision logic                              | Rectangle with clipped corners |
+| Knowledge Source         | Authority for a decision                             | Rectangle with wavy bottom     |
+| Decision Service         | Reusable decision component                          | Rectangle with two sections    |
+
+These components are connected by:
+
+- **Information Requirements**: Showing data dependencies (solid arrows)
+- **Knowledge Requirements**: Showing logic dependencies (dashed arrows)
+- **Authority Requirements**: Showing authoritative sources (dotted arrows)
+
+### Decision Logic
+
+DMN provides multiple formats for expressing decision logic:
+
+- **Decision Tables**: Structured, tabular representations of rules
+- **Literal Expressions**: Simple FEEL expressions
+- **Contexts**: Name-value pairs for organizing logic
+- **Relations**: Structured data in tabular format
+- **Functions**: Reusable business logic
+- **Invocations**: Calls to business knowledge models
+- **Lists**: Collections of values
+
+## Friendly Enough Expression Language (FEEL)
+
+FEEL is the expression language defined by the DMN standard for writing decision logic. Key characteristics include:
+
+- **Business-friendly syntax**: Designed to be readable by non-programmers
+- **Strongly typed**: Supports numbers, strings, dates, and complex structures
+- **Side-effect free**: Expressions cannot modify external state
+- **Built-in functions**: Rich library of functions for common operations
+
+FEEL allows business analysts to define precise decision logic without requiring programming skills.
+
+## DMN Hit Policies
+
+Hit policies define how decision tables handle matching rules. The Aletyx Enterprise Build of Kogito and Drools supports all DMN hit policies:
+
+- **Unique (U)**: Only one rule can match
+- **Any (A)**: Multiple rules can match if they have the same output
+- **Priority (P)**: Highest priority output is selected
+- **First (F)**: First matching rule is used
+- **Collect (C)**: Aggregates outputs from all matching rules
+  - **C+**: Sum of values
+  - **C#**: Count of matches
+  - **C<**: Minimum value
+  - **C>**: Maximum value
+  - **C**: List of all matches
+
+## Getting Started with DMN
+
+The easiest way to start with DMN is to use the Aletyx Playground:
+
+1. Access the [Aletyx Playground](https://playground.aletyx.ai)
+2. Create a new DMN model
+3. Define your decision requirements diagram
+4. Implement decision logic
+5. Test your decision model
+
+For a step-by-step tutorial, see the [DMN Introduction](/guides/dmn/intro) guide.
+
+## Integration Patterns
+
+DMN models in Aletyx Enterprise Build of Kogito and Drools can be integrated in several ways:
+
+- **Embedded in Applications**: Direct invocation from Java applications
+- **Decision Services**: Exposed as RESTful services
+- **BPMN Process Integration**: Used within business processes
+- **Event-Driven Architecture**: Responding to business events
+
+## Common Use Cases
+
+DMN is particularly effective for:
+
+- **Financial Services**: Loan approvals, insurance underwriting, pricing
+- **Healthcare**: Treatment protocols, eligibility assessments
+- **Regulatory Compliance**: Policy enforcement, validation rules
+- **Customer Management**: Segmentation, next-best-action determination
+- **Operational Decisions**: Resource allocation, service level determination
+
+## Advanced DMN Features
+
+The Aletyx Enterprise Build of Kogito and Drools provides several extensions to the DMN standard:
+
+- **Decision Services**: Encapsulated, reusable decision logic
+- **Included Models**: Incorporating external DMN and PMML models
+- **Multiple Diagrams**: Managing complex models through nested diagrams
+- **DMN Testing**: Comprehensive testing capabilities
+- **Custom Data Types**: Creating domain-specific data structures
+
+## Where to Go Next
+
+- [Core DMN Concepts](/decisions/dmn/concepts): Learn about the fundamental concepts of DMN
+- [FEEL Handbook](/decisions/dmn/feel-handbook): Explore the FEEL expression language
+- [DMN Listeners](/decisions/dmn/listeners): Understand how to monitor and extend DMN execution
+- [DMN Introduction Tutorial](/guides/dmn/intro): Follow a step-by-step tutorial

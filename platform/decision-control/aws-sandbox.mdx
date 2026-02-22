@@ -1,0 +1,947 @@
+---
+title: "Deploy on AWS Marketplace"
+description: "The Decision Control Sandbox provides a rapid way to test and evaluate Decision Control in your AWS environment with auto-login enabled for ease of use."
+---
+## Overview
+
+The Decision Control Sandbox provides a rapid way to test and evaluate Decision Control in your AWS environment with auto-login enabled for ease of use.
+
+## Before You Start
+
+You'll need:
+
+1. **Your public IP address**  
+   Run: 
+    ```bash
+    curl https://checkip.amazonaws.com
+    ```
+
+    Note the result. You'll use it as `YOUR_IP/32` (example: `203.0.113.45/32`)
+
+2. **AWS Account** with an active AWS Marketplace subscription
+
+3. **EC2 Key Pair** in your target region (for SSH access)
+
+4. **VPC with a public subnet** (the subnet must have an internet gateway route)
+
+---
+
+## Security Model
+
+Decision Control Sandbox uses **auto-login** for fast evaluation. There is no login screen.
+
+**Security is enforced at the network layer.** The CloudFormation template creates a Security Group that restricts access to the IP range you specify. Only traffic from your allowed CIDR can reach the application.
+
+This means:
+
+- You **must** restrict access to your IP or corporate network
+- You **should not** use `0.0.0.0/0` (this would expose the application to the public internet with no authentication) exposing what your sandbox has published to it. Using AWS Security Groups allows the restriction of the instance to be tied to an individual or corporate network
+
+When properly configured with IP restriction, this is equivalent to VPN-level access control.
+
+---
+
+## Deployment Steps
+
+### Step 1: Subscribe on AWS Marketplace
+
+1. Go to [AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-xdljdweji7eee)
+2. Click **Continue to Subscribe**
+3. Accept terms and wait 1 to 2 minutes for processing
+4. Click **Continue to Configuration**
+5. Select your AWS region
+6. Click **Continue to Launch**
+7. Under "Choose Action", select **Launch CloudFormation**
+8. Click **Launch**
+
+### Step 2: Configure CloudFormation Parameters
+
+**Stack name**: Choose something descriptive (example: `decision-control-sandbox`)
+
+**Instance Configuration**:
+
+| Parameter | Value |
+|-----------|-------|
+| InstanceType | `t3.large` (recommended) or `t3.medium` for lighter workloads |
+| KeyName | Select your existing EC2 key pair |
+| AmiId | Leave empty (uses Marketplace AMI) |
+
+**Network Configuration**:
+
+| Parameter | Value |
+|-----------|-------|
+| VpcId | Select your VPC |
+| SubnetId | Select a **public** subnet |
+| AllowedCidr | Your IP with /32 suffix (example: `203.0.113.45/32`) |
+
+**Domain Configuration**:
+
+| Parameter | Value |
+|-----------|-------|
+| CustomDomain | Leave empty |
+| HostedZoneName | Leave empty |
+
+Custom domain configuration is supported in the Sandbox edition, and can be used 
+
+### Step 3: Launch the Stack
+
+1. Click **Next** (Stack options page, no changes needed)
+2. Click **Next** (Review page)
+3. Check the acknowledgment box for IAM resource creation
+4. Click **Submit**
+
+### Step 4: Wait for Completion
+
+Monitor the **Events** tab. The stack typically completes in 3 to 5 minutes.
+
+When you see **CREATE_COMPLETE**, proceed to the next step.
+
+### Step 5: Access the Application
+
+1. Click on your stack name
+2. Go to the **Outputs** tab
+3. Find the **ApplicationUrl** output
+4. Click the URL or copy it to your browser
+
+**Application will be available at**:
+
+- **IP-Restricted (No Custom Domain)**: `http://ec2-XX-XX-XX-XX.compute-1.amazonaws.com` (the public DNS address using HTTP)
+- **Custom Domain (No SSL)**: `http://your-domain.example.com` (HTTP protocol)
+- **Custom Domain (With SSL)**: `https://your-domain.example.com` (HTTPS protocol, after manual SSL setup)
+
+The application takes 2 to 3 minutes to fully start after stack creation. If you see a connection error, wait and refresh.
+
+**You're in.** No login required. Start creating DMN models and publish to consume easily!
+
+---
+
+## Outputs Reference
+
+After deployment, the Outputs tab provides:
+
+| Output | Description |
+|--------|-------------|
+| ApplicationUrl | Web interface URL |
+| PublicIp | EC2 instance public IP |
+| SSHCommand | Pre-formatted SSH command for terminal access |
+| InstanceId | EC2 instance ID |
+
+---
+
+## Retrieving Credentials
+
+Credentials are generated during deployment and stored on the instance. You may need them for API access.
+
+**Via SSH**:
+
+```bash
+# Use the SSHCommand from Outputs, then run:
+sudo cat /etc/aletyx/credentials
+```
+
+**Via AWS Systems Manager** (no SSH key required):
+
+```bash
+aws ssm start-session --target INSTANCE_ID
+sudo cat /etc/aletyx/credentials
+```
+
+---
+
+## Common Configurations
+
+### Single User (Recommended for POC)
+
+```yaml
+AllowedCidr: YOUR_IP/32
+```
+
+Restricts access to your current IP address only.
+
+### Team Access (Corporate Network)
+
+```yaml
+AllowedCidr: 10.0.0.0/8
+```
+
+Allows access from your corporate network range. Adjust the CIDR to match your network.
+
+### Adding Additional IPs After Deployment
+
+If you need to grant access to additional users:
+
+```bash
+# Get the Security Group ID from CloudFormation Resources tab
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-XXXXX \
+  --protocol tcp \
+  --port 80 \
+  --cidr ADDITIONAL_IP/32 \
+  --region us-east-1
+```
+
+---
+
+## Domain and SSL Options
+
+### Three Supported Options
+
+#### Option 1: IP-Restricted HTTP (Default URL)
+
+```yaml
+AllowedCidr: YOUR_IP/32
+CustomDomain: ""
+HostedZoneName: ""
+```
+
+**Application will be available at**: `http://ec2-XX-XX-XX-XX.compute-1.amazonaws.com`
+(The public DNS address assigned to your EC2 instance, accessible via HTTP protocol)
+
+**Best For**: Quick POCs, testing, demos via screen share
+
+#### Option 2: IP-Restricted HTTP (Custom Domain)
+
+```yaml
+AllowedCidr: YOUR_IP/32
+CustomDomain: demo
+HostedZoneName: example.com
+```
+
+**Application will be available at**: `http://demo.example.com`
+(Your custom domain, accessible via HTTP protocol)
+
+**Best For**: Easier-to-remember URLs, still IP-restricted and secure
+
+#### Option 3: IP-Restricted HTTPS (Two-Step SSL Setup)
+
+This is the SAFE way to add SSL to your sandbox deployment.
+
+**Step 1: Deploy with IP restriction + custom domain**
+
+```yaml
+AllowedCidr: YOUR_IP/32
+CustomDomain: demo
+HostedZoneName: example.com
+```
+
+**Step 2: Manually add SSL when ready**
+
+1. Get your security group ID from CloudFormation Resources tab
+
+2. Temporarily open port 80 for Let's Encrypt validation (2-3 minutes):
+
+    ```bash
+    # Get security group ID from CloudFormation
+    SG_ID="sg-xxxxx"
+
+    # Temporarily open port 80
+    aws ec2 authorize-security-group-ingress \
+      --group-id $SG_ID \
+      --protocol tcp \
+      --port 80 \
+      --cidr 0.0.0.0/0 \
+      --region us-east-1
+    ```
+
+3. Run SSL setup on the instance:
+
+    ```bash
+    # SSH to your instance
+    ssh -i your-key.pem ec2-user@demo.example.com
+
+    # Run SSL setup script
+    sudo /usr/local/bin/ssl-setup.sh demo.example.com admin@example.com 8080
+    ```
+
+4. IMMEDIATELY close port 80 after SSL completes:
+
+    ```bash
+    # Close port 80
+    aws ec2 revoke-security-group-ingress \
+      --group-id $SG_ID \
+      --protocol tcp \
+      --port 80 \
+      --cidr 0.0.0.0/0 \
+      --region us-east-1
+    ```
+
+**Application will be available at**: `https://demo.example.com`
+(Your custom domain, accessible via HTTPS protocol with SSL certificate)
+
+**Why This IS Safe**:
+
+- You control exactly when port 80 is open (2-3 minutes)
+- You're watching it happen
+- You close it immediately after SSL completes
+- Minimal risk window
+
+### What's NOT Supported
+
+**Automatic SSL during stack creation** (AllowedCidr=0.0.0.0/0 in template)
+
+This is NOT safe because:
+
+- Port 80 would be open to the world during stack creation
+- Application is accessible without authentication
+- 5-10 minute window where anyone can access
+- High security risk
+
+---
+
+## Troubleshooting
+
+### Cannot connect to application
+
+1. **Wait for startup**: The application needs 2 to 3 minutes after stack creation
+2. **Check your IP**: Run `curl https://checkip.amazonaws.com` and compare with your AllowedCidr
+3. **Verify subnet is public**: The subnet must have a route to an internet gateway
+
+### IP address changed
+
+If your IP changed, update the Security Group:
+
+```bash
+# Remove old rule
+aws ec2 revoke-security-group-ingress \
+  --group-id sg-XXXXX \
+  --protocol tcp \
+  --port 80 \
+  --cidr OLD_IP/32 \
+  --region us-east-1
+
+# Add new rule
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-XXXXX \
+  --protocol tcp \
+  --port 80 \
+  --cidr NEW_IP/32 \
+  --region us-east-1
+```
+
+### Cannot SSH to instance
+
+1. Check key permissions: `chmod 400 ~/.ssh/your-key.pem`
+2. Verify AllowedCidr includes your IP (SSH uses port 22, which is also restricted)
+3. Alternative: Use AWS Systems Manager Session Manager instead
+
+### Application shows errors
+
+Check application logs:
+
+```bash
+sudo tail -f /var/log/aletyx-sandbox.log
+```
+
+Restart the application:
+
+```bash
+sudo systemctl restart aletyx-sandbox
+```
+
+### Stack creation failed
+
+Check the Events tab for the specific error. Common causes:
+
+- **Subnet not public**: Use a subnet with an internet gateway route
+- **Invalid CIDR format**: Must include the prefix (example: `203.0.113.45/32`, not just the IP)
+- **Key pair not found**: Create or select an existing EC2 key pair in your region
+
+---
+
+## Cleanup
+
+When you're finished testing, delete the stack to stop charges.
+
+**Via Console**:
+
+1. Go to CloudFormation
+2. Select your stack
+3. Click **Delete**
+4. Confirm
+
+**Via CLI**:
+
+```bash
+aws cloudformation delete-stack \
+  --stack-name decision-control-sandbox \
+  --region us-east-1
+```
+
+Deletion removes the EC2 instance, Security Group, and IAM resources. Your VPC, subnets, and key pairs are not affected.
+
+**Important**: Any data on the instance will be lost. Export your DMN models before deleting if you want to keep them. This can be done by synchronizing with your Git repository since Decision Control can use your Git token to synchronize with your repository or with downloading the respective resources from the `Authoring` perspective.
+
+---
+
+## Cost Reference
+
+Sandbox billing is hourly. You pay only while the instance is running.
+
+**To minimize cost**: Delete the stack when not in use. Redeployment takes only 5 minutes. Just note that the models that are deployed will need to be redeployed since the persistence in Decision Control Sandbox is ephemeral.
+
+---
+
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| Check application status | `sudo systemctl status aletyx-sandbox` |
+| View application logs | `sudo tail -f /var/log/aletyx-sandbox.log` |
+| Restart application | `sudo systemctl restart aletyx-sandbox` |
+| Get credentials | `sudo cat /etc/aletyx/credentials` |
+| Check your current IP | `curl https://checkip.amazonaws.com` |
+
+---
+
+## Support
+
+- **Documentation**: [https://docs.aletyx.ai](https://docs.aletyx.ai)
+- **Support Email**: aws-support@aletyx.ai
+- **Support Portal**: [https://my.aletyx.ai](https://my.aletyx.ai)
+
+Sandbox edition includes community support with typical 24 to 48 hour response times.
+
+
+## Important: Security Model
+
+### The Sandbox Has NO Login Screen
+
+**Key Facts**:
+
+- Auto-login enabled for fast POC/testing without password management
+- NO authentication - No username/password required to access
+- MUST be IP-restricted - Security enforced ONLY by AWS Security Group
+- Cannot be exposed to public internet - Would allow anyone full access
+
+### How Security Works
+
+Security is enforced at the AWS network layer (Security Group), NOT at the application layer.
+
+```
+Internet → AWS Security Group → EC2 Instance → Application
+           ↑
+           Only allowed IPs can pass through
+```
+
+When you set `AllowedCidr: YOUR_IP/32`:
+
+- AWS Security Group blocks ALL traffic except from your IP
+- Your IP is the ONLY one that can reach the application
+- This is secure (equivalent to VPN access)
+
+## Quick Start (5 Minutes)
+
+### Prerequisites
+
+1. **Your IP address**: Run `curl https://checkip.amazonaws.com`
+2. **AWS Account** with marketplace subscription
+3. **EC2 Key Pair** for SSH access
+4. **VPC with public subnet**
+
+### Deploy Now
+
+1. Subscribe to product in AWS Marketplace
+2. Launch with CloudFormation
+3. Use these parameters:
+   ```yaml
+   InstanceType: t3.large
+   KeyName: YOUR-KEY-NAME
+   VpcId: YOUR-VPC-ID
+   SubnetId: YOUR-SUBNET-ID           # must be public
+   AllowedCidr: YOUR_IP/32             # YOUR IP FROM STEP 1
+   CustomDomain: ""                    # leave empty
+   HostedZoneName: ""                  # leave empty
+   ```
+4. Wait 5 minutes for stack to complete
+5. Go to "Outputs" tab → Click "ApplicationUrl"
+6. Done!
+
+## Step-by-Step Deployment
+
+### Step 1: Get Your IP Address
+
+**From command line**:
+```bash
+curl https://checkip.amazonaws.com
+```
+
+**Note it down** - you'll need it as `YOUR_IP/32` (e.g., `203.0.113.45/32`)
+
+### Step 2: Subscribe to AWS Marketplace
+
+1. Go to [AWS Marketplace](https://aws.amazon.com/marketplace)
+2. Search "Aletyx Decision Control Sandbox"
+3. Click **"Continue to Subscribe"**
+4. Accept terms (wait 1-2 minutes for processing)
+5. Click **"Continue to Configuration"**
+6. Select your region (e.g., `us-east-1`)
+7. Click **"Continue to Launch"**
+8. Select **"Launch CloudFormation"**
+9. Click **"Launch"**
+
+### Step 3: CloudFormation Parameters
+
+**Stack Name**: `aletyx-sandbox-dev` (or your preferred name)
+
+**Instance Configuration**:
+```yaml
+InstanceType: t3.large              # recommended - or t3.medium for smaller
+KeyName: your-keypair-name          # select your existing EC2 key pair
+AmiId: ""                           # leave empty - uses marketplace AMI
+```
+
+**Network Configuration**:
+```yaml
+VpcId: vpc-xxxxx                    # your VPC
+SubnetId: subnet-xxxxx              # MUST be public subnet with internet access
+AllowedCidr: YOUR_IP/32             # example: 203.0.113.45/32
+```
+
+**Custom Domain (Leave Empty)**:
+```yaml
+CustomDomain: ""                    # leave empty
+HostedZoneName: ""                  # leave empty
+```
+
+**IMPORTANT**: Do NOT fill in CustomDomain or HostedZoneName. SSL is not supported for sandbox.
+
+### Step 4: Review and Launch
+
+1. Click **"Next"** (Configure stack options - no changes needed)
+2. Click **"Next"** (Review)
+3. Check **"I acknowledge that AWS CloudFormation might create IAM resources"**
+4. Click **"Submit"**
+
+### Step 5: Wait for Completion
+
+Watch the Events tab:
+
+- You'll see resources being created
+- Wait for status: **CREATE_COMPLETE** (takes 3-5 minutes)
+
+**If it fails**:
+
+- Check "Events" tab for error message
+- Common issues: Subnet not public, AllowedCidr format wrong
+
+### Step 6: Access the Application
+
+Once status is **CREATE_COMPLETE**:
+
+1. Click on your stack name
+2. Go to **"Outputs"** tab
+3. You'll see these outputs:
+
+| Output Key | Description | Example |
+|------------|-------------|---------|
+| **ApplicationUrl** | Click this to access app | `http://ec2-3-80-154-224.compute-1.amazonaws.com` |
+| PublicIp | Instance IP address | `3.80.154.224` |
+| SSHCommand | SSH command to connect | `ssh -i ~/.ssh/key.pem ec2-user@...` |
+| DeploymentStatus | Success message | "Stack deployed successfully..." |
+
+4. **Click ApplicationUrl** (or copy/paste into browser)
+
+**Application will be available at**:
+
+- **IP-Restricted (No Custom Domain)**: `http://ec2-XX-XX-XX-XX.compute-1.amazonaws.com` (public DNS address with HTTP)
+- **Custom Domain (No SSL)**: `http://your-domain.example.com` (HTTP protocol)
+- **Custom Domain (With SSL)**: `https://your-domain.example.com` (HTTPS protocol, after manual SSL setup)
+
+5. **Wait 2-3 minutes** after stack creation for application to start
+6. **You're in!** No login needed - auto-login enabled
+
+## Getting Your Credentials
+
+Even though there's no login screen, credentials are generated and stored on the instance. You might need them for API access or other features.
+
+### Method 1: SSH to Get Credentials
+
+```bash
+# 1. Copy SSHCommand from CloudFormation Outputs
+ssh -i ~/.ssh/your-key.pem ec2-user@ec2-XX-XX-XX-XX.compute-1.amazonaws.com
+
+# 2. Get credentials
+sudo cat /etc/aletyx/credentials
+
+# Output:
+# Admin Username: admin
+# Admin Password: RandomGeneratedPassword123!
+```
+
+### Method 2: Systems Manager (No SSH Key Needed)
+
+```bash
+# Get instance ID from CloudFormation Outputs
+INSTANCE_ID="i-0abc123..."
+
+# Connect via Session Manager
+aws ssm start-session --target $INSTANCE_ID
+
+# Get credentials
+sudo cat /etc/aletyx/credentials
+```
+
+## Supported Deployments
+
+### Option 1: Personal IP-Restricted (RECOMMENDED)
+
+```yaml
+AllowedCidr: YOUR_IP/32          # Your IP only
+CustomDomain: ""                 # Leave empty
+HostedZoneName: ""               # Leave empty
+```
+
+**Best For**:
+
+- Personal POC/testing
+- Development
+- Customer demos (via screen share)
+
+**Security**: Maximum
+
+### Option 2: Corporate Network
+
+```yaml
+AllowedCidr: 10.0.0.0/8          # Your corporate CIDR
+CustomDomain: ""                 # Leave empty
+HostedZoneName: ""               # Leave empty
+```
+
+**Best For**:
+
+- Team testing
+- Internal demos
+- Multi-user POCs
+
+**Security**: High
+
+**Common Corporate CIDRs**:
+
+- `10.0.0.0/8` - Large networks
+- `172.16.0.0/12` - Medium networks
+- `192.168.0.0/16` - Small networks
+
+## NOT SUPPORTED Deployments
+
+### Public Access (Open to Internet)
+
+```yaml
+# DO NOT USE
+AllowedCidr: 0.0.0.0/0          # DANGEROUS - exposes to public
+CustomDomain: ""
+HostedZoneName: ""
+```
+
+**Why NOT**:
+
+- No login screen - anyone can access
+- Full application access to public internet
+- High security risk
+- Data exposure
+
+### Custom Domain with SSL
+
+```yaml
+# DO NOT USE
+AllowedCidr: 0.0.0.0/0          # DANGEROUS
+CustomDomain: demo
+HostedZoneName: example.com
+```
+
+**Why NOT**:
+
+- Let's Encrypt requires port 80 open to world
+- No login screen - application fully accessible during setup
+- 3-5 minute window where anyone can access
+- High security risk
+
+## Demo Scenarios
+
+### Scenario: Show to a Customer
+
+**Solution: Screen Share (BEST APPROACH)**
+
+1. **Deploy IP-restricted** (YOUR_IP/32)
+2. **Access the application** from your computer
+3. **Share your screen** during the demo (Zoom, Teams, etc.)
+4. **Customer sees everything** - full application functionality
+5. **Zero security risk** - application never exposed to public
+
+This is professional and secure!
+
+### Scenario: Customer Wants Hands-On Access
+
+**Option A: Customer's IP or Network**
+
+```yaml
+# Add customer's IP
+AllowedCidr: 198.51.100.45/32
+
+# OR customer's corporate network
+AllowedCidr: 198.51.100.0/24
+```
+
+**Option B: Multiple IPs (via Security Group)**
+
+After deployment, add multiple IP rules:
+
+```bash
+# Get security group ID from CloudFormation Resources
+SG_ID="sg-xxxxx"
+
+# Add customer's IP
+aws ec2 authorize-security-group-ingress \
+  --group-id $SG_ID \
+  --protocol tcp \
+  --port 80 \
+  --cidr 198.51.100.45/32 \
+  --region us-east-1
+```
+
+### Scenario: Need HTTPS URL
+
+**Answer**: Sandbox doesn't support SSL securely (no login screen).
+
+**Better Approach**:
+
+- Use IP-restricted HTTP (it's secure when restricted!)
+- Screen share for demos
+- For production with SSL, use Production edition (has authentication)
+
+## Troubleshooting
+
+### Can't Access Application
+
+**Symptom**: Browser times out or "cannot connect"
+
+**Solutions**:
+
+1. **Wait 2-3 minutes** after stack creation for app to start
+
+2. **Check your IP hasn't changed**:
+   ```bash
+   # Get your current IP
+   curl https://checkip.amazonaws.com
+
+   # Compare with AllowedCidr parameter in CloudFormation
+   ```
+
+3. **Update Security Group** if IP changed:
+   ```bash
+   # Get your new IP
+   NEW_IP=$(curl -s https://checkip.amazonaws.com)
+
+   # Get security group ID from CloudFormation Resources tab
+   SG_ID="sg-xxxxx"
+
+   # Remove old rule (use old IP)
+   aws ec2 revoke-security-group-ingress \
+     --group-id $SG_ID \
+     --protocol tcp \
+     --port 80 \
+     --cidr OLD_IP/32 \
+     --region us-east-1
+
+   # Add new rule
+   aws ec2 authorize-security-group-ingress \
+     --group-id $SG_ID \
+     --protocol tcp \
+     --port 80 \
+     --cidr ${NEW_IP}/32 \
+     --region us-east-1
+   ```
+
+4. **Check application status** via SSH:
+   ```bash
+   ssh -i your-key.pem ec2-user@ec2-XX-XX-XX-XX.compute-1.amazonaws.com
+   sudo systemctl status aletyx-sandbox
+
+   # Should show: "active (running)"
+   ```
+
+### Can't SSH to Instance
+
+**Symptom**: "Permission denied" or "Connection timed out"
+
+**Solutions**:
+
+1. **Fix key permissions**:
+   ```bash
+   chmod 400 ~/.ssh/your-key.pem
+   ```
+
+2. **Check AllowedCidr allows port 22**:
+   - CloudFormation parameter `AllowedCidr` must include your IP
+   - Security group allows SSH (port 22) from your CIDR
+
+3. **Use Systems Manager instead** (no key needed):
+   ```bash
+   aws ssm start-session --target i-INSTANCE-ID
+   ```
+
+### Application Shows Error Page
+
+**Symptom**: Application loads but shows error
+
+**Check logs via SSH**:
+
+```bash
+# Application logs
+sudo tail -f /var/log/aletyx-sandbox.log
+
+# Nginx logs
+sudo tail -f /var/log/nginx/error.log
+
+# System logs
+sudo journalctl -u aletyx-sandbox -f
+```
+
+**Restart application**:
+
+```bash
+sudo systemctl restart aletyx-sandbox
+
+# Wait 30 seconds
+sudo systemctl status aletyx-sandbox
+```
+
+### Stack Creation Failed
+
+**Check CloudFormation Events tab** for error message.
+
+**Common Issues**:
+
+1. **"Subnet not public"**:
+   - Solution: Use a subnet with internet gateway route
+   - Or create new public subnet
+
+2. **"Invalid CIDR format"**:
+   - Solution: Use format like `203.0.113.45/32` (IP/32)
+   - Not just IP without /32
+
+3. **"Key pair not found"**:
+   - Solution: Create EC2 key pair first
+   - Or select existing key pair
+
+## Cleanup
+
+### Delete Your Deployment
+
+When you're done testing, delete the stack to stop charges.
+
+#### Via AWS Console
+
+1. Go to [CloudFormation Console](https://console.aws.amazon.com/cloudformation/)
+2. Select your stack
+3. Click **"Delete"**
+4. Confirm deletion
+5. Wait 3-5 minutes
+
+#### Via AWS CLI
+
+```bash
+aws cloudformation delete-stack \
+  --stack-name aletyx-sandbox-dev \
+  --region us-east-1
+
+# Check deletion progress
+aws cloudformation describe-stacks \
+  --stack-name aletyx-sandbox-dev \
+  --region us-east-1
+```
+
+### What Gets Deleted
+
+- EC2 instance (stops hourly charges)
+- Security group
+- IAM role and instance profile
+- All associated resources
+
+### What Doesn't Get Deleted
+
+- SSH key pair (reusable - keep it)
+- VPC and subnets (shared resources)
+- Your data (not backed up - save before deleting!)
+
+## Cost Information
+
+### Hourly Cost (us-east-1)
+
+- **t3.medium**: ~$0.04/hour (~$30/month if left running)
+- **t3.large**: ~$0.08/hour (~$60/month if left running)
+
+### Save Money
+
+- Delete when not in use - Redeploy takes only 5 minutes
+- Stop instance (keeps data, still charges for storage)
+- Use t3.medium for light testing
+
+## Common Commands Reference
+
+### Check Application Status
+
+```bash
+sudo systemctl status aletyx-sandbox
+```
+
+### View Logs
+
+```bash
+# Application
+sudo tail -f /var/log/aletyx-sandbox.log
+
+# Nginx
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+```
+
+### Restart Application
+
+```bash
+sudo systemctl restart aletyx-sandbox
+```
+
+### Get Credentials
+
+```bash
+sudo cat /etc/aletyx/credentials
+```
+
+### Check Your Current IP
+
+```bash
+curl https://checkip.amazonaws.com
+```
+
+## Summary
+
+### The Sandbox Is
+
+- Fast to deploy (5 minutes)
+- Easy to use (auto-login, no password management)
+- Secure when IP-restricted
+- Perfect for POCs, testing, demos
+
+### Remember
+
+- **MUST be IP-restricted** - Use YOUR_IP/32 or corporate CIDR
+- **Do NOT use 0.0.0.0/0** - Not secure (no login screen)
+- **Do NOT configure SSL** - Not supported securely
+- **Screen share for demos** - Professional and secure
+
+### Quick Deploy Checklist
+
+1. Get IP: `curl https://checkip.amazonaws.com`
+2. Deploy CloudFormation with `AllowedCidr: YOUR_IP/32`
+3. Wait 5 minutes
+4. Click ApplicationUrl in Outputs
+5. Done!
+
+## Need Help?
+
+**Logs**: `/var/log/aletyx-sandbox.log`
+**Status**: `sudo systemctl status aletyx-sandbox`
+**Restart**: `sudo systemctl restart aletyx-sandbox`
+**Credentials**: `sudo cat /etc/aletyx/credentials`
+
+Ready to deploy? [Try Decision Control on AWS](https://aws.amazon.com/marketplace/pp/prodview-weakaemafiris)

@@ -1,0 +1,124 @@
+---
+title: "Introduction to Decision Model and Notation (DMN)"
+description: "Decision Model and Notation (DMN) is an industry standard created by the OMG (OMG) that provides a common notation for decision modeling. It bridges the gap between business decision design and..."
+---
+## What is DMN?
+
+Decision Model and Notation (DMN) is an industry standard created by the OMG (OMG) that provides a common notation for decision modeling. It bridges the gap between business decision design and decision implementation by providing a notation that's readable by both business and technical users.
+
+DMN is designed to:
+
+- Document decision-making processes clearly and precisely
+- Enable collaboration between business and technical teams
+- Create executable decision models that can be automated
+- Ensure decision logic is testable, auditable, and traceable
+
+## Core Components of DMN
+
+DMN models consist of two key elements:
+
+1. **Decision Requirements Diagram (DRD)** - The visual representation of the decision model
+2. **Decision Logic** - The detailed specifications of how decisions are made
+
+### Decision Requirements Diagram (DRD)
+
+A DRD shows the structure of a decision model using these elements:
+
+![DMN Elements](/images/guides/examples/dmn/images/dmn-elements.png)
+
+- **Decision Nodes** (rectangles): Represent the decisions to be made
+- **Input Data** (ovals): Represent information used to make decisions
+- **Knowledge Sources** (documents): Represent sources of knowledge (policies, regulations, etc.)
+- **Business Knowledge Models** (rounded rectangles): Represent reusable decision logic
+- **Information Requirements** (solid arrows): Show dependencies between decisions
+- **Knowledge Requirements** (dashed arrows): Show dependencies on business knowledge models
+- **Authority Requirements** (dotted arrows): Show dependencies on knowledge sources
+
+### Decision Logic
+
+Decision logic in DMN can be expressed in several ways:
+
+1. **Decision Tables**: Structured way to represent complex decision logic
+2. **Literal Expressions**: Simple expressions or calculations
+3. **Function Definitions**: Reusable logic functions
+4. **Invocations**: Calls to Business Knowledge Models
+5. **Contexts**: Collections of local variables and results
+6. **Lists**: Collections of items
+
+The most common format is the decision table, which represents conditions and actions in a tabular format.
+
+## Decision Tables
+
+Decision tables are a powerful way to express complex business rules. They consist of:
+
+- **Hit Policy**: Determines how rules are evaluated (unique, first, collect, etc.)
+- **Input Columns**: Conditions to be checked
+- **Output Columns**: Actions or results
+- **Rules**: Rows that connect inputs to outputs
+
+For example, a basic decision table might look like this:
+
+| U   | Age  | Years of Service | Vacation Days | Annotation            |
+| --- | ---- | ---------------- | ------------- | --------------------- |
+|     | <18  | -                | 5             | Minor employees       |
+|     | >=18 | <5               | 10            | Standard entry level  |
+|     | >=18 | [5..10]          | 15            | Experienced employees |
+|     | >=18 | >10              | 20            | Senior employees      |
+
+This table uses a Unique (U) hit policy, meaning only one rule will match for any given input.
+
+## FEEL - Friendly Enough Expression Language
+
+DMN uses a language called FEEL (Friendly Enough Expression Language) for expressing decision logic. FEEL is designed to be:
+
+- Readable by business users
+- Precise enough for execution
+- Capable of expressing complex logic
+
+Examples of FEEL expressions:
+
+- Simple calculations: `Base Premium * Risk Factor + 10`
+- Conditional logic: `if Age < 25 then "Young Driver" else "Regular Driver"`
+- List operations: `some item in [1, 2, 3] satisfies item > 2`
+- Date handling: `date("2023-04-15") + duration("P3M")` (adds 3 months to the date)
+
+## DMN Execution
+
+DMN models are not just documentation—they're executable specifications. When a DMN model is executed:
+
+1. Input data is provided to the model
+2. The model evaluates decisions in dependency order
+3. Decision logic is applied according to the specified rules
+4. Results are returned for all requested decisions
+
+This execution can happen within applications, as standalone services, or as part of larger process workflows.
+
+## Benefits of Using DMN
+
+DMN offers numerous advantages over traditional approaches to defining business rules:
+
+1. **Business-IT Alignment**: Common language for business and technical stakeholders
+2. **Separation of Concerns**: Decision logic separated from process flow
+3. **Transparency**: Clear documentation of decision criteria and logic
+4. **Consistency**: Standard approach to modeling decisions across the organization
+5. **Modularity**: Reusable decision components
+6. **Testability**: Easy to validate with test scenarios
+7. **Adaptability**: Easier to change decision logic without affecting applications
+8. **Interoperability**: Standard format works across compliant tools and engines
+
+## DMN in the Apache KIE Ecosystem
+
+Within the Apache KIE ecosystem, DMN is fully supported with these features:
+
+- Visual modeling through Aletyx Playground
+- Full compliance with the DMN specification
+- Integration with other standards like BPMN
+- Cloud-native deployment options
+- Testing and validation tools
+- Versioning and governance capabilities
+
+## Getting Started with DMN
+
+The best way to learn DMN is by creating your first model. In the next guide, [Your First DMN Model](/guides/dmn/basic), we'll walk through creating a simple vacation days calculation model that demonstrates the key concepts of DMN.
+
+Ready to create your first DMN model? Let's get started!

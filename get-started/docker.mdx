@@ -1,0 +1,314 @@
+---
+title: "Container Runtime Setup in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Choose your preferred container runtime environment. We recommend either Docker or Podman."
+---
+Choose your preferred container runtime environment. We recommend either Docker or Podman.
+
+## Docker Installation
+
+<Tabs>
+  <Tab title="Microsoft Windows">
+
+    1. Install Docker Desktop:
+    	- Download [Docker Desktop](https://www.docker.com/products/docker-desktop)
+    	- Run the installer
+    	- During installation, ensure "WSL 2" option is selected
+
+    2. Post-installation:
+
+    	```powershell
+    	docker --version
+    	docker compose version
+    	```
+
+    3. Test Docker
+
+    	```powershell
+    	docker run hello-world
+    	```
+
+    3. Configure WSL 2 (if not already done):
+    ```powershell
+    wsl --install
+    ```
+  </Tab>
+  <Tab title="MacOS">
+
+    1. Install Docker Desktop using Homebrew:
+    	```bash
+        	brew install --cask docker
+    	```
+
+    2. Start Docker Desktop:
+
+    	```bash
+    	    open -a Docker
+    	```
+
+    3. Wait for Docker to start, then verify
+
+    	```bash
+    	docker --version
+    	docker compose version
+    	```
+
+    4. Test Docker
+
+    	```bash
+    	docker run hello-world
+    	```
+
+    5. Optional: Add Docker completion to your shell (for zsh):
+
+    	```bash
+    	echo 'zstyle ":completion:*:*:docker:*" option-stacking yes' >> ~/.zshrc
+    	echo 'zstyle ":completion:*:*:docker-*:*" option-stacking yes' >> ~/.zshrc
+    	```
+  </Tab>
+  <Tab title="Linux">
+
+    1. Install Docker Engine:
+
+    	```bash
+    	# Add Docker's official GPG key
+    	sudo apt-get update
+    	sudo apt-get install ca-certificates curl gnupg
+    	sudo install -m 0755 -d /etc/apt/keyrings
+    	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    	sudo chmod a+r /etc/apt/keyrings/docker.gpg
+    	```
+
+    2. Add the repository to Apt sources
+
+    	```bash
+    	echo \
+    	  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    	  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+    	  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    	```
+
+    3. Install Docker packages
+    	```bash
+    	sudo apt-get update
+    	sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    	```
+
+    4. Post-installation steps:
+
+    	```bash
+    	# Add your user to the docker group
+    	sudo usermod -aG docker $USER
+    	```
+
+    5. Apply group changes (or log out and back in)
+    	```bash
+    	newgrp
+    	```
+
+    6. Test Docker
+    	```bash
+    	docker run hello-world
+    	```
+  </Tab>
+</Tabs>
+## Podman Installation
+
+<Tabs>
+  <Tab title="Windows">
+
+    1. Install Podman Desktop:
+    	- Download [Podman Desktop](https://podman-desktop.io/downloads/windows)
+    	- Run the installer - Follow the installation wizard
+
+    2. Verify installation:
+    	```powershell
+    	podman --version
+    	podman machine init
+    	podman machine start
+    	```
+  </Tab>
+  <Tab title="macOS">
+
+    1. Install Podman using Homebrew:
+    ```bash
+    brew install podman
+    ```
+
+    2. Initialize and start Podman:
+
+    	```bash
+    	# Initialize Podman machine
+    	podman machine init
+
+    	# Start Podman machine
+    	podman machine start
+
+    	# Verify installation
+    	podman --version
+
+    	# Test Podman
+    	podman run hello-world
+    	```
+
+    3. Optional: Add Podman completion to your shell (for zsh):
+    	```bash
+    	echo 'autoload -Uz compinit' >> ~/.zshrc
+    	echo 'compinit' >> ~/.zshrc
+    	```
+  </Tab>
+  <Tab title="Linux">
+
+    1. Install Podman:
+
+    	```bash
+    	# Ubuntu/Debian
+    	sudo apt-get update
+    	sudo apt-get install -y podman
+    	```
+
+    2. Verify installation
+    	```bash
+        podman --version
+    	```
+
+    3. Test Podman
+        ```bash
+    	podman run hello-world
+        ```
+  </Tab>
+</Tabs>
+## Container Compose Setup
+
+<Tabs>
+  <Tab title="Docker Compose">
+  </Tab>
+</Tabs>
+Docker Compose is included with Docker Desktop for Windows and macOS.
+
+### For Linux:
+
+```bash
+# Install Docker Compose plugin
+sudo apt-get update
+sudo apt-get install docker-compose-plugin
+
+    # Verify installation
+    docker compose version
+```
+
+<Tabs>
+  <Tab title="Podman Compose">
+
+    ```bash
+    # Install Podman Compose using pip
+    pip3 install podman-compose
+
+    # Verify installation
+    podman-compose version
+    ```
+  </Tab>
+</Tabs>
+## Container Configuration
+
+<Tabs>
+  <Tab title="Docker">
+
+    Configure Docker resources (in Docker Desktop):
+    1. Open Docker Desktop
+    2. Go to Settings (⚙️)
+    3. Recommended settings: - CPUs: At least 2 - Memory: At least 4 GB - Swap: At least 1 GB - Disk image size: At least 60 GB
+  </Tab>
+  <Tab title="Podman">
+
+    Configure Podman machine resources:
+
+    ```bash # Create a new machine with custom resources
+    podman machine init --cpus 2 --memory 4096 --disk-size 60
+
+        # Start the machine
+        podman machine start
+    ```
+  </Tab>
+</Tabs>
+## Verify Installation
+
+Test your container environment with a simple container:
+
+<Tabs>
+  <Tab title="Docker">
+
+    1. Pull and run nginx
+    ```bash
+    docker run -d -p 8080:80 --name test-nginx nginx
+    ```
+
+    2. Check container status
+    ```bash
+    docker ps
+    ```
+
+    3. Stop and remove the container
+    ```bash
+        docker stop test-nginx
+        docker rm test-nginx
+    ```
+  </Tab>
+  <Tab title="Podman">
+
+    1. Pull and run nginx
+    	```bash
+    	podman run -d -p 8080:80 --name test-nginx nginx
+    	```
+
+    2. Check container status
+    	```bash
+    	podman ps
+    	```
+
+    3. Stop and remove the container
+    	```bash
+    	podman stop test-nginx
+    	podman rm test-nginx
+    	```
+  </Tab>
+</Tabs>
+## Troubleshooting
+
+<Tabs>
+  <Tab title="Docker Common issues and solutions">
+
+    1. Reset Docker Desktop
+       ```bash
+       docker system prune -a
+       ```
+
+    1. Check Docker status
+       ```bash
+       docker info
+       ```
+
+    1. View Docker logs
+       ```bash
+       docker logs <container-name>
+       ```
+  </Tab>
+  <Tab title="Podman common issues and solutions">
+
+    1. Reset Podman Machine
+       ```bash
+       podman machine stop
+       podman machine rm
+       podman machine init
+       podman machine start
+       ```
+
+    1. Check Podman status
+       ```bash
+       podman info
+       ```
+    1. View Podman logs
+       ```bash
+       podman logs <container-name>
+       ```
+  </Tab>
+</Tabs>

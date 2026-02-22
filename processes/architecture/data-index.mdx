@@ -1,0 +1,153 @@
+---
+title: "Data Intelligence Layer (Data-Index) in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "The Data Intelligence Layer, implemented through the Data-Index subsystem, provides a continuously updated snapshot of process state that enables real-time visibility into your business processes...."
+---
+The Data Intelligence Layer, implemented through the Data-Index subsystem, provides a continuously updated snapshot of process state that enables real-time visibility into your business processes. This component is a key element of the Adaptive Process Architecture, offering powerful querying capabilities to analyze and monitor your process instances.
+
+## Overview
+
+The Data-Index subsystem maintains a real-time view of process instances by efficiently processing events from the process engine and storing them in an optimized format for querying. This provides a comprehensive view of active processes without impacting the performance of the process execution engine.
+
+![Graphical view of the Data-Index subsystem](/images/core/processes/architecture/images/data-index.png)
+
+The system consists of three main components:
+
+- **Transport**: The medium used to transfer events between the runtime and the Data-Index service. In the Adaptive Process Architecture, this is in-vm transport.
+- **Storage**: The persistence tier of the Data-Index component, typically using the same database as the rest of the application.
+- **Data-Index**: The main component responsible for creating/updating the Data-Index, and for providing query capabilities.
+
+## Key Features
+
+### Real-Time Process Visibility
+
+The Data-Index receives incremental state change events from the Orchestration Engine and efficiently computes the current state by integrating these changes with existing contextual data. This provides an up-to-date view of all process instances without the need for complex synchronization mechanisms.
+
+### GraphQL Querying Capabilities
+
+The Data-Index exposes powerful GraphQL interfaces that allow both systems and users to query process data using flexible, domain-specific queries. This enables:
+
+- Advanced filtering and sorting
+- Relationship traversal across process instances
+- Selection of specific process attributes
+- Complex conditional queries
+
+### Dashboarding Support
+
+The Data-Index serves as the foundation for process monitoring dashboards, providing the necessary data access layer to:
+
+- Track KPIs and business metrics
+- Monitor process throughput
+- Identify bottlenecks
+- Visualize process flows
+
+### Low-Impact Monitoring
+
+By maintaining a separate query-optimized data store, the Data-Index allows comprehensive monitoring and analysis without impacting the performance of the process execution engine.
+
+## Using GraphQL with Data-Index
+
+The Data-Index supports GraphQL queries through the following endpoint:
+
+```
+http://localhost:8080/<root-path>/graphql-ui/
+```
+
+This provides an interactive GraphQL interface for exploring and querying your process data.
+
+### Example Queries
+
+#### Retrieve All Process Instances
+
+```graphql
+{
+  ProcessInstances {
+    id
+    processId
+    state
+    start
+    end
+    parentProcessInstanceId
+    rootProcessInstanceId
+    roles
+  }
+}
+```
+
+#### Find Process Instances by State
+
+```graphql
+{
+  ProcessInstances(where: {state: {equal: "ACTIVE"}}) {
+    id
+    processId
+    state
+    start
+    businessKey
+  }
+}
+```
+
+#### Retrieve Process Variables
+
+```graphql
+{
+  ProcessInstances(where: {processId: {equal: "claim_initiation"}}) {
+    id
+    processId
+    state
+    variables
+  }
+}
+```
+
+## Adding Data-Index to Your Project
+
+The Data-Index capability can be added to your project by including the following dependency:
+
+```xml
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-data-index-jpa</artifactId>
+</dependency>
+```
+
+This dependency enables Quarkus to use the in-vm transport tier and specifies the storage mechanism for the Data-Index simultaneously.
+
+## Configuration
+
+The Data-Index automatically uses the same data source as your main application, which simplifies configuration and deployment. The most important configuration properties for the Data-Index are:
+
+```properties
+# Enable or disable the Data-Index
+kogito.data-index.enabled=true
+
+# Configure GraphQL path (optional, defaults to /graphql)
+kogito.data-index.graphql.ui.path=/graphql-ui
+```
+
+## Best Practices
+
+### Optimizing Queries
+
+- Limit result sets using pagination for large data volumes
+- Select only the fields you need to reduce response size
+- Use appropriate indexing on the database for frequently queried fields
+- Consider caching for repeated identical queries
+
+### Integration with Monitoring Tools
+
+- Use the GraphQL API to feed data to your monitoring dashboards
+- Setup alerts based on process KPIs
+- Implement automatic reporting for key business metrics
+
+### Performance Considerations
+
+- The Data-Index adds some overhead to process execution due to event processing
+- For extremely high-throughput scenarios, consider making the Data-Index optional
+- Monitor the size of your Data-Index database and implement appropriate retention policies
+
+## See Also
+
+- [Process History Service](/processes/architecture/data-audit)
+- [Process Data & Persistence](data)
+- [GraphQL API Reference](../../apis/graphql-api)

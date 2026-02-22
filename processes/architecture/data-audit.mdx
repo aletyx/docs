@@ -1,0 +1,194 @@
+---
+title: "Process History Service (Data-Audit) in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "The Process History Service, implemented through the Data-Audit subsystem, provides a comprehensive temporal view of process execution throughout the lifecycle of process instances. This component..."
+---
+The Process History Service, implemented through the Data-Audit subsystem, provides a comprehensive temporal view of process execution throughout the lifecycle of process instances. This component is a crucial part of the Adaptive Process Architecture, maintaining an immutable record of every significant event for compliance, analysis, and process improvement.
+
+## Overview
+
+The Data-Audit subsystem enables the storage of events issued by various process components and persists them in a structured format. It captures the complete evolution of process instances, from creation to completion, including all intermediate state changes.
+
+![Graphical view of the Data-Audit subsystem](/images/core/processes/architecture/images/data-audit-design.png)
+
+The Data-Audit system consists of several modules:
+
+- **Data-Audit Common**: Provides the common framework to create implementations
+- **Data-Audit «Quarkus»**: Provides the wiring to use Data-Audit with Quarkus as a colocated service
+- **Data-Audit JPA Common**: Provides the common extension that doesn't depend on the runtime
+- **Data-Audit JPA «Quarkus»**: Provides the wiring between the specific implementation and Quarkus System
+
+## Key Features
+
+### Comprehensive Event Recording
+
+The Data-Audit subsystem records events from multiple sources:
+
+- **Workflow Engine Events**: Process instance creation, state transitions, completion
+- **User Task Events**: Task creation, assignment, completion
+- **Temporal Events**: Timer creation, execution, cancellation
+- **Variable Events**: Data modifications throughout the process lifecycle
+
+### Immutable Audit Trail
+
+The Process History Service maintains an immutable record of all events, ensuring compliance with regulatory requirements and providing a trusted audit trail for:
+
+- Compliance verification
+- Process forensics
+- Legal documentation
+- Historical analysis
+
+### Temporal Querying
+
+Through its GraphQL interface, the Data-Audit service supports sophisticated temporal queries that can:
+
+- Identify historical patterns
+- Compare process performance over time
+- Reconstruct the state of a process at any point in time
+- Analyze decision paths and outcomes
+
+### Extensibility
+
+The Data-Audit subsystem provides several extension points:
+
+- Storage customization
+- Query customization
+- Event filtering
+- Security integration
+
+## Querying the Process History Service
+
+The Data-Audit service exposes a GraphQL endpoint for querying historical process data:
+
+```
+${HOST}/data-audit/q
+```
+
+### Example Queries
+
+#### Retrieve Process Instance States
+
+This example shows how to retrieve all process instance states:
+
+```console
+curl -H "Content-Type: application/json" -H "Accept: application/json" -s -X POST http://${HOST}/data-audit/q/ -d '
+{
+    "query": "{GetAllProcessInstancesState {eventId, processInstanceId, eventType, eventDate}}"
+}'|jq
+```
+
+#### Register a Custom Query
+
+You can register custom queries to extract specific information:
+
+```console
+curl -H "Content-Type: application/json" -H "Accept: application/json" -s -X POST http://${HOST}/data-audit/r/ -d '
+{
+    "identifier" : "tests",
+    "graphQLDefinition" : "type EventTest { jobId : String, processInstanceId: String} type Query { tests (pagination: Pagination) : [ EventTest ] } ",
+    "query" : "SELECT o.job_id, o.process_instance_id FROM job_execution_log o"
+}'
+```
+
+Once registered, you can execute the custom query:
+
+```console
+curl -H "Content-Type: application/json" -H "Accept: application/json" -s -X POST http://${HOST}/data-audit/q/ -d '
+{
+    "query": "{tests {jobId, processInstanceId}}"
+}'|jq
+```
+
+## Schema Discovery
+
+To retrieve the GraphQL schema definition including a list of all registered queries, run a GET command to:
+
+```
+${HOST}/data-audit/r
+```
+
+This endpoint can also be used to register new queries.
+
+## Adding Data-Audit to Your Project
+
+To enable the Process History Service in your project, add the following dependencies:
+
+```xml
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-data-audit</artifactId>
+</dependency>
+
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kogito-addons-quarkus-data-audit-jpa</artifactId>
+</dependency>
+```
+
+The first dependency specifies how you want to deploy the service (as a colocated/embedded service), and the second dependency specifies the implementation you want to use.
+
+## Java Persistence API (JPA) Implementation
+
+The JPA implementation allows you to store the events in a relational database. This implementation uses the same database connection as your application, simplifying configuration and deployment.
+
+Depending on your database, you may need additional dependencies:
+
+```xml
+<dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-jdbc-postgresql</artifactId>
+</dependency>
+```
+
+## Extension Points
+
+The Data-Audit system provides several extension points for customization:
+
+### Context Factory
+
+`org.kogito.kie.app.audit.spi.DataAuditContextFactory` depends on the runtime and enables the creation of the context needed by a particular implementation.
+
+### Runtime-Independent Extensions
+
+These extension points do not depend on the runtime:
+
+- `org.kie.kogito.app.audit.spi.DataAuditStore`: Stores the data in a particular way
+- `org.kie.kogito.app.audit.spi.GraphQLSchemaQuery<T>`: Enables execution of a GraphQL query
+- `org.kie.kogito.app.audit.spi.GraphQLSchemaQueryProvider`: Enables the subsystem to identify additional queries provided by the end user
+
+## Configuration
+
+The Data-Audit service is automatically configured to use the same data source as your main application. The most relevant configuration properties are:
+
+```properties
+# Enable or disable the Data-Audit service
+kogito.data-audit.enabled=true
+
+# Configure the audit retention period (in days)
+kogito.data-audit.retention-period=365
+```
+
+## Best Practices
+
+### Data Volume Management
+
+- Implement appropriate retention policies for audit data
+- Consider archiving older audit data to cold storage
+- Monitor the growth of audit tables
+
+### Query Performance
+
+- Create custom queries for frequently used reports
+- Use pagination for large result sets
+- Index database fields used in filtering
+
+### Compliance Requirements
+
+- Document the audit trail capabilities for regulatory reviews
+- Ensure audit data is properly secured
+- Implement backup strategies appropriate for compliance requirements
+
+## See Also
+
+- [Data Intelligence Layer](/processes/architecture/data-index)
+- [Process Data & Persistence](data)
+- [GraphQL API Reference](../../apis/graphql-api)

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 124 124">
+	<style>
+		/* Light mode styles */
+		.icon-primary {
+			fill: #000000;
+		}
+
+		.icon-secondary {
+			fill: #1a1a1a;
+		}
+
+		.icon-highlight {
+			stroke: #424242;
+		}
+
+		.icon-background {
+			fill: #b7b0b0;
+		}
+
+		.icon-container {
+			filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+		}
+	</style>
+
+	<!-- CUSTOMER SERVICE/ONBOARDING ICON -->
+	<g class="icon-container" transform="translate(62, 62)">
+		<circle class="icon-background" cx="0" cy="0" r="60" />
+
+		<!-- Speech bubble - make it more chat-bubble shaped -->
+		<path class="icon-secondary"
+			d="M-40,-30 C-40,-42 -25,-50 0,-50 C25,-50 40,-42 40,-30 C40,-18 25,0 0,0 C-5,0 -10,-1 -15,-3 L-30,20 L-25,0 C-35,-6 -40,-18 -40,-30 Z" />
+
+		<!-- Two people silhouettes inside -->
+		<g transform="translate(-15,-20)">
+			<!-- Head -->
+			<circle class="icon-primary" cx="0" cy="0" r="10" />
+			<!-- Body -->
+			<path class="icon-primary" d="M-5,10 C-5,10 -10,25 -10,25 C-10,25 10,25 10,25 C10,25 5,10 5,10 Z" />
+		</g>
+
+		<g transform="translate(15,-20)">
+			<!-- Head -->
+			<circle class="icon-primary" cx="0" cy="0" r="10" />
+			<!-- Body -->
+			<path class="icon-primary" d="M-5,10 C-5,10 -10,25 -10,25 C-10,25 10,25 10,25 C10,25 5,10 5,10 Z" />
+		</g>
+
+		<!-- Chat lines -->
+		<line x1="-10" y1="-30" x2="10" y2="-30" stroke="#424242" stroke-width="3" stroke-linecap="round"
+			class="icon-highlight" />
+		<line x1="-5" y1="-15" x2="5" y2="-15" stroke="#424242" stroke-width="3" stroke-linecap="round"
+			class="icon-highlight" />
+	</g>
+</svg>

@@ -1,0 +1,462 @@
+---
+title: "Working with Rule Conditions in DRL"
+description: "The power of Drools lies in its ability to identify patterns in your data and respond accordingly. The condition section of your rules (the when part) is where you define these patterns. In this..."
+---
+The power of Drools lies in its ability to identify patterns in your data and respond accordingly. The condition section of your rules (the `when` part) is where you define these patterns. In this section, we'll explore how to write effective, efficient rule conditions that accurately capture your business logic.
+
+## Understanding Pattern Matching
+
+At the heart of Drools rule conditions is pattern matching. A pattern defines a template that the Drools rule engine uses to find matching facts in the working memory.
+
+### Basic Pattern Structure
+
+The simplest pattern has this form:
+
+```
+/dataSource[ <constraints> ]
+```
+
+For example:
+
+```
+/customers[ status == "GOLD" ]
+```
+
+This pattern matches all customer facts in the customers data source that have the status "GOLD".
+
+To reference the matched object in other parts of the rule, you can bind it to a variable:
+
+```
+$customer: /customers[ status == "GOLD" ]
+```
+
+You can now use `$customer` in other patterns or in the rule's actions.
+
+### OOPath Expressions
+
+OOPath is a powerful feature in Drools that allows you to navigate through object graphs in a concise, elegant way. It's inspired by XPath but adapted for object-oriented structures.
+
+Basic OOPath syntax:
+
+```
+/dataSource[ <constraints> ]/property[ <constraints> ]
+```
+
+For example, to match orders from a gold customer:
+
+```
+/customers[ status == "GOLD" ]/orders[ total > 100 ]
+```
+
+This navigates from customers to their orders, finding orders over $100 from gold customers.
+
+You can also bind variables at each step:
+
+```
+$customer: /customers[ status == "GOLD" ]
+$order: /orders[ customer == $customer, total > 100 ]
+```
+
+This approach is more explicit about the relationship between customers and orders, and it's particularly useful when you need to reference both the customer and the order in your rule's actions.
+
+## Writing Effective Constraints
+
+Constraints are conditions that facts must satisfy to match a pattern. They filter the facts in your data sources to find those relevant to your rule.
+
+### Simple Constraints
+
+Simple constraints compare a property to a value:
+
+```
+/customers[ age > 18 ]  // Customers over 18 years old
+/customers[ status == "ACTIVE" ]  // Active customers
+/customers[ accountBalance < creditLimit ]  // Customers with available credit
+```
+
+### Multiple Constraints
+
+You can combine multiple constraints using:
+
+1. **Comma-separated list** (implicit AND):
+   ```
+   /customers[ status == "GOLD", yearsSinceJoining > 5 ]
+   ```
+
+2. **Logical operators** (&&, ||):
+   ```
+   /customers[ status == "GOLD" && (yearsSinceJoining > 5 || totalSpent > 10000) ]
+   ```
+
+The comma-separated approach is preferred for simple AND conditions as it's more readable and slightly more efficient.
+
+### Constraint Operators
+
+DRL supports a wide range of operators for constructing constraints:
+
+#### Basic Comparison
+
+```
+/customers[ age == 30 ]    // Equal to
+/customers[ age != 30 ]    // Not equal to
+/customers[ age > 30 ]     // Greater than
+/customers[ age >= 30 ]    // Greater than or equal to
+/customers[ age < 30 ]     // Less than
+/customers[ age <= 30 ]    // Less than or equal to
+```
+
+#### String Matching
+
+```
+/customers[ name matches "J.*" ]         // Regex matching
+/customers[ name not matches "J.*" ]     // Regex non-matching
+/customers[ email contains "@acme" ]     // Contains substring
+/customers[ email not contains "@acme" ] // Doesn't contain substring
+```
+
+#### Collection Operations
+
+```
+/customers[ favoriteFruits contains "apple" ]          // Collection contains value
+/customers[ favoriteFruits not contains "apple" ]      // Collection doesn't contain value
+/customers[ "apple" memberOf favoriteFruits ]          // Value is in collection
+/customers[ "apple" not memberOf favoriteFruits ]      // Value isn't in collection
+/customers[ favoriteNumbers in (1, 2, 3, 4) ]          // Value is in a list of values
+/customers[ favoriteNumbers not in (1, 2, 3, 4) ]      // Value isn't in a list of values
+```
+
+#### Special Operators
+
+```
+/customers[ dateOfBirth < "01-Jan-2000" ]        // Date comparison
+/customers[ name soundslike "John" ]             // Phonetic matching
+/customers[ email str[endsWith] ".com" ]         // String functions
+/customers[ email == null ]                      // Null check
+/customers[ status != null ]                     // Not null check
+```
+
+### Abbreviated Combined Relation Constraints
+
+DRL provides a shorthand for range expressions:
+
+```
+/customers[ age > 18 && < 65 ]    // Age between 18 and 65 (exclusive)
+/customers[ age >= 18 && <= 65 ]  // Age between 18 and 65 (inclusive)
+```
+
+This is equivalent to:
+
+```
+/customers[ age > 18, age < 65 ]
+```
+
+But offers a more concise syntax for ranges.
+
+### Property Access
+
+You can access nested properties using the dot notation:
+
+```
+/customers[ address.zipCode == "90210" ]
+```
+
+For null-safe property access, use the `!.` operator:
+
+```
+/customers[ address!.zipCode == "90210" ]
+```
+
+This will only match customers who have an address and whose zip code is "90210".
+
+## Binding Variables
+
+Variables are a crucial part of DRL. They allow you to:
+
+1. Reference matched facts in other patterns or in actions
+2. Access specific properties for later use
+3. Join patterns together
+
+### Basic Variable Binding
+
+To bind a fact to a variable, use the `:` operator:
+
+```
+$customer: /customers[ status == "GOLD" ]
+```
+
+You can use `$customer` to reference this fact in other patterns:
+
+```
+$customer: /customers[ status == "GOLD" ]
+$order: /orders[ customer == $customer, total > 100 ]
+```
+
+### Property Binding
+
+You can also bind specific properties:
+
+```
+/customers[ $name: name, $age: age, status == "GOLD" ]
+```
+
+Now you can use `$name` and `$age` in your rule without accessing them through the customer object.
+
+### Best Practices for Variable Binding
+
+1. **Use meaningful names**: Choose variable names that reflect what they represent.
+2. **Use the $ prefix**: This is a convention that helps distinguish variables from properties.
+3. **Separate bindings from constraints**: For clarity, list bindings first, then constraints.
+4. **Only bind what you need**: Binding creates overhead, so only bind variables you'll actually use.
+
+## Advanced Condition Elements
+
+DRL provides several condition elements that allow you to express complex patterns of facts.
+
+### not
+
+The `not` element matches when a pattern has no matches. It's used to verify that something doesn't exist:
+
+```
+not /customers[ status == "BLACKLISTED", name == $applicantName ]
+```
+
+This matches when there's no blacklisted customer with the given name.
+
+### exists
+
+The `exists` element matches when a pattern has at least one match. It's used to verify that something exists:
+
+```
+exists /orders[ customer == $customer, date > "01-Jan-2023" ]
+```
+
+This matches when the customer has placed at least one order this year.
+
+### and
+
+The `and` element creates a logical conjunction of two or more patterns. It matches when all its contained patterns match:
+
+```
+$customer: /customers[ status == "GOLD" ] and
+/orders[ customer == $customer, total > 1000 ]
+```
+
+This matches gold customers who have placed an order over $1000.
+
+### or
+
+The `or` element creates a logical disjunction of two or more patterns. It matches when any of its contained patterns match:
+
+```
+$customer: /customers[ status == "GOLD" ] or
+$customer: /customers[ status == "SILVER", yearsSinceJoining > 5 ]
+```
+
+This matches customers who are either gold status or silver status with more than 5 years of membership.
+
+### forall
+
+The `forall` element matches when all facts matching the first pattern also match all the remaining patterns:
+
+```
+forall( $customer: /customers[ type == "business" ]
+        /customers[ this == $customer, creditChecked == true ] )
+```
+
+This matches when all business customers have had their credit checked.
+
+## The accumulate Function
+
+The `accumulate` function allows you to perform calculations over groups of facts. This is similar to SQL's aggregate functions but more powerful.
+
+### Basic Syntax
+
+```
+accumulate( <pattern>; <functions> [; <constraints>] )
+```
+
+### Predefined Accumulate Functions
+
+Drools includes several built-in accumulate functions:
+
+```
+// Count the number of orders
+accumulate( $order: /orders[ customer == $customer ];
+            $orderCount: count($order) )
+
+// Calculate the total value of orders
+accumulate( $order: /orders[ customer == $customer, $total: total ];
+            $totalSpent: sum($total) )
+
+// Find the most expensive order
+accumulate( $order: /orders[ customer == $customer, $total: total ];
+            $maxOrder: max($total) )
+
+// Calculate the average order value
+accumulate( $order: /orders[ customer == $customer, $total: total ];
+            $avgOrder: average($total) )
+
+// Collect orders into a list
+accumulate( $order: /orders[ customer == $customer ];
+            $orderList: collectList($order) )
+```
+
+### Constraints on Accumulated Results
+
+You can add constraints on the results of accumulate functions:
+
+```
+// Customers who have spent more than $10,000
+$customer: /customers[ ]
+accumulate( $order: /orders[ customer == $customer, $total: total ];
+            $totalSpent: sum($total);
+            $totalSpent > 10000 )
+```
+
+### Multiple Functions in One Accumulate
+
+You can combine multiple functions in a single accumulate:
+
+```
+// Calculate multiple statistics at once
+accumulate( $order: /orders[ customer == $customer, $total: total ];
+            $orderCount: count($order),
+            $totalSpent: sum($total),
+            $avgOrder: average($total),
+            $maxOrder: max($total) )
+```
+
+## The groupby Function
+
+The `groupby` function extends `accumulate` by allowing you to partition data based on keys and perform accumulate functions on each group.
+
+### Basic Syntax
+
+```
+groupby( <pattern>; <key expression>; <functions> [; <constraints>] )
+```
+
+### Example
+
+```
+// Calculate total sales by product category
+groupby( $order: /orderItems[ $product: product, $amount: amount ];
+          $category: $product.category;
+          $totalSales: sum($amount) )
+```
+
+This will create groups based on product categories and calculate the total sales for each category.
+
+## Putting It All Together: Real-World Examples
+
+Let's look at some comprehensive examples that combine the concepts we've learned.
+
+### Example 1: Customer Loyalty Upgrade
+
+```
+rule "Upgrade to Gold Status"
+  when
+    // Find silver customers who qualify for an upgrade
+    $customer: /customers[ status == "SILVER" ]
+
+    // Check if they've spent enough
+    accumulate(
+      $order: /orders[ customer == $customer, orderDate >= "01-Jan-2023", $total: total ];
+      $yearTotal: sum($total);
+      $yearTotal >= 5000
+    )
+
+    // Check if they have enough recent orders
+    accumulate(
+      $order: /orders[ customer == $customer, orderDate >= "01-Jan-2023" ];
+      $orderCount: count($order);
+      $orderCount >= 10
+    )
+
+    // Make sure they don't have any unresolved disputes
+    not /disputes[ customer == $customer, status == "OPEN" ]
+  then
+    // Upgrade the customer
+    $customer.setStatus("GOLD");
+    $customer.setStatusChangeReason("Automatic upgrade: spend and frequency criteria met");
+    customers.update($customer);
+
+    // Create a notification
+    StatusChangeNotification notification = new StatusChangeNotification($customer.getId(), "GOLD");
+    notifications.add(notification);
+end
+```
+
+This rule upgrades silver customers to gold status when they have:
+1. Spent at least $5,000 this year
+2. Placed at least 10 orders this year
+3. No open disputes
+
+### Example 2: Fraud Detection
+
+```
+rule "Suspicious Activity Detection"
+  when
+    // Find a recent high-value transaction
+    $transaction: /transactions[ amount > 1000, status == "PENDING" ]
+
+    // Check if customer location is different from transaction location
+    $customer: /customers[ id == $transaction.customerId ]
+    eval( !LocationUtil.isNear($customer.lastKnownLocation, $transaction.location) )
+
+    // Check for multiple large transactions in a short time period
+    accumulate(
+      $recentTrans: /transactions[
+        customerId == $transaction.customerId,
+        id != $transaction.id,
+        amount > 500,
+        timestamp >= ($transaction.timestamp - 1h)
+      ];
+      $recentCount: count($recentTrans);
+      $recentCount >= 2
+    )
+  then
+    // Flag the transaction for review
+    $transaction.setFraudRiskFlag(true);
+    $transaction.setFraudRiskReason("Multiple large transactions from unusual location");
+    transactions.update($transaction);
+
+    // Create a high-priority alert
+    FraudAlert alert = new FraudAlert($transaction.getId(), "HIGH");
+    fraudAlerts.add(alert);
+end
+```
+
+This rule flags transactions as potentially fraudulent when:
+1. The transaction is high-value (over $1,000)
+2. The customer's known location differs from the transaction location
+3. There have been multiple other substantial transactions in the last hour
+
+## Performance Considerations for Rule Conditions
+
+Writing efficient rule conditions is crucial for good performance, especially with large fact bases.
+
+### Best Practices
+
+1. **Most restrictive patterns first**: Place patterns that will match the fewest facts first.
+2. **Most restrictive constraints first**: Within a pattern, place the most selective constraints first.
+3. **Avoid unnecessary variable bindings**: Only bind variables you'll actually use.
+4. **Use property reactivity**: Only update the properties that have changed to avoid unnecessary rule reevaluation.
+5. **Avoid complex expressions in constraints**: Move complex calculations to helper methods.
+6. **Be careful with `not` and `exists`**: These can be expensive with large fact bases.
+7. **Use indexing effectively**: Properties used in join conditions should be indexed.
+
+### Common Pitfalls
+
+1. **Expensive constraint evaluation**: Avoid constraints that require costly computation.
+2. **Cross-product joins**: Be cautious with patterns that create large combinations of facts.
+3. **Redundant rule activations**: Use `no-loop` and `lock-on-active` attributes when appropriate.
+4. **Overuse of `eval`**: The `eval` condition element doesn't use Drools' optimizations.
+5. **Memory leaks**: Remove facts from working memory when they're no longer needed.
+
+## Summary
+
+Understanding rule conditions is essential for harnessing the full power of Drools. By mastering pattern matching, constraints, condition elements, and accumulation functions, you can express complex business logic in a declarative, maintainable way.
+
+The condition section is where you define what situations your rules respond to. Taking time to design these conditions carefully ensures your rules fire exactly when they should – no more, no less.
+
+In the next section, we'll explore the action side of rules: what happens after your conditions are met.

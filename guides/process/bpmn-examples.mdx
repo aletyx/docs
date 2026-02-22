@@ -1,0 +1,1206 @@
+---
+title: "Creating Your First BPMN Workflow"
+description: "This guide walks you through creating a Business Process Model and Notation (BPMN) workflow for an employee onboarding process. You'll learn how to design, implement, and execute a process that..."
+---
+This guide walks you through creating a Business Process Model and Notation (BPMN) workflow for an employee onboarding process. You'll learn how to design, implement, and execute a process that orchestrates both human and automated tasks.
+
+## Example Use Case: Employee Onboarding
+
+Our employee onboarding process includes these key steps:
+
+1. HR initiates the onboarding process with new employee information
+2. IT department prepares equipment and accounts in parallel with HR paperwork
+3. The manager reviews and approves the onboarding plan
+4. Automated notifications are sent to relevant departments
+5. The new employee completes required training
+6. The process concludes with a feedback collection step
+
+## Version 1: Using Aletyx Playground
+
+### Step 1: Access Aletyx Playground
+
+1. Navigate to [playground.aletyx.ai](https://playground.aletyx.ai) or run locally:
+
+```bash
+curl -sL https://raw.githubusercontent.com/aletyx-labs/kie-10.0.0-sandbox/refs/heads/main/docker-compose.yaml | docker compose -f - up
+```
+
+2. From the welcome screen, click **Create Project**
+3. Name your project "EmployeeOnboarding" and provide a description
+4. Click **Create**
+
+### Step 2: Create a New BPMN Model
+
+1. Click **New File** and select **Workflow** (BPMN)
+2. Name your workflow "employee-onboarding.bpmn"
+3. Click **Create**
+
+### Step 3: Design the Onboarding Process
+
+Let's build the process diagram:
+
+1. **Start Event**:
+   - Drag a Start Event from the palette
+   - Name it "New Employee Hire"
+   - In the properties panel, add a process variable: `employee` (type: Object)
+
+2. **HR Onboarding Task**:
+   - Drag a User Task and connect it to the Start Event
+   - Name it "Complete HR Paperwork"
+   - In the properties panel:
+     - Actors: `HR` (the group responsible)
+     - Data assignments:
+       - Input: `employee` (map from process variable)
+       - Output: `hrComplete` (Boolean)
+
+3. **Parallel Gateway (Split)**:
+   - Drag a Parallel Gateway after the HR task
+   - Connect it to the HR task
+
+4. **IT Setup Task** (one branch of parallel execution):
+   - Drag a User Task and connect it to the Parallel Gateway
+   - Name it "Prepare IT Equipment and Accounts"
+   - In the properties panel:
+     - Actors: `IT` (the group responsible)
+     - Data assignments:
+       - Input: `employee` (map from process variable)
+       - Output: `itComplete` (Boolean)
+
+5. **Add Equipment Timer**:
+   - Add a Boundary Timer Event to the IT task
+   - Set timer to ISO-8601: `PT3D` (3 days)
+   - Connect it to an "IT Setup Escalation" Script Task
+   - In the Script Task, add a script to send an escalation email
+
+6. **Training Setup Task** (another branch of parallel execution):
+   - Drag a Service Task and connect it to the Parallel Gateway
+   - Name it "Schedule Required Training"
+   - In the properties panel:
+     - Implementation: Java Class
+     - Class name: `ai.aletyx.onboarding.TrainingService`
+     - Method: `scheduleTraining`
+     - Data assignments:
+       - Input: `employee` (map from process variable)
+       - Output: `trainingScheduled` (Boolean)
+
+7. **Parallel Gateway (Join)**:
+   - Drag another Parallel Gateway
+   - Connect both the IT task and Training Service task to this gateway
+
+8. **Manager Approval Task**:
+   - Drag a User Task and connect it to the Join Gateway
+   - Name it "Manager Review and Approval"
+   - In the properties panel:
+     - Actors: `#{employee.departmentManager}` (dynamic assignment)
+     - Data assignments:
+       - Input: `employee`, `hrComplete`, `itComplete`, `trainingScheduled`
+       - Output: `managerApproved` (Boolean)
+
+9. **Exclusive Gateway (Decision)**:
+   - Drag an Exclusive Gateway after the Manager Approval
+   - Create two paths:
+     - Path 1: Condition `managerApproved == true`
+     - Path 2: Condition `managerApproved == false` (returns to HR task)
+
+10. **Send Welcome Email Task**:
+    - Drag a Service Task on the approval path
+    - Name it "Send Welcome Email"
+    - Implementation: Java Class
+    - Class name: `ai.aletyx.onboarding.NotificationService`
+    - Method: `sendWelcomeEmail`
+
+11. **Employee Training Task**:
+    - Drag a User Task after the Welcome Email task
+    - Name it "Complete Required Training"
+    - Actors: `#{employee.username}`
+    - Add a form with training checklist
+
+12. **End Event**:
+    - Drag an End Event and connect it to the Training task
+    - Name it "Onboarding Complete"
+
+13. **Save the model**
+
+### Step 4: Create Required Java Classes
+
+Create these Java files in your project:
+
+**Employee.java**
+```java
+package ai.aletyx.model;
+
+public class Employee {
+    private String id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String department;
+    private String position;
+    private String departmentManager;
+    private String username;
+    private String startDate;
+
+    // Constructors, getters, and setters
+
+    public Employee() {
+    }
+
+    public Employee(String id, String firstName, String lastName, String email,
+                   String department, String position, String departmentManager,
+                   String username, String startDate) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.department = department;
+        this.position = position;
+        this.departmentManager = departmentManager;
+        this.username = username;
+        this.startDate = startDate;
+    }
+
+    // Getters and setters for all fields
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public String getDepartmentManager() {
+        return departmentManager;
+    }
+
+    public void setDepartmentManager(String departmentManager) {
+        this.departmentManager = departmentManager;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+}
+```
+
+**TrainingService.java**
+```java
+package ai.aletyx.onboarding;
+
+import ai.aletyx.model.Employee;
+
+public class TrainingService {
+
+    public boolean scheduleTraining(Employee employee) {
+        // In a real implementation, this would connect to a training system
+        // and schedule the required courses based on employee role/department
+
+        System.out.println("Scheduling training for: " + employee.getFirstName() + " " +
+                          employee.getLastName() + " in " + employee.getDepartment());
+
+        // Determine required trainings based on department
+        String[] requiredTrainings;
+        switch(employee.getDepartment().toLowerCase()) {
+            case "engineering":
+                requiredTrainings = new String[]{"Code of Conduct", "Security Awareness", "Technical Onboarding"};
+                break;
+            case "sales":
+                requiredTrainings = new String[]{"Code of Conduct", "Sales Methodology", "CRM Training"};
+                break;
+            case "hr":
+                requiredTrainings = new String[]{"Code of Conduct", "HR Policies", "Benefits Administration"};
+                break;
+            default:
+                requiredTrainings = new String[]{"Code of Conduct", "Security Awareness"};
+        }
+
+        // Log scheduled trainings
+        for(String training : requiredTrainings) {
+            System.out.println("  - Scheduled: " + training);
+        }
+
+        return true;
+    }
+}
+```
+
+**NotificationService.java**
+```java
+package ai.aletyx.onboarding;
+
+import ai.aletyx.model.Employee;
+
+public class NotificationService {
+
+    public void sendWelcomeEmail(Employee employee) {
+        // In a real implementation, this would connect to an email service
+        // and send the actual welcome email to the employee
+
+        System.out.println("Sending welcome email to: " + employee.getEmail());
+        System.out.println("Subject: Welcome to Our Company, " + employee.getFirstName() + "!");
+        System.out.println("Body: ");
+        System.out.println("Dear " + employee.getFirstName() + ",");
+        System.out.println();
+        System.out.println("Welcome to Our Company! We're excited to have you joining the " +
+                          employee.getDepartment() + " team as a " + employee.getPosition() + ".");
+        System.out.println();
+        System.out.println("Your start date is: " + employee.getStartDate());
+        System.out.println("Your manager is: " + employee.getDepartmentManager());
+        System.out.println();
+        System.out.println("Please complete your required training modules by the end of your first week.");
+        System.out.println();
+        System.out.println("Best regards,");
+        System.out.println("HR Department");
+    }
+
+    public void sendEscalationEmail(String manager, String employeeName, String task) {
+        // In a real implementation, this would send an escalation email
+
+        System.out.println("Sending escalation email to: " + manager);
+        System.out.println("Subject: ACTION REQUIRED: Onboarding task overdue for " + employeeName);
+        System.out.println("Body: ");
+        System.out.println("Dear Manager,");
+        System.out.println();
+        System.out.println("The following onboarding task is overdue: " + task);
+        System.out.println("Employee: " + employeeName);
+        System.out.println();
+        System.out.println("Please ensure this task is completed as soon as possible.");
+        System.out.println();
+        System.out.println("Best regards,");
+        System.out.println("HR System");
+    }
+}
+```
+
+### Step 5: Deploy and Test the Workflow
+
+1. Click **Deploy** to create a dev deployment
+2. Once deployed, use the test interface to start a new process instance:
+   - Enter sample employee data:
+     ```json
+     {
+       "id": "EMP001",
+       "firstName": "Jane",
+       "lastName": "Smith",
+       "email": "jane.smith@company.com",
+       "department": "Engineering",
+       "position": "Software Engineer",
+       "departmentManager": "john.doe",
+       "username": "jane.smith",
+       "startDate": "2023-06-01"
+     }
+     ```
+3. Navigate to the Task list to see and complete the "HR Paperwork" task
+4. Continue through the process, completing the IT setup and manager approval tasks
+5. Observe how the process flows through the various paths based on your inputs
+
+## Version 2: Java 17 Project with Maven
+
+### Step 1: Create a Maven Project
+
+1. Create a new Maven project with the following structure:
+
+```
+employee-onboarding/
+├── pom.xml
+└── src/
+    └── main/
+        ├── java/
+        │   └── ai/
+        │       └── aletyx/
+        │           ├── model/
+        │           │   └── Employee.java
+        │           ├── onboarding/
+        │           │   ├── TrainingService.java
+        │           │   └── NotificationService.java
+        │           └── OnboardingApplication.java
+        └── resources/
+            └── process/
+                └── employee-onboarding.bpmn
+```
+
+2. Set up your `pom.xml`:
+
+
+### Step 4: Create the BPMN Process File
+
+1. Place your BPMN process file in `src/main/resources/employee-onboarding.bpmn`
+
+2. You can either:
+   - Export the BPMN file from the Aletyx Playground after designing it there
+   - Use a BPMN editor to create the process and export it
+
+3. The BPMN file should contain all the elements we designed in the Playground version:
+   - Start event for "New Employee Hire"
+   - User task for "Complete HR Paperwork"
+   - Parallel gateway for splitting the flow
+   - User task for "Prepare IT Equipment and Accounts" with boundary timer
+   - Service task for "Schedule Required Training"
+   - Parallel gateway for joining the flows
+   - User task for "Manager Review and Approval"
+   - Exclusive gateway for the approval decision
+   - Service task for "Send Welcome Email"
+   - User task for "Complete Required Training"
+   - End event for "Onboarding Complete"
+
+4. For full BPMN file content, refer to the [sample onboarding process file](https://github.com/aletyx-labs/examples/raw/main/employee-onboarding/src/main/resources/employee-onboarding.bpmn)
+
+### Step 5: Create the REST Resource
+
+Create a REST resource to expose the process API:
+
+**OnboardingProcessResource.java**
+```java
+package ai.aletyx.process;
+
+import ai.aletyx.model.Employee;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jbpm.workflow.instance.impl.WorkflowProcessInstanceImpl;
+import org.kie.kogito.process.Process;
+import org.kie.kogito.process.ProcessInstance;
+import org.kie.kogito.process.impl.Sig;
+
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import java.util.HashMap;
+import java.util.Map;
+
+@Path("/onboarding")
+@Tag(name = "Onboarding Process", description = "Employee onboarding process operations")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class OnboardingProcessResource {
+
+    @Inject
+    Process<EmployeeOnboardingModel> onboardingProcess;
+
+    @POST
+    @Path("/start")
+    @Operation(summary = "Start a new onboarding process",
+              description = "Initiates the employee onboarding process for a new hire")
+    public Response startOnboardingProcess(Employee employee) {
+        // Create the process input
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("employee", employee);
+        parameters.put("hrComplete", false);
+        parameters.put("itComplete", false);
+        parameters.put("trainingScheduled", false);
+        parameters.put("managerApproved", false);
+
+        // Start the process
+        EmployeeOnboardingModel model = EmployeeOnboardingModel.fromMap(parameters);
+        ProcessInstance<EmployeeOnboardingModel> instance = onboardingProcess.createInstance(model);
+        instance.start();
+
+        // Return the process instance ID for future reference
+        return Response.ok()
+                .entity(Map.of(
+                        "processId", instance.id(),
+                        "employee", employee,
+                        "status", instance.status()
+                ))
+                .build();
+    }
+
+    @GET
+    @Path("/{id}")
+    @Operation(summary = "Get process instance details",
+              description = "Retrieves details about a specific onboarding process")
+    public Response getProcessInstance(@PathParam("id") String id) {
+        ProcessInstance<EmployeeOnboardingModel> instance = onboardingProcess.instances()
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException("Process instance not found"));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("processId", instance.id());
+        response.put("status", instance.status());
+
+        // Add process variables
+        if (instance.variables() != null) {
+            response.put("employee", instance.variables().getEmployee());
+            response.put("hrComplete", instance.variables().isHrComplete());
+            response.put("itComplete", instance.variables().isItComplete());
+            response.put("trainingScheduled", instance.variables().isTrainingScheduled());
+            response.put("managerApproved", instance.variables().isManagerApproved());
+        }
+
+        return Response.ok(response).build();
+    }
+
+    @POST
+    @Path("/{id}/abort")
+    @Operation(summary = "Abort process instance",
+              description = "Aborts an active onboarding process instance")
+    public Response abortProcessInstance(@PathParam("id") String id) {
+        ProcessInstance<EmployeeOnboardingModel> instance = onboardingProcess.instances()
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException("Process instance not found"));
+
+        instance.abort();
+
+        return Response.ok()
+                .entity(Map.of(
+                        "processId", instance.id(),
+                        "status", "Aborted"
+                ))
+                .build();
+    }
+}
+```
+
+### Step 6: Create the Process Model Class
+
+Create a model class to represent the process variables:
+
+**EmployeeOnboardingModel.java**
+```java
+package ai.aletyx.process;
+
+import ai.aletyx.model.Employee;
+
+import java.util.Map;
+
+public class EmployeeOnboardingModel {
+
+    private Employee employee;
+    private boolean hrComplete;
+    private boolean itComplete;
+    private boolean trainingScheduled;
+    private boolean managerApproved;
+
+    public static EmployeeOnboardingModel fromMap(Map<String, Object> params) {
+        EmployeeOnboardingModel model = new EmployeeOnboardingModel();
+        model.setEmployee((Employee) params.get("employee"));
+        model.setHrComplete((Boolean) params.getOrDefault("hrComplete", false));
+        model.setItComplete((Boolean) params.getOrDefault("itComplete", false));
+        model.setTrainingScheduled((Boolean) params.getOrDefault("trainingScheduled", false));
+        model.setManagerApproved((Boolean) params.getOrDefault("managerApproved", false));
+        return model;
+    }
+
+    public Map<String, Object> toMap() {
+        return Map.of(
+            "employee", employee,
+            "hrComplete", hrComplete,
+            "itComplete", itComplete,
+            "trainingScheduled", trainingScheduled,
+            "managerApproved", managerApproved
+        );
+    }
+
+    // Getters and setters
+    public Employee getEmployee() {
+        return employee;
+    }
+
+    public void setEmployee(Employee employee) {
+        this.employee = employee;
+    }
+
+    public boolean isHrComplete() {
+        return hrComplete;
+    }
+
+    public void setHrComplete(boolean hrComplete) {
+        this.hrComplete = hrComplete;
+    }
+
+    public boolean isItComplete() {
+        return itComplete;
+    }
+
+    public void setItComplete(boolean itComplete) {
+        this.itComplete = itComplete;
+    }
+
+    public boolean isTrainingScheduled() {
+        return trainingScheduled;
+    }
+
+    public void setTrainingScheduled(boolean trainingScheduled) {
+        this.trainingScheduled = trainingScheduled;
+    }
+
+    public boolean isManagerApproved() {
+        return managerApproved;
+    }
+
+    public void setManagerApproved(boolean managerApproved) {
+        this.managerApproved = managerApproved;
+    }
+}
+```
+
+### Step 7: Create the Application Main Class
+
+Create or update the main application class:
+
+**OnboardingApplication.java**
+```java
+package ai.aletyx;
+
+import io.quarkus.runtime.Quarkus;
+import io.quarkus.runtime.annotations.QuarkusMain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@QuarkusMain
+public class OnboardingApplication {
+
+    private static final Logger logger = LoggerFactory.getLogger(OnboardingApplication.class);
+
+    public static void main(String[] args) {
+        logger.info("Starting Employee Onboarding Application");
+        Quarkus.run(args);
+    }
+}
+```
+
+### Step 8: Create a Simple Test Case
+
+**OnboardingProcessTest.java**
+```java
+package ai.aletyx;
+
+import ai.aletyx.model.Employee;
+import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
+import org.junit.jupiter.api.Test;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+
+@QuarkusTest
+public class OnboardingProcessTest {
+
+    @Test
+    public void testStartOnboardingProcess() {
+        // Create a test employee
+        Employee employee = new Employee();
+        employee.setId("EMP001");
+        employee.setFirstName("Jane");
+        employee.setLastName("Smith");
+        employee.setEmail("jane.smith@company.com");
+        employee.setDepartment("Engineering");
+        employee.setPosition("Software Engineer");
+        employee.setDepartmentManager("john.doe");
+        employee.setUsername("jane.smith");
+        employee.setStartDate("2023-06-01");
+
+        // Start the process
+        String processId = given()
+                .contentType(ContentType.JSON)
+                .body(employee)
+                .when()
+                .post("/onboarding/start")
+                .then()
+                .statusCode(200)
+                .body("processId", notNullValue())
+                .body("status", is("ACTIVE"))
+                .extract()
+                .path("processId");
+
+        // Verify the process instance exists
+        given()
+                .when()
+                .get("/onboarding/" + processId)
+                .then()
+                .statusCode(200)
+                .body("status", is("ACTIVE"))
+                .body("employee.firstName", is("Jane"))
+                .body("employee.lastName", is("Smith"));
+    }
+}
+```
+
+### Step 9: Run the Application
+
+1. Start the application:
+```bash
+mvn quarkus:dev
+```
+
+2. Access the Swagger UI to test the API:
+   - Open [http://localhost:8080/q/swagger-ui](http://localhost:8080/q/swagger-ui)
+   - Use the `/onboarding/start` endpoint to start a new process
+   - Check the process instance with `/onboarding/{id}`
+
+3. Access the Task UI (if you've added the Quarkus task console extension):
+   - Open [http://localhost:8080/q/dev-ui/task-console](http://localhost:8080/q/dev-ui/task-console)
+   - Complete tasks in the onboarding process
+
+### Step 10: Deploying to Production
+
+1. Build a native executable for optimal performance:
+```bash
+mvn package -Pnative -Dquarkus.native.container-build=true
+```
+
+2. Create a Docker image:
+```bash
+docker build -f src/main/docker/Dockerfile.native -t aletyx/employee-onboarding .
+```
+
+3. Deploy to Kubernetes:
+```bash
+kubectl apply -f kubernetes/employee-onboarding.yaml
+```
+
+## Advanced Features
+
+### Adding Process Metrics
+
+To track process performance, add the Quarkus Micrometer extension and configure process metrics:
+
+1. Add the dependency:
+```xml
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+</dependency>
+```
+
+2. Configure metrics in `application.properties`:
+```properties
+# Enable and expose metrics
+quarkus.micrometer.binder.kogito.enabled=true
+quarkus.micrometer.export.prometheus.enabled=true
+```
+
+3. Access metrics at `/q/metrics`
+
+### Task Assignment Strategies
+
+Implement custom task assignment strategies:
+
+1. Create a TaskAssignmentStrategy class:
+```java
+package ai.aletyx.onboarding;
+
+import org.kie.kogito.process.workitem.Policy;
+import org.kie.kogito.process.workitem.TaskAssignmentException;
+import org.kie.kogito.process.workitem.TaskInfo;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import java.util.Map;
+
+@ApplicationScoped
+public class WorkloadBasedAssignmentStrategy {
+
+    public String assignTask(TaskInfo task, Map<String, Object> parameters) throws TaskAssignmentException {
+        // Implement your assignment logic here
+        // For example, assign to the user with the lowest workload
+        return "optimal-user";
+    }
+}
+```
+
+2. Register your strategy with the task assignment service
+
+### Process Monitoring and Administration
+
+For enterprise deployments, consider adding:
+
+1. Kogito Management Console for process monitoring
+2. Kogito Task Console for task management
+3. Infinispan or Redis for process state persistence
+4. Kafka for event-driven process communication
+
+## Benefits of BPMN Workflows
+
+- **Standardized Notation**: BPMN is an industry-standard understood by business and technical teams
+- **Process Visualization**: Graphical representation makes complex workflows easier to understand
+- **Execution Control**: Fine-grained control over process flow, parallel execution, and decision points
+- **Human and System Tasks**: Seamless integration of manual and automated activities
+- **Event Handling**: Built-in handling of timers, signals, messages, and errors
+- **Monitoring and Reporting**: Process analytics and KPIs for continuous improvement
+- **Flexibility**: Easily modify processes without changing application code
+</bpmn2:sourceRef>
+        <bpmn2:targetRef>DataInput_5</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>itComplete</bpmn2:sourceRef>
+        <bpmn2:targetRef>DataInput_6</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:sourceRef>trainingScheduled</bpmn2:sourceRef>
+        <bpmn2:targetRef>DataInput_7</bpmn2:targetRef>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataOutputAssociation>
+        <bpmn2:sourceRef>DataOutput_4</bpmn2:sourceRef>
+        <bpmn2:targetRef>managerApproved</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+      <bpmn2:potentialOwner id="PotentialOwner_3">
+        <bpmn# Creating Your First BPMN Workflow
+
+This guide walks you through creating a Business Process Model and Notation (BPMN) workflow for an employee onboarding process. You'll learn how to design, implement, and execute a process that orchestrates both human and automated tasks.
+
+## Example Use Case: Employee Onboarding
+
+Our employee onboarding process includes these key steps:
+
+1. HR initiates the onboarding process with new employee information
+2. IT department prepares equipment and accounts in parallel with HR paperwork
+3. The manager reviews and approves the onboarding plan
+4. Automated notifications are sent to relevant departments
+5. The new employee completes required training
+6. The process concludes with a feedback collection step
+
+## Version 1: Using Aletyx Playground
+
+### Step 1: Access Aletyx Playground
+
+1. Navigate to [playground.aletyx.ai](https://playground.aletyx.ai) or run locally:
+
+```bash
+curl -sL https://raw.githubusercontent.com/aletyx-labs/kie-10.0.0-sandbox/refs/heads/main/docker-compose.yaml | docker compose -f - up
+```
+
+2. From the welcome screen, click **Create Project**
+3. Name your project "EmployeeOnboarding" and provide a description
+4. Click **Create**
+
+### Step 2: Create a New BPMN Model
+
+1. Click **New File** and select **Workflow** (BPMN)
+2. Name your workflow "employee-onboarding.bpmn"
+3. Click **Create**
+
+### Step 3: Design the Onboarding Process
+
+Let's build the process diagram:
+
+1. **Start Event**:
+   - Drag a Start Event from the palette
+   - Name it "New Employee Hire"
+   - In the properties panel, add a process variable: `employee` (type: Object)
+
+2. **HR Onboarding Task**:
+   - Drag a User Task and connect it to the Start Event
+   - Name it "Complete HR Paperwork"
+   - In the properties panel:
+     - Actors: `HR` (the group responsible)
+     - Data assignments:
+       - Input: `employee` (map from process variable)
+       - Output: `hrComplete` (Boolean)
+
+3. **Parallel Gateway (Split)**:
+   - Drag a Parallel Gateway after the HR task
+   - Connect it to the HR task
+
+4. **IT Setup Task** (one branch of parallel execution):
+   - Drag a User Task and connect it to the Parallel Gateway
+   - Name it "Prepare IT Equipment and Accounts"
+   - In the properties panel:
+     - Actors: `IT` (the group responsible)
+     - Data assignments:
+       - Input: `employee` (map from process variable)
+       - Output: `itComplete` (Boolean)
+
+5. **Add Equipment Timer**:
+   - Add a Boundary Timer Event to the IT task
+   - Set timer to ISO-8601: `PT3D` (3 days)
+   - Connect it to an "IT Setup Escalation" Script Task
+   - In the Script Task, add a script to send an escalation email
+
+6. **Training Setup Task** (another branch of parallel execution):
+   - Drag a Service Task and connect it to the Parallel Gateway
+   - Name it "Schedule Required Training"
+   - In the properties panel:
+     - Implementation: Java Class
+     - Class name: `ai.aletyx.onboarding.TrainingService`
+     - Method: `scheduleTraining`
+     - Data assignments:
+       - Input: `employee` (map from process variable)
+       - Output: `trainingScheduled` (Boolean)
+
+7. **Parallel Gateway (Join)**:
+   - Drag another Parallel Gateway
+   - Connect both the IT task and Training Service task to this gateway
+
+8. **Manager Approval Task**:
+   - Drag a User Task and connect it to the Join Gateway
+   - Name it "Manager Review and Approval"
+   - In the properties panel:
+     - Actors: `#{employee.departmentManager}` (dynamic assignment)
+     - Data assignments:
+       - Input: `employee`, `hrComplete`, `itComplete`, `trainingScheduled`
+       - Output: `managerApproved` (Boolean)
+
+9. **Exclusive Gateway (Decision)**:
+   - Drag an Exclusive Gateway after the Manager Approval
+   - Create two paths:
+     - Path 1: Condition `managerApproved == true`
+     - Path 2: Condition `managerApproved == false` (returns to HR task)
+
+10. **Send Welcome Email Task**:
+    - Drag a Service Task on the approval path
+    - Name it "Send Welcome Email"
+    - Implementation: Java Class
+    - Class name: `ai.aletyx.onboarding.NotificationService`
+    - Method: `sendWelcomeEmail`
+
+11. **Employee Training Task**:
+    - Drag a User Task after the Welcome Email task
+    - Name it "Complete Required Training"
+    - Actors: `#{employee.username}`
+    - Add a form with training checklist
+
+12. **End Event**:
+    - Drag an End Event and connect it to the Training task
+    - Name it "Onboarding Complete"
+
+13. **Save the model**
+
+### Step 4: Create Required Java Classes
+
+Create these Java files in your project:
+
+**Employee.java**
+```java
+package ai.aletyx.model;
+
+public class Employee {
+    private String id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String department;
+    private String position;
+    private String departmentManager;
+    private String username;
+    private String startDate;
+
+    // Constructors, getters, and setters
+
+    public Employee() {
+    }
+
+    public Employee(String id, String firstName, String lastName, String email,
+                   String department, String position, String departmentManager,
+                   String username, String startDate) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.department = department;
+        this.position = position;
+        this.departmentManager = departmentManager;
+        this.username = username;
+        this.startDate = startDate;
+    }
+
+    // Getters and setters for all fields
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public String getDepartmentManager() {
+        return departmentManager;
+    }
+
+    public void setDepartmentManager(String departmentManager) {
+        this.departmentManager = departmentManager;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+}
+```
+
+**TrainingService.java**
+```java
+package ai.aletyx.onboarding;
+
+import ai.aletyx.model.Employee;
+
+public class TrainingService {
+
+    public boolean scheduleTraining(Employee employee) {
+        // In a real implementation, this would connect to a training system
+        // and schedule the required courses based on employee role/department
+
+        System.out.println("Scheduling training for: " + employee.getFirstName() + " " +
+                          employee.getLastName() + " in " + employee.getDepartment());
+
+        // Determine required trainings based on department
+        String[] requiredTrainings;
+        switch(employee.getDepartment().toLowerCase()) {
+            case "engineering":
+                requiredTrainings = new String[]{"Code of Conduct", "Security Awareness", "Technical Onboarding"};
+                break;
+            case "sales":
+                requiredTrainings = new String[]{"Code of Conduct", "Sales Methodology", "CRM Training"};
+                break;
+            case "hr":
+                requiredTrainings = new String[]{"Code of Conduct", "HR Policies", "Benefits Administration"};
+                break;
+            default:
+                requiredTrainings = new String[]{"Code of Conduct", "Security Awareness"};
+        }
+
+        // Log scheduled trainings
+        for(String training : requiredTrainings) {
+            System.out.println("  - Scheduled: " + training);
+        }
+
+        return true;
+    }
+}
+```
+
+**NotificationService.java**
+```java
+package ai.aletyx.onboarding;
+
+import ai.aletyx.model.Employee;
+
+public class NotificationService {
+
+    public void sendWelcomeEmail(Employee employee) {
+        // In a real implementation, this would connect to an email service
+        // and send the actual welcome email to the employee
+
+        System.out.println("Sending welcome email to: " + employee.getEmail());
+        System.out.println("Subject: Welcome to Our Company, " + employee.getFirstName() + "!");
+        System.out.println("Body: ");
+        System.out.println("Dear " + employee.getFirstName() + ",");
+        System.out.println();
+        System.out.println("Welcome to Our Company! We're excited to have you joining the " +
+                          employee.getDepartment() + " team as a " + employee.getPosition() + ".");
+        System.out.println();
+        System.out.println("Your start date is: " + employee.getStartDate());
+        System.out.println("Your manager is: " + employee.getDepartmentManager());
+        System.out.println();
+        System.out.println("Please complete your required training modules by the end of your first week.");
+        System.out.println();
+        System.out.println("Best regards,");
+        System.out.println("HR Department");
+    }
+
+    public void sendEscalationEmail(String manager, String employeeName, String task) {
+        // In a real implementation, this would send an escalation email
+
+        System.out.println("Sending escalation email to: " + manager);
+        System.out.println("Subject: ACTION REQUIRED: Onboarding task overdue for " + employeeName);
+        System.out.println("Body: ");
+        System.out.println("Dear Manager,");
+        System.out.println();
+        System.out.println("The following onboarding task is overdue: " + task);
+        System.out.println("Employee: " + employeeName);
+        System.out.println();
+        System.out.println("Please ensure this task is completed as soon as possible.");
+        System.out.println();
+        System.out.println("Best regards,");
+        System.out.println("HR System");
+    }
+}
+```
+
+### Step 5: Deploy and Test the Workflow
+
+1. Click **Deploy** to create a dev deployment
+2. Once deployed, use the test interface to start a new process instance:
+   - Enter sample employee data:
+     ```json
+     {
+       "id": "EMP001",
+       "firstName": "Jane",
+       "lastName": "Smith",
+       "email": "jane.smith@company.com",
+       "department": "Engineering",
+       "position": "Software Engineer",
+       "departmentManager": "john.doe",
+       "username": "jane.smith",
+       "startDate": "2023-06-01"
+     }
+     ```
+3. Navigate to the Task list to see and complete the "HR Paperwork" task
+4. Continue through the process, completing the IT setup and manager approval tasks
+5. Observe how the process flows through the various paths based on your inputs
+
+### Step 6: Advanced Process Features
+
+Once you're comfortable with the basic workflow, try adding these advanced features:
+
+1. **Process Metrics**:
+   - Add data collection points to measure process efficiency
+   - Track time spent in each task
+   - Configure SLA deadlines for critical tasks
+
+2. **Dynamic Task Assignment**:
+   - Implement rules for automatic task assignment based on workload
+   - Configure notification settings for assigned tasks
+
+3. **Error Handling**:
+   - Add boundary error events to handle exceptions
+   - Implement compensation actions for rollback scenarios
+
+4. **Process Variables**:
+   - Add complex data structures to process variables
+   - Implement custom variable serialization
+
+## Version 2: Java 17 Project with Maven
+
+### Step 1: Create a Maven Project
+
+1. Generate a new Quarkus project with Kogito using the Maven CLI:
+
+```bash
+mvn io.quarkus:quarkus-maven-plugin:3.2.0.Final:create \
+    -DprojectGroupId=ai.aletyx \
+    -DprojectArtifactId=employee-onboarding \
+    -DclassName="ai.aletyx.OnboardingApplication" \
+    -Dpath="/onboarding" \
+    -Dextensions="kogito,resteasy-jackson,smallrye-openapi,smallrye-health"
+```
+
+2. The project will have the following structure:
+
+```
+employee-onboarding/
+├── pom.xml
+└── src/
+    ├── main/
+    │   ├── java/
+    │   │   └── ai/
+    │   │       └── aletyx/
+    │   │           ├── model/
+    │   │           │   └── Employee.java
+    │   │           ├── onboarding/
+    │   │           │   ├── TrainingService.java
+    │   │           │   └── NotificationService.java
+    │   │           ├── process/
+    │   │           │   ├── EmployeeOnboardingProcess.java
+    │   │           │   └── OnboardingProcessResource.java
+    │   │           └── OnboardingApplication.java
+    │   └── resources/
+    │       ├── META-INF/
+    │       │   └── resources/
+    │       │       └── index.html
+    │       └── process/
+    │           └── employee-onboarding.bpmn
+    └── test/
+        └── java/
+            └── ai/
+                └── aletyx/
+                    └── OnboardingProcessTest.java
+```
+
+<groupId>org.kie.kogito</groupId>
+        <artifactId>kogito-quarkus-deployment</artifactId>
+        <version>${kogito.version}</version>
+    </dependency>
+</dependencies>

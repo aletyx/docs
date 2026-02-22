@@ -1,0 +1,703 @@
+---
+title: "Drools 7 End of Life: Architectural and Migration Considerations"
+description: "Drools 7 and its enterprise ecosystem (JBoss EAP 7, Business Central, KIE Server, and KieScanner) are reaching end-of-life or extended support only. Organizations running Drools 7 in production..."
+---
+<p class="meta-info">
+<strong>Last updated:</strong> February 23, 2026 &nbsp;|&nbsp; <strong>Reading time:</strong> 20 min &nbsp;|&nbsp; <strong>Audience:</strong> Enterprise Architects, Platform Owners, Technical Leads
+</p>
+
+## Overview
+
+Drools 7 and its enterprise ecosystem (JBoss EAP 7, Business Central, KIE Server, and KieScanner) are reaching end-of-life or extended support only. Organizations running Drools 7 in production face a critical platform decision affecting security posture, compliance status, and operational continuity. The path forward is not straightforward.
+
+This document analyzes the execution model changes, performance characteristics, governance shifts, and deployment model differences introduced in Drools 10 (the community release distributed through Apache KIE). It is intended for enterprise architects, platform owners, and technical leads responsible for modernization decisions.
+
+### Architectural Constraint
+
+Community Drools 10 is not a drop-in replacement for orchestration-heavy Drools 7 systems. Session isolation, execution model changes, and removal of `startProcess()` alter runtime behavior and performance characteristics.
+
+Drools 10 preserves DRL syntax compatibility but changes the execution and deployment model fundamentally.
+
+---
+
+## Key Findings
+
+- **Not a drop-in replacement**: Community Drools 10 requires architectural changes for systems using BPMN orchestration, shared working memory, or `startProcess()` patterns.
+- **Core components removed**: KIE Server, Business Central, KieScanner, and the KJAR runtime deployment model do not exist in community Drools 10.
+- **Execution model changed**: Drools 10 uses session-per-task isolation; facts are no longer shared implicitly across BPMN tasks.
+- **Performance impact observed**: 5× to 30× degradation measured in orchestration-heavy BPMN workflows under internal benchmarking conditions.
+- **Deployment model shifted**: Every rule change requires container image rebuild and redeployment; no runtime hot-deploy capability exists.
+- **Governance gaps**: Business Central retirement eliminates built-in audit trails, approval workflows, and visual DRL authoring; KIE Sandbox supports only BPMN and DMN editing.
+- **Migration feasibility varies**: Simple rule-only projects can migrate; orchestration-heavy systems may require fundamental architectural redesign.
+
+---
+
+## Scope and Methodology
+
+This document synthesizes observed migration patterns, architectural mismatches, and operational challenges encountered across multiple enterprise Drools 7 environments attempting to move to community Drools 10 through Apache KIE.
+
+Observations reflect real migration efforts across regulated industries and analysis of upstream Apache KIE project changes. Outcomes vary significantly based on orchestration depth, execution model reliance, and governance requirements.
+
+### How to Read This Document
+
+Performance characteristics, governance impacts, and migration feasibility described here are observational. They reflect patterns encountered across real systems and may vary based on architecture, workload, and operational constraints.
+
+### About the Authors
+
+Aletyx Engineering has led multiple enterprise Drools 7 modernization efforts across regulated industries, including financial services, healthcare, and public sector environments. This document reflects patterns observed during those migrations and analysis of upstream Apache KIE changes.
+
+The approaches described here informed internal architectural models designed to mitigate orchestration and governance regressions introduced in community Drools 10.
+
+
+---
+
+## Problem Overview
+
+Organizations running Drools 7 in production face three possible outcomes:
+
+1. **Accept unsupported platform risk** — Continue running EOL software with no security patches
+2. **Migrate to an alternative execution model** — Evaluate commercial alternatives or different automation approaches
+3. **Perform architectural redesign for community Drools 10** — Accept the breaking changes and rebuild
+
+Migration complexity correlates strongly with the degree of dependency on the legacy Drools 7 execution model.
+
+## Migration Sensitivity by Execution Model Dependency
+
+| Execution Model Dependency | Migration Complexity | Typical Characteristics |
+|----------------------------|---------------------|-------------------------|
+| **Rule-Only Execution** | Low | Stateless or simple rule services without BPMN orchestration |
+| **Orchestrated Rule Execution** | Moderate | BPMN workflows with gateways, multiple tasks, limited shared session reliance |
+| **Session-Dependent Orchestration** | High | Heavy `startProcess()` usage, deep shared working memory reliance across task boundaries |
+
+Systems with deep reliance on ruleflow orchestration experience the highest migration risk.
+
+### End-of-Life Component Status
+
+The following table summarizes the lifecycle status of components in the Drools 7 ecosystem. Status definitions:
+
+- **End of life**: No further releases, patches, or support from the upstream project
+- **Extended support only**: Vendor support available at additional cost; no new features
+- **Maintenance mode**: Limited updates; approaching end of active development
+- **Retired**: Component discontinued; no replacement with equivalent functionality
+- **Removed in Drools 10**: Capability does not exist in community Drools 10
+
+| Component | Status | Impact | Source |
+|-----------|--------|--------|--------|
+| Drools 7.x engine | End of life | No security patches; last community release July 2023 | [Apache KIE](https://github.com/apache/incubator-kie-drools/releases) |
+| Java 7 | End of life | Security vulnerabilities unpatched since 2015 | [Oracle](https://www.oracle.com/java/technologies/java-se-support-roadmap.html) |
+| Java 8 | Extended support only | Oracle Premier Support ended Jan 2019; extended until Dec 2030 | [Oracle](https://www.oracle.com/java/technologies/java-se-support-roadmap.html) |
+| Java 11 | Maintenance mode | Oracle Premier Support ends Sep 2026; migration to 17/21 required | [Oracle](https://www.oracle.com/java/technologies/java-se-support-roadmap.html) |
+| Spring Boot 2.x | End of life | No security patches after Nov 2023 | [Spring](https://spring.io/projects/spring-boot#support) |
+| JBoss EAP 7.x | Extended support only | ELS until Oct 2027; no EAP 8+ planned on Drools 7 | [Red Hat](https://access.redhat.com/support/policy/updates/jboss_notes/) |
+| Business Central | Retired | No equivalent in community Drools 10 | [Apache KIE Blog](https://blog.kie.org/2024/08/the-new-kie-tools-releases.html) |
+| KIE Server | Retired | No centralized deployment; no unified REST entry point | [Apache KIE Blog](https://blog.kie.org/2024/08/the-new-kie-tools-releases.html) |
+| KJAR deployment model | Removed in Drools 10 | Runtime deployment via REST eliminated; container rebuild required | [Apache KIE Migration Guide](https://docs.kie.apache.org/kogito/latest/migration-guide/index.html)* |
+| KieScanner | Removed in Drools 10 | Dynamic KJAR reloading not available | [Apache KIE Migration Guide](https://docs.kie.apache.org/kogito/latest/migration-guide/index.html)* |
+
+*URL may shift with future Apache KIE releases.
+
+<Info title="JBoss EAP 7 Future">
+JBoss EAP 7.x has no planned successor releases that support Drools 7. JBoss EAP 8 targets Jakarta EE 10 and Java 17+, which is not certified with Drools 7.x and introduces dependency incompatibilities. Organizations on EAP 7 face a parallel migration challenge.
+</Info>
+### Security Implications
+
+Java 17+ introduces security manager deprecation and module system enforcement that breaks many Drools 7 patterns:
+
+- **Security Manager removal**: Java 17 deprecates `SecurityManager` for removal (JEP 411), and later Java releases progressively restrict or disable its functionality. Drools 7 deployments relying on security policies require rearchitecture.
+- **Strong encapsulation**: Internal JDK APIs used by reflection-heavy frameworks are no longer accessible by default. Common workarounds (`--add-opens`) create maintenance burden.
+- **Dependency chain breakage**: Libraries compatible with Java 8/11 often fail on Java 17+ due to illegal reflective access, requiring version upgrades throughout the dependency tree.
+
+### Operational Implications
+
+End-of-life creates compounding risks:
+
+- **Security exposure**: Known vulnerabilities in JBoss EAP 7, Java 8/11, Spring Boot 2.x, and related dependencies will not receive patches or require costly extended support contracts
+- **Compliance risk**: Regulated industries require supported software stacks; running EOL software may violate audit requirements
+- **Operational fragility**: Compatible dependencies, documentation, and skilled resources become increasingly difficult to source
+- **No forward path within 7.x**: No Drools 7.x releases will address emerging Java runtime requirements or security issues
+- **Java runtime modernization**: Organizations must migrate from Java 7, 8, or 11 to Java 17 or 21 to run community Drools 10, which cascades into dependency upgrades, module system constraints, and security policy changes
+- **Spring Boot migration**: Spring Boot 2.x end-of-life forces migration to Spring Boot 3.x, which itself requires Java 17+ and introduces breaking changes in configuration and dependencies
+
+### Platform Lifecycle Alignment
+
+Drools 7 deployments rarely exist in isolation. The rule engine is typically embedded within a broader platform stack including Java runtimes, application servers, Spring frameworks, CI/CD pipelines, and governance tooling.
+
+Drools 7 end-of-life often coincides with other platform end-of-life events:
+
+- **Java Runtime**: Many Drools 7 systems were certified on Java 7, 8, or 11. Community Drools 10 requires Java 17 or later, with Java 21 recommended for long-term support.
+- **Spring Framework**: Drools 7 deployments using Spring Boot 2.x face a parallel migration to Spring Boot 3.x with its own breaking changes.
+- **Application Server**: Enterprise deployments are frequently coupled with JBoss EAP 7.x or WildFly releases targeting older Java versions.
+
+Treating these end-of-life events independently leads to repeated revalidation cycles, fragmented modernization efforts, and increased operational risk.
+
+---
+
+## Architectural Impact
+
+Migration outcomes are driven more by execution model changes than by rule syntax compatibility.
+
+### What Changed in the Drools 10 Execution Model?
+
+The following subsections detail the specific architectural changes introduced in community Drools 10.
+
+### Execution Model Changes
+
+Community Drools 10 introduces significant architectural changes from Drools 7, particularly in how orchestration and session management function. These changes began with the Drools 8 release[^drools-8-announcement] and continued through subsequent versions:
+
+| Aspect | Drools 7 | Community Drools 10 |
+|--------|----------|---------------------|
+| Execution model | Shared working memory across tasks | Isolated session per BPMN task |
+| Deployment | KJAR artifacts deployed to KIE Server at runtime | Immutable container images with code-generated rule execution |
+| REST API | Prebuilt command-based endpoints | Custom endpoints required per execution path |
+| Orchestration | `startProcess()` with BPMN-driven ruleflow | Code generation with explicit data marshalling |
+| Governance | Business Central with visual authoring | GitOps-based workflows; KIE Sandbox for BPMN/DMN design only |
+| Build system | kie-maven-plugin with implicit dependencies | Explicit dependency management across multiple BOMs |
+| Dynamic reloading | KieScanner for runtime KJAR updates | Not available; container rebuild required |
+
+### Spring Embedded Model and KieScanner
+
+Many Drools 7 deployments use the Spring embedded model, where the rule engine runs within a Spring application context. This pattern often relies on:
+
+- **KieScanner**: Automatic polling for updated KJARs in Maven repositories, enabling hot-reload of rules without application restart
+- **Spring integration**: KieContainer and KieSession beans managed by Spring dependency injection
+- **Embedded execution**: Rules execute within the same JVM as the application
+
+**Impact in community Drools 10:**
+
+- KieScanner is not available; there is no mechanism for runtime KJAR updates
+- Rule changes require container image rebuild and redeployment
+- Spring Boot 3.x migration is required for Java 17+ compatibility
+- Kogito's code generation model replaces the embedded KieContainer pattern
+
+### Removal of startProcess()
+
+The `startProcess()` API has been the foundation of orchestration models since Drools 5. As discussed on the Apache KIE developer mailing list (early 2025)[^kie-mailing-startprocess], maintainers indicated that the legacy process runtime supporting this pattern is being phased out in favor of the code-generated execution model.
+
+**Impact:**
+
+- `startProcess()` is deprecated and is not supported under the Drools 10/Kogito execution model
+- The method signature may remain on shared interfaces due to jBPM dependencies, allowing code to compile but fail at runtime
+- As indicated by project maintainers[^kie-mailing-legacy], the legacy runtime that supported this pattern is no longer being maintained
+
+**Affected Pattern:**
+
+1. Insert multiple fact objects into working memory
+2. Invoke a BPMN-driven ruleflow via `startProcess()`
+3. Rely on shared session state across multiple tasks
+
+This pattern cannot be replicated directly in community Drools 10 without fundamental redesign.
+
+### Session Isolation
+
+In Drools 7, a single KIE Session managed facts across an entire orchestration. In community Drools 10, each task in the BPMN process creates a new KIE Session. Session-per-task execution changes performance characteristics more than rule complexity.
+
+| Drools 7 Behavior | Community Drools 10 Behavior |
+|-------------------|------------------------------|
+| Facts flow implicitly between tasks | Facts must be explicitly mapped as process variables |
+| Intermediate results remain in working memory | Intermediate results require explicit extraction and reinsertion |
+| Global variables accessible across orchestration | Global scope limited to individual task sessions |
+| Facts persist throughout process execution | Facts are created and destroyed per task; not shared |
+
+**Practical impact:**
+
+- Every fact previously implicitly available must now be explicitly declared as process variables
+- Input/output mappings must be defined at each BPMN task node
+- Parallel gateways become serial constructs requiring explicit synchronization
+- Manual analysis of every task and data dependency is required
+
+### REST API Elimination
+
+KIE Server provided a standardized REST API supporting command-based rule execution. All deployed KJARs were accessible through a single, consistent interface.
+
+**Impact:**
+
+- KIE Server is no longer present in community Drools 10
+- No centralized prebuilt REST execution server equivalent exists
+- Each execution path requires custom endpoint implementation
+- Client systems integrated with KIE Server require interface rewrites
+
+### Business Central Retirement
+
+Business Central provided:
+
+- Visual rule authoring environment for business users
+- DRL, guided rules, guided decision tables, and spreadsheet decision table editing
+- Deployment pipeline orchestration
+- Version management and rollback capabilities
+- Test scenario execution
+- Audit trails and governance workflows
+- Repository management and access control
+
+**Community Drools 10 alternatives:**
+
+- **KIE Sandbox**: Provides visual editing for BPMN and DMN assets only; does not support DRL, guided rules, guided decision tables, or other rule asset types
+- **GitOps workflows**: Rules must be managed as source code in version control systems
+- **CI/CD pipelines**: Deployment becomes pipeline responsibility with container image builds per version
+- **No direct governance replacement**: Audit trails, approval workflows, and role-based access require custom implementation or third-party solutions
+
+The limitation of KIE Sandbox to BPMN and DMN editing means organizations with significant DRL or spreadsheet decision table assets have no visual authoring environment in community Drools 10.
+
+### Excel Decision Table Changes
+
+Excel decision tables require specific file naming conventions in community Drools 10:
+
+- Files must be renamed from `.xls`, `.xlsx`, or `.csv` to `.drl.xls`, `.drl.xlsx`, or `.drl.csv`
+- In the current Kogito-based build tooling, the build does not fail if files are misnamed
+- Rules are silently excluded from compilation with no warnings or errors
+
+This creates a class of silent failures detectable only through comprehensive test coverage. File naming conventions are documented in the Drools 10 decision tables reference[^drools-decision-tables].
+
+---
+
+## Performance Implications
+
+### Why Does Drools 10 Performance Differ?
+
+Performance degradation is not uniform. Some systems experience modest impact; others experience severe nonlinear scaling degradation. The session-per-task model is the dominant variable, but orchestration structure often determines whether degradation is tolerable or catastrophic.
+
+### Benchmarking Methodology
+
+Performance observations in this document are based on internal benchmarking conducted by Aletyx Engineering across multiple client environments. Testing focused on orchestration-heavy BPMN workflows with 10+ tasks per process instance, comparing Drools 7 and community Drools 10 under equivalent infrastructure conditions (same hardware, JVM settings, and data volumes). These findings may not apply to simple rule services without BPMN orchestration or to workloads with fundamentally different execution patterns.
+
+### Session-per-Task Model
+
+The session-per-task execution model produces the most significant performance impact. Where Drools 7 maintained a single session across an orchestration, community Drools 10 creates a new session for each task in the BPMN process.
+
+**Observed impacts:**
+
+- Performance degradation of 5× to 30× measured across multiple enterprise environments with orchestration-heavy workflows
+- Sub-200ms executions can degrade to multi-second runtimes
+- Memory overhead increases due to fact recreation across task boundaries
+- CPU utilization increases due to repeated session initialization and garbage collection
+
+**Scaling characteristics:**
+
+- Simple orchestration: moderate degradation
+- Moderate orchestration: severe degradation
+- Heavy orchestration: often fails to meet existing SLA thresholds
+
+### Resource Overhead
+
+| Resource | Drools 7 | Community Drools 10 |
+|----------|----------|---------------------|
+| Sessions per execution | 1 | N (one per task) |
+| Fact instances | Shared across tasks | Created and destroyed per task |
+| GC pressure | Baseline (single session lifecycle) | Elevated due to per-task session lifecycle |
+| Initialization overhead | Once per process | Per task execution |
+
+### Performance Acceptability Criteria
+
+Performance degradation may be acceptable when:
+
+- Execution times are well under SLA requirements
+- Transaction volumes are low and horizontal scaling is feasible
+- Orchestration is simple (limited tasks, no gateways)
+
+Performance degradation is likely unacceptable when:
+
+- Existing execution times are close to SLA thresholds
+- High transaction volumes make horizontal scaling cost-prohibitive
+- Complex orchestration multiplies the degradation factor
+
+---
+
+## Governance Impact
+
+In most migrations, governance and operational gaps surface before functional incompatibilities. Community Drools 10 shifts to a primarily GitOps-based and container release strategy versus the traditional KJAR methods found in Drools 7 which could be released through multiple mechanisms.
+
+### Capability Comparison
+
+| Capability | Business Central | Community Drools 10 |
+|------------|------------------|---------------------|
+| Role-based access control | Built-in with LDAP integration | Must implement in application layer |
+| Audit trails | Automatic | Must implement custom logging |
+| Version history | Built-in | Git history via GitOps workflows |
+| Deployment approval | Workflow-based | Must implement in CI/CD pipelines |
+| Rule visibility | Visual, accessible to business users | Code-based for DRL; KIE Sandbox for BPMN/DMN only |
+| Asset coverage | Full (DRL, guided rules, decision tables, BPMN, DMN) | KIE Sandbox: BPMN and DMN only |
+
+### Operational Model Shift
+
+**Drools 7 operational model:**
+
+- Business Central as deployment controller
+- Hot deployment of KJARs via REST API
+- KieScanner for automatic KJAR updates
+- Centralized monitoring and management
+- Single point of configuration for exception handling
+
+**Community Drools 10 operational model:**
+
+- Immutable container images built per version
+- CI/CD pipeline-driven deployments
+- Container rebuild required for any rule change
+- Distributed monitoring across services
+- Exception handling implemented per service
+- GitOps workflows for version control and deployment
+
+### Deployment Model Change
+
+The shift from KJAR deployment to container images represents a fundamental operational change:
+
+- **Drools 7**: Deploy KJAR artifacts to running KIE Server; use KieScanner for automatic updates
+- **Community Drools 10**: Build new container image for every rule change; deploy through container orchestration
+
+This means every rule modification, regardless of scope, requires:
+
+1. Code generation and compilation
+2. Container image build
+3. Image registry push
+4. Container deployment/restart
+
+### Exception Handling
+
+The pluggable `ConsequenceExceptionHandler`, which allowed centralized exception handling at the KIE Server level, is not available in community Drools 10 as KIE Server itself has been retired.
+
+**Implications:**
+
+- Exception handling becomes fragmented across services
+- Each microservice must implement its own exception capture logic
+- Inconsistency risk increases across different team implementations
+- Observability and compliance exposure increase without centralized handling
+
+---
+
+## Migration Patterns by Execution Dependency
+
+In practice, projects cluster into patterns based on their execution model dependency.
+
+### Migration Effort by System Type
+
+| System Type | Typical Characteristics | Migration Effort |
+|-------------|------------------------|------------------|
+| **Rule-Only Systems** | Stateless rule services, no BPMN orchestration, no shared session reliance | Lower effort; weeks of engineering work |
+| **Orchestrated Systems** | BPMN workflows with gateways, multiple tasks, limited shared session reliance | Moderate effort; multiple engineering iterations |
+| **Session-Dependent Systems** | Heavy `startProcess()` usage, deep shared working memory reliance across task boundaries | High effort; architectural rebuild required |
+
+### Rule-Only Systems
+
+**Characteristics:**
+
+- Limited BPMN complexity (small number of tasks)
+- No parallel or complex gateways
+- Minimal reliance on shared working memory
+- Clean Java 17 compatibility
+- Relatively simple dependency footprints
+- No reliance on KieScanner for dynamic updates
+
+**Approach:**
+
+- Replace BPMN orchestration with programmatic Java flows
+- Implement custom REST endpoints
+- Rename Excel decision tables
+- Establish unit testing before migration
+- Implement container build pipelines
+
+### Orchestrated Systems
+
+**Characteristics:**
+
+- Heavier use of workflow orchestration (moderate task counts)
+- Gateway constructs requiring conditional logic reimplementation
+- Multiple processes within a single project
+- Reliance on KieScanner or hot-deploy patterns
+
+**Risk factors:**
+
+- Loss of visual workflow representation
+- Uncertain performance under load
+- Increased testing burden
+- Potential for subtle behavioral differences
+- Container rebuild overhead for rule changes
+
+### Session-Dependent Systems
+
+**Characteristics:**
+
+- Heavy reliance on `startProcess()` orchestration with large numbers of tasks
+- Deep dependencies on shared working memory across task boundaries
+- Facts created dynamically during execution that must persist across tasks
+- Performance requirements incompatible with session-per-task model
+- Critical dependency on KieScanner for runtime updates
+
+**Options for session-dependent systems:**
+
+1. Remain on unsupported Drools 7 (security and compliance risk)
+2. Rebuild using alternative technology (high cost, loss of existing investment)
+3. Evaluate commercial alternatives that preserve architectural patterns
+
+---
+
+## Testing Considerations
+
+> **Passing unit tests does not imply orchestration equivalence.**
+
+Common failure modes include:
+
+- Silent rule exclusion due to file naming
+- Behavioral drift caused by session isolation
+- Performance collapse under load
+- Correct results produced through incorrect intermediate states
+
+Comprehensive integration and performance testing is required to surface these issues.
+
+
+### Silent Failure Detection
+
+The most challenging testing requirement is detecting silent failures:
+
+- Rules excluded due to file naming (no compilation error)
+- Behavioral differences due to session isolation
+- Missing fact propagation between tasks
+- Performance degradation that only appears under load
+
+**Approach:**
+
+- Establish comprehensive test coverage before migration
+- Implement automated verification that all expected rules fire
+- Create integration tests that validate end-to-end behavior
+- Perform load testing with production-representative data volumes
+
+### Regression Testing Limitations
+
+Traditional regression testing may be insufficient because:
+
+- Functionality may pass unit tests but fail under orchestration
+- Performance characteristics are fundamentally different
+- Session isolation may produce correct results with incorrect intermediate states
+- Excel decision table changes may introduce subtle data type coercion issues
+
+### Test Environment Requirements
+
+Test environments must account for:
+
+- Java 17 or 21 runtime requirements
+- Container-based deployment model
+- Custom REST endpoint testing
+- Performance baseline comparison with Drools 7
+- Container build and deployment pipeline validation
+
+---
+
+## Cost Factors
+
+Cost multiplier ranges reflect internal estimates based on multiple enterprise migration engagements. Actual values vary based on organizational size, regulatory environment, and existing infrastructure maturity.
+
+### Common Underestimations
+
+| Factor | Impact | Commonly Underestimated By |
+|--------|--------|---------------------------|
+| Governance reconstruction | Building audit, versioning, and approval workflows | 3-5× |
+| Client system integration | Rewriting API contracts and client code | 2-3× |
+| Performance optimization | Addressing degradation to meet SLAs | 2-4× |
+| Excel decision table remediation | Fixing naming and silent failures | 2× |
+| Container pipeline implementation | Building CI/CD for container-based deployment | 2× |
+| Regulatory re-approval | Validating compliant behavior post-migration | Variable |
+
+### Organizational Impacts
+
+**Skills transition:**
+
+- Teams must adapt to Quarkus or Spring Boot 3.x development patterns, even if already familiar with earlier versions
+- DevOps skills for container orchestration become essential
+- Business users lose direct access to rule authoring for non-BPMN/DMN assets
+- Container build and deployment expertise required across teams
+
+**Operational responsibility shift:**
+
+- Platform teams absorb workflow orchestration responsibilities
+- Engineering owns deployment pipelines previously managed by Business Central
+- Governance becomes distributed rather than centralized
+- Every rule change triggers container rebuild and redeployment
+
+---
+
+## Migration Path Options
+
+The following paths reflect strategies organizations have attempted. None represent a universally correct approach. Outcomes have varied significantly depending on system architecture, governance requirements, and performance sensitivity.
+
+### Option 1: Community Drools 10 Migration
+
+**Approach:**
+
+- Accept the architectural constraints of the community release
+- Implement workarounds for removed capabilities
+- Build custom governance and operational tooling
+- Establish container build pipelines for deployment
+
+**We have only seen this succeed when:**
+
+- Projects are primarily rules-based with minimal orchestration
+- Performance degradation is within acceptable bounds
+- Organization has capacity to build and maintain custom tooling
+- Container rebuild per rule change is acceptable
+
+**Risks:**
+
+- Bug resolution timelines depend on community prioritization and contributor availability
+- Performance constraints may block some projects
+- Governance gaps require significant custom development
+- KIE Sandbox limitations affect rule authoring workflows
+
+### Option 2: Phased Migration with Project Triage
+
+**Approach:**
+
+- Classify portfolio by migration feasibility
+- Migrate feasible projects first to establish patterns
+- Evaluate alternatives for blocked projects
+
+**Migration phases:**
+
+| Phase | Focus | Relative Effort |
+|-------|-------|-----------------|
+| Pilot | Single project end-to-end migration | Initial iteration to establish patterns |
+| Rollout | Feasible projects using pilot patterns | Incremental, leveraging pilot learnings |
+| Evaluation | Determine path for blocked projects | Ongoing assessment |
+
+**We have only seen this succeed when:**
+
+- Portfolio has mixed complexity levels
+- Organization needs to demonstrate progress while managing risk
+- Time allows for iterative learning
+
+### Option 3: Platform Re-evaluation
+
+**Approach:**
+
+- Evaluate whether Drools remains the appropriate technology choice
+- Consider commercial alternatives or different automation approaches
+- Factor in total cost of ownership over 5-10 year horizon
+
+**We have only seen this succeed when:**
+
+- Significant portion of portfolio is blocked from migration
+- Strategic direction favors commercial support and SLAs
+- Governance requirements exceed community release capabilities
+
+### Runtime Selection: Quarkus vs. Spring Boot
+
+| Factor | Quarkus | Spring Boot 3.x |
+|--------|---------|-----------------|
+| Startup time | Fast (native compilation) | Slower |
+| Memory footprint | Lower | Higher |
+| Throughput (JVM mode) | Comparable; workload-dependent | Comparable; workload-dependent |
+| Ecosystem maturity | Emerging | Established |
+| Developer familiarity | Limited | Widespread |
+| Migration from Spring Boot 2.x | New framework adoption | Configuration and dependency updates |
+
+Throughput characteristics are workload-dependent and may vary based on rule complexity, JVM configuration, and infrastructure.
+
+The orchestration model—not the runtime—is the primary determinant of migration feasibility.
+
+---
+
+## Frequently Asked Questions
+
+### Is Drools 10 a drop-in replacement for Drools 7?
+
+No. Community Drools 10 introduces breaking changes to orchestration, session management, and deployment models. Systems using `startProcess()`, shared working memory across BPMN tasks, or KIE Server REST APIs require architectural redesign. Simple rule-only services without orchestration have higher compatibility.
+
+### What happened to KIE Server in Drools 10?
+
+KIE Server has been retired and does not exist in community Drools 10. There is no centralized runtime server for deploying and executing KJARs via REST. Each rule service must implement its own REST endpoints, and deployment occurs through container images rather than runtime artifact deployment.
+
+### What replaces Business Central in Drools 10?
+
+There is no direct replacement. KIE Sandbox provides visual editing for BPMN and DMN assets only. DRL files, guided rules, and decision tables must be managed as source code through GitOps workflows. Audit trails, approval workflows, and role-based access control require custom implementation.
+
+### Why is Drools 10 performance different?
+
+Community Drools 10 uses session-per-task isolation in BPMN orchestration. Each task creates a new KIE Session with its own working memory, requiring facts to be explicitly marshalled between tasks. As measured in internal benchmarking, this architectural change produces 5× to 30× performance degradation in orchestration-heavy workflows compared to Drools 7's shared session model.
+
+### How do I migrate from Drools 7 to Drools 10?
+
+First, classify your projects by migration feasibility based on orchestration complexity and `startProcess()` usage. Establish comprehensive test coverage before migration. For feasible projects, replace BPMN orchestration with programmatic flows, implement custom REST endpoints, and establish container build pipelines. Blocked projects require architectural redesign or evaluation of alternative platforms.
+
+---
+
+## Summary
+
+### Platform Status
+
+- Migration is required for organizations needing security updates and supported dependencies
+- The ecosystem is retiring: Business Central, KIE Server, KieScanner, and KJAR deployment model are removed
+- Remaining on Drools 7 carries escalating security, compliance, and operational risk
+- Java 7, 8, 11 and Spring Boot 2.x end-of-life compounds migration requirements
+
+### Architectural Changes
+
+- `startProcess()` removal breaks a common enterprise orchestration pattern
+- Session isolation eliminates shared working memory between tasks
+- Performance degradation of 5×–30× observed in orchestration-heavy enterprise environments under internal benchmarking conditions
+- No centralized prebuilt REST execution server equivalent exists
+- Requiring a container rebuild for every rule change is an operational shift, not a tooling detail
+- KIE Sandbox supports only BPMN and DMN editing
+
+### Migration Constraints
+
+- Not all Drools 7 systems can migrate to community Drools 10 without architectural redesign, particularly those with orchestration-heavy usage
+- Governance gaps emerge before functional gaps in most migration efforts
+- Cost multipliers from governance reconstruction, client integration, and regulatory re-approval are consistently underestimated
+- Container-based deployment model changes operational workflows
+
+### Patterns Observed in Successful Evaluations
+
+1. Classify portfolio by migration feasibility before committing to timelines
+2. Establish test coverage before attempting migration
+3. Validate performance under production-representative load conditions
+4. Plan for governance reconstruction as a parallel workstream
+5. Consider total cost of migration versus alternative platform strategies
+
+---
+
+## Glossary
+
+**Business Central**: Web-based development and governance environment for Drools 7, providing rule authoring, deployment management, and audit capabilities. Retired in community Drools 10.
+
+**Community Drools 10**: Open-source release of Drools 10.x from the Apache KIE project, distinct from commercial distributions.
+
+**DRL (Drools Rule Language)**: Native syntax for defining rules in Drools. DRL syntax compatibility is preserved in community Drools 10, though execution context differs.
+
+**KIE Sandbox**: Web-based design tool in community Drools 10 for creating and editing BPMN and DMN assets. Does not support DRL, guided rules, or decision table editing.
+
+**KIE Server**: Runtime execution server for Drools 7 providing REST APIs for rule execution and KJAR deployment. Retired in community Drools 10.
+
+**KIE Session**: Runtime context in which rules execute. In Drools 7, a single session could span an entire orchestration. In community Drools 10, each task creates a new session.
+
+**KieScanner**: Component in Drools 7 that automatically polls Maven repositories for updated KJARs, enabling hot-reload of rules. Not available in community Drools 10.
+
+**KJAR (Knowledge JAR)**: Packaging format for Drools artifacts deployable to KIE Server at runtime. Removed in community Drools 10.
+
+**Ruleflow Group**: Mechanism for organizing rules into execution groups activated in sequence or through BPMN orchestration.
+
+**startProcess()**: API method for initiating BPMN-driven rule orchestration in Drools 7. Deprecated and not supported under the Drools 10/Kogito execution model.
+
+**Working Memory**: Runtime fact store where objects are inserted for rule evaluation. In Drools 7, shared across tasks. In community Drools 10, each task session has isolated working memory with facts created and destroyed per task.
+
+---
+
+## Sources and References
+
+[^drools7]: Apache KIE GitHub – Drools release history: https://github.com/apache/incubator-kie-drools/releases
+
+[^kie-blog]: Apache KIE Project Blog – KIE Tools releases and roadmap: https://blog.kie.org/2024/08/the-new-kie-tools-releases.html
+
+[^drools-8-announcement]: Drools 8 Final: Toward a Modular and Cloud-Native Rule Engine (October 2022): https://blog.kie.org/2022/10/drools-8-final-toward-a-modular-and-cloud-native-rule-engine.html
+
+[^drools-decision-tables]: Drools 10.1.x Decision Tables Reference – File naming conventions: https://kie.apache.org/docs/10.1.x/drools/drools/language-reference/index.html#decision-tables-con_decision-tables
+
+[^kie-migration]: Apache KIE Migration Documentation – Kogito migration guide: https://docs.kie.apache.org/kogito/latest/migration-guide/index.html (URL may shift with future Apache KIE releases)
+
+[^oracle-java]: Oracle Java SE Support Roadmap: https://www.oracle.com/java/technologies/java-se-support-roadmap.html
+
+[^spring-support]: Spring Boot Support Policy: https://spring.io/projects/spring-boot#support
+
+[^redhat-eap]: Red Hat JBoss EAP Lifecycle Policy: https://access.redhat.com/support/policy/updates/jboss_notes/
+
+[^kie-mailing-startprocess]: Apache KIE Developer Mailing List – Discussion on startProcess() deprecation and removal (early 2025): https://lists.apache.org/thread/t3o842mbj03c57cg5yw3tmo25qf2br1t
+
+[^kie-mailing-legacy]: Apache KIE Developer Mailing List – Legacy runtime removal discussion: https://lists.apache.org/thread/cftmsopn0tgz9prt3ronfkrz9l4llq1o
+
+
+---

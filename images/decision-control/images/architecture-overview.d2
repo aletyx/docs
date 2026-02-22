@@ -1,0 +1,138 @@
+direction: down
+
+vars: {
+  d2-config: {
+    sketch: true
+  }
+}
+
+# {{ product.tower }} Component
+ct: {
+  label: |md
+    **Aletyx Decision Control Tower**
+    Unified Portal & Dashboard
+  |
+  shape: rectangle
+  style: {
+    fill: "#90EE90"
+    stroke: "#333"
+    stroke-width: 3
+    bold: true
+    font-size: 18
+  }
+}
+
+# Governance API Component
+gov: {
+  label: |md
+    **Governance API**
+    Workflow & Approval Management
+  |
+  shape: rectangle
+  style: {
+    fill: "#FFB6C1"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Decision Control Application Component
+dc: {
+  label: |md
+    **Decision Control Application**
+    DMN Authoring
+    Testing & Execution
+  |
+  shape: rectangle
+  style: {
+    fill: "#87CEEB"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# PostgreSQL Database Component
+db: {
+  label: |md
+    **PostgreSQL**
+    Databases
+  |
+  shape: cylinder
+  style: {
+    fill: "#FFE4B5"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Keycloak Authentication Component
+kc: {
+  label: |md
+    **Keycloak**
+    Authentication
+  |
+  shape: rectangle
+  style: {
+    fill: "#DDA0DD"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Connections with animation
+ct <-> dc: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+ct -> gov: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+ct <-> kc: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+gov <-> dc: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+dc <-> db: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+gov -> db: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+gov -> kc: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}

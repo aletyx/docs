@@ -1,0 +1,134 @@
+---
+title: "Aletyx Enterprise Build of Drools Documentation"
+description: "Welcome to the comprehensive documentation for Drools, the powerful Business Rules Management System (BRMS) and Decision Management platform. This guide covers everything from core concepts to..."
+---
+Welcome to the comprehensive documentation for Drools, the powerful Business Rules Management System (BRMS) and Decision Management platform. This guide covers everything from core concepts to advanced implementation patterns, helping you leverage the full potential of Drools in your applications.
+
+## What is Drools?
+
+Drools is an open-source Business Rules Management System (BRMS) and Decision Management platform that provides a flexible way to express business logic as declarative rules. It allows you to separate business rules from application code, making your systems more maintainable, adaptable, and aligned with business needs.
+
+At its core, Drools offers:
+
+- **Declarative rule language** for expressing business logic
+- **Rule engine** that efficiently evaluates rules against data
+- **Decision model support** through DMN (Decision Model & Notation)
+- **Rule management** capabilities for versioning and governance
+- **Integration options** for various application architectures
+
+## Core Components
+
+### Drools Rule Language (DRL)
+
+[Drools Rule Language (DRL)](drl/introduction) is the foundation of Drools, providing a powerful way to express business rules in a declarative format. DRL allows you to define when conditions are met (the "when" part) and what actions to take (the "then" part).
+
+```java
+rule "Approve Low-Value Loan Application"
+    when
+        $application : LoanApplication(amount < 5000, creditScore > 700)
+    then
+        $application.setApproved(true);
+        $application.setApprovalReason("Automatic approval for low-value loan with good credit");
+end
+```
+
+DRL offers sophisticated pattern matching capabilities, allowing you to detect complex scenarios in your data and respond accordingly. Learn more in the [DRL Building Blocks](/decisions/drl/building-blocks) section.
+
+### Rule Units
+
+[Rule Units](/decisions/drl/rule-units) represent a modern approach to organizing related rules and their data sources. They provide better encapsulation, improved testing capabilities, and are well-suited for cloud-native architectures.
+
+Rule Units offer:
+- **Clear boundaries** for rule scope and data access
+- **Modularity** for independent development and deployment
+- **REST integration** through automatic endpoint generation
+- **Improved reusability** of decision components
+
+### Decision Model & Notation (DMN)
+
+[DMN](/decisions/dmn/overview) is an industry standard for modeling business decisions. It provides a business-friendly notation that bridges the gap between decision design and implementation.
+
+With DMN, you can:
+- Create **visual models** of your business decisions
+- Define **precise decision logic** using business-friendly notations
+- **Test and validate** your decisions with real data
+- Deploy your decisions as **executable services**
+
+Learn how to create your first DMN model in our [DMN Basic Example](/guides/dmn/basic) guide.
+
+## Getting Started
+
+If you're new to Drools, we recommend following these steps:
+
+1. **Understand the basics**: Start with our [Introduction to DRL](drl/introduction) and [Introduction to DMN](/decisions/dmn/overview)
+
+2. **Create your first rules**: Follow the guide to [create your first DRL rule](/decisions/rule-language) or [first DMN model](/guides/dmn/basic)
+
+3. **Integrate with your application**: Learn about [implementing decision services](/decisions/drl/decision-services)
+
+4. **Deploy to production**: Explore [basic deployment options](/guides/dmn/basic-deployment) and [advanced deployment patterns](/guides/dmn/advanced-deployment)
+
+## Key Features
+
+### Pattern Matching and Inference
+
+Drools excels at identifying patterns in your data and making inferences based on rules. The [Conditions (LHS)](/decisions/drl/conditions) guide explains how to write effective patterns that accurately match your business scenarios.
+
+### Rule Execution Control
+
+Control how and when your rules execute with [Rule Actions (RHS)](/decisions/drl/actions) and advanced features like salience, agenda groups, and rule flow groups.
+
+### Decision Tables
+
+[Decision Tables](/decisions/tables/overview) provide a spreadsheet-like format for defining business rules, making them accessible to business users. Learn how to [create your first table](/decisions/tables/first-table) and [run decision tables](/decisions/tables/running).
+
+## Advanced Topics
+
+### OOPath Expressions
+
+[OOPath](/decisions/drl/oopath) is an object-oriented path expression language for navigating object graphs in DRL, providing a concise way to access nested properties.
+
+### FEEL Expressions
+
+The [FEEL Handbook](/decisions/dmn/feel-handbook) provides comprehensive documentation on the Friendly Enough Expression Language used in DMN models.
+
+### DMN Listeners
+
+[DMN Listeners](/decisions/dmn/listeners) allow you to observe and react to decision evaluation events, enabling monitoring, debugging, and extending the behavior of DMN evaluations.
+
+### Cloud-Native Deployment
+
+Learn how to deploy your decision services in cloud environments with our guides on [basic deployment](/guides/dmn/basic-deployment) and [advanced deployment options](/guides/dmn/advanced-deployment).
+
+## Development Tools
+
+### Aletyx Playground
+
+[Aletyx Playground](core/playground) is a browser-based environment for creating, testing, and deploying business automation solutions using DMN and BPMN. It provides:
+
+- **Visual editors** for DMN and BPMN
+- **Real-time validation** to catch errors early
+- **Testing capabilities** built directly into the editors
+- **Git integration** with popular providers
+- **Deployment options** for development environments
+- **Accelerators** to transform models into complete applications
+
+Get started with [creating your first DMN model](guides/examples/dmn/dmn-intro-lab) in Aletyx Playground.
+
+## Examples and Tutorials
+
+Practice your skills with our comprehensive examples:
+
+- [Vacation Days Calculation](/guides/dmn/basic): Introduction to DMN building
+- [Travel Insurance Pricing](/guides/dmn/advanced-modeling): A deeper dive into DMN building a decison to calculate travel insurance based on various risk factors
+- [Decision Services Implementation](/decisions/drl/decision-services): Build complete decision services
+
+## Next Steps
+
+Ready to dive deeper? Explore these resources:
+
+- [Advanced DMN Modeling Techniques](guides/examples/dmn/dmn-advanced-modeling)
+- [DMN Accelerators](/guides/dmn/accelerators)
+- [Best Practices for Rule Development](drl/rule-language)
+
+Drools provides a powerful foundation for creating flexible, maintainable business rule systems that can adapt to changing business requirements while maintaining high performance and scalability.

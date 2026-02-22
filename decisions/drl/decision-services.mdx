@@ -1,0 +1,1179 @@
+---
+title: "Implementing Decision Services with DRL"
+description: "Decision services are specialized applications that automate business decisions using a set of predefined rules. In this chapter, we'll walk through the process of implementing a complete decision..."
+---
+Decision services are specialized applications that automate business decisions using a set of predefined rules. In this chapter, we'll walk through the process of implementing a complete decision service using Drools Rule Language (DRL), from requirements gathering to deployment.
+
+## Understanding Decision Services
+
+Before diving into implementation, let's understand what decision services are and their key characteristics:
+
+### What is a Decision Service?
+
+A decision service is a standalone component that:
+
+1. Accepts input data relevant to a business decision
+2. Processes this data through business rules
+3. Returns a decision or recommendation
+4. Operates independently of other application components
+5. Can be called synchronously or asynchronously
+
+### Common Decision Service Use Cases
+
+Decision services excel in scenarios like:
+
+- **Loan or credit approval**: Determining loan eligibility, interest rates, and terms
+- **Insurance underwriting**: Calculating premiums, assessing risks, determining coverage
+- **Regulatory compliance**: Checking transactions against compliance rules
+- **Pricing optimization**: Setting dynamic prices based on market conditions and customer data
+- **Customer segmentation**: Categorizing customers for targeted marketing
+- **Fraud detection**: Identifying suspicious patterns in transactions
+- **Tax calculation**: Computing complex tax scenarios
+
+## Building a Loan Approval Decision Service
+
+Let's walk through designing and implementing a loan approval decision service step by step.
+
+### Step 1: Gather Requirements
+
+First, we need to understand the business requirements for our loan approval process:
+
+#### Functional Requirements
+
+- The system must evaluate loan applications based on credit score, income, loan amount, and purpose
+- Applications must be automatically approved, rejected, or flagged for manual review
+- The system must calculate a risk score for each application
+- The system must determine the appropriate interest rate for approved loans
+- The system must provide explanations for decisions
+
+#### Business Rules (Simplified Example)
+
+1. Applications with credit scores below 550 are automatically rejected
+2. Applications with credit scores above 750 are automatically approved
+3. The debt-to-income ratio must not exceed 43% for approval
+4. The loan amount must not exceed 5 times the annual income
+5. Interest rates range from 3.5% to 12.5% based on credit score and risk assessment
+6. Applications that are not automatically approved or rejected require manual review
+
+### Step 2: Design the Domain Model
+
+Based on the requirements, we'll design our fact model:
+
+```java
+package ai.aletyx.examples.loan;
+
+public class LoanApplication {
+    private String id;
+    private String applicantName;
+    private int creditScore;
+    private double annualIncome;
+    private double monthlyDebt;
+    private double requestedAmount;
+    private int requestedTermInMonths;
+    private String purpose;
+
+    // Decision fields - will be set by rules
+    private String status; // "PENDING", "APPROVED", "REJECTED", "REVIEW"
+    private String decisionReason;
+    private double riskScore;
+    private double approvedInterestRate;
+    private double approvedAmount;
+    private int approvedTermInMonths;
+    private double calculatedMonthlyPayment;
+
+    // Getters, setters, and calculated properties
+    public double getDebtToIncomeRatio() {
+        return (monthlyDebt * 12) / annualIncome;
+    }
+
+    public double getLoanToIncomeRatio() {
+        return requestedAmount / annualIncome;
+    }
+
+    // ... other getters and setters
+}
+```
+
+### Step 3: Create the Rule Unit
+
+Now we'll create the rule unit to define the data sources:
+
+```java
+package ai.aletyx.examples.loan;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+import org.drools.ruleunits.api.DataSource;
+
+public class LoanDecisionUnit implements RuleUnitData {
+    private final DataStore<LoanApplication> applications;
+
+    public LoanDecisionUnit() {
+        this.applications = DataSource.createStore();
+    }
+
+    public DataStore<LoanApplication> getApplications() {
+        return applications;
+    }
+}
+```
+
+### Step 4: Write the Rules
+
+Now we'll implement our business rules in DRL:
+
+```
+package ai.aletyx.examples.loan
+unit LoanDecisionUnit;
+
+import ai.aletyx.examples.loan.LoanApplication;
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+
+declare LoanDecisionUnit extends RuleUnitData
+  applications: DataStore<LoanApplication>
+end
+
+// Rule 1: Calculate Risk Score
+rule "Calculate Loan Risk Score"
+  salience 100 // Run early in the sequence
+  when
+    $application: /applications[ status == "PENDING" ]
+  then
+    // Complex risk calculation algorithm
+    double creditFactor = 100 - ($application.getCreditScore() / 8.0);
+    double dtiRiskFactor = $application.getDebtToIncomeRatio() * 100;
+    double loanToIncomeFactor = $application.getLoanToIncomeRatio() * 20;
+
+    // Adjust for loan purpose
+    double purposeFactor = 0;
+    if ("DEBT_CONSOLIDATION".equals($application.getPurpose())) {
+        purposeFactor = 10;
+    } else if ("HOME_IMPROVEMENT".equals($application.getPurpose())) {
+        purposeFactor = 5;
+    } else if ("EDUCATION".equals($application.getPurpose())) {
+        purposeFactor = 15;
+    } else if ("BUSINESS".equals($application.getPurpose())) {
+        purposeFactor = 20;
+    }
+
+    // Calculate final risk score (0-100)
+    double riskScore = creditFactor + dtiRiskFactor + loanToIncomeFactor + purposeFactor;
+    riskScore = Math.max(0, Math.min(100, riskScore)); // Clamp between 0-100
+
+    // Set the risk score
+    $application.setRiskScore(riskScore);
+    applications.update($application);
+end
+
+// Rule 2: Auto-Reject Poor Credit
+rule "Reject Application with Poor Credit"
+  salience 90
+  when
+    $application: /applications[ status == "PENDING", creditScore < 550 ]
+  then
+    $application.setStatus("REJECTED");
+    $application.setDecisionReason("Credit score below minimum threshold");
+    applications.update($application);
+end
+
+// Rule 3: Reject High Debt-to-Income Ratio
+rule "Reject Application with High Debt-to-Income Ratio"
+  salience 90
+  when
+    $application: /applications[ status == "PENDING", debtToIncomeRatio > 0.43 ]
+  then
+    $application.setStatus("REJECTED");
+    $application.setDecisionReason("Debt-to-income ratio exceeds maximum threshold");
+    applications.update($application);
+end
+
+// Rule 4: Reject Excessive Loan Amount
+rule "Reject Application with Excessive Loan Amount"
+  salience 90
+  when
+    $application: /applications[ status == "PENDING", loanToIncomeRatio > 5 ]
+  then
+    $application.setStatus("REJECTED");
+    $application.setDecisionReason("Requested loan amount exceeds 5x annual income");
+    applications.update($application);
+end
+
+// Rule 5: Auto-Approve Excellent Credit with Low Risk
+rule "Approve Application with Excellent Credit and Low Risk"
+  salience 80
+  when
+    $application: /applications[
+      status == "PENDING",
+      creditScore >= 750,
+      riskScore < 40
+    ]
+  then
+    $application.setStatus("APPROVED");
+    $application.setDecisionReason("Excellent credit profile with low risk assessment");
+    $application.setApprovedAmount($application.getRequestedAmount());
+    $application.setApprovedTermInMonths($application.getRequestedTermInMonths());
+    applications.update($application);
+end
+
+// Rule 6: Set Interest Rate Based on Risk Score
+rule "Set Interest Rate for Approved Loans"
+  salience 70
+  when
+    $application: /applications[ status == "APPROVED", approvedInterestRate == 0 ]
+  then
+    // Base interest rate calculation
+    double baseRate = 3.5; // Minimum rate
+    double riskPremium = ($application.getRiskScore() / 10.0);
+    double creditAdjustment = (800 - $application.getCreditScore()) / 40.0;
+
+    // Calculate final rate (capped between 3.5% and 12.5%)
+    double interestRate = baseRate + riskPremium + creditAdjustment;
+    interestRate = Math.max(3.5, Math.min(12.5, interestRate));
+
+    // Round to nearest 0.125%
+    interestRate = Math.round(interestRate * 8) / 8.0;
+
+    // Set the approved interest rate
+    $application.setApprovedInterestRate(interestRate);
+    applications.update($application);
+end
+
+// Rule 7: Calculate Monthly Payment for Approved Loans
+rule "Calculate Monthly Payment for Approved Loans"
+  salience 60
+  when
+    $application: /applications[
+      status == "APPROVED",
+      approvedInterestRate > 0,
+      calculatedMonthlyPayment == 0
+    ]
+  then
+    // Monthly interest rate (annual rate divided by 12)
+    double monthlyRate = $application.getApprovedInterestRate() / 100 / 12;
+
+    // Number of payments
+    int payments = $application.getApprovedTermInMonths();
+
+    // Loan amount
+    double principal = $application.getApprovedAmount();
+
+    // Monthly payment calculation using amortization formula
+    double monthlyPayment = 0;
+    if (monthlyRate > 0) {
+        monthlyPayment = principal * monthlyRate *
+                        Math.pow(1 + monthlyRate, payments) /
+                        (Math.pow(1 + monthlyRate, payments) - 1);
+    } else {
+        // Simple division if interest rate is zero
+        monthlyPayment = principal / payments;
+    }
+
+    // Round to nearest dollar
+    monthlyPayment = Math.ceil(monthlyPayment);
+
+    // Set the monthly payment
+    $application.setCalculatedMonthlyPayment(monthlyPayment);
+    applications.update($application);
+end
+
+// Rule 8: Route Remaining Applications to Manual Review
+rule "Route to Manual Review"
+  salience 50
+  when
+    $application: /applications[ status == "PENDING" ]
+  then
+    $application.setStatus("REVIEW");
+    $application.setDecisionReason("Application requires manual underwriter review");
+    applications.update($application);
+end
+```
+
+### Step 5: Implement the Service Layer
+
+Next, we'll create a service class to expose our decision logic:
+
+```java
+package ai.aletyx.examples.loan;
+
+import org.drools.ruleunits.api.RuleUnitInstance;
+import org.drools.ruleunits.api.RuleUnitProvider;
+
+public class LoanDecisionService {
+
+    /**
+     * Evaluates a loan application and makes a decision.
+     *
+     * @param application The loan application to evaluate
+     * @return The updated loan application with decision results
+     */
+    public LoanApplication evaluateLoanApplication(LoanApplication application) {
+        // Initialize the application status
+        application.setStatus("PENDING");
+
+        // Create the rule unit
+        LoanDecisionUnit loanDecisionUnit = new LoanDecisionUnit();
+
+        // Add the application to the rule unit's data store
+        loanDecisionUnit.getApplications().add(application);
+
+        // Create a rule unit instance
+        RuleUnitInstance<LoanDecisionUnit> instance =
+            RuleUnitProvider.get().createRuleUnitInstance(loanDecisionUnit);
+
+        try {
+            // Execute the rules
+            instance.fire();
+
+            // Return the updated application (rules have modified it)
+            return application;
+        } finally {
+            // Always dispose of the instance when done
+            instance.dispose();
+        }
+    }
+}
+```
+
+### Step 6: Create Unit Tests
+
+Let's create a comprehensive test case:
+
+```java
+package ai.aletyx.examples.loan;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class LoanDecisionServiceTest {
+
+    private LoanDecisionService service = new LoanDecisionService();
+
+    @Test
+    public void testAutoRejectionDueToPoorCredit() {
+        // Create an application with poor credit
+        LoanApplication application = new LoanApplication();
+        application.setId("LOAN-001");
+        application.setApplicantName("John Doe");
+        application.setCreditScore(520); // Poor credit
+        application.setAnnualIncome(75000);
+        application.setMonthlyDebt(1500);
+        application.setRequestedAmount(150000);
+        application.setRequestedTermInMonths(360);
+        application.setPurpose("HOME_IMPROVEMENT");
+
+        // Evaluate the application
+        LoanApplication result = service.evaluateLoanApplication(application);
+
+        // Assert the application was rejected
+        assertEquals("REJECTED", result.getStatus());
+        assertEquals("Credit score below minimum threshold", result.getDecisionReason());
+    }
+
+    @Test
+    public void testAutoApprovalDueToExcellentCredit() {
+        // Create an application with excellent credit
+        LoanApplication application = new LoanApplication();
+        application.setId("LOAN-002");
+        application.setApplicantName("Jane Smith");
+        application.setCreditScore(780); // Excellent credit
+        application.setAnnualIncome(100000);
+        application.setMonthlyDebt(2000);
+        application.setRequestedAmount(200000);
+        application.setRequestedTermInMonths(360);
+        application.setPurpose("HOME_IMPROVEMENT");
+
+        // Evaluate the application
+        LoanApplication result = service.evaluateLoanApplication(application);
+
+        // Assert the application was approved
+        assertEquals("APPROVED", result.getStatus());
+        assertEquals("Excellent credit profile with low risk assessment", result.getDecisionReason());
+        assertNotEquals(0, result.getApprovedInterestRate());
+        assertNotEquals(0, result.getCalculatedMonthlyPayment());
+    }
+
+    @Test
+    public void testManualReviewForBorderlineCase() {
+        // Create a borderline application
+        LoanApplication application = new LoanApplication();
+        application.setId("LOAN-003");
+        application.setApplicantName("Michael Johnson");
+        application.setCreditScore(680); // Good but not excellent
+        application.setAnnualIncome(60000);
+        application.setMonthlyDebt(1800);
+        application.setRequestedAmount(180000);
+        application.setRequestedTermInMonths(360);
+        application.setPurpose("DEBT_CONSOLIDATION");
+
+        // Evaluate the application
+        LoanApplication result = service.evaluateLoanApplication(application);
+
+        // Assert the application was sent for review
+        assertEquals("REVIEW", result.getStatus());
+        assertEquals("Application requires manual underwriter review", result.getDecisionReason());
+    }
+
+    @Test
+    public void testRejectionDueToHighDebtToIncomeRatio() {
+        // Create an application with high debt-to-income ratio
+        LoanApplication application = new LoanApplication();
+        application.setId("LOAN-004");
+        application.setApplicantName("Sarah Williams");
+        application.setCreditScore(700); // Good credit
+        application.setAnnualIncome(50000);
+        application.setMonthlyDebt(2500); // Monthly debt too high
+        application.setRequestedAmount(100000);
+        application.setRequestedTermInMonths(240);
+        application.setPurpose("EDUCATION");
+
+        // Evaluate the application
+        LoanApplication result = service.evaluateLoanApplication(application);
+
+        // Assert the application was rejected
+        assertEquals("REJECTED", result.getStatus());
+        assertEquals("Debt-to-income ratio exceeds maximum threshold", result.getDecisionReason());
+    }
+}
+```
+
+### Step 7: Create a REST Service (Optional)
+
+For a complete solution, we can expose our decision service as a REST endpoint:
+
+```java
+package ai.aletyx.examples.loan;
+
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+@Path("/loan-decisions")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class LoanDecisionResource {
+
+    @Inject
+    LoanDecisionService loanDecisionService;
+
+    @POST
+    @Path("/evaluate")
+    public Response evaluateLoanApplication(LoanApplication application) {
+        try {
+            LoanApplication result = loanDecisionService.evaluateLoanApplication(application);
+            return Response.ok(result).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error evaluating loan application: " + e.getMessage())
+                    .build();
+        }
+    }
+}
+```
+
+## Advanced Decision Service Implementation Patterns
+
+As your decision services grow in complexity, consider these advanced implementation patterns.
+
+### Decision Service Orchestration
+
+Complex decisions often involve multiple sub-decisions. For example, a loan approval might include:
+
+1. Credit risk assessment
+2. Fraud detection
+3. Regulatory compliance check
+4. Pricing determination
+
+Each sub-decision can be implemented as a separate rule unit:
+
+```java
+public class LoanOrchestrationService {
+
+    @Inject
+    CreditRiskService creditRiskService;
+
+    @Inject
+    FraudDetectionService fraudDetectionService;
+
+    @Inject
+    ComplianceService complianceService;
+
+    @Inject
+    PricingService pricingService;
+
+    public LoanDecision processLoanApplication(LoanApplication application) {
+        // Step 1: Assess credit risk
+        RiskAssessment riskAssessment = creditRiskService.assessRisk(application);
+        if (riskAssessment.getRiskLevel() == RiskLevel.EXTREME) {
+            return createRejection("Credit risk too high", riskAssessment);
+        }
+
+        // Step 2: Check for fraud
+        FraudCheckResult fraudCheck = fraudDetectionService.checkForFraud(application);
+        if (fraudCheck.isFraudSuspected()) {
+            return createRejection("Fraud suspicion", fraudCheck);
+        }
+
+        // Step 3: Check compliance
+        ComplianceResult complianceCheck = complianceService.checkCompliance(application);
+        if (!complianceCheck.isCompliant()) {
+            return createRejection("Compliance issues", complianceCheck);
+        }
+
+        // Step 4: Determine pricing if all checks passed
+        PricingResult pricing = pricingService.determineInterestRate(
+            application, riskAssessment, fraudCheck, complianceCheck);
+
+        // Create approval with pricing details
+        return createApproval(pricing, riskAssessment);
+    }
+
+    private LoanDecision createRejection(String reason, Object... evidence) {
+        // Create rejection response with details
+    }
+
+    private LoanDecision createApproval(PricingResult pricing, RiskAssessment risk) {
+        // Create approval response with details
+    }
+}
+```
+
+This approach:
+- Separates concerns into distinct services
+- Makes complex decision logic more maintainable
+- Allows independent testing of each component
+- Provides clear traceability for decisions
+
+### Event-Driven Decision Services
+
+For high-throughput environments, consider implementing event-driven decision services:
+
+```java
+@ApplicationScoped
+public class EventDrivenLoanDecisionService {
+
+    @Inject
+    LoanDecisionService decisionService;
+
+    @Inject
+    Event<LoanDecisionEvent> decisionEventEmitter;
+
+    @Incoming("loan-applications")
+    public CompletionStage<Void> processApplication(LoanApplication application) {
+        return CompletableFuture.runAsync(() -> {
+            // Process the application
+            LoanApplication result = decisionService.evaluateLoanApplication(application);
+
+            // Emit appropriate event based on decision
+            LoanDecisionEvent event = new LoanDecisionEvent(result);
+            decisionEventEmitter.fire(event);
+
+            // Route to appropriate downstream queue
+            String targetQueue = determineTargetQueue(result);
+            routeToQueue(result, targetQueue);
+        });
+    }
+
+    private String determineTargetQueue(LoanApplication application) {
+        switch (application.getStatus()) {
+            case "APPROVED": return "approved-loans";
+            case "REJECTED": return "rejected-loans";
+            case "REVIEW": return "manual-review-loans";
+            default: return "error-loans";
+        }
+    }
+
+    private void routeToQueue(LoanApplication application, String queue) {
+        // Route the application to the appropriate downstream queue
+    }
+}
+```
+
+This pattern:
+- Decouples decision-making from request handling
+- Supports high throughput through asynchronous processing
+- Enables natural integration with event-driven architectures
+- Improves scalability and resilience
+
+### Decision Caching
+
+For performance-critical decision services, implement caching:
+
+```java
+@ApplicationScoped
+public class CachedLoanDecisionService {
+
+    @Inject
+    LoanDecisionService decisionService;
+
+    private Cache<String, LoanApplication> decisionCache;
+
+    @PostConstruct
+    void initialize() {
+        decisionCache = CacheBuilder.newBuilder()
+            .maximumSize(10000)
+            .expireAfterWrite(24, TimeUnit.HOURS)
+            .build();
+    }
+
+    public LoanApplication evaluateLoanApplication(LoanApplication application) {
+        // Generate a cache key based on relevant application attributes
+        String cacheKey = generateCacheKey(application);
+
+        // Check if we have a cached decision
+        LoanApplication cachedResult = decisionCache.getIfPresent(cacheKey);
+        if (cachedResult != null) {
+            // Copy decision data to the original application
+            copyDecisionData(cachedResult, application);
+            return application;
+        }
+
+        // No cache hit, evaluate with rules
+        LoanApplication result = decisionService.evaluateLoanApplication(application);
+
+        // Cache the result
+        decisionCache.put(cacheKey, cloneApplication(result));
+
+        return result;
+    }
+
+    private String generateCacheKey(LoanApplication application) {
+        // Generate a key based on the inputs that affect the decision
+        return String.format("%d:%d:%.2f:%.2f:%d:%s",
+            application.getCreditScore(),
+            (int)(application.getAnnualIncome() / 1000), // Round to nearest thousand
+            application.getMonthlyDebt(),
+            application.getRequestedAmount(),
+            application.getRequestedTermInMonths(),
+            application.getPurpose());
+    }
+
+    // Helper methods for cloning and copying application data
+    private LoanApplication cloneApplication(LoanApplication original) { /* ... */ }
+    private void copyDecisionData(LoanApplication from, LoanApplication to) { /* ... */ }
+}
+```
+
+Caching is particularly effective for:
+- High-volume decisions with similar inputs
+- Decisions with expensive calculations
+- Decision services with external calls
+- Regulatory scenarios where consistency is critical
+
+### Decision Service Versioning
+
+Business rules change over time. Implement versioning to maintain backward compatibility:
+
+```java
+@ApplicationScoped
+public class VersionedLoanDecisionService {
+
+    @Inject
+    @Named("v1")
+    LoanDecisionService decisionServiceV1;
+
+    @Inject
+    @Named("v2")
+    LoanDecisionService decisionServiceV2;
+
+    @Inject
+    @Named("v3")
+    LoanDecisionService decisionServiceV3;
+
+    public LoanApplication evaluateLoanApplication(LoanApplication application, String version) {
+        switch (version) {
+            case "v1":
+                return decisionServiceV1.evaluateLoanApplication(application);
+            case "v2":
+                return decisionServiceV2.evaluateLoanApplication(application);
+            case "v3":
+            default:
+                return decisionServiceV3.evaluateLoanApplication(application);
+        }
+    }
+}
+```
+
+You can implement versioning at different levels:
+- **API versioning**: Different API endpoints for each version
+- **Rule versioning**: Different rule sets for each version
+- **Runtime versioning**: Dynamic loading of rules based on version
+- **Decision output versioning**: Consistent output structure across versions
+
+## Decision Service Testing Strategies
+
+Thorough testing is critical for decision services. Implement these testing strategies:
+
+### Decision Tables for Test Cases
+
+Create a spreadsheet or CSV file with test cases:
+
+```csv
+testId,creditScore,annualIncome,monthlyDebt,requestedAmount,term,purpose,expectedStatus,expectedReason
+Test001,520,75000,1500,150000,360,HOME_IMPROVEMENT,REJECTED,Credit score below minimum threshold
+Test002,780,100000,2000,200000,360,HOME_IMPROVEMENT,APPROVED,Excellent credit profile with low risk assessment
+Test003,680,60000,1800,180000,360,DEBT_CONSOLIDATION,REVIEW,Application requires manual underwriter review
+Test004,700,50000,2500,100000,240,EDUCATION,REJECTED,Debt-to-income ratio exceeds maximum threshold
+```
+
+Then create a test that loads this table:
+
+```java
+@Test
+public void testDecisionServiceWithTestCases() throws Exception {
+    // Load test cases from CSV
+    List<TestCase> testCases = loadTestCasesFromCsv("loan-test-cases.csv");
+
+    for (TestCase testCase : testCases) {
+        // Create application from test case data
+        LoanApplication application = createApplicationFromTestCase(testCase);
+
+        // Evaluate the application
+        LoanApplication result = service.evaluateLoanApplication(application);
+
+        // Assert the result matches expectations
+        assertEquals(testCase.getExpectedStatus(), result.getStatus(),
+                     "Test case " + testCase.getTestId() + " failed: Incorrect status");
+
+        if (testCase.getExpectedReason() != null) {
+            assertEquals(testCase.getExpectedReason(), result.getDecisionReason(),
+                         "Test case " + testCase.getTestId() + " failed: Incorrect reason");
+        }
+    }
+}
+```
+
+This approach:
+- Makes test cases easy to review with business stakeholders
+- Provides comprehensive coverage of decision paths
+- Simplifies adding new test cases
+- Creates a clear specification for the decision service
+
+### Decision Service Simulation
+
+For complex decision services, create a simulation environment:
+
+```java
+@Test
+public void simulateLoanDecisionService() {
+    // Create a distribution of applications
+    List<LoanApplication> simulatedApplications = new ArrayList<>();
+
+    // Add applications with various characteristics
+    for (int i = 0; i < 1000; i++) {
+        simulatedApplications.add(generateRandomApplication());
+    }
+
+    // Process all applications
+    Map<String, Integer> decisionCounts = new HashMap<>();
+    for (LoanApplication application : simulatedApplications) {
+        LoanApplication result = service.evaluateLoanApplication(application);
+
+        // Count decisions by status
+        decisionCounts.merge(result.getStatus(), 1, Integer::sum);
+    }
+
+    // Analyze decision distribution
+    for (Map.Entry<String, Integer> entry : decisionCounts.entrySet()) {
+        System.out.println(entry.getKey() + ": " + entry.getValue() +
+                          " (" + (entry.getValue() * 100.0 / simulatedApplications.size()) + "%)");
+    }
+
+    // Assert reasonable decision distribution
+    assertTrue(decisionCounts.getOrDefault("APPROVED", 0) > 0, "Should have some approvals");
+    assertTrue(decisionCounts.getOrDefault("REJECTED", 0) > 0, "Should have some rejections");
+    assertTrue(decisionCounts.getOrDefault("REVIEW", 0) > 0, "Should have some reviews");
+}
+
+private LoanApplication generateRandomApplication() {
+    LoanApplication application = new LoanApplication();
+
+    // Generate realistic random data
+    application.setId("SIM-" + ThreadLocalRandom.current().nextInt(10000, 99999));
+    application.setCreditScore(ThreadLocalRandom.current().nextInt(500, 850));
+    application.setAnnualIncome(ThreadLocalRandom.current().nextInt(30000, 150000));
+
+    // Set other properties with realistic distributions
+    // ...
+
+    return application;
+}
+```
+
+This simulation approach helps:
+- Validate the decision distribution
+- Identify edge cases and boundary conditions
+- Analyze performance under load
+- Test business KPIs like approval rates
+
+### Decision Tracing and Explanation
+
+Implement decision tracing to understand why rules fired:
+
+```java
+public LoanApplication evaluateLoanApplicationWithTracing(LoanApplication application) {
+    // Initialize the application status
+    application.setStatus("PENDING");
+
+    // Create the rule unit
+    LoanDecisionUnit loanDecisionUnit = new LoanDecisionUnit();
+
+    // Add the application to the rule unit's data store
+    loanDecisionUnit.getApplications().add(application);
+
+    // Create a rule unit instance with debug listener
+    RuleUnitInstance<LoanDecisionUnit> instance =
+        RuleUnitProvider.get().createRuleUnitInstance(loanDecisionUnit);
+
+    // Add a debug listener for tracing
+    DebugRuleRuntimeEventListener listener = new DebugRuleRuntimeEventListener();
+    instance.addRuleRuntimeEventListener(listener);
+
+    try {
+        // Execute the rules
+        instance.fire();
+
+        // Add tracing information to result
+        application.setRuleExecutionTrace(listener.getExecutedRules());
+
+        return application;
+    } finally {
+        instance.dispose();
+    }
+}
+```
+
+This tracing information can:
+- Provide transparency into decisions
+- Help debug rule execution
+- Support regulatory requirements for explainability
+- Enable better customer communications
+
+## Decision Service Performance Tuning
+
+As your decision services handle increased load, consider these performance optimizations:
+
+### Rule Ordering
+
+Organize rules to minimize evaluation time:
+
+```
+// Run rejection rules first, with highest salience
+rule "Reject Application with Poor Credit"
+  salience 100
+  when
+    $application: /applications[ creditScore < 550 ]
+  then
+    // Quick rejection
+end
+```
+
+This pattern:
+- Rejects invalid applications quickly
+- Avoids unnecessary computations
+- Improves average response time
+
+### Rule Partitioning
+
+Split large rule sets into logical groups:
+
+```java
+public LoanDecision processApplication(LoanApplication application) {
+    // Phase 1: Validation rules
+    ValidationResult validation = validationRules.validate(application);
+    if (!validation.isValid()) {
+        return createRejection(validation.getReason());
+    }
+
+    // Phase 2: Risk assessment rules
+    RiskAssessment risk = riskRules.assessRisk(application);
+    if (risk.getRiskLevel() == RiskLevel.EXTREME) {
+        return createRejection("Excessive risk");
+    }
+
+    // Phase 3: Decision rules
+    DecisionResult decision = decisionRules.makeDecision(application, risk);
+
+    // Phase 4: Pricing rules (only if approved)
+    if (decision.isApproved()) {
+        PricingResult pricing = pricingRules.calculatePricing(application, risk);
+        return createApproval(pricing);
+    } else {
+        return createRejection(decision.getReason());
+    }
+}
+```
+
+This approach:
+- Reduces the number of rules evaluated per phase
+- Improves maintainability of rule groups
+- Allows specialized optimization per rule group
+- Enables better performance monitoring
+
+### Fact Indexing
+
+For large fact bases, ensure proper indexing:
+
+```
+// Add @key annotation to indexed fields in fact declarations
+declare LoanApplication
+    @key id : String
+    @key applicantId : String
+    creditScore : int
+    // Other fields
+end
+```
+
+Properly indexed facts:
+- Speed up pattern matching
+- Improve join performance
+- Reduce memory usage
+- Scale better with large fact bases
+
+### Stateless vs. Stateful Sessions
+
+Choose the appropriate session type:
+
+```java
+// Stateless for simple, independent decisions
+public LoanDecision evaluateStateless(LoanApplication application) {
+    StatelessKieSession session = kieContainer.newStatelessKieSession();
+    LoanDecision decision = new LoanDecision();
+
+    session.execute(CommandFactory.newInsert(application),
+                    CommandFactory.newInsert(decision));
+
+    return decision;
+}
+
+// Stateful for complex, interdependent decisions
+public List<LoanDecision> evaluateBatch(List<LoanApplication> applications) {
+    KieSession session = kieContainer.newKieSession();
+    List<LoanDecision> decisions = new ArrayList<>();
+
+    try {
+        // Insert applications
+        for (LoanApplication app : applications) {
+            session.insert(app);
+            LoanDecision decision = new LoanDecision(app.getId());
+            decisions.add(decision);
+            session.insert(decision);
+        }
+
+        // Insert market data and other shared facts
+        session.insert(marketDataService.getCurrentData());
+
+        // Fire rules
+        session.fireAllRules();
+
+        return decisions;
+    } finally {
+        session.dispose();
+    }
+}
+```
+
+Choose based on your requirements:
+- **Stateless**: Use for simple, independent decisions with small fact sets
+- **Stateful**: Use for complex decisions with shared context or interdependencies
+
+## Operational Aspects of Decision Services
+
+Consider these operational factors for production-ready decision services:
+
+### Monitoring and Metrics
+
+Implement comprehensive monitoring:
+
+```java
+@Interceptor
+public class DecisionMetricsInterceptor {
+
+    @Inject
+    MeterRegistry registry;
+
+    @AroundInvoke
+    public Object recordMetrics(InvocationContext context) throws Exception {
+        long startTime = System.nanoTime();
+
+        try {
+            // Execute the decision service
+            Object result = context.proceed();
+
+            // Record metrics
+            if (result instanceof LoanApplication) {
+                LoanApplication application = (LoanApplication) result;
+                recordDecisionMetrics(application, startTime);
+            }
+
+            return result;
+        } catch (Exception e) {
+            // Record error metrics
+            registry.counter("loan.decision.errors",
+                            "error", e.getClass().getSimpleName()).increment();
+            throw e;
+        }
+    }
+
+    private void recordDecisionMetrics(LoanApplication application, long startTime) {
+        long duration = System.nanoTime() - startTime;
+
+        // Record decision outcome
+        registry.counter("loan.decision.outcomes",
+                        "status", application.getStatus()).increment();
+
+        // Record decision time
+        registry.timer("loan.decision.time").record(duration, TimeUnit.NANOSECONDS);
+
+        // Record risk score distribution
+        registry.summary("loan.decision.riskScore").record(application.getRiskScore());
+
+        // Record interest rate for approved loans
+        if ("APPROVED".equals(application.getStatus())) {
+            registry.summary("loan.decision.interestRate")
+                  .record(application.getApprovedInterestRate());
+        }
+    }
+}
+```
+
+Key metrics to track:
+- Decision outcomes (approved, rejected, review)
+- Decision times
+- Rule execution counts
+- Business KPIs (average interest rate, risk scores)
+- Error rates
+
+### Rule Deployment and Versioning
+
+Implement a robust deployment strategy:
+
+```java
+@ApplicationScoped
+public class VersionedRuleDeploymentService {
+
+    private Map<String, KieContainer> versionedContainers = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    void initialize() {
+        // Load all available rule versions
+        loadRuleVersion("v1", "com/aletyx/rules/loan/v1");
+        loadRuleVersion("v2", "com/aletyx/rules/loan/v2");
+        loadRuleVersion("current", "com/aletyx/rules/loan/current");
+    }
+
+    private void loadRuleVersion(String version, String packagePath) {
+        KieServices services = KieServices.Factory.get();
+        KieFileSystem fileSystem = services.newKieFileSystem();
+
+        // Load rules from classpath
+        fileSystem.write(ResourceFactory.newClassPathResource(packagePath));
+
+        // Build the knowledge base
+        KieBuilder builder = services.newKieBuilder(fileSystem);
+        builder.buildAll();
+
+        if (builder.getResults().hasMessages(Message.Level.ERROR)) {
+            throw new RuntimeException("Rule compilation errors: " +
+                                      builder.getResults().getMessages());
+        }
+
+        // Create container and cache it
+        KieContainer container = services.newKieContainer(
+                services.getRepository().getDefaultReleaseId());
+        versionedContainers.put(version, container);
+    }
+
+    public KieContainer getRuleContainer(String version) {
+        if (!versionedContainers.containsKey(version)) {
+            throw new IllegalArgumentException("Unknown rule version: " + version);
+        }
+        return versionedContainers.get(version);
+    }
+}
+```
+
+This approach enables:
+- Progressive rollout of rule changes
+- A/B testing of rule versions
+- Safe rollback capabilities
+- Maintenance of backward compatibility
+
+### Decision Service Audit Logging
+
+Implement comprehensive audit logging for regulatory compliance:
+
+```java
+@Interceptor
+public class DecisionAuditInterceptor {
+
+    @Inject
+    AuditLogger auditLogger;
+
+    @AroundInvoke
+    public Object auditDecision(InvocationContext context) throws Exception {
+        // Extract the loan application from method parameters
+        LoanApplication application = findLoanApplication(context.getParameters());
+        if (application == null) {
+            return context.proceed();
+        }
+
+        // Clone the application for before state
+        LoanApplication before = cloneApplication(application);
+
+        // Execute the decision service
+        Object result = context.proceed();
+
+        // Extract the after state
+        LoanApplication after = (result instanceof LoanApplication) ?
+                (LoanApplication) result : application;
+
+        // Create audit entry
+        DecisionAuditEntry entry = new DecisionAuditEntry();
+        entry.setDecisionId(UUID.randomUUID().toString());
+        entry.setApplicationId(application.getId());
+        entry.setTimestamp(new Date());
+        entry.setUserId(getCurrentUser());
+        entry.setRuleVersion(getRuleVersion());
+        entry.setInputState(serializeState(before));
+        entry.setOutputState(serializeState(after));
+        entry.setDecisionOutcome(after.getStatus());
+        entry.setDecisionReason(after.getDecisionReason());
+
+        // Log the audit entry
+        auditLogger.logDecision(entry);
+
+        return result;
+    }
+
+    // Helper methods
+    private LoanApplication findLoanApplication(Object[] parameters) { /* ... */ }
+    private LoanApplication cloneApplication(LoanApplication app) { /* ... */ }
+    private String getCurrentUser() { /* ... */ }
+    private String getRuleVersion() { /* ... */ }
+    private String serializeState(LoanApplication app) { /* ... */ }
+}
+```
+
+Audit logs should capture:
+- Input data (application details)
+- Output decisions
+- Rule versions used
+- Timestamps
+- User/system identifiers
+- Rule execution trace
+
+## Summary
+
+Implementing decision services with DRL enables you to:
+
+1. **Capture complex business logic** in a maintainable, declarative format
+2. **Create modular, reusable decision components** that integrate with your applications
+3. **Adapt quickly to changing business requirements** by updating rules instead of code
+4. **Scale decision processing** to handle high volumes efficiently
+5. **Provide transparency and traceability** for regulatory compliance
+
+By following the patterns and best practices outlined in this chapter, you can build robust, high-performance decision services that deliver consistent, accurate business decisions.
+
+As your decision services mature, consider expanding into more sophisticated approaches like decision tables, complex event processing, and predictive analytics integration to further enhance your business decision automation capabilities.

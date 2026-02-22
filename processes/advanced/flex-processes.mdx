@@ -1,0 +1,27 @@
+---
+title: "Flexible Processes in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "In traditional Business Process Management (BPM), workflows are often designed with predefined, rigid paths. However, many real-world scenarios require adaptability to handle unpredictable events..."
+---
+In traditional Business Process Management (BPM), workflows are often designed with predefined, rigid paths. However, many real-world scenarios require adaptability to handle unpredictable events and evolving conditions. Aletyx Enterprise Build of Kogito and Drools addresses this need through flexible processes, enabling dynamic and adaptable workflows.
+
+### Key Features of Flexible Processes in Aletyx Enterprise Build of Kogito and Drools:
+
+1. Ad-Hoc Processes: By marking a process as ad-hoc, designers can create workflows that may lack a defined start node, allowing tasks to be executed as needed rather than in a strict sequence.
+
+1. Ad-Hoc Sub-Processes: These sub-processes group related tasks without enforcing a specific order. They utilize activation and completion conditions, defined as Java expressions, to determine when tasks should commence and when the sub-process should conclude.
+
+1. Milestones: Serving as checkpoints within the process, milestones automatically activate upon receiving specific events. They can include conditions to assess when the milestone is achieved, facilitating progression to subsequent stages.
+
+1. Ad-Hoc Fragments: These are tasks or nodes without incoming connections and are not designated start nodes. Depending on the configuration, they can start automatically or be triggered via signals, offering flexibility in task execution.
+
+
+By leveraging these features, Kogito enables the modeling of processes that can adapt to changing circumstances, ensuring that workflows remain efficient and relevant in dynamic environments.
+
+This is a screenshot of a Flexible process that models a Service Desk application.
+
+ ![Embedded Subprocesses](/images/core/processes/advanced-bpmn/images/flex-process.png)
+
+<Warning title="Warning">
+
+This feature is not fully mature, so be careful on exploring this functionality.
+</Warning>

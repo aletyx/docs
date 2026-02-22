@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 124 124">
+	<style>
+		/* Dark mode styles */
+		.icon-primary {
+			fill: #FC764C;
+		}
+
+		.icon-secondary {
+			fill: #e0e0e0;
+		}
+
+		.icon-highlight {
+			stroke: #e0e0e0;
+		}
+
+		.icon-background {
+			fill: #413f3f;
+		}
+
+		.icon-container {
+			filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+		}
+	</style>
+
+	<!-- LENDING ICON -->
+	<g class="icon-container" transform="translate(60, 60)">
+		<circle class="icon-background" cx="0" cy="0" r="60" />
+		<!-- Dollar symbol and building combination -->
+		<path class="icon-primary" d="M-30,-10 h60 v40 h-60 v-40 z" />
+		<path class="icon-secondary"
+			d="M-35,-20 h10 v60 h-10 v-60 z M25,-20 h10 v60 h-10 v-60 z M-35,-30 h70 v10 h-70 v-10 z" />
+		<path class="icon-highlight"
+			d="M0,-5 c-5,0 -10,4 -10,10 c0,5 5,8 10,10 c5,2 10,5 10,10 c0,6 -5,10 -10,10 c-4,0 -8,-2 -10,-5 l-3,4 c3,3 8,6 13,6 c8,0 15,-6 15,-15 c0,-7 -5,-11 -12,-13 c-5,-2 -8,-4 -8,-7 c0,-3 3,-5 7,-5 c3,0 6,1 8,3 l3,-4 c-3,-3 -7,-4 -11,-4 z M0,-10 v-8 M0,35 v8"
+			stroke-width="5" stroke-linecap="round" fill="none" />
+	</g>
+</svg>

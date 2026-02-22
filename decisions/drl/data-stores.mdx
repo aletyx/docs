@@ -1,0 +1,416 @@
+---
+title: "Data Sources in Rule Units: A Comprehensive Introduction"
+description: "Data sources are a fundamental concept in rule units that provide a structured way to work with facts (data objects) in your rules. Think of data sources as specialized containers that manage how..."
+---
+## Introduction to Data Sources
+
+Data sources are a fundamental concept in rule units that provide a structured way to work with facts (data objects) in your rules. Think of data sources as specialized containers that manage how facts are stored, updated, and shared between rules. Unlike traditional Drools working memory, data sources are strongly typed and provide clear entry points for facts to enter and exit your rule systems.
+
+In simpler terms, data sources are "fact containers" that your rules can observe and interact with. When facts in these containers change, relevant rules are automatically triggered.
+
+## Why Use Data Sources?
+
+Data sources solve several common problems in rule-based systems:
+
+1. **Type Safety**: Data sources are strongly typed, preventing type-related errors
+2. **Isolation**: Each rule unit has its own data sources, reducing unintended interactions
+3. **Declarative API**: Clear methods for adding, updating, and removing facts
+4. **Reactive Processing**: Changes in data sources automatically trigger rule evaluation
+5. **Improved Testability**: Data sources can be mocked and verified in tests
+
+## Types of Data Sources
+
+Drools supports three primary types of data sources, each designed for specific use cases:
+
+### 1. DataStore
+
+A DataStore is the most versatile data source type. It functions similar to a collection that supports the complete lifecycle of facts: adding, updating, and removing.
+
+**When to use DataStore:**
+- For facts that need to be added, updated, or removed during rule execution
+- When working with domain objects that change over time
+- For most traditional rule use cases
+
+**Key characteristics:**
+- Mutable collection of facts
+- Complete CRUD (Create, Read, Update, Delete) operations
+- Notifies rule engine when facts change
+
+#### Creating a DataStore
+
+```java
+// In a rule unit class
+private DataStore<Customer> customers;
+
+public MyRuleUnit() {
+    // Initialize empty data store
+    this.customers = DataSource.createStore();
+}
+
+// Or with initial data
+public MyRuleUnit(Collection<Customer> initialCustomers) {
+    this.customers = DataSource.createStore();
+    for (Customer customer : initialCustomers) {
+        this.customers.add(customer);
+    }
+}
+```
+
+#### DataStore Operations
+
+```java
+// Adding a fact
+Customer newCustomer = new Customer("John", "Doe");
+DataHandle handle = customers.add(newCustomer);
+
+// Updating a fact
+newCustomer.setStatus("PREMIUM");
+customers.update(handle, newCustomer);
+
+// Removing a fact
+customers.remove(handle);
+```
+
+#### Using DataStore in Rules
+
+```java
+rule "Premium Customer Detection"
+when
+    $customer: /customers[spending > 1000]
+then
+    $customer.setCategory("PREMIUM");
+    customers.update($customer);  // Notice how we update through the data source
+end
+```
+
+### 2. DataStream
+
+A DataStream is an append-only data source designed for event processing. It allows you to add facts but not update or remove them, making it perfect for event streams where history matters.
+
+**When to use DataStream:**
+- For processing events in sequential order
+- When you need an audit trail of all events
+- For immutable facts that don't change once created
+- In Complex Event Processing (CEP) scenarios
+
+**Key characteristics:**
+- Append-only collection
+- Facts cannot be updated or removed
+- Optimized for sequential processing
+- Good for event-based systems
+
+#### Creating a DataStream
+
+```java
+// In a rule unit class
+private DataStream<TemperatureReading> temperatureReadings;
+
+public SensorRuleUnit() {
+    // Initialize empty data stream
+    this.temperatureReadings = DataSource.createStream();
+}
+```
+
+#### DataStream Operations
+
+```java
+// Appending an event (only operation available)
+TemperatureReading reading = new TemperatureReading(72.5, "Celsius", timestamp);
+temperatureReadings.append(reading);
+
+// Cannot update or remove - these operations are not available for DataStream
+```
+
+#### Using DataStream in Rules
+
+```java
+rule "High Temperature Alert"
+when
+    $reading: /temperatureReadings[value > 90]
+then
+    // Cannot modify the reading directly since DataStream is append-only
+    alerts.add(new TemperatureAlert($reading, "HIGH_TEMP"));
+end
+```
+
+### 3. SingletonStore
+
+A SingletonStore holds a single value that can be updated or cleared. This is useful for configuration settings, global state, or reference data that all rules need to access.
+
+**When to use SingletonStore:**
+- For global configuration settings
+- For reference data that all rules need to access
+- When you need a reactive global variable
+- For state that affects all rules in a unit
+
+**Key characteristics:**
+- Contains at most one element
+- Can be set, updated, or cleared
+- All rules react to changes in the singleton
+- Similar to a global variable but reactive
+
+#### Creating a SingletonStore
+
+```java
+// In a rule unit class
+private SingletonStore<TaxConfiguration> taxConfig;
+
+public TaxRuleUnit() {
+    // Initialize empty singleton store
+    this.taxConfig = DataSource.createSingleton();
+}
+```
+
+#### SingletonStore Operations
+
+```java
+// Setting the value
+TaxConfiguration config = new TaxConfiguration(0.07, "US");
+taxConfig.set(config);
+
+// Updating the existing value
+config.setRate(0.08);
+taxConfig.update();
+
+// Clearing the value
+taxConfig.clear();
+```
+
+#### Using SingletonStore in Rules
+
+```java
+rule "Apply Tax"
+when
+    $config: /taxConfig[] // Empty brackets match the singleton
+    $order: /orders[taxApplied == false]
+then
+    $order.setTaxAmount($order.getSubtotal() * $config.getRate());
+    $order.setTaxApplied(true);
+    orders.update($order);
+end
+```
+
+## DataHandle: Managing Fact References
+
+When you add facts to a DataStore, you receive a DataHandle in return. This handle is a reference to the fact within the data source and is essential for updating or removing the fact later.
+
+```java
+// Adding a fact and storing the handle
+Customer customer = new Customer("Jane", "Smith");
+DataHandle customerHandle = customers.add(customer);
+
+// Later, using the handle to update the fact
+customer.setStatus("VIP");
+customers.update(customerHandle, customer);
+
+// Or to remove it
+customers.remove(customerHandle);
+```
+
+If you lose the handle but need to update a fact, you can still use the overloaded methods that locate the handle for you, but this is less efficient:
+
+```java
+// Less efficient update without a handle - Drools must search for the fact
+customer.setStatus("VIP");
+customers.update(customer);
+```
+
+## Practical Examples
+
+Let's examine some real-world examples of using different data sources together:
+
+### Example 1: Order Processing System
+
+```java
+public class OrderProcessingUnit implements RuleUnitData {
+    // Customer repository - relatively stable data
+    private final DataStore<Customer> customers;
+
+    // Incoming orders - frequently changing data
+    private final DataStore<Order> orders;
+
+    // Events generated during processing - append-only audit trail
+    private final DataStream<OrderEvent> orderEvents;
+
+    // Current tax rates - global configuration
+    private final SingletonStore<TaxConfiguration> taxConfig;
+
+    public OrderProcessingUnit() {
+        this.customers = DataSource.createStore();
+        this.orders = DataSource.createStore();
+        this.orderEvents = DataSource.createStream();
+        this.taxConfig = DataSource.createSingleton();
+    }
+
+    // Getters and setters
+    // ...
+}
+```
+
+Corresponding DRL:
+
+```java
+package com.example;
+unit OrderProcessingUnit;
+
+rule "New Order Validation"
+when
+    $order: /orders[status == "NEW"]
+    $customer: /customers[id == $order.customerId]
+    $taxConfig: /taxConfig[]
+then
+    // Log event to audit trail
+    orderEvents.append(new OrderEvent($order.getId(), "VALIDATING", System.currentTimeMillis()));
+
+    // Perform validation
+    if ($customer.getCreditScore() < 500) {
+        $order.setStatus("REJECTED");
+        $order.setRejectionReason("Insufficient credit score");
+    } else {
+        // Calculate tax
+        $order.setTaxAmount($order.getSubtotal() * $taxConfig.getRate());
+        $order.setStatus("VALIDATED");
+    }
+
+    // Update the order
+    orders.update($order);
+
+    // Log completion event
+    orderEvents.append(new OrderEvent($order.getId(), "VALIDATED", System.currentTimeMillis()));
+end
+```
+
+### Example 2: IoT Sensor Monitoring
+
+```java
+public class SensorMonitoringUnit implements RuleUnitData {
+    // Incoming sensor readings - continuous stream of data
+    private final DataStream<SensorReading> readings;
+
+    // Alerts generated from readings - can be acknowledged/cleared
+    private final DataStore<Alert> alerts;
+
+    // Sensor configurations - reference data
+    private final DataStore<SensorConfig> sensorConfigs;
+
+    // Current system mode (normal, maintenance, emergency)
+    private final SingletonStore<SystemMode> systemMode;
+
+    public SensorMonitoringUnit() {
+        this.readings = DataSource.createStream();
+        this.alerts = DataSource.createStore();
+        this.sensorConfigs = DataSource.createStore();
+        this.systemMode = DataSource.createSingleton();
+    }
+
+    // Getters and setters
+    // ...
+}
+```
+
+## Best Practices for Working with Data Sources
+
+### 1. Choose the Right Data Source Type
+
+- Use **DataStore** for facts that need full lifecycle management
+- Use **DataStream** for events and immutable facts
+- Use **SingletonStore** for global configurations and state
+
+### 2. Optimize Update Operations
+
+- Always keep track of DataHandles for facts you'll update
+- Group related updates together to minimize rule activations
+- Use the modify block in rule actions when available
+
+### 3. Manage Memory Efficiently
+
+- Remove facts from DataStore when they're no longer needed
+- Consider using event expiration for DataStream facts
+- Be cautious with large collections in SingletonStore
+
+### 4. Design for Modularity
+
+- Keep data sources focused on a specific domain concept
+- Share data sources between rule units when appropriate
+- Use multiple smaller rule units instead of one large unit
+
+### 5. Ensure Type Safety
+
+- Use generics consistently with data sources
+- Avoid mixing different fact types in the same data source
+- Consider creating wrapper types for primitive values
+
+## Common Pitfalls and Solutions
+
+### Pitfall 1: Forgetting to Update Data Sources
+
+When you modify facts in rule actions, remember to notify the data source:
+
+```java
+rule "Update Customer Status"
+when
+    $customer: /customers[orderCount > 10, status != "PREMIUM"]
+then
+    // WRONG: Updating the object without notifying the data source
+    $customer.setStatus("PREMIUM");
+
+    // CORRECT: Notify the data source about the change
+    $customer.setStatus("PREMIUM");
+    customers.update($customer);
+end
+```
+
+### Pitfall 2: Overusing SingletonStore
+
+SingletonStore should be used sparingly for truly global state:
+
+```java
+// WRONG: Using SingletonStore for facts that should be in a collection
+private SingletonStore<Customer> currentCustomer; // Bad design
+
+// CORRECT: Use DataStore for collections of facts
+private DataStore<Customer> customers; // Good design
+```
+
+### Pitfall 3: Inefficient Data Source Operations
+
+Perform operations efficiently:
+
+```java
+// INEFFICIENT: Multiple updates triggering multiple rule activations
+customer.setFirstName("John");
+customers.update(customer);
+customer.setLastName("Doe");
+customers.update(customer);
+customer.setEmail("john.doe@example.com");
+customers.update(customer);
+
+// EFFICIENT: Single update after all changes
+customer.setFirstName("John");
+customer.setLastName("Doe");
+customer.setEmail("john.doe@example.com");
+customers.update(customer);
+```
+
+## Converting from Traditional Drools to Rule Units
+
+If you're migrating from traditional Drools to Rule Units, here's how the traditional operations map to data source operations:
+
+| Traditional Drools | Rule Units with Data Sources |
+| ------------------ | ---------------------------- |
+| `insert(fact)`     | `dataStore.add(fact)`        |
+| `update(fact)`     | `dataStore.update(fact)`     |
+| `delete(fact)`     | `dataStore.remove(fact)`     |
+| Entry Point        | DataStore/DataStream         |
+| Global Variable    | SingletonStore               |
+
+## Conclusion
+
+Data sources are the foundation of effective rule units. By understanding the different types of data sources and when to use each one, you can design more modular, maintainable, and efficient rule systems.
+
+The right data source type depends on your specific use case:
+- Use **DataStore** for most traditional rule use cases with mutable facts
+- Use **DataStream** for event processing and audit trails
+- Use **SingletonStore** for configuration and global state
+
+By choosing the appropriate data source type and following the best practices outlined in this guide, you'll be able to create more robust rule systems that are easier to develop, test, and maintain.

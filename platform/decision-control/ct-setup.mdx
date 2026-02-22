@@ -1,0 +1,630 @@
+---
+title: "Aletyx Decision Control Tower Setup Guide"
+description: "This guide covers deploying Aletyx Decision Control Tower in your Kubernetes cluster with production-ready configurations."
+---
+This guide covers deploying Aletyx Decision Control Tower in your Kubernetes cluster with production-ready configurations.
+
+<Info title="Prerequisites">
+Before deploying Aletyx Decision Control Tower, ensure you have:
+
+- Kubernetes cluster v1.24+
+- Decision Control environments deployed (dev, test, prod)
+- Keycloak configured with the `aletyx` realm
+- Ingress controller with TLS support
+- DNS entries for Aletyx Decision Control Tower hostname
+</Info>
+## Architecture Overview
+
+Aletyx Decision Control Tower consists of three main components that work together to provide unified governance across your Decision Control environments.
+
+![Diagram](/images/diagrams/decision-control/control-tower/setup/flowchart-td-1.svg)
+
+---
+
+## Step 1: Create Namespace and Service Account
+
+Create a dedicated namespace for Aletyx Decision Control Tower:
+
+```yaml
+# namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: decision-control
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: control-tower-sa
+  namespace: decision-control
+```
+
+Apply:
+
+```bash
+kubectl apply -f namespace.yaml
+```
+
+---
+
+## Step 2: Configure Container Registry Access
+
+Create an image pull secret for accessing container images:
+
+```bash
+kubectl create secret docker-registry aletyx-registry \
+  --docker-server=registry-{{edition}}.aletyx.services \
+  --docker-username=YOUR_EMAIL \
+  --docker-password=YOUR_TOKEN \
+  --namespace=decision-control
+```
+
+<Tip title="Registry Credentials">
+Obtain your registry credentials from [my.aletyx.ai](https://my.aletyx.ai). Navigate to **Container Images** to find your username (email) and authentication token for your subscription edition.
+</Tip>
+---
+
+## Step 3: Deploy Governance Database
+
+Deploy PostgreSQL for governance data:
+
+```yaml
+# governance-database.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-governance-secret
+  namespace: decision-control
+type: Opaque
+stringData:
+  POSTGRES_USER: governance_user
+  POSTGRES_PASSWORD: "CHANGE_ME_SECURE_PASSWORD"
+  POSTGRES_DB: governance_db
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-governance-pvc
+  namespace: decision-control
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-governance
+  namespace: decision-control
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-governance
+  template:
+    metadata:
+      labels:
+        app: postgres-governance
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-governance-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-governance-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-governance-secret
+              key: POSTGRES_DB
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command: ["pg_isready", "-U", "governance_user"]
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "governance_user"]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-governance-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-governance
+  namespace: decision-control
+spec:
+  selector:
+    app: postgres-governance
+  ports:
+  - port: 5432
+    targetPort: 5432
+```
+
+Apply:
+
+```bash
+kubectl apply -f governance-database.yaml
+```
+
+<Warning title="Production Considerations">
+For production deployments, consider using managed PostgreSQL services (AWS RDS, Google Cloud SQL, Azure Database) with automated backups and high availability.
+</Warning>
+---
+
+## Step 4: Deploy Governance API
+
+The Governance API provides the backend services for workflow management:
+
+```yaml
+# governance-api.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: governance-api-config
+  namespace: decision-control
+data:
+  DB_HOST: "postgres-governance"
+  DB_PORT: "5432"
+  DB_NAME: "governance_db"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: governance-api
+  namespace: decision-control
+  labels:
+    app: governance-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: governance-api
+  template:
+    metadata:
+      labels:
+        app: governance-api
+    spec:
+      serviceAccountName: control-tower-sa
+      imagePullSecrets:
+      - name: aletyx-registry
+      containers:
+      - name: governance-api
+        image: registry-{{edition}}.aletyx.services/governance-api:1.2.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: AUTH_PROVIDER
+          value: "keycloak"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: governance-api-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: governance-api-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: governance-api-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-governance-secret
+              key: POSTGRES_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-governance-secret
+              key: POSTGRES_PASSWORD
+        - name: KEYCLOAK_URL
+          value: "https://keycloak.your-domain.com"
+        - name: KEYCLOAK_REALM
+          value: "aletyx"
+        - name: KEYCLOAK_CLIENT_ID
+          value: "decision-control"
+        - name: APP_BASE_URL
+          value: "https://control-tower.your-domain.com"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: governance-api
+  namespace: decision-control
+spec:
+  selector:
+    app: governance-api
+  ports:
+  - port: 3000
+    targetPort: 3000
+```
+
+Apply:
+
+```bash
+kubectl apply -f governance-api.yaml
+```
+
+---
+
+## Step 5: Deploy Control Tower
+
+Deploy the Aletyx Decision Control Tower frontend and API gateway:
+
+```yaml
+# control-tower.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: control-tower-config
+  namespace: decision-control
+data:
+  env.js: |
+    window.__ENV__ = {
+      KEYCLOAK_URL: 'https://keycloak.your-domain.com',
+      KEYCLOAK_REALM: 'aletyx',
+      KEYCLOAK_CLIENT_ID: 'decision-control'
+    };
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: control-tower
+  namespace: decision-control
+  labels:
+    app: control-tower
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: control-tower
+  template:
+    metadata:
+      labels:
+        app: control-tower
+    spec:
+      serviceAccountName: control-tower-sa
+      imagePullSecrets:
+      - name: aletyx-registry
+      containers:
+      - name: control-tower
+        image: registry-{{edition}}.aletyx.services/control-tower:1.2.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "8080"
+        - name: GOVERNANCE_API_URL
+          value: "http://governance-api:3000"
+        - name: AUTH_PROVIDER
+          value: "keycloak"
+        - name: KEYCLOAK_URL
+          value: "https://keycloak.your-domain.com"
+        - name: KEYCLOAK_REALM
+          value: "aletyx"
+        volumeMounts:
+        - name: config
+          mountPath: /app/public/config/env.js
+          subPath: env.js
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: config
+        configMap:
+          name: control-tower-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: control-tower
+  namespace: decision-control
+spec:
+  selector:
+    app: control-tower
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: control-tower
+  namespace: decision-control
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - control-tower.your-domain.com
+    secretName: control-tower-tls
+  rules:
+  - host: control-tower.your-domain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: control-tower
+            port:
+              number: 80
+```
+
+Apply:
+
+```bash
+kubectl apply -f control-tower.yaml
+```
+
+---
+
+## Step 6: Configure Keycloak
+
+### Create Client
+
+In Keycloak admin console (`https://keycloak.your-domain.com/admin`):
+
+1. **Select Realm**: `aletyx`
+
+2. **Create Client**:
+    - Client ID: `decision-control`
+    - Client type: `OpenID Connect`
+    - Client authentication: `Off` (public client)
+
+3. **Configure Settings**:
+    - Standard flow: `Enabled`
+    - Valid redirect URIs: `https://control-tower.your-domain.com/*`
+    - Valid post logout redirect URIs: `https://control-tower.your-domain.com/*`
+    - Web origins: `https://control-tower.your-domain.com`
+
+### Create Realm Roles
+
+Create these roles in the `aletyx` realm:
+
+| Role | Description | Typical Users |
+|------|-------------|---------------|
+| `decision-control-dev-users` | Access to DEV environment | Business Analysts |
+| `decision-control-risk-manager` | Risk approval authority | Risk Managers |
+| `decision-control-compliance` | Compliance approval authority | Compliance Officers |
+| `decision-control-prod-users` | Access to PROD environment | Operations Managers |
+| `decision-control-admin` | Full administrative access | Administrators |
+
+### Create Test Users
+
+<Tabs>
+  <Tab title="Business Analyst">
+
+    ```
+    Username: sarah@demo.local
+    Password: demo123
+    Roles: decision-control-dev-users
+    ```
+  </Tab>
+  <Tab title="Risk Manager">
+
+    ```
+    Username: tom@demo.local
+    Password: demo123
+    Roles: decision-control-risk-manager
+    ```
+  </Tab>
+  <Tab title="Compliance Officer">
+
+    ```
+    Username: maria@demo.local
+    Password: demo123
+    Roles: decision-control-compliance
+    ```
+  </Tab>
+  <Tab title="Administrator">
+
+    ```
+    Username: admin@demo.local
+    Password: demo123
+    Roles: decision-control-admin
+    ```
+  </Tab>
+</Tabs>
+---
+
+## Step 7: Verify Deployment
+
+Check all pods are running:
+
+```bash
+kubectl get pods -n decision-control
+
+# Expected output:
+# NAME                                READY   STATUS    RESTARTS   AGE
+# control-tower-xxx                   1/1     Running   0          2m
+# governance-api-xxx                  1/1     Running   0          3m
+# postgres-governance-xxx             1/1     Running   0          5m
+```
+
+Test endpoints:
+
+```bash
+# Control Tower health
+curl -s https://control-tower.your-domain.com/health
+
+# Governance API health
+kubectl exec -n decision-control deploy/control-tower -- \
+  wget -qO- http://governance-api:3000/health
+```
+
+---
+
+## Step 8: First Login
+
+1. Navigate to `https://control-tower.your-domain.com`
+2. Click "Sign In" - you'll be redirected to Keycloak
+3. Authenticate with a user that has Decision Control roles
+4. After authentication, the dashboard displays your accessible environments
+
+<Tip title="Verification Checklist">
+- [ ] Login redirects to Keycloak
+- [ ] Dashboard loads after authentication
+- [ ] Environments display based on user roles
+- [ ] Navigation between environments works
+</Tip>
+---
+
+## Configuration Reference
+
+### Environment Variables
+
+#### Control Tower
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `GOVERNANCE_API_URL` | Internal URL to Governance API | `http://governance-api:3000` |
+| `AUTH_PROVIDER` | Authentication provider | `keycloak` |
+| `KEYCLOAK_URL` | Public Keycloak URL | `https://keycloak.example.com` |
+| `KEYCLOAK_REALM` | Keycloak realm name | `aletyx` |
+
+#### Governance API
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DB_HOST` | PostgreSQL host | `postgres-governance` |
+| `DB_PORT` | PostgreSQL port | `5432` |
+| `DB_NAME` | Database name | `governance_db` |
+| `DB_USER` | Database username | `governance_user` |
+| `DB_PASSWORD` | Database password | (from secret) |
+| `APP_BASE_URL` | Public Aletyx Decision Control Tower URL | `https://control-tower.example.com` |
+
+---
+
+## Updating Configuration
+
+To update Aletyx Decision Control Tower configuration:
+
+```bash
+# Update ConfigMap
+kubectl delete configmap control-tower-config -n decision-control
+kubectl create configmap control-tower-config \
+  --from-file=env.js=./env.js \
+  --namespace=decision-control
+
+# Restart deployment
+kubectl rollout restart deployment/control-tower -n decision-control
+```
+
+---
+
+## Troubleshooting
+
+### Cannot Log In
+
+1. Verify Keycloak client redirect URIs include `https://control-tower.your-domain.com/*`
+2. Check Governance API logs:
+   ```bash
+   kubectl logs -n decision-control -l app=governance-api --tail=50
+   ```
+3. Verify Keycloak is accessible from the cluster
+
+### Environments Not Loading
+
+1. Verify Governance API is running
+2. Check database connectivity:
+   ```bash
+   kubectl exec -n decision-control deploy/governance-api -- \
+     nc -zv postgres-governance 5432
+   ```
+3. Review environment configuration in database
+
+### Tasks Not Appearing
+
+1. Ensure user has correct role assignment in Keycloak
+2. Verify governance workflow is configured
+3. Check Governance API logs for errors
+
+---
+
+## Next Steps
+
+- [Dashboard Overview](/platform/decision-control/ct-dashboard): Navigate the interface
+- [Environment Management](/platform/decision-control/ct-environments): Configure Decision Control environments
+- [Task Management](/platform/decision-control/ct-tasks): Work with governance tasks
+- [Governance Workflow](/platform/decision-control/governance): Configure approval workflows

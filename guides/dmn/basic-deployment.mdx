@@ -1,0 +1,212 @@
+---
+title: "DMN Basic Deployment Options in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "After creating your DMN model and applying an accelerator to structure your project, the next step is deployment. This guide covers the basics of deploying your decision service to make it..."
+---
+## Introduction
+
+After creating your DMN model and applying an accelerator to structure your project, the next step is deployment. This guide covers the basics of deploying your decision service to make it accessible to other applications and services in your ecosystem.
+
+We'll focus on the development deployment capabilities of Aletyx Playground to get you started quickly. For production deployments, see our [Advanced Deployment Options](/guides/dmn/advanced-deployment) guide.
+
+## Understanding Deployment Concepts
+
+Before diving into deployment, let's understand some key concepts:
+
+### What is a Decision Service?
+
+A decision service is an API-enabled service that:
+
+- Exposes your DMN models as REST endpoints
+- Accepts input data in JSON format
+- Evaluates decisions based on your models
+- Returns results in JSON format
+
+### Development vs. Production Deployment
+
+It's important to distinguish between:
+
+- **Development Deployment**: For testing and validation during development
+- **Production Deployment**: For use in actual business operations
+
+This guide focuses on development deployments through Aletyx Playground, which are perfect for initial testing but not intended for production use.
+
+## Preparing for Deployment
+
+Before deploying, ensure:
+
+1. Your DMN model is properly structured and validated
+2. You've applied the appropriate accelerator
+3. Your project is synchronized with Git (if you want to preserve changes)
+
+## Using Dev Deployments in Aletyx Playground
+
+Aletyx Playground provides a simple way to deploy your decision service for development and testing purposes:
+
+### Creating a Development Deployment
+
+1. In Aletyx Playground with your project open, click the **Deploy** button in the toolbar
+
+2. If prompted, select the folder containing your project (usually "Untitled Folder" if this is your first deployment)
+
+3. A dialog will appear explaining that this deployment is for development purposes only
+
+    - Review the information
+    - Click **Confirm** to proceed
+
+4. The deployment process will begin. This typically takes 1-2 minutes for the first deployment as the system pulls the necessary container images
+
+5. You can monitor the progress in the deployment dialog
+
+![Development Deployment Process](/images/guides/examples/dmn/images/dev-deployment-process.png)
+
+### Accessing Your Deployed Service
+
+Once deployment completes:
+
+1. Click the **Dev Deployments** button in the toolbar
+
+2. You'll see a list of your deployments with their status
+
+    - A green checkmark indicates a successful deployment
+    - Click **Refresh** if you don't see an updated status
+
+3. Click on the deployment link to access the Swagger UI for your service
+
+4. The Swagger UI provides:
+
+    - Documentation of your service's REST API
+    - The ability to test your endpoints directly in the browser
+    - Details of the request/response formats
+
+![Swagger UI for Deployed Service](/images/guides/examples/dmn/images/swagger-ui.png)
+
+### Testing Your Deployed Service
+
+To test your deployment using the Swagger UI:
+
+1. Locate the POST endpoint for your DMN model
+   - It should be named after your model, e.g., `/vacation-days`
+
+2. Click on the endpoint to expand it
+
+3. Click **Try it out**
+
+4. In the Request Body field, enter a JSON object with your input values:
+
+    ```json
+    {
+      "Age": 45,
+      "Years of Service": 20
+    }
+    ```
+
+5. Click **Execute**
+
+6. Review the response, which should contain all the decisions in your model:
+
+    ```json
+    {
+      "Base Vacation Days": 22,
+      "Extra days case-1": 0,
+      "Extra days case-2": 0,
+      "Extra days case-3": 3,
+      "Total Vacation Days": 25
+    }
+    ```
+
+This confirms that your decision service is working correctly!
+
+## Understanding the Deployment Architecture
+
+The development deployment created by Aletyx Playground has these characteristics:
+
+1. **Containerized**: Packaged as a container
+2. **Isolated**: Each deployment runs independently
+3. **Temporary**: Not intended for long-term use
+4. **Stateless**: Each decision request is processed independently
+5. **REST API**: Accessible via HTTP endpoints
+
+![Deployment Architecture](/images/guides/examples/dmn/images/deployment-architecture.png)
+
+## Deployment Limitations
+
+Be aware of these limitations of Dev Deployments:
+
+1. **Not for Production**: Dev Deployments are for testing only
+2. **Limited Scalability**: Cannot be horizontally scaled
+3. **No Health Monitoring**: Limited production-ready features
+4. **Isolated Models**: Multiple interdependent models may not work as expected
+5. **Temporary**: No guaranteed uptime or persistence
+
+## Connecting to OpenShift (Optional)
+
+For more advanced testing, you can deploy to an Red Hat OpenShift environment:
+
+1. Click **Dev Deployments** and select **Connect to an account**
+
+2. Select the **OpenShift** tile
+
+3. Complete the connection form with:
+
+    - Your namespace
+    - The OpenShift API URL
+    - Your authentication token
+    - Check "Insecurely disable TLS validation" if needed
+
+4. Click **Connect**
+
+5. After successful connection, click **Continue**
+
+6. Follow the same deployment steps as before
+
+This deployment will still be for development purposes but will run in your OpenShift environment.
+
+## Next Steps After Deployment
+
+Once your service is deployed and tested:
+
+1. **Integration Testing**: Test with other applications and services
+2. **Performance Testing**: Validate response times and throughput
+3. **Documentation**: Create API documentation for consumers
+4. **Feedback Loop**: Gather feedback and refine your model
+5. **Production Planning**: Prepare for production deployment
+
+## Transitioning to Production
+
+When you're ready to move to production:
+
+1. Follow the [Advanced Deployment Options](/guides/dmn/advanced-deployment) guide
+2. Implement proper CI/CD pipelines
+3. Set up monitoring and observability
+4. Configure appropriate security measures
+5. Plan for scaling and availability
+
+## Troubleshooting Common Deployment Issues
+
+If you encounter issues with your deployment:
+
+1. **Deployment Fails to Start**:
+
+    - Check for errors in the deployment logs
+    - Verify the model name matches the file name
+    - Ensure your DMN model is valid
+
+2. **Incorrect Results**:
+
+    - Validate your model in the Aletyx Playground testing environment
+    - Check your input data format
+    - Review the decision logic for errors
+
+3. **Service Unavailable**:
+
+    - Refresh the deployment status
+    - Try redeploying the service
+    - Check your network connection
+
+## Conclusion
+
+You've now successfully deployed your DMN model as a decision service! This development deployment allows you to test and validate your decision logic in a real service environment.
+
+Remember that this is just the beginning of your deployment journey. For production use, you'll need to implement more robust deployment patterns as covered in the [Advanced Deployment Options](/guides/dmn/advanced-deployment) guide.
+
+In the next section, we'll explore advanced DMN modeling techniques to help you create more sophisticated decision models.

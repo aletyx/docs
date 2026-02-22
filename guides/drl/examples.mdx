@@ -1,0 +1,432 @@
+---
+title: "Creating Your First Decision Table"
+description: "This guide walks you through creating a decision table for a shipping charges calculation system. This approach is ideal for business rules that need to be managed by business analysts and subject..."
+---
+This guide walks you through creating a decision table for a shipping charges calculation system. This approach is ideal for business rules that need to be managed by business analysts and subject matter experts without requiring programming knowledge.
+
+## Example Use Case: Enterprise Shipping Charges
+
+Our enterprise shipping system has the following pricing rules:
+
+- Free shipping when:
+  - The order has 4+ items AND the total is $300+
+  - Standard shipping is selected (4-5 business days)
+- Otherwise, shipping charges vary based on:
+  - Number of items
+  - Delivery speed (Next day, 2nd day, or Standard)
+  - Order total (less than $300 or $300+)
+
+## Version 1: Using Aletyx Playground
+
+### Step 1: Access Aletyx Playground
+
+1. Navigate to [playground.aletyx.ai](https://playground.aletyx.ai) or run locally:
+
+```bash
+curl -sL https://raw.githubusercontent.com/aletyx-labs/kie-10.0.0-sandbox/refs/heads/main/docker-compose.yaml | docker compose -f - up
+```
+
+2. From the welcome screen, click **Create New Decision**
+3. Name your new DMN "ShippingRules", but you don't have to do anything with it as we're just going to use the Accelerators to speed up development!
+4. Apply the `Decisions Kogito jBPM Profile` Accelerator by clicking `Apply Accelerator` and selecting the profile.
+5. On the modal that pops up, click `Apply`.
+6. Make a commit message and click `Commit`
+7. Now you can either download your project by either clicking  **Share** and select `All Files` to download the workspace or selecting your Git ID and creating a repository in your connected environment!
+
+
+### Step 2: Upload Decision Table Template
+
+1. Click **Upload File** in your project
+2. Download the [Decision Table template](GitHubLocation/DecisionTable.drl.xlsx)
+3. Copy the template to your project
+
+### Step 3: Edit the Decision Table
+
+1. Open the uploaded Microsoft Excel file in your preferred spreadsheet application
+2. Verify the RuleSet information is defined correctly:
+
+| A                               | B       | C                                                                                            |
+| ------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| Shipping Charges Decision Table | RuleSet | ai.aletyx.shipping                                                                           |
+|                                 | Unit    | ShippingUnit                                                                                 |
+|                                 | Import  | ai.aletyx.model.Order, ai.aletyx.model.Charge                                                |
+|                                 | Queries | query FindShippingCharge(Order order, Charge charge) order := /orders charge := /charges end |
+
+3. Review and modify the first RuleTable for orders under $300:
+
+| A   | B                            | C                                  | D                                |
+| --- | ---------------------------- | ---------------------------------- | -------------------------------- |
+|     | RuleTable Shipping Under 300 |                                    |                                  |
+|     | CONDITION                    | CONDITION                          | ACTION                           |
+|     | $order : /orders             | $order : /orders                   |                                  |
+|     | total < 300                  | itemsCount $1, deliverInDays == $2 | charges.add(new Charge($param)); |
+|     | Under $300                   | Items & Delivery                   | Shipping Charge                  |
+|     |                              | < 3, 1                             | 35                               |
+|     |                              | < 3, 2                             | 15                               |
+|     |                              | < 3, 5                             | 10                               |
+|     |                              | >= 4, 1                            | $order.getItemsCount() * 7.50    |
+|     |                              | >= 4, 2                            | $order.getItemsCount() * 3.50    |
+|     |                              | >= 4, 5                            | $order.getItemsCount() * 2.50    |
+
+4. Review and modify the second RuleTable for orders of $300 or more:
+
+| A   | B                           | C                                  | D                                |
+| --- | --------------------------- | ---------------------------------- | -------------------------------- |
+|     | RuleTable Shipping Over 300 |                                    |                                  |
+|     | CONDITION                   | CONDITION                          | ACTION                           |
+|     | $order : /orders            | $order : /orders                   |                                  |
+|     | total >= 300                | itemsCount $1, deliverInDays == $2 | charges.add(new Charge($param)); |
+|     | $300 or more                | Items & Delivery                   | Shipping Charge                  |
+|     |                             | < 3, 1                             | 25                               |
+|     |                             | < 3, 2                             | 10                               |
+|     |                             | < 3, 5                             | $order.getItemsCount() * 1.50    |
+|     |                             | >= 4, 1                            | $order.getItemsCount() * 5       |
+|     |                             | >= 4, 2                            | $order.getItemsCount() * 2       |
+|     |                             | >= 4, 5                            | 0                                |
+
+5. Save the Excel file and upload the updated version to the playground
+
+### Step 4: Create Required Java Classes
+
+Create two Java files in your project:
+
+**Order.java**
+```java
+package ai.aletyx.model;
+
+public class Order {
+    private int itemsCount;
+    private double total;
+    private int deliverInDays;
+
+    public Order() {
+    }
+
+    public Order(int itemsCount, double total, int deliverInDays) {
+        this.itemsCount = itemsCount;
+        this.total = total;
+        this.deliverInDays = deliverInDays;
+    }
+
+    // Getters and setters
+    public int getItemsCount() {
+        return itemsCount;
+    }
+
+    public void setItemsCount(int itemsCount) {
+        this.itemsCount = itemsCount;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public void setTotal(double total) {
+        this.total = total;
+    }
+
+    public int getDeliverInDays() {
+        return deliverInDays;
+    }
+
+    public void setDeliverInDays(int deliverInDays) {
+        this.deliverInDays = deliverInDays;
+    }
+}
+```
+
+**Charge.java**
+```java
+package ai.aletyx.model;
+
+public class Charge {
+    private double amount;
+
+    public Charge() {
+    }
+
+    public Charge(double amount) {
+        this.amount = amount;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    @Override
+    public String toString() {
+        return "Shipping charge: $" + amount;
+    }
+}
+```
+
+### Step 5: Test Your Decision Table
+
+1. Click **Deploy** to create a dev deployment
+2. Once deployed, use the test interface to submit test orders:
+   - Order 1: 2 items, $150 total, 1-day delivery (Expected charge: $35)
+   - Order 2: 5 items, $400 total, 5-day delivery (Expected charge: $0 - free shipping)
+
+## Version 2: Java 17 Project with Maven
+
+### Step 1: Create a Maven Project
+
+1. Create a new Maven project with the following structure:
+
+```
+shipping-rules-app/
+├── pom.xml
+└── src/
+    └── main/
+        ├── java/
+        │   └── ai/
+        │       └── aletyx/
+        │           ├── model/
+        │           │   ├── Order.java
+        │           │   └── Charge.java
+        │           └── ShippingChargesApp.java
+        └── resources/
+            └── rules/
+                └── ShippingCharges.drl.xlsx
+```
+
+2. Set up your `pom.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>ai.aletyx</groupId>
+    <artifactId>shipping-rules-app</artifactId>
+    <version>1.0.0</version>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <drools.version>10.0.0</drools.version>
+    </properties>
+
+    <dependencies>
+        <!-- Drools Dependencies -->
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-engine</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-xml-support</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-ruleunits-engine</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-decisiontables</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.11</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>ai.aletyx.ShippingChargesApp</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+### Step 2: Create the Model Classes
+
+Create the Order and Charge classes in the `ai.aletyx.model` package as shown in the Playground version.
+
+### Step 3: Create the Decision Table
+
+Create the Excel decision table as described above and save it to `src/main/resources/rules/ShippingCharges.drl.xlsx`.
+
+### Step 4: Create the Application Class
+
+Create `ShippingChargesApp.java`:
+
+```java
+package ai.aletyx;
+
+import ai.aletyx.model.Charge;
+import ai.aletyx.model.Order;
+import org.drools.ruleunits.api.RuleUnitInstance;
+import org.drools.ruleunits.api.RuleUnitProvider;
+import org.drools.ruleunits.api.conf.RuleConfig;
+import org.kie.api.resource.ResourceType;
+import org.kie.internal.io.ResourceFactory;
+import org.drools.io.ResourceFactoryService;
+import org.kie.api.io.ResourceType;
+import org.drools.ruleunits.api.RuleUnitInstance;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class ShippingChargesApp {
+    public static void main(String[] args) {
+        // Create a rule unit provider
+        RuleUnitProvider ruleUnitProvider = RuleUnitProvider.get();
+
+        // Create a rule unit data store
+        ShippingUnit shippingUnit = new ShippingUnit();
+
+        // Create a rule unit instance
+        try (RuleUnitInstance<ShippingUnit> instance = ruleUnitProvider.createRuleUnitInstance(shippingUnit)) {
+            // Load the decision table
+            instance.getKieSession().getKieBase().newKieBuilder()
+                    .add(ResourceFactory.newClassPathResource("rules/ShippingCharges.drl.xlsx"), ResourceType.DTABLE)
+                    .build();
+
+            // Interactive command line interface
+            Scanner scanner = new Scanner(System.in);
+            boolean running = true;
+
+            while (running) {
+                System.out.println("\n=== Shipping Charge Calculator ===");
+                System.out.println("1. Calculate shipping charge");
+                System.out.println("2. Exit");
+                System.out.print("Enter choice: ");
+
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+
+                switch (choice) {
+                    case 1:
+                        calculateShipping(scanner, shippingUnit, instance);
+                        break;
+                    case 2:
+                        running = false;
+                        break;
+                    default:
+                        System.out.println("Invalid choice!");
+                }
+            }
+
+            System.out.println("Thank you for using the Shipping Charge Calculator!");
+        }
+    }
+
+    private static void calculateShipping(Scanner scanner, ShippingUnit shippingUnit, RuleUnitInstance<ShippingUnit> instance) {
+        System.out.print("Enter number of items: ");
+        int itemsCount = scanner.nextInt();
+
+        System.out.print("Enter order total: $");
+        double total = scanner.nextDouble();
+
+        System.out.println("Select delivery speed:");
+        System.out.println("1. Next Day (1)");
+        System.out.println("2. Second Day (2)");
+        System.out.println("3. Standard (5)");
+        System.out.print("Enter choice (1-3): ");
+        int deliveryChoice = scanner.nextInt();
+
+        int deliverInDays;
+        switch (deliveryChoice) {
+            case 1: deliverInDays = 1; break;
+            case 2: deliverInDays = 2; break;
+            case 3: deliverInDays = 5; break;
+            default: deliverInDays = 5;
+        }
+
+        // Create the order
+        Order order = new Order(itemsCount, total, deliverInDays);
+        shippingUnit.getOrders().add(order);
+
+        // Fire rules
+        instance.fire();
+
+        // Get results
+        List<Charge> charges = new ArrayList<>(shippingUnit.getCharges());
+        if (!charges.isEmpty()) {
+            System.out.println("\nShipping charge: $" + charges.get(charges.size() - 1).getAmount());
+        } else {
+            System.out.println("\nNo shipping charge calculated.");
+        }
+
+        // Clear data for next calculation
+        shippingUnit.getOrders().clear();
+        shippingUnit.getCharges().clear();
+    }
+
+    // Rule Unit class
+    public static class ShippingUnit {
+        private final List<Order> orders = new ArrayList<>();
+        private final List<Charge> charges = new ArrayList<>();
+
+        public List<Order> getOrders() {
+            return orders;
+        }
+
+        public List<Charge> getCharges() {
+            return charges;
+        }
+    }
+}
+```
+
+### Step 5: Build and Run the Application
+
+1. Build the project:
+```bash
+mvn clean package
+```
+
+2. Run the application:
+```bash
+java -jar target/shipping-rules-app-1.0.0-jar-with-dependencies.jar
+```
+
+3. Follow the interactive prompts to test different orders:
+   - Try an order with 2 items, $150 total, Next Day delivery
+   - Try an order with 5 items, $350 total, Standard delivery
+
+## Benefits of Excel Decision Tables
+
+- **Decision Analyst Friendly**: Non-technical stakeholders can understand and modify rules
+- **Centralized Rule Management**: All business rules in one visible location
+- **Easy Maintenance**: Rules can be updated without code changes
+- **Version Control**: Excel files can be versioned alongside code
+- **Rapid Iteration**: Quick updates to business rules without recompilation

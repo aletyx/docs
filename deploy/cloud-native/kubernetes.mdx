@@ -1,0 +1,1812 @@
+---
+title: "Kubernetes Deployment Guide for Business Process Automation in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "This guide provides a detailed explanation of deploying a Business Process Automation (jBPM/Kogito) application to Kubernetes, with step-by-step instructions and automation scripts."
+---
+This guide provides a detailed explanation of deploying a Business Process Automation (jBPM/Kogito) application to Kubernetes, with step-by-step instructions and automation scripts.
+
+## Architecture Overview
+
+The architecture consists of these core components:
+
+1. **Process Service**: A Quarkus application running jBPM/Kogito business processes
+2. **PostgreSQL Database**: Persistent storage for process instances, tasks, and audit data
+3. **Management Console**: Web UI for process instance monitoring and management
+4. **Keycloak**: Authentication and authorization server
+
+Each component runs in its own pod but is connected through Kubernetes services and configured with proper environment variables.
+
+## Prerequisites
+
+- Kubernetes cluster (1.30+)
+- `kubectl` (version compatible with your cluster)
+- Private Docker registry or access to Docker Hub
+- Keycloak server (already running)
+- Maven 3.9.6+
+- JDK 17
+- Bash shell
+
+
+## Project Structure
+
+The project consists of:
+
+- A jBPM/Kogito-based business process service built with Aletyx Enterprise Build of Kogito and Drools
+- PostgreSQL database for persistence
+- Management Console for process instance monitoring and task management
+
+## Configuration
+
+### Kubernetes Secret Configuration
+
+The secrets provide secure access to your Docker registry and database credentials:
+
+- **Registry Credentials Secret**: Enables pods to pull images from your private registry
+- **PostgreSQL Credentials Secret**: Stores database credentials securely
+
+
+```bash
+# Create registry credentials
+kubectl -n <namespace> create secret docker-registry registry-credentials \
+  --docker-server=<registry-url> \
+  --docker-username=<username> \
+  --docker-password=<password> \
+  --docker-email=admin@example.com
+
+The `docker-registry` type creates a secret specifically formatted for Docker registry authentication. Kubernetes automatically uses this when pulling images if referenced in the `imagePullSecrets` field.
+
+
+# Create PostgreSQL credentials
+kubectl -n <namespace> create secret generic postgresql-credentials \
+  --from-literal=database-name=kogito \
+  --from-literal=database-user=kogito \
+  --from-literal=database-password=kogito123
+```
+The `generic` type creates a standard secret. Each `--from-literal` pair becomes a key-value entry in the secret.
+
+### Application Properties
+
+The `application.properties` file configures the Quarkus application with all necessary settings:
+
+- **HTTP Configuration**: Sets up basic HTTP server properties and CORS
+- **Database Connection**: Configures the connection to PostgreSQL
+- **Kogito-specific Settings**: Configures process engine behavior
+- **Authentication**: Sets up Keycloak integration (even if disabled initially)
+- **Kubernetes Deployment**: Configures how the application is deployed
+
+Key settings explained:
+
+```properties
+# Common Configuration
+quarkus.http.port=8080
+quarkus.http.root-path=/
+quarkus.http.cors=true
+
+# CORS Configuration
+quarkus.http.cors=true
+quarkus.http.cors.origins=*
+quarkus.http.cors.methods=GET,POST,PUT,DELETE,OPTIONS,PATCH
+quarkus.http.cors.headers=accept,authorization,content-type,x-requested-with,x-forward-for,content-length,host,origin,referer,Access-Control-Request-Method,Access-Control-Request-Headers
+quarkus.http.cors.exposed-headers=Content-Disposition,Content-Type
+quarkus.http.cors.access-control-max-age=24H
+quarkus.http.cors.access-control-allow-credentials=true
+
+# API Documentation
+quarkus.smallrye-openapi.path=/docs/openapi.json
+quarkus.swagger-ui.always-include=true
+quarkus.smallrye-graphql.ui.always-include=true
+quarkus.smallrye-graphql.ui.path=/graphql-ui
+
+# Production Configuration
+%prod.quarkus.devservices.enabled=false
+%prod.quarkus.kogito.devservices.enabled=false
+%prod.kogito.service.url=${KOGITO_SERVICE_URL}
+%prod.kogito.jobs-service.url=${KOGITO_JOBS_SERVICE_URL}
+%prod.kogito.dataindex.http.url=${KOGITO_DATAINDEX_HTTP_URL}
+
+# Production Database Configuration
+%prod.quarkus.datasource.db-kind=postgresql
+%prod.quarkus.datasource.username=${POSTGRESQL_USER:kogito}
+%prod.quarkus.datasource.password=${POSTGRESQL_PASSWORD:kogito123}
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://${POSTGRESQL_SERVICE:localhost}:5432/${POSTGRESQL_DATABASE:kogito}
+
+# Database Migration
+%prod.quarkus.flyway.migrate-at-start=true
+%prod.quarkus.flyway.baseline-on-migrate=true
+%prod.quarkus.flyway.out-of-order=true
+%prod.quarkus.flyway.baseline-version=0.0
+%prod.quarkus.flyway.locations=classpath:/db/migration,classpath:/db/jobs-service,classpath:/db/data-audit/postgresql
+%prod.quarkus.flyway.table=FLYWAY_RUNTIME_SERVICE
+
+# Kogito Specific Configurations
+%prod.kogito.apps.persistence.type=jdbc
+%prod.kogito.data-index.blocking=true
+%prod.kogito.data-index.domain-indexing=true
+
+# Keycloak/OIDC Configuration
+quarkus.oidc.auth-server-url=https://<keycloak-url>/auth/realms/<realm>
+quarkus.oidc.client-id=<client-id>
+quarkus.oidc.enabled=true
+quarkus.oidc.discovery-enabled=true
+quarkus.oidc.tenant-enabled=true
+quarkus.oidc.credentials.secret=secret
+quarkus.oidc.application-type=service
+quarkus.http.auth.permission.authenticated.paths=/*
+quarkus.http.auth.permission.authenticated.policy=authenticated
+quarkus.http.auth.permission.public.paths=/q/*,/docs/*
+quarkus.http.auth.permission.public.policy=permit
+
+# Kubernetes Configuration
+%prod.quarkus.kubernetes.deploy=true
+%prod.quarkus.kubernetes.deployment-target=kubernetes
+%prod.quarkus.kubernetes.ingress.expose=true
+%prod.quarkus.kubernetes.ingress.host=${SERVICE_HOST:example.com}
+```
+
+## Building and Deploying your Aletyx Enterprise Build of Kogito and Drools Application
+
+### Project `pom.xml` Configuration
+
+The Maven project configuration includes:
+
+- **Property Definitions**: Sets up version constants for dependencies
+- **Dependency Management**: Imports BOMs (Bill of Materials) for Quarkus and Kogito
+- **Dependencies**: Lists all required libraries for the application
+- **Build Configuration**: Sets up the build process
+- **Profiles**: Configures environment-specific settings (like Kubernetes)
+
+```xml
+<properties>
+    <quarkus.platform.version>3.20.3</quarkus.platform.version>
+    <kogito.bom.version>10.1.0-aletyx</kogito.bom.version>
+    <jbpm.quarkus.devui.version>10.1.0-aletyx</jbpm.quarkus.devui.version>
+</properties>
+
+<dependencies>
+    <!-- Core dependencies -->
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-arc</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-resteasy</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-resteasy-jackson</artifactId>
+    </dependency>
+
+	<dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-smallrye-graphql</artifactId>
+    </dependency>
+
+    <!-- Kogito and jBPM dependencies -->
+    <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kogito-addons-quarkus-data-index-postgresql</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.kie.kogito</groupId>
+        <artifactId>kogito-addons-quarkus-jobs-service</artifactId>
+        <version>${kogito.bom.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kogito-addons-quarkus-jobs-management</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.jbpm</groupId>
+        <artifactId>jbpm-with-drools-quarkus</artifactId>
+    </dependency>
+	<dependency>
+		<groupId>org.kie</groupId>
+		<artifactId>kie-addons-quarkus-process-svg</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.kie</groupId>
+		<artifactId>kie-addons-quarkus-process-management</artifactId>
+	</dependency>
+
+	<!-- DevUI -->
+	<dependency>
+		<groupId>org.jbpm</groupId>
+		<artifactId>jbpm-quarkus-devui</artifactId>
+	</dependency>
+
+    <!-- Persistence -->
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-jdbc-postgresql</artifactId>
+    </dependency>
+	<dependency>
+		<groupId>io.quarkus</groupId>
+		<artifactId>quarkus-agroal</artifactId>
+	</dependency>
+    <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kie-addons-quarkus-persistence-jdbc</artifactId>
+    </dependency>
+	<dependency>
+		<groupId>org.kie</groupId>
+		<artifactId>kogito-addons-quarkus-data-index-persistence-postgresql</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.kie</groupId>
+		<artifactId>kogito-addons-quarkus-data-audit-jpa</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.kie</groupId>
+		<artifactId>kogito-addons-quarkus-data-audit</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.kie</groupId>
+		<artifactId>kie-addons-quarkus-source-files</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>io.quarkus</groupId>
+		<artifactId>quarkus-smallrye-health</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>io.quarkus</groupId>
+		<artifactId>quarkus-kubernetes</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>io.quarkus</groupId>
+		<artifactId>quarkus-container-image-jib</artifactId>
+	</dependency>
+</depenencies>
+```
+
+The Kubernetes profile enables specific container image and deployment settings:
+
+```xml
+<profiles>
+    <profile>
+        <id>kubernetes</id>
+        <properties>
+            <quarkus.kubernetes.deploy>true</quarkus.kubernetes.deploy>
+            <quarkus.kubernetes.deployment-target>kubernetes</quarkus.kubernetes.deployment-target>
+            <quarkus.kubernetes.ingress.expose>true</quarkus.kubernetes.ingress.expose>
+            <quarkus.container-image.registry>${registry-url}</quarkus.container-image.registry>
+            <quarkus.container-image.group>${namespace}</quarkus.container-image.group>
+            <quarkus.container-image.name>${artifactId}</quarkus.container-image.name>
+            <quarkus.container-image.build>true</quarkus.container-image.build>
+            <quarkus.container-image.insecure>true</quarkus.container-image.insecure>
+        </properties>
+    </profile>
+</profiles>
+```
+
+### 2. Build and Push the Application Image
+
+```bash
+mvn clean package -Pkubernetes \
+  -Dquarkus.container-image.registry="${REGISTRY_URL}" \
+  -Dquarkus.container-image.group="${NAMESPACE}" \
+  -Dquarkus.container-image.name="${SERVICE_NAME}" \
+  -Dquarkus.container-image.tag="latest" \
+  -Dquarkus.container-image.build=true \
+  -Dquarkus.container-image.push=true \
+  -Dquarkus.kubernetes.deploy=false \
+  -Dquarkus.container-image.username="${REGISTRY_USERNAME}" \
+  -Dquarkus.container-image.password="${REGISTRY_PASSWORD}" \
+  -Dquarkus.container-image.insecure=true
+```
+
+## Kubernetes YAML Manifests Explained
+
+### PostgreSQL Deployment
+
+The PostgreSQL deployment consists of three parts:
+
+1. **PersistentVolumeClaim**: Allocates persistent storage for database files
+2. **Deployment**: Creates the PostgreSQL pod with proper configuration
+3. **Service**: Exposes the PostgreSQL port internally
+
+Create a file named `postgresql.yaml`:
+
+```yaml
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ${SERVICE_NAME}-postgresql-pvc
+  namespace: ${NAMESPACE}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${SERVICE_NAME}-postgresql
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${SERVICE_NAME}-postgresql
+    app.kubernetes.io/part-of: ${SERVICE_NAME}-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}-postgresql
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE_NAME}-postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: postgres:16.1-alpine3.19
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "kogito"
+        - name: POSTGRES_USER
+          value: "kogito"
+        - name: POSTGRES_PASSWORD
+          value: "kogito123"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        volumeMounts:
+        - name: postgresql-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgresql-data
+        persistentVolumeClaim:
+          claimName: ${SERVICE_NAME}-postgresql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${SERVICE_NAME}-postgresql
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    app: ${SERVICE_NAME}-postgresql
+  ports:
+  - port: 5432
+    targetPort: 5432
+```
+
+Apply the PostgreSQL configuration:
+
+```bash
+# Replace variables in the template
+envsubst < postgresql.yaml | kubectl apply -f -
+```
+
+### Main Aletyx Enterprise Build of Kogito and Drools Service Application Deployment
+
+The Quarkus application deployment consists of:
+
+1. **Deployment**: Creates the application pod with environment variables
+2. **Service**: Exposes the application HTTP port
+
+Key deployment features:
+
+Create a file named `application.yaml` - this will be the deployment for the Kogito Process Service:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${SERVICE_NAME}
+    app.kubernetes.io/part-of: ${SERVICE_NAME}-app
+    app.kubernetes.io/runtime: java
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE_NAME}
+    spec:
+      imagePullSecrets:
+      - name: registry-credentials
+      containers:
+      - name: ${SERVICE_NAME}
+        image: ${REGISTRY_URL}/${NAMESPACE}/${SERVICE_NAME}:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: POSTGRESQL_USER
+          value: "kogito"
+        - name: POSTGRESQL_PASSWORD
+          value: "kogito123"
+        - name: POSTGRESQL_DATABASE
+          value: "kogito"
+        - name: POSTGRESQL_SERVICE
+          value: "${SERVICE_NAME}-postgresql"
+        - name: KOGITO_SERVICE_URL
+          value: "https://${SERVICE_NAME}.${DOMAIN_NAME}"
+        - name: KOGITO_JOBS_SERVICE_URL
+          value: "https://${SERVICE_NAME}.${DOMAIN_NAME}"
+        - name: KOGITO_DATAINDEX_HTTP_URL
+          value: "https://${SERVICE_NAME}.${DOMAIN_NAME}"
+        - name: QUARKUS_OIDC_ENABLED
+          value: "false"
+        - name: QUARKUS_OIDC_AUTH_SERVER_URL
+          value: "https://${KEYCLOAK_BASE_URL}/auth/realms/${REALM}"
+        - name: QUARKUS_HTTP_CORS
+          value: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    app: ${SERVICE_NAME}
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+Apply the application configuration:
+
+```bash
+# Replace variables in the template
+envsubst < application.yaml | kubectl apply -f -
+```
+
+
+### Management Console Deployment
+
+Create a file named `management-console.yaml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${SERVICE_NAME}-management-console
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${SERVICE_NAME}-management-console
+    app.kubernetes.io/part-of: ${SERVICE_NAME}-app
+    app.kubernetes.io/runtime: nodejs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}-management-console
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE_NAME}-management-console
+    spec:
+      imagePullSecrets:
+      - name: registry-credentials
+      containers:
+      - name: management-console
+        image: postgres:16.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: RUNTIME_TOOLS_MANAGEMENT_CONSOLE_KOGITO_ENV_MODE
+          value: "PROD"
+        - name: RUNTIME_TOOLS_MANAGEMENT_CONSOLE_DATA_INDEX_ENDPOINT
+          value: "https://${SERVICE_NAME}.${DOMAIN_NAME}/graphql"
+        - name: KOGITO_CONSOLES_KEYCLOAK_HEALTH_CHECK_URL
+          value: "https://${KEYCLOAK_BASE_URL}/auth/realms/${REALM}/.well-known/openid-configuration"
+        - name: KOGITO_CONSOLES_KEYCLOAK_URL
+          value: "https://${KEYCLOAK_BASE_URL}/auth"
+        - name: KOGITO_CONSOLES_KEYCLOAK_REALM
+          value: "${REALM}"
+        - name: KOGITO_CONSOLES_KEYCLOAK_CLIENT_ID
+          value: "management-console"
+        - name: KOGITO_CONSOLES_KEYCLOAK_CLIENT_SECRET
+          value: "${MGMT_CONSOLE_SECRET}"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${SERVICE_NAME}-management-console
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    app: ${SERVICE_NAME}-management-console
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+```bash
+# Replace variables in the template
+envsubst < management-console.yaml | kubectl apply -f -
+```
+
+### Ingress Configuration
+
+The ingress resources configure external access to the applications:
+
+1. **TLS Termination**: Configures HTTPS with certificates
+2. **Path Routing**: Routes requests to the appropriate service
+3. **Host-based Routing**: Separates services by hostname
+
+Create a file named `ingress.yaml`:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  tls:
+  - hosts:
+    - ${SERVICE_NAME}.${DOMAIN_NAME}
+    secretName: ${SERVICE_NAME}-tls
+  rules:
+  - host: ${SERVICE_NAME}.${DOMAIN_NAME}
+    http:
+      paths:
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: ${SERVICE_NAME}
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${SERVICE_NAME}-management-console
+  namespace: ${NAMESPACE}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  tls:
+  - hosts:
+    - ${SERVICE_NAME}-management-console.${DOMAIN_NAME}
+    secretName: ${SERVICE_NAME}-management-console-tls
+  rules:
+  - host: ${SERVICE_NAME}-management-console.${DOMAIN_NAME}
+    http:
+      paths:
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: ${SERVICE_NAME}-management-console
+            port:
+              number: 80
+```
+
+Apply the ingress configuration:
+
+```bash
+# Replace variables in the template
+envsubst < ingress.yaml | kubectl apply -f -
+```
+
+## Keycloak Configuration
+
+Keycloak provides authentication and authorization:
+
+1. **Realm**: Isolates users and applications
+2. **Clients**: Represents the applications that can authenticate
+3. **Roles**: Defines permissions for users
+4. **Users**: Defines users who can log in
+
+The setup process includes:
+
+### Setting up the Keycloak Realm and Clients
+
+Use these commands to interact with Keycloak:
+
+```bash
+# Get access token from Keycloak
+ACCESS_TOKEN=$(curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/realms/master/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=${ADMIN_USERNAME}" \
+  -d "password=${ADMIN_PASSWORD}" \
+  -d "grant_type=password" \
+  -d "client_id=admin-cli" | jq -r '.access_token')
+
+# Create realm if it doesn't exist
+curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "realm": "jbpm-openshift",
+      "enabled": true,
+      "sslRequired": "external",
+      "registrationAllowed": false,
+      "loginWithEmailAllowed": true,
+      "duplicateEmailsAllowed": false,
+      "resetPasswordAllowed": true,
+      "editUsernameAllowed": false,
+      "bruteForceProtected": true
+  }'
+
+# Create management-console client
+curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/jbpm-openshift/clients" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "clientId": "management-console",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "your-client-secret",
+      "redirectUris": ["https://'${SERVICE_NAME}'-management-console.'${DOMAIN_NAME}'/*"],
+      "webOrigins": ["+"]
+  }'
+```
+
+### Creating a Test User
+
+```bash
+# Create a test user
+curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/jbpm-openshift/users" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+      "username": "jdoe",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "jdoe@example.com",
+      "credentials": [{
+          "type": "password",
+          "value": "jdoe",
+          "temporary": false
+      }]
+  }'
+
+# Get the user ID
+USER_ID=$(curl -s -k -X GET "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/jbpm-openshift/users?username=jdoe" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  | jq -r '.[0].id')
+
+# Create roles (HR, IT, user)
+for ROLE in "HR" "IT" "user"; do
+  # Create role
+  curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/jbpm-openshift/roles" \
+    -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "name": "'${ROLE}'"
+    }'
+
+  # Get role ID
+  ROLE_ID=$(curl -s -k -X GET "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/jbpm-openshift/roles/${ROLE}" \
+    -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+    | jq -r '.id')
+
+  # Assign role to user
+  curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/jbpm-openshift/users/${USER_ID}/role-mappings/realm" \
+    -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d '[{
+        "id": "'${ROLE_ID}'",
+        "name": "'${ROLE}'"
+    }]'
+done
+```
+
+## Solution for Handling Replacements
+
+To properly handle replacing resources during deployment instead of having to clean them first, you can use this approach in a deployment script:
+
+```bash
+# Function to apply with strategic merge patch
+function apply_with_patch() {
+  local resource_type=$1
+  local resource_name=$2
+  local yaml_file=$3
+  local namespace=$4
+
+  # Check if resource exists
+  if kubectl get $resource_type $resource_name -n $namespace >/dev/null 2>&1; then
+    echo "Updating existing $resource_type: $resource_name"
+    # Extract YAML content without metadata.creationTimestamp, status, etc.
+    kubectl apply -f $yaml_file -n $namespace --server-side --force-conflicts
+  else
+    echo "Creating new $resource_type: $resource_name"
+    kubectl apply -f $yaml_file -n $namespace
+  fi
+}
+
+# Usage example
+apply_with_patch deployment ${SERVICE_NAME} application.yaml ${NAMESPACE}
+```
+
+## Automated Deployment Script
+
+Here's a complete deployment script that addresses the replacement issue:
+
+```bash
+#!/bin/bash
+# complete-deployment.sh - Automated deployment script for Kogito on Kubernetes
+
+# Script will exit on any error
+set -e
+
+# Display usage information
+function show_help() {
+  echo "Usage: $0 [options]"
+  echo "Options:"
+  echo "  -n, --namespace NAMESPACE    Kubernetes namespace (default: kogito-demo)"
+  echo "  -s, --service SERVICE_NAME   Service name (default: kogito-app)"
+  echo "  -d, --domain DOMAIN_NAME     Domain name for ingress (required)"
+  echo "  -k, --keycloak URL           Keycloak base URL (required)"
+  echo "  -r, --registry URL           Container registry URL (required)"
+  echo "  -u, --registry-user USER     Registry username (required)"
+  echo "  -p, --registry-pass PASS     Registry password (required)"
+  echo "  -a, --admin-user USER        Keycloak admin username (required)"
+  echo "  -b, --admin-pass PASS        Keycloak admin password (required)"
+  echo "  -h, --help                   Show this help message"
+  exit 1
+}
+
+# Default values
+NAMESPACE="kogito-demo"
+SERVICE_NAME="kogito-app"
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    -n|--namespace)
+      NAMESPACE="$2"
+      shift 2
+      ;;
+    -s|--service)
+      SERVICE_NAME="$2"
+      shift 2
+      ;;
+    -d|--domain)
+      DOMAIN_NAME="$2"
+      shift 2
+      ;;
+    -k|--keycloak)
+      KEYCLOAK_BASE_URL="$2"
+      shift 2
+      ;;
+    -r|--registry)
+      REGISTRY_URL="$2"
+      shift 2
+      ;;
+    -u|--registry-user)
+      REGISTRY_USERNAME="$2"
+      shift 2
+      ;;
+    -p|--registry-pass)
+      REGISTRY_PASSWORD="$2"
+      shift 2
+      ;;
+    -a|--admin-user)
+      ADMIN_USERNAME="$2"
+      shift 2
+      ;;
+    -b|--admin-pass)
+      ADMIN_PASSWORD="$2"
+      shift 2
+      ;;
+    -h|--help)
+      show_help
+      ;;
+    *)
+      echo "Unknown option: $1"
+      show_help
+      ;;
+  esac
+done
+
+# Validate required parameters
+for param in DOMAIN_NAME KEYCLOAK_BASE_URL REGISTRY_URL REGISTRY_USERNAME REGISTRY_PASSWORD ADMIN_USERNAME ADMIN_PASSWORD; do
+  if [ -z "${!param}" ]; then
+    echo "Error: Parameter $param is required"
+    show_help
+  fi
+done
+
+# Set derived variables
+REALM="jbpm-openshift"
+MGMT_CONSOLE_NAME="${SERVICE_NAME}-management-console"
+APP_PART_OF="${SERVICE_NAME}-app"
+
+echo "==== Deployment Configuration ===="
+echo "Namespace:       $NAMESPACE"
+echo "Service Name:    $SERVICE_NAME"
+echo "Domain Name:     $DOMAIN_NAME"
+echo "Keycloak URL:    $KEYCLOAK_BASE_URL"
+echo "Registry URL:    $REGISTRY_URL"
+echo "=================================="
+
+# Create namespace if it doesn't exist
+echo "Creating namespace $NAMESPACE (if it doesn't exist)..."
+kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+
+# Function to apply YAML with server-side apply
+function apply_with_patch() {
+  local yaml_content=$1
+
+  # Apply with server-side apply to handle conflicts better
+  echo "$yaml_content" | kubectl apply --server-side -f -
+}
+
+# Create Kubernetes resources
+echo "Creating Kubernetes resources..."
+
+# Create registry credentials
+echo "Creating Docker registry credentials..."
+kubectl -n ${NAMESPACE} create secret docker-registry registry-credentials \
+  --docker-server=${REGISTRY_URL} \
+  --docker-username=${REGISTRY_USERNAME} \
+  --docker-password=${REGISTRY_PASSWORD} \
+  --docker-email=admin@example.com \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Create PostgreSQL credentials
+echo "Creating PostgreSQL credentials..."
+kubectl -n ${NAMESPACE} create secret generic postgresql-credentials \
+  --from-literal=database-name=kogito \
+  --from-literal=database-user=kogito \
+  --from-literal=database-password=kogito123 \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Deploy PostgreSQL
+echo "Deploying PostgreSQL..."
+POSTGRESQL_YAML=$(cat << EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ${SERVICE_NAME}-postgresql-pvc
+  namespace: ${NAMESPACE}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${SERVICE_NAME}-postgresql
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${SERVICE_NAME}-postgresql
+    app.kubernetes.io/part-of: ${APP_PART_OF}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}-postgresql
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE_NAME}-postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: postgres:16.1-alpine3.19
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "kogito"
+        - name: POSTGRES_USER
+          value: "kogito"
+        - name: POSTGRES_PASSWORD
+          value: "kogito123"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        volumeMounts:
+        - name: postgresql-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgresql-data
+        persistentVolumeClaim:
+          claimName: ${SERVICE_NAME}-postgresql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${SERVICE_NAME}-postgresql
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    app: ${SERVICE_NAME}-postgresql
+  ports:
+  - port: 5432
+    targetPort: 5432
+EOF
+)
+
+apply_with_patch "$POSTGRESQL_YAML"
+
+# Wait for PostgreSQL to be ready
+echo "Waiting for PostgreSQL to be ready..."
+kubectl wait --for=condition=available deployment/${SERVICE_NAME}-postgresql --timeout=300s -n ${NAMESPACE} || true
+
+# Deploy main application
+echo "Deploying main application..."
+APP_YAML=$(cat << EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${SERVICE_NAME}
+    app.kubernetes.io/part-of: ${APP_PART_OF}
+    app.kubernetes.io/runtime: java
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE_NAME}
+    spec:
+      imagePullSecrets:
+      - name: registry-credentials
+      containers:
+      - name: ${SERVICE_NAME}
+        image: ${REGISTRY_URL}/${NAMESPACE}/${SERVICE_NAME}:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: POSTGRESQL_USER
+          value: "kogito"
+        - name: POSTGRESQL_PASSWORD
+          value: "kogito123"
+        - name: POSTGRESQL_DATABASE
+          value: "kogito"
+        - name: POSTGRESQL_SERVICE
+          value: "${SERVICE_NAME}-postgresql"
+        - name: KOGITO_SERVICE_URL
+          value: "https://${SERVICE_NAME}.${DOMAIN_NAME}"
+        - name: KOGITO_JOBS_SERVICE_URL
+          value: "https://${SERVICE_NAME}.${DOMAIN_NAME}"
+        - name: KOGITO_DATAINDEX_HTTP_URL
+          value: "https://${SERVICE_NAME}.${DOMAIN_NAME}"
+        - name: QUARKUS_OIDC_ENABLED
+          value: "false"
+        - name: QUARKUS_OIDC_AUTH_SERVER_URL
+          value: "https://${KEYCLOAK_BASE_URL}/auth/realms/${REALM}"
+        - name: QUARKUS_HTTP_CORS
+          value: "true"
+        - name: QUARKUS_HTTP_CORS_ORIGINS
+          value: "*"
+        - name: QUARKUS_HTTP_CORS_METHODS
+          value: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    app: ${SERVICE_NAME}
+  ports:
+  - port: 80
+    targetPort: 8080
+EOF
+)
+
+apply_with_patch "$APP_YAML"
+
+# Deploy management console
+echo "Deploying management console..."
+MGMT_CONSOLE_YAML=$(cat << EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${MGMT_CONSOLE_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${MGMT_CONSOLE_NAME}
+    app.kubernetes.io/part-of: ${APP_PART_OF}
+    app.kubernetes.io/runtime: nodejs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${MGMT_CONSOLE_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${MGMT_CONSOLE_NAME}
+    spec:
+      imagePullSecrets:
+      - name: registry-credentials
+      containers:
+      - name: management-console
+        image: apache/incubator-kie-kogito-management-console:10.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: RUNTIME_TOOLS_MANAGEMENT_CONSOLE_KOGITO_ENV_MODE
+          value: "PROD"
+        - name: RUNTIME_TOOLS_MANAGEMENT_CONSOLE_DATA_INDEX_ENDPOINT
+          value: "https://${SERVICE_NAME}.${DOMAIN_NAME}/graphql"
+        - name: KOGITO_CONSOLES_KEYCLOAK_HEALTH_CHECK_URL
+          value: "https://${KEYCLOAK_BASE_URL}/auth/realms/${REALM}/.well-known/openid-configuration"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${MGMT_CONSOLE_NAME}
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    app: ${MGMT_CONSOLE_NAME}
+  ports:
+  - port: 80
+    targetPort: 8080
+EOF
+)
+
+apply_with_patch "$MGMT_CONSOLE_YAML"
+
+# Create Ingress resources
+echo "Creating Ingress resources..."
+INGRESS_YAML=$(cat << EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /\$1
+spec:
+  tls:
+  - hosts:
+    - ${SERVICE_NAME}.${DOMAIN_NAME}
+    secretName: ${SERVICE_NAME}-tls
+  rules:
+  - host: ${SERVICE_NAME}.${DOMAIN_NAME}
+    http:
+      paths:
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: ${SERVICE_NAME}
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${MGMT_CONSOLE_NAME}
+  namespace: ${NAMESPACE}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /\$1
+spec:
+  tls:
+  - hosts:
+    - ${MGMT_CONSOLE_NAME}.${DOMAIN_NAME}
+    secretName: ${MGMT_CONSOLE_NAME}-tls
+  rules:
+  - host: ${MGMT_CONSOLE_NAME}.${DOMAIN_NAME}
+    http:
+      paths:
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: ${MGMT_CONSOLE_NAME}
+            port:
+              number: 80
+EOF
+)
+
+apply_with_patch "$INGRESS_YAML"
+
+# Configure Keycloak
+echo "Configuring Keycloak..."
+
+# Get access token from Keycloak
+echo "Getting Keycloak access token..."
+TOKEN_RESPONSE=$(curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/realms/master/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=${ADMIN_USERNAME}" \
+  -d "password=${ADMIN_PASSWORD}" \
+  -d "grant_type=password" \
+  -d "client_id=admin-cli")
+
+# Extract token from response
+TOKEN=$(echo "$TOKEN_RESPONSE" | grep -o '"access_token":"[^"]*"' | awk -F':' '{print $2}' | tr -d '"')
+
+if [ -z "$TOKEN" ]; then
+  echo "Failed to obtain Keycloak access token. Response:"
+  echo "$TOKEN_RESPONSE"
+  exit 1
+fi
+
+echo "Successfully obtained Keycloak access token"
+
+# Check if realm exists
+echo "Checking if realm $REALM exists..."
+REALM_CHECK=$(curl -s -k -X GET "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/${REALM}" \
+  -H "Authorization: Bearer ${TOKEN}")
+
+if echo "$REALM_CHECK" | grep -q "error"; then
+  echo "Creating realm $REALM..."
+  curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms" \
+      -H "Authorization: Bearer ${TOKEN}" \
+      -H "Content-Type: application/json" \
+      -d '{
+          "realm": "'${REALM}'",
+          "enabled": true,
+          "sslRequired": "external",
+          "registrationAllowed": false,
+          "loginWithEmailAllowed": true,
+          "duplicateEmailsAllowed": false,
+          "resetPasswordAllowed": true,
+          "editUsernameAllowed": false,
+          "bruteForceProtected": true
+      }'
+  echo "Realm created successfully"
+else
+  echo "Realm $REALM already exists"
+fi
+
+# Create test user
+echo "Creating test user 'jdoe'..."
+USER_PAYLOAD='{
+    "username": "jdoe",
+    "enabled": true,
+    "emailVerified": true,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "jdoe@example.com",
+    "credentials": [{
+        "type": "password",
+        "value": "jdoe",
+        "temporary": false
+    }]
+}'
+
+# Create user (if it doesn't exist)
+curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/${REALM}/users" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "$USER_PAYLOAD"
+
+# Get user ID
+USER_RESPONSE=$(curl -s -k -X GET "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/${REALM}/users?username=jdoe" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -H "Content-Type: application/json")
+
+USER_ID=$(echo "$USER_RESPONSE" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+if [ -z "$USER_ID" ]; then
+  echo "Failed to get user ID for jdoe"
+  exit 1
+fi
+
+echo "Found user ID: $USER_ID"
+
+# Create and assign roles
+for ROLE in "HR" "IT" "user"; do
+  echo "Setting up role: $ROLE"
+
+  # Create role
+  curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/${REALM}/roles" \
+      -H "Authorization: Bearer ${TOKEN}" \
+      -H "Content-Type: application/json" \
+      -d '{
+          "name": "'$ROLE'"
+      }' || true
+
+  # Get role details
+  ROLE_RESPONSE=$(curl -s -k -X GET "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/${REALM}/roles/${ROLE}" \
+      -H "Authorization: Bearer ${TOKEN}" \
+      -H "Content-Type: application/json")
+
+  ROLE_ID=$(echo "$ROLE_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+
+  if [ -n "$ROLE_ID" ]; then
+    # Assign role to user
+    curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/${REALM}/users/${USER_ID}/role-mappings/realm" \
+        -H "Authorization: Bearer ${TOKEN}" \
+        -H "Content-Type: application/json" \
+        -d '[{
+            "id": "'$ROLE_ID'",
+            "name": "'$ROLE'"
+        }]'
+
+    echo "Role $ROLE assigned to user jdoe"
+  else
+    echo "Could not find role ID for $ROLE"
+  fi
+done
+
+echo "Setting up management-console client..."
+curl -s -k -X POST "https://${KEYCLOAK_BASE_URL}/auth/admin/realms/${REALM}/clients" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "clientId": "management-console",
+        "enabled": true,
+        "publicClient": false,
+        "secret": "fBd92XRwPlWDt4CSIIDHSxbcB1w0p3jm",
+        "redirectUris": ["https://'${MGMT_CONSOLE_NAME}'.'${DOMAIN_NAME}'/*"],
+        "webOrigins": ["+"]
+    }' || true
+
+# Wait for deployments to be ready
+echo "Waiting for all deployments to be ready..."
+for DEPLOYMENT in "${SERVICE_NAME}" "${MGMT_CONSOLE_NAME}"; do
+  kubectl rollout status deployment/${DEPLOYMENT} -n ${NAMESPACE} --timeout=300s || true
+done
+
+echo "==== Deployment Complete ===="
+echo "Main application: https://${SERVICE_NAME}.${DOMAIN_NAME}/"
+echo "Swagger UI:       https://${SERVICE_NAME}.${DOMAIN_NAME}/q/swagger-ui"
+echo "GraphQL UI:       https://${SERVICE_NAME}.${DOMAIN_NAME}/graphql-ui"
+echo "Management Console: https://${MGMT_CONSOLE_NAME}.${DOMAIN_NAME}/"
+echo "=================================="
+echo "Test User: jdoe / jdoe"
+echo "=================================="
+```
+
+## Accessing the Application
+
+Once deployed, the following endpoints will be available:
+
+- Main Application: `https://<service-name>.<domain-name>/`
+- Swagger UI: `https://<service-name>.<domain-name>/q/swagger-ui`
+- GraphQL UI: `https://<service-name>.<domain-name>/graphql-ui`
+- Management Console: `https://<service-name>-management-console.<domain-name>/`
+
+
+## Maven Build Script
+
+Here's a script to automate the Maven build process:
+
+```bash
+#!/bin/bash
+# maven-build.sh - Build and push the Kogito application container image
+
+# Script will exit on any error
+set -e
+
+# Display usage information
+function show_help() {
+  echo "Usage: $0 [options]"
+  echo "Options:"
+  echo "  -n, --namespace NAMESPACE    Kubernetes namespace (default: kogito-demo)"
+  echo "  -s, --service SERVICE_NAME   Service name (default: kogito-app)"
+  echo "  -r, --registry URL           Container registry URL (required)"
+  echo "  -u, --registry-user USER     Registry username (required)"
+  echo "  -p, --registry-pass PASS     Registry password (required)"
+  echo "  -d, --dir DIRECTORY          Project directory (default: current directory)"
+  echo "  -t, --tag TAG                Image tag (default: latest)"
+  echo "  -h, --help                   Show this help message"
+  exit 1
+}
+
+# Default values
+NAMESPACE="kogito-demo"
+SERVICE_NAME="kogito-app"
+PROJECT_DIR="."
+TAG="latest"
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    -n|--namespace)
+      NAMESPACE="$2"
+      shift 2
+      ;;
+    -s|--service)
+      SERVICE_NAME="$2"
+      shift 2
+      ;;
+    -r|--registry)
+      REGISTRY_URL="$2"
+      shift 2
+      ;;
+    -u|--registry-user)
+      REGISTRY_USERNAME="$2"
+      shift 2
+      ;;
+    -p|--registry-pass)
+      REGISTRY_PASSWORD="$2"
+      shift 2
+      ;;
+    -d|--dir)
+      PROJECT_DIR="$2"
+      shift 2
+      ;;
+    -t|--tag)
+      TAG="$2"
+      shift 2
+      ;;
+    -h|--help)
+      show_help
+      ;;
+    *)
+      echo "Unknown option: $1"
+      show_help
+      ;;
+  esac
+done
+
+# Validate required parameters
+for param in REGISTRY_URL REGISTRY_USERNAME REGISTRY_PASSWORD; do
+  if [ -z "${!param}" ]; then
+    echo "Error: Parameter $param is required"
+    show_help
+  fi
+done
+
+echo "==== Build Configuration ===="
+echo "Namespace:       $NAMESPACE"
+echo "Service Name:    $SERVICE_NAME"
+echo "Registry URL:    $REGISTRY_URL"
+echo "Project Dir:     $PROJECT_DIR"
+echo "Image Tag:       $TAG"
+echo "============================"
+
+# Check if project directory exists
+if [ ! -d "$PROJECT_DIR" ]; then
+  echo "Error: Project directory '$PROJECT_DIR' does not exist"
+  exit 1
+fi
+
+# Change to project directory
+cd "$PROJECT_DIR"
+
+# Login to Docker registry
+echo "Logging in to Docker registry..."
+echo "$REGISTRY_PASSWORD" | docker login ${REGISTRY_URL} -u $REGISTRY_USERNAME --password-stdin
+
+# Build and push the container image
+echo "Building and pushing the container image..."
+mvn clean package -Pkubernetes \
+  -Dquarkus.container-image.registry="${REGISTRY_URL}" \
+  -Dquarkus.container-image.group="${NAMESPACE}" \
+  -Dquarkus.container-image.name="${SERVICE_NAME}" \
+  -Dquarkus.container-image.tag="${TAG}" \
+  -Dquarkus.container-image.build=true \
+  -Dquarkus.container-image.push=true \
+  -Dquarkus.kubernetes.deploy=false \
+  -Dquarkus.container-image.username="${REGISTRY_USERNAME}" \
+  -Dquarkus.container-image.password="${REGISTRY_PASSWORD}" \
+  -Dquarkus.container-image.insecure=true
+
+echo "==== Build Complete ===="
+echo "Container image: ${REGISTRY_URL}/${NAMESPACE}/${SERVICE_NAME}:${TAG}"
+echo "========================"
+```
+
+
+## Troubleshooting
+
+### Common Issues
+
+Here's a comprehensive guide to troubleshooting common issues:
+
+### 1. Image Pull Errors
+
+**Symptoms**: Pods remain in `ImagePullBackOff` or `ErrImagePull` state
+
+**Solutions**:
+- Verify registry credentials:
+  ```bash
+  kubectl get secret registry-credentials -n ${NAMESPACE} -o yaml
+  ```
+- Confirm image path and tag are correct:
+  ```bash
+  kubectl describe pod ${SERVICE_NAME}-xxxxxx -n ${NAMESPACE}
+  ```
+- Try pulling the image manually:
+  ```bash
+  docker pull ${REGISTRY_URL}/${NAMESPACE}/${SERVICE_NAME}:latest
+  ```
+
+### 2. Database Connection Issues
+
+**Symptoms**: Application logs show connection errors to PostgreSQL
+
+**Solutions**:
+- Verify PostgreSQL pod is running:
+  ```bash
+  kubectl get pods -n ${NAMESPACE} -l app=${SERVICE_NAME}-postgresql
+  ```
+- Check PostgreSQL logs:
+  ```bash
+  kubectl logs -n ${NAMESPACE} -l app=${SERVICE_NAME}-postgresql
+  ```
+- Test database connection from a temporary pod:
+  ```bash
+  kubectl run pg-client --rm -it --image=postgres:14-alpine --restart=Never -- psql -h ${SERVICE_NAME}-postgresql -U kogito
+  ```
+
+### 3. Keycloak Authentication Problems
+
+**Symptoms**: Unable to log in to Management Console
+
+**Solutions**:
+- Verify Keycloak is accessible:
+  ```bash
+  curl -k https://${KEYCLOAK_BASE_URL}/auth/realms/${REALM}/.well-known/openid-configuration
+  ```
+- Check client configuration:
+  ```bash
+  curl -H "Authorization: Bearer $TOKEN" https://${KEYCLOAK_BASE_URL}/auth/admin/realms/${REALM}/clients
+  ```
+- Update client redirectURIs if needed:
+  ```bash
+  curl -X PUT -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" https://${KEYCLOAK_BASE_URL}/auth/admin/realms/${REALM}/clients/${CLIENT_ID} -d '{"redirectUris": ["https://${MANAGEMENT_CONSOLE_NAME}.${DOMAIN_NAME}/*"]}'
+  ```
+
+### 4. Ingress/TLS Issues
+
+**Symptoms**: Unable to access applications via HTTPS or certificate warnings
+
+**Solutions**:
+- Check ingress resource:
+  ```bash
+  kubectl get ingress -n ${NAMESPACE}
+  ```
+- Verify certificate status:
+  ```bash
+  kubectl get certificate -n ${NAMESPACE}
+  ```
+- Check cert-manager logs:
+  ```bash
+  kubectl logs -n cert-manager -l app=cert-manager
+  ```
+- Ensure DNS records are pointing to the correct IP:
+  ```bash
+  nslookup ${SERVICE_NAME}.${DOMAIN_NAME}
+  ```
+
+### 5. Application Startup Issues
+
+**Symptoms**: Application pod crashes or fails to start
+
+**Solutions**:
+- Check pod logs:
+  ```bash
+  kubectl logs -n ${NAMESPACE} -l app=${SERVICE_NAME}
+  ```
+- Verify environment variables:
+  ```bash
+  kubectl describe pod -n ${NAMESPACE} -l app=${SERVICE_NAME}
+  ```
+- Check for database migration errors:
+  ```bash
+  kubectl logs -n ${NAMESPACE} -l app=${SERVICE_NAME} | grep Flyway
+  ```
+- Ensure all required services are accessible:
+  ```bash
+  kubectl exec -it -n ${NAMESPACE} $(kubectl get pod -n ${NAMESPACE} -l app=${SERVICE_NAME} -o name | head -1) -- curl -v ${SERVICE_NAME}-postgresql:5432
+  ```
+
+### Replacing Resources Instead of Recreating
+
+To avoid having to delete resources before deploying, use the `--server-side` flag with kubectl apply:
+
+```bash
+kubectl apply --server-side -f resource.yaml
+```
+
+For deployments specifically, you can use:
+
+```bash
+kubectl rollout restart deployment/<deployment-name> -n <namespace>
+```
+
+## Monitoring
+
+### Setting Up Prometheus and Grafana
+
+1. Install Prometheus and Grafana using Helm:
+
+	```bash
+	# Add Prometheus community repo
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm repo update
+
+	# Install Prometheus stack (includes Grafana)
+	helm install prometheus prometheus-community/kube-prometheus-stack \
+	  --namespace monitoring \
+	  --create-namespace
+	```
+
+2. Configure ServiceMonitor for your application:
+
+	```yaml
+	apiVersion: monitoring.coreos.com/v1
+	kind: ServiceMonitor
+	metadata:
+	  name: ${SERVICE_NAME}-monitor
+	  namespace: ${NAMESPACE}
+	  labels:
+	    release: prometheus
+	spec:
+	  selector:
+	    matchLabels:
+	      app: ${SERVICE_NAME}
+	  endpoints:
+	  - port: http
+	    path: /q/metrics
+	    interval: 15s
+	```
+
+3. Access Grafana and import jBPM/Kogito dashboards.
+
+## Scaling and High Availability
+
+Coming soon
+
+<!-- ### Horizontal Pod Autoscaling
+
+yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ${SERVICE_NAME}-hpa
+  namespace: ${NAMESPACE}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ${SERVICE_NAME}
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+ -->
+
+## CI/CD Integration
+
+### Complete GitHub Actions Workflow
+
+For a complete CI/CD pipeline, here's a GitHub Actions workflow that builds and deploys the application:
+
+```yaml
+name: Build and Deploy
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      namespace:
+        description: 'Your namespace'
+        required: true
+      service_name:
+        description: 'Application name'
+        required: true
+        default: 'kogito-app'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Using explicit value for MkDocs compatibility
+      SERVICE_NAME: kogito-app
+      DOMAIN_NAME: "example.com"
+      KEYCLOAK_BASE_URL: "keycloak.example.com"
+      REGISTRY_URL: "registry.example.com"
+      REALM: "kogito-realm"
+
+    steps:
+      # Setup environment
+      - name: Set namespace
+        run: |
+          if [ -n "$NAMESPACE_INPUT" ]; then
+            echo "NAMESPACE=$NAMESPACE_INPUT" >> $GITHUB_ENV
+          else
+            echo "NAMESPACE=user-default" >> $GITHUB_ENV
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Configure Docker auth
+        run: |
+          echo "$REGISTRY_PASSWORD" | docker login ${REGISTRY_URL} -u $REGISTRY_USERNAME --password-stdin
+
+      - name: Build application
+        run: |
+          mvn clean package -Pkubernetes \
+            -Dquarkus.container-image.registry="${REGISTRY_URL}" \
+            -Dquarkus.container-image.group="${NAMESPACE}" \
+            -Dquarkus.container-image.name="${SERVICE_NAME}" \
+            -Dquarkus.container-image.tag="latest" \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=true \
+            -Dquarkus.kubernetes.deploy=false \
+            -Dquarkus.container-image.username="$REGISTRY_USERNAME" \
+            -Dquarkus.container-image.password="$REGISTRY_PASSWORD" \
+            -Dquarkus.container-image.insecure=true
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "$KUBECONFIG_SECRET" | base64 --decode > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Create namespace
+        run: |
+          kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Generate deployment configuration
+        run: |
+          cat > deploy.sh << 'EOF'
+          #!/bin/bash
+          # Full deployment script here
+          # (Include the deployment script content)
+          EOF
+          chmod +x deploy.sh
+
+      - name: Deploy application
+        run: |
+          ./deploy.sh
+
+      - name: Display deployment info
+        run: |
+          echo "Application deployed!"
+          echo "Swagger UI: https://${SERVICE_NAME}.${DOMAIN_NAME}/q/swagger-ui"
+          echo "Management Console: https://${SERVICE_NAME}-management-console.${DOMAIN_NAME}"
+```
+
+<!-- ## Security Considerations VALIDATION
+
+### Network Policies
+
+Restrict network access between pods:
+
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ${SERVICE_NAME}-network-policy
+  namespace: ${NAMESPACE}
+spec:
+  podSelector:
+    matchLabels:
+      app: ${SERVICE_NAME}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: ${SERVICE_NAME}-app
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: ${SERVICE_NAME}-postgresql
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+    ports:
+    - protocol: TCP
+      port: 443
+
+
+### Secure Secrets Management
+
+For production, use a dedicated secrets management solution:
+
+- HashiCorp Vault
+- Azure Key Vault
+- AWS Secrets Manager
+- Kubernetes External Secrets Operator
+
+Example with External Secrets: -->
+
+<!-- yaml
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: ${SERVICE_NAME}-db-credentials
+  namespace: ${NAMESPACE}
+spec:
+  refreshInterval: "15m"
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: postgresql-credentials
+  data:
+  - secretKey: database-user
+    remoteRef:
+      key: ${SERVICE_NAME}/database
+      property: username
+  - secretKey: database-password
+    remoteRef:
+      key: ${SERVICE_NAME}/database
+      property: password -->
+
+## Conclusion
+
+This comprehensive guide provides detailed instructions for deploying a jBPM/Kogito Business Process Automation application to Kubernetes. The automated scripts simplify the deployment process, and the detailed explanations help you understand what's happening behind the scenes.
+
+For production deployments, consider these additional best practices:
+- Implement comprehensive monitoring with Prometheus and Grafana
+- Set up proper backup and disaster recovery procedures for the database
+- Implement network policies to restrict traffic between components
+- Set up proper log aggregation with tools like ELK or Loki
+
+By following this guide, you'll have a robust, scalable, and maintainable Business Process Automation platform running on Kubernetes using Aletyx Enterprise Build of Kogito and Drools!
+
+## Additional Resources
+
+- [KIE / Kogito Official Documentation](https://kogito.kie.org/docs/)
+- [Quarkus Kubernetes Deployment Guide](https://quarkus.io/guides/deploying-to-kubernetes)
+- [PostgreSQL on Kubernetes](https://postgres-operator.readthedocs.io/en/latest/)
+- [Keycloak on Kubernetes](https://www.keycloak.org/getting-started/getting-started-kube)
+- [Kubernetes Official Documentation](https://kubernetes.io/docs/home/)

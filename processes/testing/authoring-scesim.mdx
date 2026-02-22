@@ -1,0 +1,178 @@
+---
+title: "Test Scenario Development Guide for Decision Services with Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "As a developer working with business process and decision automation, you'll quickly discover that business decisions are the backbone of your automation systems. These decisions encode critical..."
+---
+## Introduction: Why Test Scenarios Matter
+
+As a developer working with business process and decision automation, you'll quickly discover that **business decisions are the backbone of your automation systems**. These decisions encode critical business logic that determines how your processes behave. Like any software component, this decision logic needs to be thoroughly tested before being deployed into production.
+
+Test scenarios provide a simple, business-friendly way to verify that your decision services are working correctly. Instead of writing complex test code, you can create test cases in a tabular format where you specify:
+
+- **Input values** (the "GIVEN" conditions)
+- **Expected output values** (the "EXPECT" results)
+
+This approach has several key benefits:
+
+- **Validates business logic early** in the development cycle
+- Creates **executable documentation** of how decisions should behave
+- Provides a **business-friendly way** to express test cases
+- Helps **prevent regression issues** when decision logic changes
+- Facilitates **collaboration** between technical and business teams
+
+## Getting Started with Test Scenarios
+
+### Prerequisites
+
+Before creating test scenarios, you'll need:
+
+1. A Kogito project with at least one DMN (Decision Model and Notation) file
+2. VS Code with the Aletyx Developer Tools extension installed
+3. Basic understanding of the decision logic you want to test
+
+### Project Setup
+
+To enable test scenarios in your project:
+
+1. **Add the required dependencies** to your `pom.xml` file:
+
+    ```xml
+    <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>kogito-scenario-simulation</artifactId>
+      <scope>test</scope>
+    </dependency>
+    ```
+
+2. **Create the test folder structure**:
+
+    ```bash
+    src/main/test/
+        └── java/testscenario
+        └── resources
+    ```
+
+3. **Add the JUnit activator class** in `src/main/test/java/testscenario`:
+
+    ```java
+    package testscenario;
+
+    @org.junit.runner.RunWith(org.kogito.scenariosimulation.runner.KogitoJunitActivator.class)
+    public class KogitoScenarioJunitActivatorTest {
+    }
+    ```
+
+This activator class is what makes the magic happen - it's a custom JUnit runner that finds all `.scesim` files in your project and executes them.
+
+## Creating Your First Test Scenario
+
+Let's create a test scenario for a simple decision service. We'll use the example of a `PersonDecisions.dmn` model that determines whether a person is an adult based on their age.
+
+1. **Create a new `.scesim` file** in the `src/test/resources` directory (e.g., `PersonDecisionsTest.scesim`)
+
+2. **Open the file in Visual Studio Code** and use the test scenario modeler to define your test cases:
+
+   a. The test scenario modeler will automatically open when you create a new `.scesim` file
+
+   b. Select the DMN model you want to test (e.g., `PersonDecisions.dmn`)
+
+   c. Configure the **GIVEN** columns:
+      - Set the first header cell to the `Person` data object
+      - Add subheader cells for `Age` and `Name` properties
+
+   d. Configure the **EXPECT** columns:
+      - Set the first header cell to the `isAdult` decision
+      - Add a subheader cell for the `value` property
+
+3. **Add test scenarios** (rows) with different inputs and expected outputs:
+
+   **Scenario 1: Is an adult**
+   - GIVEN:
+     - Person → Age: 20
+     - Person → Name: John Quark
+   - EXPECT:
+     - isAdult → value: true
+
+   **Scenario 2: Is underage**
+   - GIVEN:
+     - Person → Age: 15
+     - Person → Name: Jenny Quark
+   - EXPECT:
+     - isAdult → value: false
+
+Each row represents a complete test case that will verify different aspects of your decision logic.
+
+## Running Test Scenarios
+
+Once you have defined your test scenarios, you can run them with Apache Maven:
+
+```bash
+mvn clean test
+```
+
+Maven will execute all test scenarios in all `.scesim` files and report the results:
+
+- **Success**: The expected results match the actual results
+- **Failure**: The expected results don't match the actual results
+
+Test failures indicate either:
+
+- A flaw in the decision logic that needs to be fixed
+- An incorrectly defined test case that needs to be updated
+
+## Advanced Test Scenario Features
+
+### Using Background for Common Values
+
+If multiple test scenarios share common input values, you can define these in the **Background** tab:
+
+1. Switch to the **Background** tab in the test scenario modeler
+2. Add columns for common inputs (e.g., common properties that won't change)
+3. Define values for these inputs
+
+Values defined in the Background apply to all test scenarios, simplifying maintenance and making your test table more focused.
+
+### Testing with List Values
+
+For data types configured as `List` types in your DMN model:
+
+1. Double-click a cell in the corresponding column
+2. Choose one of the following options:
+   - **Create List**: Add list values using a guided form
+   - **Define List**: Define a list using FEEL syntax
+
+This is useful for testing decisions that evaluate multiple values, such as a list of states, products, or rules.
+
+## Test Scenario Best Practices
+
+To get the most value from your test scenarios:
+
+1. **Test all decision paths**: Include scenarios for each possible decision outcome
+2. **Include edge cases**: Test boundary values (e.g., exactly 18 years old)
+3. **Use descriptive scenario names**: Make it clear what each scenario is testing
+4. **Keep scenarios independent**: One scenario should not affect another
+5. **Update tests when decision logic changes**: Tests should reflect current requirements
+6. **Review test scenarios with business stakeholders**: Ensure they align with business expectations
+
+## Common Issues and Troubleshooting
+
+### Test Scenario Fails Unexpectedly
+
+If a previously working test scenario starts failing:
+
+- Check if the decision logic was changed intentionally
+- Verify the expected values in the test scenario are still correct
+- Look for any data type changes in the DMN model
+
+### Missing Data in Test Results
+
+If your test scenario runs but doesn't include all expected data:
+
+- Verify that all relevant data objects are included in your test scenario
+- Check that your DMN model correctly defines all data types
+- Ensure the input values are compatible with the data types in your DMN model
+
+## Conclusion
+
+Test scenarios provide a powerful, yet simple way to validate your decision services. By expressing tests in a business-friendly format, you create a bridge between technical implementation and business requirements.
+
+Remember that test scenarios are not just about finding bugs - they're executable documentation that helps everyone understand how your decision services should behave. Take the time to create comprehensive test scenarios, and you'll build more reliable decision services with fewer defects.

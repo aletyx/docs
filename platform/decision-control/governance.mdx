@@ -1,0 +1,562 @@
+---
+title: "Governance Workflow"
+description: "Decision Control implements enterprise-grade governance workflows that enforce separation of duties, maintain comprehensive audit trails, and ensure compliance with regulatory requirements. This..."
+---
+<Info title="Horizon/Keystone Edition">
+Governance workflows are available in the **Horizon** and **Keystone** editions of Decision Control. Pioneer and Innovator editions do not include governance features.
+</Info>
+Decision Control implements enterprise-grade governance workflows that enforce separation of duties, maintain comprehensive audit trails, and ensure compliance with regulatory requirements. This document explains how to configure, use, and customize approval workflows for promoting decision models across environments.
+
+## Overview
+
+Governance workflows provide structured approval processes for moving DMN models from Development through Testing to Production. Each workflow consists of multiple steps, role-based approvals, and automated deployment actions, ensuring that changes are properly reviewed before reaching production systems.
+
+### Key Principles
+
+**Four-Eyes Principle**: No user can approve their own submission. Every approval step requires a different user than the submitter, enforcing separation of duties and preventing single-person approval chains.
+
+**Role-Based Assignment**: Each workflow step is assigned to specific Keycloak roles. Only users with the appropriate role can approve that step.
+
+**Immutable Audit Trail**: Every action (submission, approval, rejection, deployment) is logged with timestamp, user identity, and context. Audit records cannot be modified or deleted.
+
+**Configurable Workflows**: Organizations can define multiple workflow types with different approval requirements based on change risk, environment, or business context.
+
+## Workflow Types
+
+Decision Control includes six pre-configured workflow types:
+
+### 1. Standard Dev → Test
+
+Standard approval flow for most development-to-testing promotions.
+
+![Diagram](/images/diagrams/decision-control/governance-workflow/state-1.svg)
+
+**Workflow Steps**:
+
+1. **Submit**: Business Analyst initiates the request
+2. **Business Review**: Another Business Analyst reviews for correctness
+3. **Risk Review**: Risk Manager assesses potential risks
+4. **Deploy**: Automated deployment to Test environment
+
+**Use Cases**: Regular feature additions, business rule updates, routine model changes.
+
+**Example**:
+
+```bash
+# Submit request via API
+curl -X POST https://governance-api.your-domain.com/api/governance/requests \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "modelName": "CreditScoring",
+    "modelVersion": "1.2.0",
+    "unitName": "financial-services",
+    "sourceEnv": "dev",
+    "targetEnv": "test",
+    "workflowType": "standard-dev-to-test",
+    "submittedBy": "sarah@demo.local",
+    "justification": "Updated credit score thresholds per new policy"
+  }'
+```
+
+### 2. Fast-Track Dev → Test
+
+Expedited workflow for low-risk changes like typo fixes or documentation updates.
+
+![Diagram](/images/diagrams/decision-control/governance-workflow/state-2.svg)
+
+**Workflow Steps**:
+
+1. **Submit**: Business Analyst initiates
+2. **Admin Quick Review**: Administrator performs rapid validation
+3. **Deploy**: Automated deployment
+
+**Use Cases**: Hotfixes, typos, minor updates, non-functional changes.
+
+### 3. Standard Test → Prod
+
+Comprehensive approval flow for production deployments.
+
+![Diagram](/images/diagrams/decision-control/governance-workflow/state-3.svg)
+
+**Workflow Steps**:
+
+1. **Submit**: Operations Manager initiates
+2. **Business Review**: Business Analyst validates test results
+3. **Risk Review**: Risk Manager assesses production risks
+4. **Compliance Review**: Compliance Officer ensures regulatory compliance
+5. **Final Approval**: Administrator provides final sign-off
+6. **Deploy**: Automated deployment to Production
+
+**Use Cases**: All production deployments, major releases, regulatory changes.
+
+### 4. Emergency Test → Prod
+
+Emergency deployment with mandatory post-deployment review.
+
+![Diagram](/images/diagrams/decision-control/governance-workflow/state-4.svg)
+
+**Workflow Steps**:
+
+1. **Submit Emergency**: Administrator declares emergency
+2. **Emergency Approval**: Second Administrator approves with detailed justification
+3. **Deploy**: Immediate automated deployment
+4. **Post-Deployment Review**: Risk Manager AND Compliance Officer review after the fact
+
+**Use Cases**: Critical production bugs, security vulnerabilities, system outages.
+
+<Warning title="Emergency Use Only">
+Emergency workflows bypass standard approvals. Organizations should establish clear criteria for emergency use and review all emergency deployments.
+</Warning>
+### 5. Multi-Approver Test → Prod
+
+High-impact changes requiring multiple approvers at each stage.
+
+**Workflow Steps**:
+
+1. **Submit**: Operations Manager initiates
+2. **Business Review (Primary)**: First Business Analyst approval
+3. **Business Review (Secondary)**: Second Business Analyst approval
+4. **Risk & Compliance Joint Review**: Both Risk Manager AND Compliance Officer must approve
+5. **Admin Approval (Primary)**: First Administrator approval
+6. **Admin Approval (Secondary)**: Second Administrator approval
+7. **Deploy**: Automated deployment
+
+**Use Cases**: Mission-critical systems, financial regulations, healthcare compliance.
+
+### 6. Self-Service Dev → Test
+
+Minimal oversight for experienced developers with automated validation.
+
+![Diagram](/images/diagrams/decision-control/governance-workflow/state-5.svg)
+
+**Workflow Steps**:
+
+1. **Submit**: Business Analyst initiates
+2. **Automated Validation**: Syntax checks, basic validation
+3. **Deploy**: Automated deployment (no human approval required)
+
+**Use Cases**: Experienced teams, non-production environments, rapid iteration.
+
+<Info title="Enabling Self-Service">
+Self-service workflows should only be enabled for mature teams with established testing practices and comprehensive automated validation.
+</Info>
+## Using Governance Workflows
+
+### Submitting a Model for Review
+
+From the Aletyx Decision Control Tower landing page:
+
+1. **Navigate to Models View**: Click "Models" in the sidebar
+2. **Select Environment**: Choose the source environment (typically DEV)
+3. **Find Your Model**: Expand the unit and version to locate your model
+4. **Click "Submit for Review"**: Button appears next to each model
+5. **Complete the Form**:
+   - **Workflow Type**: Select appropriate workflow (Standard, Fast-Track, etc.)
+   - **Target Environment**: Choose destination (Test or Prod)
+   - **Justification**: Provide clear explanation of changes
+   - **Additional Context**: Optional notes, links to tickets, etc.
+6. **Submit**: Click "Submit for Review"
+
+The system creates a governance request and assigns the first approval task.
+
+### Approving a Task
+
+Users with appropriate roles will see pending tasks:
+
+1. **Navigate to Tasks View**: Click "Tasks" in the sidebar
+2. **View Pending Tasks**: Table shows all requests awaiting your role
+3. **Click on Request**: Opens task details with:
+   - Model information (name, version, unit)
+   - Submitter and submission time
+   - Justification and context
+   - Full timeline of previous approvals
+4. **Review Details**: Examine changes, justification, and audit trail
+5. **Take Action**:
+   - **Approve**: Click "✓ Approve & Deploy" (or "Approve" for non-final steps)
+   - **Reject**: Click "✗ Reject Request" to decline and provide feedback
+   - **Add Comment**: Always provide meaningful feedback
+
+### Audit Trail
+
+Every governance request maintains a complete timeline:
+
+```json
+{
+  "requestId": 42,
+  "modelName": "CreditScoring",
+  "status": "DEPLOYED",
+  "timeline": [
+    {
+      "event": "SUBMITTED",
+      "timestamp": "2025-01-15T10:00:00Z",
+      "user": "sarah@demo.local",
+      "details": "Initial submission"
+    },
+    {
+      "event": "BUSINESS_REVIEW_APPROVED",
+      "timestamp": "2025-01-15T11:30:00Z",
+      "user": "maria@demo.local",
+      "comment": "Business logic validated. Thresholds align with policy updates."
+    },
+    {
+      "event": "RISK_REVIEW_APPROVED",
+      "timestamp": "2025-01-15T14:00:00Z",
+      "user": "tom@demo.local",
+      "comment": "Risk assessment complete. No significant concerns."
+    },
+    {
+      "event": "DEPLOYED",
+      "timestamp": "2025-01-15T14:01:00Z",
+      "system": "governance-api",
+      "targetEnv": "test"
+    }
+  ]
+}
+```
+
+Access audit trails:
+
+- **Aletyx Decision Control Tower UI**: Tasks view shows full timeline for each request
+- **API**: `GET /api/governance/audit?requestId=42`
+- **Database**: `audit_log` table contains all events
+
+## Workflow Configuration
+
+### Workflow Definition Structure
+
+Workflows are defined in JSON format in `governance-api/workflows/promotion-workflows.json`:
+
+```json
+{
+  "workflows": {
+    "custom-workflow-id": {
+      "id": "custom-workflow-id",
+      "name": "Custom Workflow Name",
+      "description": "What this workflow is for",
+      "sourceEnv": "dev",
+      "targetEnv": "test",
+      "enabled": true,
+      "steps": [
+        {
+          "stepId": "unique-step-id",
+          "type": "REVIEW",
+          "name": "Step Display Name",
+          "description": "What this step validates",
+          "requiredRole": "keycloak-role-name",
+          "requiresComment": true,
+          "canSkip": false
+        }
+      ]
+    }
+  }
+}
+```
+
+**Step Types**:
+
+- `SUBMIT`: Initial submission (auto-completes)
+- `REVIEW`: Human approval required
+- `DEPLOY`: Automated deployment
+- `POST_REVIEW`: Review after deployment (emergency workflows)
+- `AUTOMATED`: Automated validation checks
+
+**Step Properties**:
+
+- `requiredRole`: Keycloak role required to approve
+- `requiredRoles`: Array of roles (for multi-role steps)
+- `requiresAllRoles`: If true, all roles must approve (default: any role can approve)
+- `requiresComment`: Forces user to provide comment
+- `requiresJustification`: Requires detailed justification
+- `autoExecute`: Step executes automatically (no user action)
+- `autoComplete`: Step completes immediately after previous step
+- `canSkip`: Allows skipping step under certain conditions
+
+### Creating a Custom Workflow
+
+Example: Create a workflow for minor documentation updates that requires only one approval:
+
+```json
+{
+  "workflows": {
+    "docs-only-dev-to-test": {
+      "id": "docs-only-dev-to-test",
+      "name": "Documentation Updates",
+      "description": "Fast path for documentation-only changes",
+      "sourceEnv": "dev",
+      "targetEnv": "test",
+      "enabled": true,
+      "steps": [
+        {
+          "stepId": "submit",
+          "type": "SUBMIT",
+          "name": "Submit Documentation Update",
+          "requiredRole": "decision-control-dev-users",
+          "autoComplete": true
+        },
+        {
+          "stepId": "peer-review",
+          "type": "REVIEW",
+          "name": "Peer Review",
+          "description": "Another team member reviews documentation changes",
+          "requiredRole": "decision-control-dev-users",
+          "requiresComment": true,
+          "canSkip": false
+        },
+        {
+          "stepId": "deploy",
+          "type": "DEPLOY",
+          "name": "Deploy to Test",
+          "requiredRole": "decision-control-dev-users",
+          "autoExecute": true
+        }
+      ]
+    }
+  }
+}
+```
+
+### Updating Workflows
+
+To deploy workflow changes:
+
+1. **Edit Workflow File**: Update `promotion-workflows.json`
+2. **Update ConfigMap**:
+
+```bash
+kubectl delete configmap governance-workflows -n prod
+kubectl create configmap governance-workflows \
+  --from-file=promotion-workflows.json \
+  --namespace=prod
+```
+
+3. **Restart Governance API**:
+
+```bash
+kubectl rollout restart deployment/governance-api -n prod
+```
+
+4. **Verify Changes**: Check logs for successful workflow loading
+
+## Role Mapping
+
+Map Keycloak roles to Decision Control permissions:
+
+| Keycloak Role | Permission Set | Can Approve |
+|---------------|----------------|-------------|
+| `decision-control-dev-users` | Business Analyst | Business Review steps |
+| `decision-control-risk-manager` | Risk Manager | Risk Review steps |
+| `decision-control-compliance` | Compliance Officer | Compliance Review steps |
+| `decision-control-prod-users` | Operations Manager | Can submit prod deployments |
+| `decision-control-admin` | Administrator | All steps, emergency workflows |
+
+### Adding Custom Roles
+
+To create a new approval role:
+
+1. **Create Role in Keycloak**:
+   - Navigate to Realm `aletyx` → Roles
+   - Click "Create Role"
+   - Name: `decision-control-security-team`
+   - Description: "Security team review"
+
+2. **Assign to Users**: Add role to appropriate users
+
+3. **Update Workflow**: Add step requiring new role
+
+```json
+{
+  "stepId": "security-review",
+  "type": "REVIEW",
+  "name": "Security Review",
+  "requiredRole": "decision-control-security-team",
+  "requiresComment": true
+}
+```
+
+## Best Practices
+
+### Workflow Design
+
+<Tip title="Keep Workflows Focused">
+Each workflow should have a clear purpose. Create separate workflows for different risk levels rather than making one workflow handle all cases.
+</Tip>
+**Do**:
+
+- Use descriptive workflow and step names
+- Provide clear descriptions of what each step validates
+- Require comments on all review steps
+- Set appropriate auto-execute for deployment steps
+
+**Don't**:
+
+- Create overly complex workflows with too many steps
+- Skip four-eyes checks for convenience
+- Use emergency workflows for non-emergency changes
+- Allow same-role approvals in sequence without different users
+
+### Approval Comments
+
+Meaningful approval comments improve audit quality:
+
+**Good Comments**:
+
+- "Validated credit score thresholds against updated policy document (v3.2). Logic correctly implements new risk bands."
+- "Tested with 500 sample records. All edge cases handled correctly. Ready for production."
+- "Emergency deployment required for production incident INC-12345. Fix validated in hotfix environment."
+
+**Poor Comments**:
+
+- "LGTM" (too vague)
+- "Approved" (adds no information)
+- "ok" (unprofessional)
+
+### Security Considerations
+
+**Protect Emergency Workflows**: Limit `decision-control-admin` role to trusted users. Establish clear emergency criteria and review all emergency deployments within 24 hours.
+
+**Regular Audit Reviews**: Schedule quarterly reviews of:
+
+- Emergency workflow usage
+- Rejected requests (identify patterns)
+- Approval timing (identify bottlenecks)
+- Four-eyes principle violations (should be zero)
+
+**Separation of Duties**: Never assign conflicting roles to the same user:
+
+- Don't give Business Analysts the Admin role
+- Keep Risk Manager and Compliance roles separate from development roles
+
+## Troubleshooting
+
+### Request Stuck in Pending
+
+**Symptom**: Workflow doesn't advance after approval.
+
+**Causes**:
+
+1. **Four-Eyes Violation**: Submitter tried to approve their own request
+2. **Role Mismatch**: User doesn't have required role
+3. **Database Transaction Failure**: Check governance-api logs
+
+**Resolution**:
+
+```bash
+# Check request status
+curl https://governance-api.your-domain.com/api/governance/requests/42
+
+# Check governance-api logs
+kubectl logs -f deployment/governance-api -n prod | grep "request_id=42"
+```
+
+### Deployment Failure
+
+**Symptom**: Approval succeeds but deployment fails.
+
+**Causes**:
+
+1. **Target Environment Unavailable**: Decision Control instance not running
+2. **Network Connectivity**: Governance API can't reach Decision Control
+3. **Authentication Failure**: Invalid or expired service credentials
+
+**Resolution**:
+
+```bash
+# Verify target environment health
+curl https://decision-control-test.your-domain.com/actuator/health
+
+# Check governance API can reach Decision Control
+kubectl exec -it deployment/governance-api -n prod -- \
+  curl -I https://decision-control-test.your-domain.com
+
+# Review deployment logs
+kubectl logs deployment/governance-api -n prod | grep "deployment"
+```
+
+### Missing Approvals
+
+**Symptom**: User with correct role doesn't see pending tasks.
+
+**Causes**:
+
+1. **Token Doesn't Include Role**: Keycloak not adding role to token
+2. **Role Name Mismatch**: Workflow expects different role name
+3. **Request Already Approved**: Another user with same role approved
+
+**Resolution**:
+
+```bash
+# Decode JWT token to verify roles
+echo $TOKEN | cut -d. -f2 | base64 -d | jq .realm_access.roles
+
+# Check request current step
+curl https://governance-api.your-domain.com/api/governance/requests/42 \
+  | jq .currentStep
+```
+
+## API Reference
+
+### Submit Request
+
+```bash
+POST /api/governance/requests
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+  "modelName": "string",
+  "modelVersion": "string",
+  "unitName": "string",
+  "sourceEnv": "dev|test",
+  "targetEnv": "test|prod",
+  "workflowType": "workflow-id",
+  "submittedBy": "user@example.com",
+  "justification": "string"
+}
+```
+
+### Approve Request
+
+```bash
+POST /api/governance/requests/{id}/approve
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+  "approvedBy": "user@example.com",
+  "comment": "string"
+}
+```
+
+### Reject Request
+
+```bash
+POST /api/governance/requests/{id}/reject
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+  "rejectedBy": "user@example.com",
+  "reason": "string"
+}
+```
+
+### List Requests
+
+```bash
+GET /api/governance/requests?role={role}&status={status}
+Authorization: Bearer {token}
+```
+
+### Get Audit Trail
+
+```bash
+GET /api/governance/audit?requestId={id}
+Authorization: Bearer {token}
+```
+
+## Next Steps
+
+- [Integration and APIs](/platform/decision-control/apis): Integrate governance with external systems
+- [Usage Scenarios](/platform/decision-control/usage-scenarios): Common usage patterns and examples
+- [FAQ and Troubleshooting](/platform/decision-control/faq): Additional troubleshooting guidance

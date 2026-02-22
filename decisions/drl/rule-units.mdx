@@ -1,0 +1,1228 @@
+---
+title: "Understanding Rule Units in Aletyx Enterprise Build of Drools 10.1.0-aletyx"
+description: "Rule Units represent the modern approach to organizing business rules in Drools. Introduced in Drools 7 and significantly enhanced in subsequent versions, Rule Units provide a structured, modular..."
+---
+## Introduction to Rule Units
+
+Rule Units represent the modern approach to organizing business rules in Drools. Introduced in Drools 7 and significantly enhanced in subsequent versions, Rule Units provide a structured, modular way to organize rules and their associated data.
+
+In traditional Drools applications, all rules shared a global working memory (KieSession) with little structure or isolation. Rule Units solve this problem by encapsulating rules with their own data sources, creating self-contained modules that can be developed, tested, and executed independently.
+
+## Core Concepts of Rule Units
+
+A Rule Unit consists of these key components:
+
+1. **A Rule Unit Class**: A Java class that implements `RuleUnitData` (or `RuleUnit` in older versions)
+2. **Data Sources**: Typed containers for facts that rules operate on
+3. **Global Variables**: Values shared across all rules in the unit
+4. **Rules**: DRL rules that belong to the unit
+5. **Queries**: Named operations for retrieving data from the unit
+
+Let's explore each component in detail.
+
+## Rule Unit Classes
+
+A Rule Unit class is a Java class that serves as the container for data sources and global variables. This class implements the `RuleUnitData` interface, which is a marker interface (has no methods to implement).
+
+### Basic Rule Unit Class Structure
+
+```java
+package org.example;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+import org.drools.ruleunits.api.DataSource;
+
+public class OrderProcessingUnit implements RuleUnitData {
+    // Data sources
+    private final DataStore<Customer> customers;
+    private final DataStore<Order> orders;
+
+    // Global variables
+    private double taxRate;
+    private boolean expressShipping;
+
+    // Constructor
+    public OrderProcessingUnit() {
+        this.customers = DataSource.createStore();
+        this.orders = DataSource.createStore();
+        this.taxRate = 0.07;
+        this.expressShipping = false;
+    }
+
+    // Getters and setters
+    public DataStore<Customer> getCustomers() {
+        return customers;
+    }
+
+    public DataStore<Order> getOrders() {
+        return orders;
+    }
+
+    public double getTaxRate() {
+        return taxRate;
+    }
+
+    public void setTaxRate(double taxRate) {
+        this.taxRate = taxRate;
+    }
+
+    public boolean isExpressShipping() {
+        return expressShipping;
+    }
+
+    public void setExpressShipping(boolean expressShipping) {
+        this.expressShipping = expressShipping;
+    }
+}
+```
+
+This class defines:
+
+- Two data sources: `customers` and `orders`
+- Two global variables: `taxRate` and `expressShipping`
+- Standard getters and setters for all members
+
+### Rule Unit Lifecycle Methods
+
+In addition to data sources and global variables, Rule Unit classes can optionally implement lifecycle methods:
+
+```java
+package org.example;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.RuleUnitInstance;
+
+public class AuditableRuleUnit implements RuleUnitData {
+    // Data sources and variables
+
+    // Lifecycle methods
+    public void onStart() {
+        System.out.println("Rule unit starting: " + this.getClass().getSimpleName());
+        // Initialize resources, start timers, etc.
+    }
+
+    public void onEnd() {
+        System.out.println("Rule unit ending: " + this.getClass().getSimpleName());
+        // Clean up resources, log completion, etc.
+    }
+
+    public void onSuspend() {
+        System.out.println("Rule unit suspended");
+        // Called when using runUntilHalt() and then halt()
+    }
+
+    public void onResume() {
+        System.out.println("Rule unit resumed");
+        // Called when resuming after halt()
+    }
+
+    public void onYield(RuleUnitInstance<? extends RuleUnitData> other) {
+        System.out.println("Rule unit yielding to: " + other.unit().getClass().getSimpleName());
+        // Called when execution passes to another unit
+    }
+}
+```
+
+These lifecycle methods provide hooks for setup, teardown, and coordination between rule units.
+
+## Data Sources in Rule Units
+
+Data sources are typed containers for facts that rules operate on. They represent the entry points through which data flows into your rules. Rule Units support three types of data sources:
+
+### 1. DataStore
+
+A DataStore is a mutable collection that supports the full CRUD (Create, Read, Update, Delete) lifecycle for facts.
+
+```java
+// Creating a DataStore
+private DataStore<Customer> customers = DataSource.createStore();
+
+// Adding a fact
+DataHandle handle = customers.add(new Customer("John", "Doe"));
+
+// Updating a fact
+customer.setStatus("PREMIUM");
+customers.update(handle, customer);
+
+// Removing a fact
+customers.remove(handle);
+```
+
+### 2. DataStream
+
+A DataStream is an append-only collection designed for event processing.
+
+```java
+// Creating a DataStream
+private DataStream<LogEvent> events = DataSource.createStream();
+
+// Appending an event
+events.append(new LogEvent("USER_LOGIN", user.getId(), timestamp));
+```
+
+### 3. SingletonStore
+
+A SingletonStore holds a single value that can be updated or cleared.
+
+```java
+// Creating a SingletonStore
+private SingletonStore<Configuration> config = DataSource.createSingleton();
+
+// Setting a value
+config.set(new Configuration("PRODUCTION", 100));
+
+// Updating the value
+Configuration current = config.get();
+current.setMaxConnections(150);
+config.update();
+
+// Clearing the value
+config.clear();
+```
+
+## DRL Files with Rule Units
+
+DRL files for Rule Units follow a specific structure that associates the rules with a particular unit.
+
+### Basic Structure
+
+```java
+package org.example;
+unit OrderProcessingUnit; //(1)!
+
+import org.example.Customer;
+import org.example.Order;
+
+rule "Apply Tax"
+when
+    $order: /orders[ status == "CONFIRMED", taxApplied == false ]
+then
+    $order.setTaxAmount($order.getSubtotal() * taxRate); //(2)!
+    $order.setTaxApplied(true);
+    orders.update($order); //(3)!
+end
+```
+
+1. Declare the unit just after the package of the DRL file
+2. The unit provides direct access to global variables (like `taxRate`)
+3. Notifying the engine that we've updated the unit
+
+The key elements are:
+- The `unit` declaration, which associates the file with a specific Rule Unit class
+- OOPath expressions starting with `/` to reference data sources
+- Direct access to global variables (like `taxRate`)
+- Data source operations in rule actions (like `orders.update($order)`)
+
+### Accessing Data Sources in Rules
+
+Data sources are accessed using OOPath syntax, starting with a forward slash:
+
+```java
+rule "Gold Customer Detection"
+when
+    $customer: /customers[ totalSpent > 10000, status != "GOLD" ]
+then
+    $customer.setStatus("GOLD");
+    customers.update($customer);
+end
+```
+
+### Accessing Global Variables
+
+Global variables defined in the Rule Unit class are directly accessible in the rules:
+
+```java
+rule "Apply Express Shipping"
+when
+    $order: /orders[ priority == "HIGH" ]
+then
+    if (expressShipping) {
+        $order.setShippingMethod("EXPRESS");
+    } else {
+        $order.setShippingMethod("STANDARD");
+    }
+    orders.update($order);
+end
+```
+
+### Defining Queries
+
+Queries allow you to extract data from Rule Units:
+
+```java
+query "FindGoldCustomers"
+    $customer: /customers[ status == "GOLD" ]
+end
+
+query "FindOrdersByCustomer" (String customerId)
+    $order: /orders[ customerId == customerId ]
+end
+```
+
+## Declaring Rule Units in DRL
+
+Instead of creating a Java class, you can declare Rule Units directly in DRL:
+
+```java
+package org.example;
+unit CustomerUnit;
+
+import org.drools.ruleunits.api.RuleUnitData;
+import org.drools.ruleunits.api.DataStore;
+import org.example.Customer;
+import org.example.Order;
+
+declare CustomerUnit extends RuleUnitData
+    customers: DataStore<Customer>
+    orders: DataStore<Order>
+    minimumOrderValue: double
+end
+
+rule "Identify Valuable Customers"
+when
+    $customer: /customers
+    accumulate(
+        $order: /orders[ customerId == $customer.id, value > minimumOrderValue ];
+        $count: count($order);
+        $count > 3
+    )
+then
+    $customer.setValuedCustomer(true);
+    customers.update($customer);
+end
+```
+
+This approach allows you to define Rule Units without separate Java classes, which can be convenient for simpler use cases or prototyping.
+
+## Executing Rule Units
+
+Rule Units are executed using the `RuleUnitInstance` API.
+
+### Basic Execution
+
+```java
+// Create a rule unit
+OrderProcessingUnit orderUnit = new OrderProcessingUnit();
+
+// Add some facts
+orderUnit.getCustomers().add(new Customer("C1", "John Doe"));
+orderUnit.getOrders().add(new Order("O1", "C1", 150.0));
+
+// Create a rule unit instance
+RuleUnitInstance<OrderProcessingUnit> instance =
+    RuleUnitProvider.get().createRuleUnitInstance(orderUnit);
+
+try {
+    // Execute the rules
+    instance.fire();
+
+    // Or execute a specific query
+    List<Map<String, Object>> results =
+        instance.executeQuery("FindOrdersByCustomer", "C1").toList();
+} finally {
+    // Always dispose the instance when done
+    instance.dispose();
+}
+```
+
+### Using RuleUnitExecutor
+
+For more advanced scenarios, especially when working with multiple rule units, you can use the `RuleUnitExecutor`:
+
+```java
+// Create an executor
+RuleUnitExecutor executor = RuleUnitExecutor.create();
+
+// Bind to a KieContainer if needed
+KieContainer kieContainer = KieServices.get().getKieClasspathContainer();
+executor.bind(kieContainer);
+
+// Create and register a rule unit
+OrderProcessingUnit orderUnit = new OrderProcessingUnit();
+orderUnit.getCustomers().add(new Customer("C1", "John Doe"));
+orderUnit.getOrders().add(new Order("O1", "C1", 150.0));
+
+// Execute the unit
+executor.run(orderUnit);
+
+// Or use the class-based approach with variable binding
+executor.bindVariable("customers", DataSource.createStore(
+    new Customer("C1", "John Doe")));
+executor.bindVariable("orders", DataSource.createStore(
+    new Order("O1", "C1", 150.0)));
+executor.bindVariable("taxRate", 0.07);
+executor.run(OrderProcessingUnit.class);
+```
+
+### Continuous Execution
+
+For event-based systems, you can use the `runUntilHalt()` method:
+
+```java
+// Start continuous execution in a separate thread
+new Thread(() -> {
+    executor.runUntilHalt(eventProcessingUnit);
+}).start();
+
+// Later, stop execution
+executor.halt();
+```
+
+## Rule Unit Coordination
+
+One of the powerful features of Rule Units is the ability to coordinate the execution of multiple units.
+
+### Explicit Coordination
+
+```java
+// Execute units in sequence
+executor.run(validationUnit);
+executor.run(processingUnit);
+executor.run(notificationUnit);
+```
+
+### Data-Driven Coordination
+
+```java
+// First unit generates data for the second
+ValidationUnit validationUnit = new ValidationUnit();
+ProcessingUnit processingUnit = new ProcessingUnit();
+
+// Populate validation unit
+populateValidationUnit(validationUnit);
+
+// Execute validation
+executor.run(validationUnit);
+
+// Transfer results to processing unit
+Collection<ValidationResult> results =
+    validationUnit.getResults().stream().collect(Collectors.toList());
+results.forEach(processingUnit.getValidatedData()::add);
+
+// Execute processing
+executor.run(processingUnit);
+```
+
+### Event-Driven Coordination
+
+For more complex coordination patterns, you can use events to trigger rule units:
+
+```java
+rule "Order Validated"
+when
+    $order: /orders[ status == "VALIDATED" ]
+then
+    // Signal that this order is ready for processing
+    orderEvents.append(new OrderEvent($order.getId(), "READY_FOR_PROCESSING"));
+end
+```
+
+Then in another rule unit:
+
+```java
+rule "Process Ready Order"
+when
+    $event: /orderEvents[ type == "READY_FOR_PROCESSING" ]
+    $order: /orders[ id == $event.orderId ]
+then
+    // Process the order
+    processOrder($order);
+    orders.update($order);
+end
+```
+
+## Advanced Rule Unit Features
+
+### Configuring Rule Units
+
+You can configure rule units using `RuleConfig`:
+
+```java
+// Create a configuration
+RuleConfig ruleConfig = new RuleConfig();
+
+// Add event listeners
+ruleConfig.addRuleRuntimeEventListener(new MyRuleRuntimeListener());
+ruleConfig.addAgendaEventListener(new MyAgendaEventListener());
+
+// Create a rule unit instance with the configuration
+RuleUnitInstance<OrderProcessingUnit> instance =
+    RuleUnitProvider.get().createRuleUnitInstance(orderUnit, ruleConfig);
+```
+
+### Rule Unit DSL
+
+For more complex rule unit interactions, you can use the Rule Unit DSL:
+
+```java
+// Create and configure the rule units
+ValidationUnit validationUnit = new ValidationUnit();
+ProcessingUnit processingUnit = new ProcessingUnit();
+NotificationUnit notificationUnit = new NotificationUnit();
+
+// Build a rule unit DSL
+RuleUnitDsl.builder()
+    .bind(kieContainer)
+    .onStart(unit -> System.out.println("Starting: " + unit))
+    .onEnd(unit -> System.out.println("Completed: " + unit))
+    .execute(validationUnit)
+    .onYield(validationUnit, (source, target) -> {
+        // Transfer data between units
+        transferData(source, target);
+    })
+    .execute(processingUnit)
+    .onYield(processingUnit, (source, target) -> {
+        // Transfer data between units
+        transferData(source, target);
+    })
+    .execute(notificationUnit)
+    .build()
+    .run();
+```
+
+## Best Practices for Rule Units
+
+### 1. Design for Modularity
+
+Break down complex rule systems into focused rule units:
+
+```java
+// Instead of one large RuleUnit
+public class AllPurposeUnit implements RuleUnitData {
+    // Dozens of different data sources
+    // Hundreds of rules
+}
+
+// Create multiple focused units
+public class ValidationUnit implements RuleUnitData {
+    // Validation-specific data sources
+    // Validation-specific rules
+}
+
+public class PricingUnit implements RuleUnitData {
+    // Pricing-specific data sources
+    // Pricing-specific rules
+}
+
+public class ShippingUnit implements RuleUnitData {
+    // Shipping-specific data sources
+    // Shipping-specific rules
+}
+```
+
+### 2. Choose the Right Data Sources
+
+Select the appropriate data source type for each use case:
+
+- **DataStore**: For facts that need full CRUD operations
+- **DataStream**: For events and append-only data
+- **SingletonStore**: For global configuration and shared state
+
+### 3. Use Consistent Naming Conventions
+
+Establish clear naming conventions for rule units and their components:
+
+```java
+// Rule unit class
+public class OrderProcessingUnit implements RuleUnitData { ... }
+
+// DRL file
+// OrderProcessingUnit.drl
+
+// Package and unit declaration
+package org.example;
+unit OrderProcessingUnit;
+
+// Rule naming
+rule "OrderProcessing - Validate Order"
+rule "OrderProcessing - Calculate Tax"
+rule "OrderProcessing - Apply Shipping"
+```
+
+### 4. Test Rule Units in Isolation
+
+Create unit tests for each rule unit:
+
+```java
+@Test
+public void testOrderValidation() {
+    // Create the rule unit
+    OrderValidationUnit unit = new OrderValidationUnit();
+
+    // Populate with test data
+    Order validOrder = new Order("O1", "C1", 100.0);
+    Order invalidOrder = new Order("O2", "C2", -50.0);
+    unit.getOrders().add(validOrder);
+    unit.getOrders().add(invalidOrder);
+
+    // Execute the rules
+    RuleUnitInstance<OrderValidationUnit> instance =
+        RuleUnitProvider.get().createRuleUnitInstance(unit);
+    instance.fire();
+
+    // Verify results
+    assertEquals("VALID", validOrder.getStatus());
+    assertEquals("INVALID", invalidOrder.getStatus());
+    assertEquals("Negative amount", invalidOrder.getErrorMessage());
+}
+```
+
+### 5. Document Rule Units and Their Purpose
+
+Add clear documentation to rule unit classes and DRL files:
+
+```java
+/**
+ * OrderValidationUnit performs initial validation on incoming orders.
+ *
+ * Responsibilities:
+ * - Check order amount is positive
+ * - Verify customer exists
+ * - Validate product inventory
+ * - Flag suspicious orders for review
+ */
+public class OrderValidationUnit implements RuleUnitData {
+    // ...
+}
+```
+
+## Migrating from Traditional Drools to Rule Units
+
+If you're transitioning from traditional Drools to Rule Units, here are the key steps:
+
+### 1. Identify Rule Groups
+
+Identify groups of related rules in your existing codebase:
+
+- Rules in the same agenda group
+- Rules with similar purposes
+- Rules operating on the same fact types
+
+### 2. Define Rule Unit Classes
+
+Create Rule Unit classes for each group:
+
+```java
+// Before: Global KieSession with different rule files
+KieSession session = kieContainer.newKieSession();
+
+// After: Specific Rule Units
+CustomerUnit customerUnit = new CustomerUnit();
+OrderUnit orderUnit = new OrderUnit();
+```
+
+### 3. Convert Facts to Data Sources
+
+Move facts from global working memory to specific data sources:
+
+```java
+// Before: Global working memory
+for (Customer customer : customers) {
+    session.insert(customer);
+}
+
+// After: Typed data sources
+for (Customer customer : customers) {
+    customerUnit.getCustomers().add(customer);
+}
+```
+
+### 4. Update DRL Files
+
+Add unit declarations to your DRL files:
+
+```java
+// Before
+package org.example;
+
+rule "Gold Customer"
+when
+    $customer: Customer(totalSpent > 10000)
+then
+    $customer.setStatus("GOLD");
+    update($customer);
+end
+
+// After
+package org.example;
+unit CustomerUnit;
+
+rule "Gold Customer"
+when
+    $customer: /customers[ totalSpent > 10000 ]
+then
+    $customer.setStatus("GOLD");
+    customers.update($customer);
+end
+```
+
+### 5. Replace Direct Rule Operations
+
+Update rule actions to use data source operations:
+
+```java
+// Before
+then
+    Customer newCustomer = new Customer();
+    insert(newCustomer);
+
+    existingCustomer.setStatus("ACTIVE");
+    update(existingCustomer);
+
+    delete(oldCustomer);
+end
+
+// After
+then
+    Customer newCustomer = new Customer();
+    customers.add(newCustomer);
+
+    existingCustomer.setStatus("ACTIVE");
+    customers.update(existingCustomer);
+
+    customers.remove(oldCustomer);
+end
+```
+
+## Converting Between Classic and Rule Unit APIs
+
+| Classic API                   | Rule Unit API             |
+| ---------------------------- | ------------------------- |
+| `KieSession`                 | `RuleUnitInstance<T>`     |
+| `insert(fact)`               | `dataStore.add(fact)`     |
+| `update(fact)`               | `dataStore.update(fact)`  |
+| `delete(fact)`               | `dataStore.remove(fact)`  |
+| `getQueryResults(queryName)` | `executeQuery(queryName)` |
+| `fireAllRules()`             | `fire()`                  |
+| `fireUntilHalt()`            | `runUntilHalt()`          |
+| Global variables             | Unit variables            |
+| Entry Points                 | DataStore/DataStream      |
+
+## REST Integration with Rule Units
+
+Rule Units integrate seamlessly with REST APIs when using frameworks like Quarkus or Spring Boot.
+
+### Automatically Generated REST Endpoints
+
+When using Kogito with Rule Units, REST endpoints are automatically generated:
+
+```java
+// This rule unit...
+package org.example;
+
+public class CustomerUnit implements RuleUnitData {
+    private DataStore<Customer> customers;
+    // ...
+}
+
+// ...automatically generates REST endpoints like:
+// GET /customers
+// POST /customers
+// GET /customers/{id}
+// PUT /customers/{id}
+// DELETE /customers/{id}
+// POST /CustomerUnit
+```
+
+### Custom REST Controllers
+
+You can also create custom controllers for more control:
+
+```java
+@Path("/customers")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class CustomerResource {
+    @Inject
+    RuleUnitInstance<CustomerUnit> customerUnitInstance;
+
+    @POST
+    @Path("/validate")
+    public Response validateCustomers(List<Customer> newCustomers) {
+        CustomerUnit unit = customerUnitInstance.unit();
+
+        // Add customers to the unit
+        for (Customer customer : newCustomers) {
+            unit.getCustomers().add(customer);
+        }
+
+        // Execute rules
+        customerUnitInstance.fire();
+
+        // Get validation results
+        List<Map<String, Object>> validations =
+            customerUnitInstance.executeQuery("FindInvalidCustomers").toList();
+
+        return Response.ok(validations).build();
+    }
+}
+```
+
+## Real-World Examples
+
+Let's look at some real-world examples of Rule Units in action.
+
+### Example 1: Loan Application Processing
+
+```java
+public class LoanProcessingUnit implements RuleUnitData {
+    private final DataStore<Applicant> applicants;
+    private final DataStore<LoanApplication> applications;
+    private final DataStore<CreditReport> creditReports;
+    private final SingletonStore<RiskThresholds> riskThresholds;
+
+    // Constructor with initialization
+
+    // Getters and setters
+}
+```
+
+DRL file:
+
+```java
+package org.example;
+unit LoanProcessingUnit;
+
+rule "Auto-Approve Low-Risk Applications"
+when
+    $application: /applications[ status == "PENDING" ]
+    $applicant: /applicants[ id == $application.applicantId ]
+    $credit: /creditReports[ applicantId == $applicant.id, score > 750 ]
+    $thresholds: /riskThresholds[]
+    eval($application.requestedAmount <= $thresholds.getAutoApprovalLimit())
+then
+    $application.setStatus("APPROVED");
+    $application.setApprovalReason("Excellent credit score and low loan amount");
+    $application.setRiskCategory("LOW");
+    applications.update($application);
+end
+
+rule "Flag High-Risk Applications for Review"
+when
+    $application: /applications[ status == "PENDING" ]
+    $applicant: /applicants[ id == $application.applicantId ]
+    $credit: /creditReports[ applicantId == $applicant.id, score < 600 ]
+    or
+    $application: /applications[ status == "PENDING",
+                                 loanToIncomeRatio > 0.43 ]
+then
+    $application.setStatus("REVIEW");
+    $application.setReviewReason("High risk indicators");
+    $application.setRiskCategory("HIGH");
+    applications.update($application);
+end
+
+query "FindApprovedApplications"
+    $application: /applications[ status == "APPROVED" ]
+end
+
+query "FindApplicationsForReview"
+    $application: /applications[ status == "REVIEW" ]
+end
+```
+
+### Example 2: IoT Monitoring System
+
+```java
+public class SensorMonitoringUnit implements RuleUnitData {
+    private final DataStream<SensorReading> readings;
+    private final DataStore<Alert> alerts;
+    private final DataStore<Device> devices;
+    private final SingletonStore<AlertThresholds> thresholds;
+
+    // Constructor with initialization
+
+    // Getters and setters
+}
+```
+
+DRL file:
+
+```java
+package org.example;
+unit SensorMonitoringUnit;
+
+rule "High Temperature Alert"
+when
+    $reading: /readings[ type == "TEMPERATURE",
+                        $value: value, $deviceId: deviceId ]
+    $device: /devices[ id == $deviceId ]
+    $thresholds: /thresholds[]
+    eval($value > $thresholds.getTemperatureMax())
+then
+    Alert alert = new Alert(
+        "HIGH_TEMPERATURE",
+        "Temperature threshold exceeded: " + $value,
+        $deviceId,
+        $device.getLocation(),
+        System.currentTimeMillis()
+    );
+    alerts.add(alert);
+end
+
+rule "Battery Low Alert"
+when
+    $reading: /readings[ type == "BATTERY",
+                        $value: value, $deviceId: deviceId ]
+    $device: /devices[ id == $deviceId ]
+    $thresholds: /thresholds[]
+    eval($value < $thresholds.getBatteryMin())
+then
+    Alert alert = new Alert(
+        "LOW_BATTERY",
+        "Battery level critical: " + $value + "%",
+        $deviceId,
+        $device.getLocation(),
+        System.currentTimeMillis()
+    );
+    alerts.add(alert);
+end
+
+query "FindActiveAlerts"
+    $alert: /alerts[ resolved == false ]
+end
+
+query "FindAlertsByDevice" (String deviceId)
+    $alert: /alerts[ deviceId == deviceId ]
+end
+```
+
+## Common Patterns with Rule Units
+
+### Event-Driven Architecture
+
+Rule Units fit naturally into event-driven architectures:
+
+```java
+@ApplicationScoped
+public class SensorEventProcessor {
+    @Inject
+    SensorMonitoringUnit monitoringUnit;
+
+    @Inject
+    RuleUnitInstance<SensorMonitoringUnit> ruleUnitInstance;
+
+    @Incoming("sensor-readings")
+    public void processReading(SensorReading reading) {
+        // Add the reading to the data stream
+        monitoringUnit.getReadings().append(reading);
+
+        // Rules will automatically fire
+        // (assuming using runUntilHalt() elsewhere)
+    }
+
+    @Outgoing("alerts")
+    @Broadcast
+    public Multi<Alert> streamAlerts() {
+        // Stream all new alerts to a Kafka topic
+        return Multi.createFrom().emitter(emitter -> {
+            monitoringUnit.getAlerts().subscribe(
+                DataProcessor.of(
+                    (handle, alert) -> emitter.emit(alert)
+                )
+            );
+        });
+    }
+}
+```
+
+### Batch Processing
+
+For batch processing scenarios:
+
+```java
+@ApplicationScoped
+public class BatchOrderProcessor {
+    @Inject
+    RuleUnitProvider ruleUnitProvider;
+
+    public BatchProcessingResult processBatch(List<Order> orders) {
+        // Create a new rule unit for this batch
+        OrderProcessingUnit unit = new OrderProcessingUnit();
+
+        // Load the batch data
+        orders.forEach(unit.getOrders()::add);
+
+        // Process the batch
+        try (RuleUnitInstance<OrderProcessingUnit> instance =
+                ruleUnitProvider.createRuleUnitInstance(unit)) {
+            // Run rules
+            instance.fire();
+
+            // Collect results
+            List<Order> processed = unit.getOrders().stream()
+                .collect(Collectors.toList());
+            List<Order> failed = unit.getFailedOrders().stream()
+                .collect(Collectors.toList());
+
+            return new BatchProcessingResult(processed, failed);
+        }
+    }
+}
+```
+
+### Multi-Stage Processing Pipeline
+
+For complex workflows, chain multiple rule units:
+
+```java
+public class OrderPipeline {
+    private final RuleUnitExecutor executor;
+
+    public OrderPipeline(KieContainer container) {
+        this.executor = RuleUnitExecutor.create().bind(container);
+    }
+
+    public ProcessingResult processOrder(Order order) {
+        // Stage 1: Validation
+        ValidationUnit validationUnit = new ValidationUnit();
+        validationUnit.getOrders().add(order);
+        executor.run(validationUnit);
+
+        // Check if validation passed
+        if (!order.isValid()) {
+            return new ProcessingResult(false, order,
+                "Validation failed: " + order.getErrorMessage());
+        }
+
+        // Stage 2: Pricing
+        PricingUnit pricingUnit = new PricingUnit();
+        pricingUnit.getOrders().add(order);
+        executor.run(pricingUnit);
+
+        // Stage 3: Inventory check
+        InventoryUnit inventoryUnit = new InventoryUnit();
+        inventoryUnit.getOrders().add(order);
+        executor.run(inventoryUnit);
+
+        // Check if inventory check passed
+        if (!order.isInStock()) {
+            return new ProcessingResult(false, order,
+                "Inventory check failed: " + order.getInventoryMessage());
+        }
+
+        // Stage 4: Finalization
+        FinalizationUnit finalizationUnit = new FinalizationUnit();
+        finalizationUnit.getOrders().add(order);
+        executor.run(finalizationUnit);
+
+        return new ProcessingResult(true, order, "Order processed successfully");
+    }
+}
+```
+
+## Debugging Rule Units
+
+Debugging rule units requires understanding both the Rule Unit API and the underlying rule execution.
+
+### Enable Logging
+
+Configure proper logging for rule execution:
+
+```java
+// In your application.properties or logback.xml
+drools.eventListenerTypes = agendaEventListener,ruleRuntimeEventListener
+quarkus.log.category."org.drools".level = DEBUG
+```
+
+### Add Event Listeners
+
+Use event listeners for detailed execution information:
+
+```java
+RuleConfig config = new RuleConfig();
+config.addRuleRuntimeEventListener(new DebugRuleRuntimeEventListener());
+config.addAgendaEventListener(new DebugAgendaEventListener());
+
+RuleUnitInstance<OrderUnit> instance =
+    RuleUnitProvider.get().createRuleUnitInstance(orderUnit, config);
+```
+
+### Use Breakpoints Effectively
+
+Set breakpoints in:
+- Rule Unit lifecycle methods
+- Rule execution (when and then blocks)
+- Data source operations
+
+### Trace Execution
+
+Create a simple tracing utility:
+
+```java
+public class RuleExecutionTracer implements AgendaEventListener {
+    private final List<String> activations = new ArrayList<>();
+
+    @Override
+    public void matchCreated(MatchCreatedEvent event) {
+        // Record when rules are matched
+        activations.add("MATCH: " + event.getMatch().getRule().getName());
+    }
+
+    @Override
+    public void afterMatchFired(AfterMatchFiredEvent event) {
+        // Record when rules are executed
+        activations.add("FIRED: " + event.getMatch().getRule().getName());
+    }
+
+    // Implement other methods...
+
+    public List<String> getActivations() {
+        return activations;
+    }
+}
+```
+
+### Audit Queries
+
+Create audit queries in your rule units:
+
+```java
+query "DebugAllFacts"
+    $customer: /customers[]
+    $order: /orders[]
+end
+
+query "DebugNoMatchingOrders"
+    not /orders[]
+end
+```
+
+## Performance Considerations
+
+### Use the Right Data Source Type
+
+Choose data source types that match your usage patterns:
+- DataStore for mutable, long-lived facts
+- DataStream for high-volume event processing
+- SingletonStore for configuration and shared state
+
+### Minimize Data Source Size
+
+Keep data sources focused and minimal:
+
+```java
+// Instead of one large data source
+private DataStore<Order> allOrders;
+
+// Use more focused data sources
+private DataStore<Order> pendingOrders;
+private DataStore<Order> completedOrders;
+```
+
+### Consider Stateless Execution
+
+For high-throughput scenarios, use stateless execution:
+
+```java
+public OrderResult processOrder(Order order) {
+    // Create a fresh rule unit for each request
+    OrderUnit unit = new OrderUnit();
+    unit.getOrders().add(order);
+
+    // Execute in a new instance
+    RuleUnitInstance<OrderUnit> instance =
+        RuleUnitProvider.get().createRuleUnitInstance(unit);
+    try {
+        instance.fire();
+        return new OrderResult(true, order);
+    } finally {
+        instance.dispose();
+    }
+}
+```
+
+### Use Indexes for Better Performance
+
+Ensure your fact classes have proper indexing:
+
+```java
+@Index(value = Index.ConstraintType.EQUAL, properties = {"id"})
+public class Order {
+    private String id;
+    // ...
+}
+```
+
+## Advanced Topics
+
+### Rule Unit Composition
+
+Compose rule units for more complex behaviors:
+
+```java
+public class CompositeRuleUnit implements RuleUnitData {
+    private final ValidationUnit validationUnit;
+    private final ProcessingUnit processingUnit;
+
+    // Constructor
+
+    public ValidationUnit getValidationUnit() {
+        return validationUnit;
+    }
+
+    public ProcessingUnit getProcessingUnit() {
+        return processingUnit;
+    }
+}
+```
+
+### Data Source Subscription
+
+Subscribe to data sources programmatically:
+
+```java
+public void subscribeToAlerts(Consumer<Alert> alertHandler) {
+    monitoringUnit.getAlerts().subscribe(
+        DataProcessor.of(
+            (handle, alert) -> alertHandler.accept(alert)
+        )
+    );
+}
+```
+
+### Custom Data Sources
+
+Implement custom data sources for specific needs:
+
+```java
+public class DatabaseDataStore<T> implements DataStore<T> {
+    private final EntityManager entityManager;
+    private final Class<T> entityClass;
+
+    // Constructor
+
+    @Override
+    public DataHandle add(T object) {
+        entityManager.persist(object);
+        return new SimpleDataHandle(object);
+    }
+
+    @Override
+    public void update(DataHandle handle, T object) {
+        entityManager.merge(object);
+    }
+
+    @Override
+    public void remove(DataHandle handle) {
+        entityManager.remove(handle.getObject());
+    }
+
+    // Other methods...
+}
+```
+
+## Conclusion
+
+Rule Units represent a significant advancement in rule organization and execution in Drools. By providing a structured, modular approach to rule management, they enable more maintainable, testable, and scalable rule-based systems.
+
+Key takeaways:
+
+1. **Modularity**: Rule Units encapsulate rules with their data sources
+2. **Type Safety**: Strongly typed data sources prevent type-related errors
+3. **Clarity**: Clear separation of concerns with dedicated data sources
+4. **Integration**: Seamless integration with modern frameworks and architectures
+5. **Scalability**: Better performance and resource utilization
+
+Whether you're building a new rule-based system or migrating an existing one, Rule Units provide a solid foundation for organizing and executing business rules in a modern, maintainable way.

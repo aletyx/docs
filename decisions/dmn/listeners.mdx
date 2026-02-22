@@ -1,0 +1,632 @@
+---
+title: "DMN Event Listeners in Aletyx Enterprise Build of Drools"
+description: "DMN event listeners provide a powerful mechanism to observe and react to decision evaluation events in your Kogito applications. These listeners can be used for monitoring, debugging, or extending..."
+---
+## Introduction to DMN Event Listeners
+
+DMN event listeners provide a powerful mechanism to observe and react to decision evaluation events in your Kogito applications. These listeners can be used for monitoring, debugging, or extending the behavior of DMN evaluations without modifying the core decision logic.
+
+## Understanding DMN Event Types
+
+DMN event listeners in Kogito can respond to several types of events during decision evaluation:
+
+- **All Events**: Triggered before and after the entire DMN model is evaluated
+- **Decision Events**: Triggered before and after each decision in the model is evaluated
+- **Decision Table Events**: Triggered before and after a decision table is evaluated
+- **Context Entry Events**: Triggered before and after context entries are evaluated
+
+## The DMNRuntimeEventListener Interface
+
+At the core of DMN event listening is the `DMNRuntimeEventListener` interface:
+
+```java
+ package org.kie.dmn.api.core.event;
+
+ public interface DMNRuntimeEventListener {
+     // Model-level events
+     void beforeEvaluateAll(BeforeEvaluateAllEvent event);
+     void afterEvaluateAll(AfterEvaluateAllEvent event);
+
+     // Decision-level events
+     void beforeEvaluateDecision(BeforeEvaluateDecisionEvent event);
+     void afterEvaluateDecision(AfterEvaluateDecisionEvent event);
+
+     // Decision table events
+     void beforeEvaluateDecisionTable(BeforeEvaluateDecisionTableEvent event);
+     void afterEvaluateDecisionTable(AfterEvaluateDecisionTableEvent event);
+
+     // Context entry events
+     void beforeEvaluateContextEntry(BeforeEvaluateContextEntryEvent event);
+     void afterEvaluateContextEntry(AfterEvaluateContextEntryEvent event);
+ }
+```
+
+## Implementing a Basic DMN Event Listener
+
+Let's start with a basic DMN event listener implementation that logs events as they occur:
+
+```java
+ package org.kie.kogito.dmn.example.listener;
+
+ import org.kie.dmn.api.core.event.*;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+
+ /**
+  * A simple DMN event listener that logs events as they occur
+  */
+ public class LoggingDMNRuntimeEventListener implements DMNRuntimeEventListener {
+     private static final Logger LOG = LoggerFactory.getLogger(DMNRuntimeEventListener.class);
+     private final String name;
+
+     public LoggingDMNRuntimeEventListener(String name) {
+         this.name = name;
+     }
+
+     @Override
+     public void beforeEvaluateDecision(BeforeEvaluateDecisionEvent event) { // (1)
+         LOG.info("{} - About to evaluate decision: {}",
+             name, event.getDecision().getName());
+     }
+
+     @Override
+     public void afterEvaluateDecision(AfterEvaluateDecisionEvent event) { // (2)
+         LOG.info("{} - Completed evaluation of decision: {}. Result: {}",
+             name, event.getDecision().getName(), event.getResult().getDecisionResult());
+     }
+
+     @Override
+     public void beforeEvaluateContextEntry(BeforeEvaluateContextEntryEvent event) {
+         LOG.info("{} - About to evaluate context entry: {}",
+             name, event.getContextEntry().getVariable());
+     }
+
+     @Override
+     public void afterEvaluateContextEntry(AfterEvaluateContextEntryEvent event) {
+         LOG.info("{} - Completed evaluation of context entry: {}",
+             name, event.getContextEntry().getVariable());
+     }
+
+     @Override
+     public void beforeEvaluateDecisionTable(BeforeEvaluateDecisionTableEvent event) {
+         LOG.info("{} - About to evaluate decision table for decision: {}",
+             name, event.getDecisionTableName());
+     }
+
+     @Override
+     public void afterEvaluateDecisionTable(AfterEvaluateDecisionTableEvent event) {
+         LOG.info("{} - Completed evaluation of decision table for decision: {}",
+             name, event.getDecisionTableName());
+     }
+
+     @Override
+     public void beforeEvaluateAll(BeforeEvaluateAllEvent event) { // (3)
+         LOG.info("{} - About to evaluate DMN model: {}",
+             name, event.getDecisionModel().getName());
+     }
+
+     @Override
+     public void afterEvaluateAll(AfterEvaluateAllEvent event) { // (4)
+         LOG.info("{} - Completed evaluation of DMN model: {}",
+             name, event.getDecisionModel().getName());
+     }
+ }
+```
+
+1. Called before evaluating an individual decision in the model
+2. Called after evaluating an individual decision, contains the decision result
+3. Called before evaluating the entire DMN model
+4. Called after evaluating the entire DMN model
+
+## Understanding Event Objects
+
+Each event type provides specific information about the evaluation context:
+
+### BeforeEvaluateAllEvent / AfterEvaluateAllEvent
+
+```java
+// Model-level events provide access to the entire DMN model
+BeforeEvaluateAllEvent event = ...;
+// Get the DMN model being evaluated
+DMNModel model = event.getDecisionModel();
+
+// Access information about the model
+String modelName = model.getName();
+String modelNamespace = model.getNamespace();
+
+// AfterEvaluateAllEvent also provides access to the evaluation result
+AfterEvaluateAllEvent resultEvent = ...;
+DMNResult result = resultEvent.getResult();
+```
+
+### BeforeEvaluateDecisionEvent / AfterEvaluateDecisionEvent
+
+```java
+ // Decision events provide information about individual decisions
+ BeforeEvaluateDecisionEvent event = ...;
+
+ // Get the decision being evaluated
+ DMNDecision decision = event.getDecision();
+ String decisionName = decision.getName();
+ DMNDecisionType decisionType = decision.getDecisionType(); // e.g., DECISION_TABLE, CONTEXT, etc.
+
+ // AfterEvaluateDecisionEvent provides access to the decision result
+ AfterEvaluateDecisionEvent resultEvent = ...;
+ Object decisionResult = resultEvent.getResult().getDecisionResult();
+```
+
+### BeforeEvaluateDecisionTableEvent / AfterEvaluateDecisionTableEvent
+
+```java
+// Decision table events provide information about decision table evaluations
+BeforeEvaluateDecisionTableEvent event = ...;
+// Get the decision table information
+String decisionTableName = event.getDecisionTableName();
+// AfterEvaluateDecisionTableEvent provides access to matching rules
+AfterEvaluateDecisionTableEvent resultEvent = ...;
+List<DMNDecisionTableRule> matchedRules = resultEvent.getMatches(); // (1)
+ for (DMNDecisionTableRule rule : matchedRules) {
+     // Process each matched rule
+     String ruleId = rule.getId();
+     Map<String, Object> outputValues = rule.getOutputValues(); // Get the rule's output values
+ }
+
+1. The list of matched rules might be empty if no rules matched during evaluation
+
+### BeforeEvaluateContextEntryEvent / AfterEvaluateContextEntryEvent
+
+```java
+// Context entry events provide information about context evaluations
+BeforeEvaluateContextEntryEvent event = ...;
+// Get the context entry information
+DMNContextEntry contextEntry = event.getContextEntry();
+String variableName = contextEntry.getVariable();
+// AfterEvaluateContextEntryEvent provides the evaluated result
+AfterEvaluateContextEntryEvent resultEvent = ...;
+ Object result = resultEvent.getResult();
+```
+
+## Registering DMN Event Listeners
+
+Kogito provides two methods to register DMN event listeners:
+
+### Method 1: Using ApplicationScoped Annotation
+
+Create a listener class and annotate it with `@ApplicationScoped`:
+
+```java
+ package org.kie.kogito.dmn.example.listener;
+
+ import jakarta.enterprise.context.ApplicationScoped;
+ import org.kie.dmn.api.core.event.DMNRuntimeEventListener;
+
+ /**
+  * A DMN event listener that will be automatically registered
+  * with the DMN runtime
+  */
+ @ApplicationScoped // (1)
+ public class MonitoringDMNListener implements DMNRuntimeEventListener {
+     // Implementation of listener methods
+
+     @Override
+     public void beforeEvaluateAll(BeforeEvaluateAllEvent event) {
+         // ...
+     }
+
+     // Other listener methods...
+ }
+```
+
+1. The `@ApplicationScoped` annotation ensures the listener is discovered and registered automatically
+
+### Method 2: Using a Configuration Class
+
+Create a configuration class that implements `DecisionEventListenerConfig`:
+
+```java
+ package org.kie.kogito.dmn.example.listener;
+
+ import jakarta.enterprise.context.ApplicationScoped;
+ import org.kie.kogito.dmn.config.CachedDecisionEventListenerConfig;
+
+ /**
+  * Configuration class for registering multiple DMN event listeners
+  */
+ @ApplicationScoped
+ public class CustomDMNEventListenerConfig extends CachedDecisionEventListenerConfig { // (1)
+     public CustomDMNEventListenerConfig() {
+         // Register multiple listeners
+         register(new LoggingDMNRuntimeEventListener("Audit Listener")); // (2)
+         register(new LoggingDMNRuntimeEventListener("Performance Listener"));
+     }
+ }
+```
+
+1. Extending `CachedDecisionEventListenerConfig` provides a convenient way to register listeners
+2. You can register multiple listeners with different configurations
+
+## Practical Use Cases for DMN Event Listeners
+
+### 1. Auditing Decision Logic
+
+```java
+ @ApplicationScoped
+ public class AuditingDMNListener implements DMNRuntimeEventListener {
+     private static final Logger LOG = LoggerFactory.getLogger(AuditingDMNListener.class);
+
+     @Inject
+     AuditService auditService;
+
+     @Override
+     public void afterEvaluateDecision(AfterEvaluateDecisionEvent event) {
+         // Extract decision information
+         String decisionName = event.getDecision().getName();
+         Object result = event.getResult().getDecisionResult();
+
+         // Extract input data for the decision
+         DMNContext context = event.getResult().getContext();
+         Map<String, Object> inputs = new HashMap<>();
+         for (String key : context.getAll().keySet()) {
+             inputs.put(key, context.get(key));
+         }
+
+         LOG.info("Decision '{}' evaluated with result: {}", decisionName, result);
+
+         // Record detailed audit information
+         auditService.recordDecision(
+             event.getDecision().getModelNamespace(),
+             event.getDecision().getModelName(),
+             decisionName,
+             inputs,
+             result,
+             LocalDateTime.now()
+         );
+     }
+
+     @Override
+     public void afterEvaluateAll(AfterEvaluateAllEvent event) {
+         // Record the complete model evaluation result
+         DMNResult dmnResult = event.getResult();
+
+         // Check for any evaluation messages (warnings, errors)
+         if (!dmnResult.getMessages().isEmpty()) {
+             for (DMNMessage message : dmnResult.getMessages()) {
+                 LOG.warn("DMN Message: [{}] {}", message.getLevel(), message.getText());
+
+                 auditService.recordDMNMessage(
+                     event.getDecisionModel().getNamespace(),
+                     event.getDecisionModel().getName(),
+                     message.getSourceId(),
+                     message.getLevel().toString(),
+                     message.getText()
+                 );
+             }
+         }
+     }
+ }
+```
+
+### 2. Performance Monitoring
+
+```java
+ @ApplicationScoped
+ public class PerformanceDMNListener implements DMNRuntimeEventListener {
+     private static final Logger LOG = LoggerFactory.getLogger(PerformanceDMNListener.class);
+
+     // Store start times for decisions and models
+     private final Map<String, Long> decisionStartTimes = new ConcurrentHashMap<>();
+     private final Map<String, Long> modelStartTimes = new ConcurrentHashMap<>();
+
+     @Inject
+     MetricsService metricsService;
+
+     @Override
+     public void beforeEvaluateAll(BeforeEvaluateAllEvent event) {
+         String modelKey = event.getDecisionModel().getNamespace() + "#" + event.getDecisionModel().getName();
+         modelStartTimes.put(modelKey, System.currentTimeMillis());
+     }
+
+     @Override
+     public void afterEvaluateAll(AfterEvaluateAllEvent event) {
+         String modelKey = event.getDecisionModel().getNamespace() + "#" + event.getDecisionModel().getName();
+         Long startTime = modelStartTimes.remove(modelKey);
+
+         if (startTime != null) {
+             long duration = System.currentTimeMillis() - startTime;
+             LOG.info("DMN model '{}' evaluation took {} ms",
+                 event.getDecisionModel().getName(), duration);
+
+             // Record metrics
+             metricsService.recordModelEvaluationTime(
+                 event.getDecisionModel().getNamespace(),
+                 event.getDecisionModel().getName(),
+                 duration
+             );
+         }
+     }
+
+     @Override
+     public void beforeEvaluateDecision(BeforeEvaluateDecisionEvent event) {
+         String decisionKey = event.getDecision().getModelNamespace() + "#" +
+                             event.getDecision().getModelName() + "#" +
+                             event.getDecision().getName();
+         decisionStartTimes.put(decisionKey, System.currentTimeMillis());
+     }
+
+     @Override
+     public void afterEvaluateDecision(AfterEvaluateDecisionEvent event) {
+         String decisionKey = event.getDecision().getModelNamespace() + "#" +
+                             event.getDecision().getModelName() + "#" +
+                             event.getDecision().getName();
+         Long startTime = decisionStartTimes.remove(decisionKey);
+
+         if (startTime != null) {
+             long duration = System.currentTimeMillis() - startTime;
+
+             // Only log if duration exceeds threshold (e.g., 100ms)
+             if (duration > 100) {
+                 LOG.info("Decision '{}' took {} ms to evaluate (exceeds threshold)",
+                     event.getDecision().getName(), duration);
+
+                 // Record slow decision metrics
+                 metricsService.recordSlowDecisionEvaluation(
+                     event.getDecision().getModelNamespace(),
+                     event.getDecision().getModelName(),
+                     event.getDecision().getName(),
+                     duration
+                 );
+             }
+         }
+     }
+ }
+```
+
+### 3. Error Handling and Validation
+
+```java
+ @ApplicationScoped
+ public class ValidationDMNListener implements DMNRuntimeEventListener {
+     private static final Logger LOG = LoggerFactory.getLogger(ValidationDMNListener.class);
+
+     @Inject
+     AlertService alertService;
+
+     @Override
+     public void afterEvaluateAll(AfterEvaluateAllEvent event) {
+         // Check for evaluation errors
+         DMNResult result = event.getResult();
+
+         if (result.hasErrors()) {
+             String modelName = event.getDecisionModel().getName();
+
+             LOG.error("DMN model '{}' evaluation contains errors:", modelName);
+
+             // Process and report all error messages
+             List<DMNMessage> errorMessages = result.getMessages().stream()
+                 .filter(message -> DMNMessage.Severity.ERROR == message.getLevel())
+                 .collect(Collectors.toList());
+
+             for (DMNMessage errorMessage : errorMessages) {
+                 LOG.error("  - [{}] {}", errorMessage.getSourceId(), errorMessage.getText());
+
+                 // Alert for critical decision errors
+                 alertService.sendErrorAlert(
+                     "DMN_EVALUATION_ERROR",
+                     modelName,
+                     errorMessage.getSourceId(),
+                     errorMessage.getText()
+                 );
+             }
+         }
+     }
+
+     @Override
+     public void afterEvaluateDecision(AfterEvaluateDecisionEvent event) {
+         // Validate decision results against business rules
+         String decisionName = event.getDecision().getName();
+         Object result = event.getResult().getDecisionResult();
+
+         // Apply domain-specific validation
+         if (decisionName.equals("Eligibility Decision")) {
+             if (result instanceof Map) {
+                 Map<String, Object> eligibility = (Map<String, Object>) result;
+
+                 // Detect inconsistent results
+                 if (Boolean.TRUE.equals(eligibility.get("isEligible")) &&
+                     "Denied".equals(eligibility.get("status"))) {
+
+                     LOG.error("Inconsistent eligibility decision: isEligible=true but status=Denied");
+                     alertService.sendErrorAlert(
+                         "DMN_LOGIC_ERROR",
+                         event.getDecision().getModelName(),
+                         decisionName,
+                         "Inconsistent eligibility result detected"
+                     );
+                 }
+             }
+         }
+     }
+ }
+```
+
+### 4. Decision Table Analysis
+
+```java
+ @ApplicationScoped
+ public class DecisionTableAnalysisListener implements DMNRuntimeEventListener {
+     private static final Logger LOG = LoggerFactory.getLogger(DecisionTableAnalysisListener.class);
+
+     @Inject
+     DecisionAnalyticsService analyticsService;
+
+     @Override
+     public void afterEvaluateDecisionTable(AfterEvaluateDecisionTableEvent event) {
+         String decisionTableName = event.getDecisionTableName();
+         List<DMNDecisionTableRule> matchedRules = event.getMatches();
+
+         // Log matched rules information
+         if (matchedRules.isEmpty()) {
+             LOG.warn("Decision table '{}' had no matching rules", decisionTableName);
+
+             // Record analytics for no-match scenario
+             analyticsService.recordNoMatchScenario(
+                 decisionTableName,
+                 event.getContext().getAll()  // The input values that led to no match
+             );
+         } else if (matchedRules.size() > 1) {
+             LOG.info("Decision table '{}' had multiple matching rules: {}",
+                 decisionTableName, matchedRules.size());
+
+             // Record analytics for multiple-match scenario
+             analyticsService.recordMultipleMatchScenario(
+                 decisionTableName,
+                 matchedRules.stream().map(DMNDecisionTableRule::getId).collect(Collectors.toList()),
+                 event.getContext().getAll()
+             );
+         } else {
+             // Single rule matched
+             DMNDecisionTableRule matchedRule = matchedRules.get(0);
+             LOG.debug("Decision table '{}' matched rule: {}",
+                 decisionTableName, matchedRule.getId());
+
+             // Record rule hit frequency for analytics
+             analyticsService.recordRuleHit(
+                 decisionTableName,
+                 matchedRule.getId()
+             );
+         }
+     }
+ }
+```
+
+## Advanced Patterns
+
+### Composable DMN Listeners
+
+For complex applications, you might want to create a composite pattern for your listeners:
+
+```java
+ @ApplicationScoped
+ public class CompositeDMNListener implements DMNRuntimeEventListener {
+     private final List<DMNRuntimeEventListener> delegates = new ArrayList<>();
+
+     @Inject
+     public CompositeDMNListener(Instance<DMNRuntimeEventListener> listeners) {
+         listeners.forEach(listener -> {
+             // Avoid adding self
+             if (!(listener instanceof CompositeDMNListener)) {
+                 delegates.add(listener);
+             }
+         });
+     }
+
+     // Implement all methods to delegate to child listeners
+     @Override
+     public void beforeEvaluateAll(BeforeEvaluateAllEvent event) {
+         for (DMNRuntimeEventListener listener : delegates) {
+             try {
+                 listener.beforeEvaluateAll(event);
+             } catch (Exception e) {
+                 // Log and continue with other listeners
+                 Logger.getLogger(getClass()).error(
+                     "Listener {} failed: {}", listener.getClass().getName(), e.getMessage()
+                 );
+             }
+         }
+     }
+
+     // Implement other methods similarly...
+ }
+```
+
+### Contextual DMN Listeners
+
+You can create listeners that are aware of the broader application context:
+
+```java
+ @ApplicationScoped
+ public class ContextualDMNListener implements DMNRuntimeEventListener {
+     private static final Logger LOG = LoggerFactory.getLogger(ContextualDMNListener.class);
+
+     @Inject
+     private UserContext userContext; // Current user information
+
+     @Inject
+     private TransactionContext txContext; // Current transaction
+
+     @Override
+     public void beforeEvaluateAll(BeforeEvaluateAllEvent event) {
+         // Add contextual information to the DMN context
+         DMNContext dmnContext = event.getContext();
+
+         // Add user context information
+         if (userContext.isAuthenticated()) {
+             dmnContext.set("currentUser", userContext.getUsername());
+             dmnContext.set("userRoles", userContext.getRoles());
+             dmnContext.set("organizationId", userContext.getOrganizationId());
+         }
+
+         // Add transaction context
+         dmnContext.set("transactionId", txContext.getTransactionId());
+         dmnContext.set("transactionTimestamp", LocalDateTime.now());
+
+         LOG.debug("Enriched DMN context with user and transaction information");
+     }
+
+     @Override
+     public void afterEvaluateAll(AfterEvaluateAllEvent event) {
+         // Record decision in the transaction audit log
+         txContext.addAuditEntry(
+             "DMN_EVALUATION",
+             event.getDecisionModel().getName(),
+             userContext.getUsername(),
+             event.getResult().getMessages().isEmpty() ? "SUCCESS" : "MESSAGES"
+         );
+     }
+
+     // Implement other methods as needed...
+ }
+```
+
+## Best Practices for DMN Listeners
+
+1. **Focus on Separation of Concerns**: Each listener should handle one aspect of DMN evaluation (auditing, monitoring, validation, etc.)
+
+2. **Handle Exceptions Properly**: Listeners should never throw exceptions that could disrupt DMN evaluation
+
+3. **Consider Performance Impact**: Heavy operations should be moved to asynchronous processing
+
+4. **Use Proper Logging**: Replace System.out with an appropriate logging framework
+
+5. **Make Listeners Configurable**: Allow listeners to be enabled/disabled or configured through application properties
+
+6. **Test Listeners Thoroughly**: Unit test listeners with mock events to ensure they behave correctly
+
+## Common Pitfalls to Avoid
+
+1. **Modifying Input Context**: Avoid modifying the DMN context in `beforeEvaluateAll` unless you specifically need to change inputs
+
+2. **Circular Dependencies**: Be careful when registering listeners that depend on each other
+
+3. **Heavyweight Operations**: Avoid expensive operations in listener methods that could slow down decision evaluation
+
+4. **Thread Safety Issues**: Ensure listeners are thread-safe as they may be called from multiple threads
+
+## Configuration Options
+
+In Quarkus applications, you can control DMN listeners through configuration properties:
+
+```properties
+# Enable/disable DMN listeners (default: true)
+quarkus.kogito.decisions.event-listeners.enabled=true
+
+# Configure specific listeners
+quarkus.kogito.decisions.event-listeners.audit.enabled=true
+quarkus.kogito.decisions.event-listeners.metrics.enabled=false
+```
+
+## Conclusion
+
+DMN event listeners provide a powerful way to extend, monitor, and analyze decision evaluation in your Kogito applications. By implementing the appropriate listener interfaces and registering them with the runtime, you can gain insights into decision logic, measure performance, validate outcomes, and capture detailed audit trails without modifying your core DMN models.
+
+Start with simple logging listeners and gradually expand to more complex implementations as your understanding of the DMN evaluation lifecycle grows. Remember to keep performance considerations in mind, especially for production deployments with high throughput requirements.

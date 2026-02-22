@@ -1,0 +1,201 @@
+---
+title: "DMN Expression Types Reference"
+description: "DMN (Decision Model and Notation) provides a powerful set of expression types that can be combined to model complex decision logic. When defining decision logic in the DMN editor, you'll select..."
+---
+DMN (Decision Model and Notation) provides a powerful set of expression types that can be combined to model complex decision logic. When defining decision logic in the DMN editor, you'll select from these expression types through the "Select expression" menu.
+
+## Expression Types
+
+| Icon                                              | Type               | Description                                                                                    | When to Use                                                        |
+| ------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **_FEEL_**                                        | **Literal**        | The simplest expression type for direct values or formulas using FEEL.                         | Simple calculations, direct value assignments, math operations     |
+| ![Relation icon](/images/reference/images/icons/table.svg)       | **Relation**       | Creates a table structure for organizing data (not to be confused with a decision table).      | Reference data, lookup tables, structured data                     |
+| **_{}_**                                          | **Context**        | Defines a set of named variables that can be referenced within the context.                    | Multi-step calculations, intermediate variables, complex logic     |
+| ![Decision Table icon](/images/reference/images/icons/table.svg) | **Decision Table** | Organizes conditions (inputs) and conclusions (outputs) in a tabular format with hit policies. | Multiple conditions/rules, business rule tables, if-then scenarios |
+| ![List icon](/images/reference/images/icons/list.svg)            | **List**           | Creates an ordered collection of values or expressions.                                        | Collections of values, multiple results, aggregations              |
+| **_f()_**                                         | **Invocation**     | Calls a Business Knowledge Model (BKM) or function defined elsewhere.                          | Reusing logic, calling functions, BKM invocation                   |
+| **_f_**                                           | **Function**       | Defines a reusable function with parameters.                                                   | Reusable calculations, parameterized operations                    |
+| **_if_**                                          | **Conditional**    | Creates branching logic with if-then-else statements.                                          | Conditional logic, different outputs based on conditions           |
+| ![For icon](/images/reference/images/icons/for.svg)              | **For**            | Iterates over items in a list, applying an expression to each.                                 | Transforming collections, iterating through lists                  |
+| ![Every icon](/images/reference/images/icons/every.svg)          | **Every**          | Tests if a condition is true for every item in a collection.                                   | Validation rules for all items, ensuring conditions are met        |
+| ![Some icon](/images/reference/images/icons/some.svg)            | **Some**           | Tests if a condition is true for at least one item in a collection.                            | Finding matching items, checking existence                         |
+| ![Filter icon](/images/reference/images/icons/filter.svg)        | **Filter**         | Filters a collection based on a specified condition.                                           | Extracting subsets, finding specific items                         |
+
+## Detailed Expression Type Examples
+
+### Literal Expression
+
+The simplest expression type in DMN, used for direct values or FEEL expressions.
+
+```python
+Base Premium * 1.2
+```
+
+### Relation
+
+The most widely used DMN expression type, with columns for input conditions and output conclusions.
+
+  | State            | Abbreviation |
+  | ---------------- | ------------ |
+  | "Florida"        | "FL"         |
+  | "North Carolina" | "NC"         |
+  | "New York"       | "NY"         |
+
+### Decision Table
+
+The most widely used DMN expression type, with columns for input conditions and output conclusions.
+
+| U   | Credit Score | Risk Rating |
+| --- | ------------ | ----------- |
+| 1   | >= 700       | "Low"       |
+| 2   | [600..700)   | "Medium"    |
+| 3   | < 600        | "High"      |
+
+### Context
+
+Defines key-value pairs that can be used for multi-step calculations.
+
+```json
+{
+  Base Amount: 100,
+  Tax Rate: 0.07,
+  Tax Amount: Base Amount * Tax Rate,
+  Total: Base Amount + Tax Amount,
+  result: Total
+}
+```
+
+### List
+
+Creates an ordered collection of values or expressions.
+
+```java
+[ "Red", "Green", "Blue" ]
+```
+
+### Invocation
+
+Calls a Business Knowledge Model (BKM) or function.
+
+```java
+Calculate Discount(
+  customer: Customer,
+  order total: Order.total
+)
+```
+
+### Function
+
+Defines a reusable function with parameters.
+
+```python
+function(age, income)
+  if age < 25 then income * 0.1
+  else if age < 65 then income * 0.15
+  else income * 0.05
+```
+
+### Conditional
+
+Creates branching logic with if-then-else statements.
+
+```python
+if
+  Applicant.age >= 18
+then
+  "Eligible"
+else
+  "Not Eligible"
+```
+
+### For Loop
+
+Iterates over items in a list or collection.
+
+```python
+for item in Order.items return item.price * item.quantity
+```
+
+### Every
+
+Tests if a condition is true for every item in a collection.
+
+```python
+every item in Order.items satisfies item.price > 0
+```
+
+### Some
+
+Tests if a condition is true for at least one item.
+
+```python
+some item in Customer.productHistory satisfies item.category = "Premium"
+```
+
+### Filter
+
+Filters a collection based on a condition.
+
+```json
+Order.items[price > 100]
+```
+
+## Hit Policies in Decision Tables
+
+Decision tables use hit policies to determine how rules are applied:
+
+| Symbol | Name            | Description                                                                   |
+| ------ | --------------- | ----------------------------------------------------------------------------- |
+| **U**  | Unique          | Each row must be unique and only one rule can match (most common)             |
+| **A**  | Any             | Multiple rules can match but must return the same output                      |
+| **P**  | Priority        | Multiple rules can match, but the output of the first matching rule is used   |
+| **F**  | First           | Multiple rules can match, but the first matching rule (by rule order) is used |
+| **C**  | Collect         | Multiple rules can match and all are collected                                |
+| **C+** | Collect (Sum)   | Collects and sums numeric results                                             |
+| **C<** | Collect (Min)   | Collects and returns the minimum value                                        |
+| **C>** | Collect (Max)   | Collects and returns the maximum value                                        |
+| **C#** | Collect (Count) | Counts the number of matching rules                                           |
+
+## FEEL Operators and Functions
+
+When writing expressions, you'll often use FEEL operators and functions:
+
+### Comparison Operators
+
+- `=`, `!=`: Equal, not equal
+- `>`, `<`, `>=`, `<=`: Greater than, less than, etc.
+- `[..], (..)`: Inclusive and exclusive ranges (e.g., `[5..10]`)
+
+### Logical Operators
+
+- `and`, `or`, `not`: Logical operators
+
+### Collection Operators
+
+- `in`: Membership test (e.g., `x in [1,2,3]`)
+- `satisfies`: Test if collection elements meet a condition
+
+### Common Functions
+
+- `count(collection)`: Count elements
+- `sum(collection)`: Sum numeric values
+- `min(collection)`, `max(collection)`: Find minimum/maximum
+- `substring(string, start, length)`: Extract substring
+- `contains(collection, element)`: Test for element
+- `list contains(collection, element)`: Test if list contains element
+
+## Combining Expression Types
+
+DMN's power comes from combining these expression types to create sophisticated decision logic. For example:
+
+```python
+{
+  High Value Items: Order.items[price > 100],
+  Discount Eligible: some i in High Value Items satisfies i.category = "Electronics",
+  Discount Rate: if Discount Eligible then 0.15 else 0.05,
+  Discount Amount: sum(for i in Order.items return i.price * i.quantity) * Discount Rate,
+  result: Discount Amount
+}
+```
+
+This context expression combines filtering, some, conditional, for loop, and mathematical operations to calculate a discount based on complex criteria.

@@ -1,0 +1,234 @@
+---
+title: "Error Messages for DRL Troubleshooting"
+description: "Aletyx Enterprise Build of Drools provides standardized messages for DRL errors to help you troubleshoot and resolve problems in your DRL files. The error messages provided with some of the..."
+---
+Aletyx Enterprise Build of Drools provides standardized messages for DRL errors to help you troubleshoot and resolve problems in your DRL files. The error messages provided with some of the examples included in this section are designed to help you locate and resolve your issue.
+
+There are four main types of error codes that will be found within this section and multiple may apply in a single file at any given time.
+
+## The Error Codes
+
+
+### Drools Parsing Errors: Understanding Common Issues
+
+When working with Drools, parsing errors can be tricky. Below is a table of common errors, what they mean, and how to resolve them.
+
+| **Error Code** | **Error Name**             | **What It Means**                                                                   | **Common Causes**                                                                                    | **How to Fix It**                                                                                   |
+| -------------- | -------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **101**        | **No Viable Alternative**  | The parser reached a decision point but couldn’t determine a valid option.          | - Misspelled keywords (e.g., `rul` instead of `rule`) <br> - Incorrect syntax order                  | - Double-check spelling and syntax <br> - Use a Drools LSP plugin to highlight syntax issues        |
+| **102**        | **Mismatched Input**       | Drools expected a specific character or token, but found something else instead.    | - Missing or extra symbols like `]`, `}` or `;` <br> - Unexpected data type                          | - Ensure proper closing brackets <br> - Verify the expected input at that location                  |
+| **103**        | **Failed Predicate**       | A condition within Drools' internal validation rules was not met.                   | - Using `declare`, `rule`, `exists`, or `not` incorrectly <br> - Rule constraints failing validation | - Review how predicates are used in your rule <br> - Check Drools documentation for correct syntax  |
+| **105**        | **Did Not Match Anything** | The parser reached a required section in the grammar, but no valid match was found. | - An empty or incorrect rule block <br> - Misuse of conditional constructs                           | - Ensure every rule has a valid structure <br> - Use logging/debugging to track where parsing fails |
+
+
+## DRL Error Structure Visualization Methods
+
+```java
+rule "error test rule"
+when
+    WorkerPerformanceContext(
+        department == "Engineering",
+        rating > 3,
+        yearsOfService > 5)
+    exists(Employee(department == $department))
+then
+    System.out.println("High performer identified");
+end
+```
+
+Let's breakdown the structure of a Drools Rules Language (DRL) error as understanding how they are presented so that we can solve the problem.
+
+Let's first look at this line in  a log from a rule we wrote
+
+``` log
+[ERR 101] Line 6:35 no viable alternative at input ')' in rule
+'error test rule' in pattern WorkerPerformanceContext
+```
+
+
+```
++-------------+  +------------+  +-----------------------------+  +---------------------+  +--------------------------------+
+| [ERR 101]   |  | Line 6:35  |  | no viable alternative       |  | in rule             |  | in pattern                     |
+| Error code  |  | Location   |  | at input ')'                |  | 'test rule'         |  | WorkerPerformanceContext       |
+| 1st Block   |  | 2nd Block  |  | Description - 3rd Block     |  | Component-4th Block |  | Pattern - 5th Block            |
++-------------+  +------------+  +-----------------------------+  +---------------------+  +--------------------------------+
+```
+
+| Block         | Example Value                         | Component                  | Description                                                      |
+| ------------- | ------------------------------------- | -------------------------- | ---------------------------------------------------------------- |
+| **1st Block** | `[ERR101]`                            | **Error Code**             | Identifies the specific type of error, in this case Error 101    |
+| **2nd Block** | `Line 6:35`                           | **Line Number and Column** | Exact location in the DRL source where the error occurred begins |
+| **3rd Block** | `no viable alternative at input ')'`  | **Description**            | Explains what caused the error                                   |
+| **4th Block** | `in rule 'test rule'`                 | **Component**              | Identifies which rule, function, or query contains the error     |
+| **5th Block** | `in pattern WorkerPerformanceContext` | **Pattern**                | Specifies the pattern where the error occurred (if applicable)   |
+
+
+-   **1st Block:** Error code
+
+-   **2nd Block:** Line and column in the DRL source where the error
+    occurred
+
+-   **3rd Block:** Description of the problem
+
+-   **4th Block:** Component in the DRL source (rule, function, query)
+    where the error occurred
+
+-   **5th Block:** Pattern in the DRL source where the error occurred
+    (if applicable)
+
+
+## Spelling Issue - No Viable Alternative
+
+**Example rule with incorrect spelling.**
+
+   ```java
+   1: rule "simple rule"
+   2:   when
+   3:     exists /persons
+   4:     exits /students  // (1)
+   5:   then
+   6: end
+
+   ```
+
+   1. `Exists` is spelt wrong and is `exits` so the rule talks Must be `exists`.
+
+   ```log
+    [ERR 101] Line 4:4 no viable alternative at input 'exits' in rule "simple rule"
+   ```
+
+**Error message.**
+
+```log
+    [ERR 101] Line 4:4 no viable alternative at input 'exits' in rule "simple rule"
+```
+
+## Rule without a Name
+
+**Example rule without a rule name.**
+
+   ```java
+   1: package org.drools.examples;
+   2: rule    // (1)
+   3:   when
+   4:     Object()
+   5:   then
+   6:     System.out.println("A RHS");
+   7: end
+   ```
+
+   1. Must be `rule "rule name"` (or `rule rule_name` if no spacing). There is a requirement of a rule name to be present.
+
+**Error message.**
+
+```log
+
+    [ERR 101] Line 3:2 no viable alternative at input 'when'
+```
+
+In this example, the parser encountered the keyword `when` but expected the rule name, so it flags `when` as the incorrect expected token.
+
+## Incorrect Syntax Usage
+
+**Example rule with incorrect syntax**
+
+
+   1. This is missing a closing quotation on the `Andy` parameter.
+
+   ```java
+   1: rule "simple rule"
+   2:    when // (1)
+   3:       /students[ name == "Andy ]
+   4:    then
+   5: end
+   ```
+
+   1. This is missing a closing quotation on the `Andy` parameter.
+
+**Error message.**
+
+    [ERR 102] Line 0:-1 no viable alternative at input '<eof>' in rule "simple rule" in pattern student
+
+A line and column value of `0:-1` means the parser reached the end of the source file (`<eof>`) but encountered incomplete constructs, usually due to missing quotation marks `"…​"`, apostrophes `'…​'`, or parentheses `(…​)`.
+
+102: mismatched input
+Indicates that the parser expected a particular symbol that is missing at the current input position.
+
+## Incomplete Rule Statement
+
+**Example rule with an incomplete rule statement.**
+
+    1: rule "simple rule"
+    2:   when
+    3:     $p : /persons[
+            // Must be a complete rule statement
+
+**Error message.**
+
+    [ERR 102] Line 0:-1 mismatched input '<eof>' expecting ']' in rule "simple rule" in pattern person
+
+A line and column value of `0:-1` means the parser reached the end of the source file (`<eof>`) but encountered incomplete constructs, usually due to missing quotation marks `"…​"`, apostrophes `'…​'`, or parentheses `(…​)`.
+
+**Example rule with incorrect syntax.**
+
+   ```java
+    1: package org.drools.examples;
+    2:
+    3: rule "Product Pricing Check"
+    4: when
+    5:     not /products[ (category == "electronics", price < 500) //(1)
+	6:                      || (category == "furniture", price < 200) ]
+    7: then
+    8: System.out.println("All products properly priced according to minimum pricing policy");
+    9: end
+   ```
+
+   1. Must use `&&` operators instead of commas `,`
+
+**Error messages.**
+
+    [ERR 102] Line 5:36 mismatched input ',' expecting ')' in rule "Wrong syntax" in pattern car
+    [ERR 101] Line 5:57 no viable alternative at input 'type' in rule "Wrong syntax"
+    [ERR 102] Line 5:106 mismatched input ']' expecting 'then' in rule "Wrong syntax"
+
+In this example, the syntactic problem results in multiple error messages related to each other. The single solution of replacing the commas `,` with `&&` operators resolves all errors. If you encounter multiple errors, resolve one at a time in case errors are consequences of previous errors.
+
+103: failed predicate
+Indicates that a validating semantic predicate evaluated to `false`.
+These semantic predicates are typically used to identify component
+keywords in DRL files, such as `declare`, `rule`, `exists`, `not`, and
+others.
+
+## Invalid Keyword
+
+**Example rule with an invalid keyword.**
+
+   ```java
+   1: package nesting;
+   2:
+   3: import org.drools.compiler.Person
+   4: import org.drools.compiler.Address
+   5:
+   6: Some text
+   7: // (1)
+   8: rule "test something"
+   9:   when
+   10:     $p: /persons[ name=="Michael" ]
+   11:   then
+   12:     $p.name = "other";
+   13:     System.out.println(p.name);
+   14: end
+   ```
+
+   1. Must be a valid DRL keyword
+
+**Error message.**
+
+    [ERR 103] Line 6:0 rule 'rule_key' failed predicate: (validateIdentifierKey(DroolsSoftKeywords.RULE))? in rule
+
+The `Some text` line is invalid because it does not begin with or is not a part of a DRL keyword construct, so the parser fails to validate the rest of the DRL file.
+
+This error is similar to `102: mismatched input`, but usually involves DRL keywords.
+
+105: did not match anything
+Indicates that the parser reached a sub-rule in the grammar that must match an alternative at least once, but the sub-rule did not match anything. The parser has entered a branch with no way out.

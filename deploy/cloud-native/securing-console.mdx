@@ -1,0 +1,255 @@
+---
+title: "Securing Intelligent Process Orchestrations - API Endpoints"
+description: "This guide will walk you through the process of securing your Intelligent Process Orchestrations API endpoints when building your Intelligent Process Orchestrations. We'll cover authentication and..."
+---
+## Introduction
+
+This guide will walk you through the process of securing your Intelligent Process Orchestrations API endpoints when building your Intelligent Process Orchestrations. We'll cover authentication and authorization concepts in an easy-to-follow format, with the example focused on Quarkus.
+
+## Why Security Matters
+
+Before diving into implementation details, it's important to understand why securing your API endpoints is critical:
+
+- **Protect sensitive business data**: Without proper security, your workflow data might be exposed
+- **Ensure proper access control**: Different users need different levels of access
+- **Enable user-specific workflow tasks**: User Tasks in stateful Workflows require knowing who's who
+- **Meet compliance requirements**: Many industries require specific security standards
+
+## Architectural Overview
+
+When securing Intelligent Process Orchestrations APIs, the typical architecture involves:
+
+1. **Your Intelligent Process Orchestrations** - Built using Quarkus or Spring Boot
+1. **External Identity Provider (IdP)** - Such as Keycloak or other Open ID Connect (OIDC) Providers
+1. **Management Console** - Which needs to connect to your secured workflow services
+
+The diagram below illustrates a typical setup:
+
+```mermaid
+graph LR
+    A["Management Console"] -->|"access"| B["Your Intelligent Workflow"]
+    B <-->|"authenticate"| C["Identity Provider"]
+```
+
+## Authentication With Quarkus
+
+Authentication verifies a user's identity. Here's how to implement it within Quarkus:
+
+### Step 1: Add Required Dependencies
+
+First, add the OpenID Connect (OIDC) extension (`quarkus-oidc`) to your `pom.xml`:
+
+```xml
+<dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-oidc</artifactId>
+</dependency>
+```
+
+### Step 2: Configure Authentication
+
+Create or update your `src/main/resources/application.properties` file with OIDC settings:
+
+```java
+# Enable OIDC authentication
+quarkus.oidc.enabled=true
+quarkus.oidc.tenant-enabled=true
+
+# Configure your Identity Provider
+quarkus.oidc.auth-server-url=http://localhost:8280/auth/realms/workflow
+quarkus.oidc.client-id=my-workflow-service
+quarkus.oidc.credentials.secret=your-secret-key-here
+
+# Important: Set as hybrid to enable Management Console integration
+quarkus.oidc.application-type=hybrid
+```
+
+### Key Property Explanations
+
+| Property                          | Description                                                          | Required? |
+| --------------------------------- | -------------------------------------------------------------------- | --------- |
+| `quarkus.oidc.enabled`            | Turns on OIDC extension                                              | Yes       |
+| `quarkus.oidc.tenant-enabled`     | Enables tenant configuration                                         | Yes       |
+| `quarkus.oidc.auth-server-url`    | Base URL of your OIDC server                                         | Yes       |
+| `quarkus.oidc.client-id`          | Client ID registered with your Identity Provider                     | Yes       |
+| `quarkus.oidc.credentials.secret` | Client secret for authentication from the authentication provider    | Yes       |
+| `quarkus.oidc.application-type`   | Application type (use "hybrid" for Management Console compatibility) | Yes       |
+
+## Authorization With Quarkus
+
+Authorization determines what an authenticated user can do. Here's how to set it up:
+
+### Step 1: Configure Path-Based Authorization
+
+Add these properties to your `application.properties`:
+
+```properties
+# Define secured paths that require authentication (the paths)
+quarkus.http.auth.permission.authenticated.paths=/api/*,/workflows/*
+quarkus.http.auth.permission.authenticated.policy=authenticated
+
+# Define public paths (no authentication needed - publicly available)
+quarkus.http.auth.permission.public.paths=/health,/q/*,/docs/*,/oidc/info
+quarkus.http.auth.permission.public.policy=permit
+```
+
+### Step 2: Add Role-Based Authorization (Optional)
+
+For more granular control, you can specify role-based permissions:
+
+```java
+# Allow only users with "admin" role to access admin endpoints
+quarkus.http.auth.permission.admin.paths=/admin/*
+# */
+quarkus.http.auth.permission.admin.policy=authenticated
+quarkus.http.auth.permission.admin.roles=admin
+
+#  Allow manager-specific endpoints
+quarkus.http.auth.permission.manager.paths=/reports/*
+quarkus.http.auth.permission.manager.policy=authenticated
+quarkus.http.auth.permission.manager.roles=manager
+
+# The format for these will be based on the role */
+quarkus.http.auth.permission.<role>.paths=/
+quarkus.http.auth.permission.<role>.paths=authenticated
+quarkus.http.auth.permission.<role>.roles=<role>
+
+```
+
+### Applying Security in Code
+
+You can also enforce security at the code level using annotations:
+
+```java
+import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+@Path("/workflows")
+public class WorkflowResource {
+
+    @GET
+    @Path("/all")
+    @RolesAllowed({"admin", "manager"})
+    public List<Workflow> getAllWorkflows() {
+        // Only admins and managers can access this
+        return workflowService.getAll();
+    }
+
+    @GET
+    @Path("/my-tasks")
+    public List<Task> getMyTasks() {
+        // Any authenticated user can access this
+        return taskService.getTasksForCurrentUser();
+    }
+}
+```
+
+## Enabling Management Console Connection
+
+For the Management Console to connect to your secured Intelligent Process Orchestrations, follow these steps:
+
+### Step 1: Add OIDC Proxy Extension to your Intelligent Process Orchestrations Proect
+
+Add the `quarkus-oidc-proxy` dependency to your `pom.xml`:
+
+```xml
+<dependency>
+  <groupId>io.quarkiverse.oidc-proxy</groupId>
+  <artifactId>quarkus-oidc-proxy</artifactId>
+  <version>0.1.3</version>
+</dependency>
+```
+
+!!!note
+
+    Version 0.1.3 of quarkus-oidc-proxy is compatible with Quarkus 3.15 (LTS). With Quarkus 3.20 (LTS) 0.2.1 should be compatible and will be the version when Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx is moved to the Quarkus 3.20+ release.
+
+### Step 2: Verify the Configuration
+
+The OIDC Proxy extension will automatically create the required endpoints. Verify it's working by checking:
+
+- The endpoint `/q/oidc/.well-known/openid-configuration` should be accessible
+- It should return information about your Identity Provider
+
+### Step 3: Test Your Connection
+
+From the Management Console, try connecting to your Intelligent Process Orchestrations using:
+
+1. The service URL (e.g. local deployment is at `http://localhost:8080/q)
+2. Valid credentials from your Identity Provider
+
+
+## Troubleshooting Common Issues
+
+### CORS Configuration
+
+If you have frontend applications accessing your APIs, you'll need proper CORS configuration:
+
+#### Quarkus CORS Config
+
+```properties
+quarkus.http.cors=true
+quarkus.http.cors.origins=http://localhost:8080,http://localhost:3000
+quarkus.http.cors.methods=GET,POST,PUT,DELETE
+quarkus.http.cors.headers=Content-Type,Authorization
+quarkus.http.cors.exposed-headers=Content-Disposition
+quarkus.http.cors.access-control-max-age=24H
+quarkus.http.cors.access-control-allow-credentials=true
+```
+
+#### Spring Boot CORS Config
+
+```java
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            .allowedOrigins("http://localhost:8080", "http://localhost:3000")
+            .allowedMethods("GET", "POST", "PUT", "DELETE")
+            .allowedHeaders("Content-Type", "Authorization")
+            .exposedHeaders("Content-Disposition")
+            .allowCredentials(true)
+            .maxAge(3600);
+    }
+}
+```
+
+### Common Error Resolution
+
+Here are some common errors and their solutions:
+
+1. **401 Unauthorized** - Check your client credentials and OIDC server URL
+2. **403 Forbidden** - User is authenticated but lacks required roles
+3. **CORS errors** - Verify your CORS configuration includes all needed origins
+4. **Invalid token format** - Ensure JWT token format matches IdP expectations
+5. **Management Console can't connect** - Verify OIDC proxy is working correctly
+
+## Security Best Practices
+
+When implementing API security, follow these best practices:
+
+1. **Use HTTPS everywhere** - All API communications should be encrypted
+2. **Implement token validation** - Verify tokens haven't been tampered with
+3. **Set appropriate token lifetimes** - Balance security with user experience
+4. **Use specific scopes** - Don't request more permissions than needed
+5. **Implement rate limiting** - Prevent brute force attacks
+6. **Log security events** - Track authentication failures and suspicious activities
+7. **Regular security testing** - Test your APIs for vulnerabilities
+
+## Next Steps
+
+Now that you've secured your API endpoints, consider exploring:
+
+- **Multiple Identity Providers** - Supporting more than one IdP
+- **Custom Authentication Logic** - For special business requirements
+- **Fine-grained authorization** - Beyond simple role-based access
+- **Security monitoring and alerting** - For proactive security management
+
+## Conclusion
+
+Securing your Intelligent Process Orchestrations API endpoints is essential for robust workflow and business process automation. By implementing proper authentication and authorization, you protect your data while enabling the right users to perform the right actions.
+
+Remember that security is an ongoing process. Regularly review and update your security configurations as your application and security requirements evolve.

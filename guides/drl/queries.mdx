@@ -1,0 +1,313 @@
+---
+title: "Query System in Aletyx Enterprise Build of Drools"
+description: "The Query system in Aletyx Enterprise Build of Drools provides a powerful mechanism for extracting and analyzing data from the rule engine. Queries allow developers to retrieve facts from working..."
+---
+## Introduction to Drools Queries
+
+The Query system in Aletyx Enterprise Build of Drools provides a powerful mechanism for extracting and analyzing data from the rule engine. Queries allow developers to retrieve facts from working memory that match specific conditions, without executing actions on those facts. In the context of Rule Units, queries become even more powerful as they can be scoped to specific rule units.
+
+Queries function as a bridge between the rule engine and the application, enabling a more interactive approach to working with the knowledge base.
+
+## Traditional Queries vs. Rule Unit Queries
+
+Aletyx Enterprise Build of Drools supports two types of query approaches:
+
+### Traditional Queries
+
+Traditional queries operate on the global working memory and are not attached to any specific rule unit:
+
+```java
+package org.example;
+
+import org.example.Customer;
+import org.example.Account;
+
+query "FindPremiumCustomers"
+    $customer: Customer(status == "premium")
+    $account: Account(customerId == $customer.id, balance > 10000)
+end
+```
+
+### Rule Unit Queries
+
+Rule Unit queries are scoped to a specific Rule Unit and operate only on the data sources within that unit:
+
+```java
+package org.example;
+
+unit CustomerRuleUnit;
+
+import org.example.Customer;
+import org.example.Account;
+
+query "FindPremiumCustomers"
+    $customer: /customers[status == "premium"]
+    $account: /accounts[customerId == $customer.id, balance > 10000]
+end
+```
+
+Note the key differences:
+
+- The `unit` declaration at the top
+- The OOPath-like syntax (`/customers[...]`) for accessing data sources
+
+## Query Definition
+
+### Basic Structure
+
+A query definition consists of:
+
+1. A unique name
+2. Optional parameters
+3. A set of patterns to match against facts
+4. For Rule Unit queries, reference to the specific Rule Unit
+
+```java
+query "QueryName" (Type1 param1, Type2 param2, ...)
+    // Patterns to match facts
+end
+```
+
+### Pattern Matching in Queries
+
+Queries use the same pattern matching syntax as rules, allowing for complex conditions and constraints:
+
+```java
+query "ComplexPatternQuery"
+    // Simple pattern
+    $customer: Customer(age > 21)
+
+    // Pattern with multiple constraints
+    $account: Account(
+        customerId == $customer.id,
+        status != "closed",
+        balance > 1000
+    )
+
+    // Pattern with nested property access
+    $order: Order(
+        customer.id == $customer.id,
+        items.size > 0,
+        total > 100
+    )
+end
+```
+
+### Parameters in Queries
+
+Queries can accept parameters, making them more flexible and reusable:
+
+```java
+query "FindCustomersByAgeRange" (int minAge, int maxAge)
+    $customer: Customer(age >= minAge, age <= maxAge)
+end
+```
+
+In Rule Units, these parameters are used similarly:
+
+```java
+query "FindCustomersByAgeRange" (int minAge, int maxAge)
+    $customer: /customers[age >= minAge, age <= maxAge]
+end
+```
+
+## Executing Queries
+
+### In Traditional Drools Applications
+
+```java
+KieSession kieSession = kieContainer.newKieSession();
+// Insert facts
+kieSession.insert(new Customer("C1", "John", 30, "regular"));
+kieSession.insert(new Customer("C2", "Mary", 25, "premium"));
+
+// Execute query without parameters
+QueryResults results = kieSession.getQueryResults("FindPremiumCustomers");
+
+// Execute query with parameters
+QueryResults ageResults = kieSession.getQueryResults("FindCustomersByAgeRange", 18, 25);
+
+// Process results
+for (QueryResultsRow row : results) {
+    Customer customer = (Customer) row.get("$customer");
+    Account account = (Account) row.get("$account");
+    System.out.println(customer.getName() + " has balance: " + account.getBalance());
+}
+```
+
+### In Rule Unit Applications
+
+```java
+// Create and populate Rule Unit
+CustomerRuleUnit customerUnit = new CustomerRuleUnit();
+customerUnit.getCustomers().insert(new Customer("C1", "John", 30, "regular"));
+customerUnit.getCustomers().insert(new Customer("C2", "Mary", 25, "premium"));
+customerUnit.getAccounts().insert(new Account("A1", "C1", 20000));
+customerUnit.getAccounts().insert(new Account("A2", "C2", 15000));
+
+// Create Rule Unit Executor
+RuleUnitExecutor executor = RuleUnitExecutor.create().bind(kieContainer);
+
+// Execute query without parameters
+QueryResults results = executor.run(customerUnit, "FindPremiumCustomers");
+
+// Execute query with parameters
+QueryResults ageResults = executor.run(customerUnit, "FindCustomersByAgeRange", 18, 25);
+
+// Process results (same as traditional)
+for (QueryResultsRow row : results) {
+    Customer customer = (Customer) row.get("$customer");
+    Account account = (Account) row.get("$account");
+    System.out.println(customer.getName() + " has balance: " + account.getBalance());
+}
+```
+
+## Advanced Query Features
+
+### Nested Queries
+
+Queries can reference other queries, allowing for composition and reuse:
+
+```java
+query "ActiveCustomers"
+    $customer: /customers[status == "active"]
+end
+
+query "PremiumActiveCustomers"
+    ActiveCustomers($customer;)
+    /accounts[customerId == $customer.id, balance > 10000]
+end
+```
+
+The syntax `ActiveCustomers($customer;)` passes the `$customer` variable from the nested query to the outer query.
+
+### Backward Chaining
+
+Aletyx Enterprise Build of Drools queries support backward chaining, a reasoning technique where the system works backward from a goal:
+
+```java
+query "ParentOf" (String parent, String child)
+    Person(name == parent, children contains child)
+    or
+    (Person(name == parent, children contains $mid)
+     and ParentOf($mid, child;))
+end
+```
+
+This recursive query finds if a person is a parent of another person either directly or through multiple generations.
+
+### Unification
+
+Queries support variable unification, allowing for more concise expressions:
+
+```java
+query "FindAccountsForCustomer" (String customerId)
+    $account: /accounts[customerId == customerId]
+end
+```
+
+In this example, the parameter `customerId` is unified with the property access `customerId` in the pattern.
+
+## Live Queries
+
+Live Queries extend the query capability with real-time updates when matching facts change:
+
+```java
+// Execute live query
+LiveQuery liveQuery = kieSession.openLiveQuery("FindPremiumCustomers",
+    new Object[]{}, new ViewChangedEventListener() {
+        @Override
+        public void rowInserted(Row row) {
+            Customer customer = (Customer) row.get("$customer");
+            System.out.println("New premium customer: " + customer.getName());
+        }
+
+        @Override
+        public void rowDeleted(Row row) {
+            Customer customer = (Customer) row.get("$customer");
+            System.out.println("No longer premium: " + customer.getName());
+        }
+
+        @Override
+        public void rowUpdated(Row oldRow, Row newRow) {
+            // Handle updates
+        }
+    });
+
+// When done with live query
+liveQuery.close();
+```
+
+Live queries are particularly useful for:
+
+- Building reactive user interfaces
+- Maintaining real-time dashboards
+- Monitoring systems
+
+## Query-based Rules
+
+Queries can be used within rule conditions to create more modular and reusable rule structures:
+
+```java
+rule "Apply Premium Discount"
+when
+    FindPremiumCustomers($customer;)
+    $order: Order(customerId == $customer.id, status == "new")
+then
+    $order.applyDiscount(0.1);
+    update($order);
+end
+```
+
+This approach allows for separating the condition logic (in queries) from the action logic (in rules).
+
+## Best Practices for Queries
+
+1. **Name Queries Appropriately**: Use clear, descriptive names that indicate what the query retrieves.
+
+2. **Parameterize When Possible**: Use parameters to make queries more reusable.
+
+3. **Keep Queries Focused**: Design queries with a single, clear purpose.
+
+4. **Consider Performance**: Be mindful of the complexity of query patterns, especially with large fact bases.
+
+5. **Manage Variable Binding**: Be consistent with variable naming to avoid confusion.
+
+6. **Document Complex Queries**: Add comments to explain the purpose and logic of complex queries.
+
+7. **Test Queries Individually**: Create dedicated tests for each query to verify they return the expected results.
+
+## Troubleshooting Queries
+
+| Issue                         | Possible Cause                           | Solution                                                  |
+| ----------------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| Empty query results           | No facts match the conditions            | Verify conditions and check if facts have been inserted   |
+| ClassCastException            | Incorrect variable types in results      | Check that the retrieved objects match the expected types |
+| Query not found               | Incorrect query name or package          | Verify the query name and package declaration             |
+| Parameter type mismatch       | Passing parameters of wrong type         | Check parameter types in the query definition             |
+| Unexpected infinite recursion | Recursive query without proper base case | Ensure recursive queries have termination conditions      |
+
+## Query Performance Considerations
+
+1. **Indexing**: Aletyx Enterprise Build of Drools automatically creates indexes for some constraints. Position the most selective constraints first in patterns.
+
+2. **Query Complexity**: Complex queries with many joins can be expensive. Consider breaking them into simpler queries if possible.
+
+3. **Data Volume**: Be cautious with queries that might return large result sets.
+
+4. **Live Queries**: Live queries have additional overhead. Use them only when necessary.
+
+## Integration with External Systems
+
+Queries provide an excellent interface for integrating Aletyx Enterprise Build of Drools with external systems:
+
+- **Databases**: Use queries to retrieve rule engine data for storage
+- **APIs**: Expose queries as service endpoints
+- **User Interfaces**: Power UI components with query results
+- **Reporting Systems**: Feed business intelligence tools with query data
+
+## Conclusion
+
+The Query system in Aletyx Enterprise Build of Drools provides a powerful mechanism for extracting and analyzing data from the rule engine. When combined with Rule Units, queries become even more effective as they can be scoped to specific domains and data sources.
+
+Mastering queries allows developers to build more interactive, dynamic, and data-driven rule-based applications. Whether used for simple data retrieval or complex pattern matching with backward chaining, queries enhance the flexibility and utility of the Aletyx Enterprise Build of Drools rule engine.

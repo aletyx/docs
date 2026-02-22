@@ -1,0 +1,411 @@
+---
+title: "DMN Structure for Travel Insurance"
+description: "After mastering the basics of DMN, you're ready to explore more advanced modeling techniques. This guide builds on your foundation to help you create sophisticated decision models that can handle..."
+---
+## Overview
+
+After mastering the basics of DMN, you're ready to explore more advanced modeling techniques. This guide builds on your foundation to help you create sophisticated decision models that can handle complex business scenarios.
+
+We'll cover advanced features like Business Knowledge Models (BKMs), complex data types, list operations, and context expressions. Throughout this guide, we'll use a travel insurance pricing example to illustrate these concepts.
+
+This guide describes the Decision Model & Notation (DMN) structure that could be used as a basis for assessing travel insurance premiums based on traveler details, trip details, and associated risks with their locations and medical conditions.
+
+### The Business Problem to be Solved
+
+In this decision, the company has a few factors that impact how much the insurance premium will be for the customer looking to go on a trip. There are a few factors that impact this, there's a base price of the premium itself, we will look at claims that have been done by this person, a medical condition assessment and a destination risk factor. After gathering these sub-decisions, we will build a final price for the premium for the trip.
+
+## Walkthrough of the Decision Building
+
+Let's break down the process of building out this travel insurance decision model:
+
+### Identify the main decision and sub-factors
+
+- The main decision is calculating the **Final Premium**
+- We've also identified four key sub-factors that feed into this:
+    - Base Premium by Age
+    - Claims Assessment
+    - Medical Condition Assessment
+    - Destination Risk Factor
+
+This aligns with the DMN principle of breaking down complex decisions into smaller, modular sub-decisions. As we saw in this guide, the top-down approach allows all of the components to be operated and built separately.
+
+### Start at the End!
+
+With DMN, the best way to model a decision is with the final question to be answered at the top. This aligns with the Top-Down design approach. While it will be mapped first, it will be the last decision we will ultimately build, which is the [Final Premium](#final-premium):
+
+- Combine the outputs of the four sub-decisions
+- Uses a simple mathematical formula
+- Demonstrates how modular decisions can be composed
+
+### Start Mapping Out Each Decision
+
+- [Base Premium](#base-premium-decision-table): A simple decision table mapping age ranges to base premium amounts. Uses Unique hit policy since each age maps to one premium.
+- [Claims Assessment](#claims-assessment): Filters the claim history to only consider approved claims. Uses Collect Max to return highest value. Demonstrates filtering arrays and using ?-notation.
+- [Medical Assessment](#medical-risk): Evaluates medical conditions list against condition severity tiers. Shows iterating over lists in decision tables.
+- [Destination Risk](#destination-risk-factor): Here we use a Business Knowledge Model (BKM) to encapsulate the logic for determining country risk level based on a predefined mapping. The decision table then looks up the highest risk among all countries on the trip.
+
+Business Knowledge Models are great for reusable logic, complex calculations and integrating with external data.
+
+### Putting it Together - The Final Premium
+
+Last decision we will need to do is build the [Final Premium](#5-final-premium):
+
+- Combine the outputs of the four sub-decisions
+- Uses a simple mathematical formula
+- Demonstrates how modular decisions can be composed
+
+### Key Concepts to be Showcased
+
+This example will showcase several key DMN concepts:
+
+- Structuring decisions into sub-decisions
+- Input data mapping
+- Hit policies (Unique, Collect Max)
+- Filtering and iterating over lists
+- Using BKMs for complex logic
+- Composing decisions together
+
+## Working with Complex Data Types
+
+Real-world decisions often require more complex data than a simple flat model with just numbers and strings. DMN allows you to define custom data structures to model your business domain accurately. In this case we're going to build a DMN model for a travel insurance situation for someone building an itinerary to travel to potentially multiple countries and we want to determine how much it will cost to give that person a travel insurance policy. The factors that will be discussed in the next section focused on [Creating Custom Data Types](#creating-custom-data-types).
+
+## Creating the Input Data Structure with Custom Data Types
+
+In our travel insurance example we are going to be looking at building a both a traveler and the trip details as complex data objects:
+
+- [Traveler](#creating-traveler-in-the-data-types):
+    - age (number)
+    - claim history (collection of a claim structure)
+    - medical conditions (string collection)
+- [Trip Details](#creating-the-trip-data-type):
+    - countries (string collection)
+    - start date (date)
+    - end date (date)
+
+Mapping out the data model is crucial in DMN, as these become the _Input Data_ nodes that feed into the decision logic. That said, it does not have to be the very first step as you can start mapping out your decision and then do the model. This is the benefit of the capabilities of the Top-Down Design that DMN enables.
+
+### Creating the Data Types in Aletyx Playground
+
+Here's how to create these data structures:
+
+1. Navigate to [Aletyx Playground](https://playground.aletyx.ai) in your browser
+2. From the landing page, click **New Decision** to create a new DMN model
+3. You'll be presented with an empty DMN model editor. This is where we'll design our decision model
+4. First, change the name of the model from "Untitled" to "travelPremium"
+5. In Aletyx Playground, open the properties panel (press "i" with nothing selected)
+6. Click on "Data Types"
+7. Click "Add" to create a new data type
+
+### Creating Traveler in the Data Types
+
+| Property           | Type   | Is Collection |
+| ------------------ | ------ | ------------- |
+| age                | number | no            |
+| claim history      | Claim  | yes           |
+| medical conditions | string | yes           |
+| tDate              | date   | no            |
+
+   ![Traveler Data Model](/images/guides/examples/dmn/images/traveler-data-model.png)
+
+### Create a Claim Structure
+
+For the claim structure you need to create 4 different properties as outlined in the table. If you add an Enumeration to the **claim history** it will help facilitate an easier implementation of the decisions.
+
+| Property           | Type   | Is Collection | Constraints (Enumeration for Allowed Values) |
+| ------------------ | ------ | ------------- | -------------------------------------------- |
+| total claim amount | number | no            |                                              |
+| status             | string | no            | Approved, Denied, Pending                    |
+| tDate              | date   | no            |                                              |
+
+![Claim Data Model](/images/guides/examples/dmn/images/claim-data-model.png)
+
+<Warning title="Warning">
+
+You will notice that Date above is prefixed as tDate, this is not a typo in the documentation, but because `Date/date` is a reserved word in DMN, you cannot use it as a variable name. For reference, please refer to our reference on [DMN](/reference/dmn/reserved-words)
+</Warning>
+### Creating the Trip Data Type
+
+When building the model for the Trip Details, the dates could be used for start and end of the trip and for further enhancement in the decisions. The country list being a collection allows for multiple countries to be added to the data payload so that multiple can be evaluated against.
+
+| Property   | Type   | Is Collection |
+| ---------- | ------ | ------------- |
+| country    | string | yes           |
+| start date | date   | no            |
+| end date   | date   | no            |
+
+![Trip Details Data Model](/images/guides/examples/dmn/images/trip-details-model.png)
+
+## Using Complex Types in Decision Models
+
+Once defined, you can use these types for Input Data nodes:
+
+1. Create an Input Data node named "Traveler"
+2. Set its data type to "Traveler"
+3. Create an Input Data node named "Trip Details"
+4. Set its data type to "Trip Details"
+
+Now your decisions can reference properties of these complex types using dot notation:
+
+- `Traveler.age`
+- `Traveler.medical conditions`
+- `Trip Details.country`
+
+## Decision Nodes Logic
+
+### Base Premium (Decision Table)
+
+**Hit Policy: U (Unique)**
+
+| Age      | Base Premium | Annotation          |
+| :------- | :----------- | :------------------ |
+| <25      | 75           | "Younger than 25"   |
+| [25..65] | 50           | "Between 25 and 65" |
+| >65      | 100          | "Older than 65"     |
+
+![Base Premium](/images/guides/examples/dmn/images/base-premium.png)
+
+### Claims Assessment
+
+**Hit Policy C> (Collect Max)**
+
+| Traveler.claim history[status="Approved"] (claim) | Claims Assessment (number) | Annotations                                                 |
+| :------------------------------------------------ | :------------------------- | :---------------------------------------------------------- |
+| count(?)=0                                        | 0.9                        | "No claims gets a 10% discount"                             |
+| count(?) <= 2                                     | 1.1                        | "Claims with value greater than 1000 has 30% premium added" |
+| sum(?.total claim amount)>1000                    | 1.4                        | "Claims with value greater than 1000 has 30% premium added" |
+| count(?) > 2                                      | 1.3                        | "More than 2 claims have been previously approved"          |
+| -                                                 | 1                          | "Otherwise condition"                                       |
+
+![Claims Assessment](/images/guides/examples/dmn/images/claims-assessment.png)
+
+### Medical Assessment
+
+| Traveler.medical conditions (string)                                                | Medical Condition Assessment (number) | Annotations                    |
+| :---------------------------------------------------------------------------------- | :------------------------------------ | :----------------------------- |
+| some condition in ? satisfies list contains(["heart disease", "cancer"], condition) | 2                                     | "Heart disease or cancer Risk" |
+| some condition in ? satisfies list contains(["diabetes", "asthma"], condition)      | 1.5                                   | "Diabetes or Asthma Risk"      |
+| some condition in ? satisfies list contains(["high blood pressure"], condition)     | 1.2                                   | "High Blood Pressure Risk"     |
+| -                                                                                   | 1                                     | "Otherwise"                    |
+
+![Medical Assessment](/images/guides/examples/dmn/images/medical-assessment.png)
+
+### Country Risk Level BKM
+
+First, we need to build our BKM. This is done by creating a BKM Function with the type FEEL. The function will be called Country Risk Level of type String and has a parameter country of type string.
+
+Then you will create a Decision Table attached to it with the following parameters for it.
+
+| country (string) | Country Risk Level (string) | Annotations    |
+| :--------------- | :-------------------------- | :------------- |
+| "Brazil"         | "Medium"                    | // Medium Risk |
+| "Iraq"           | "High"                      | // High Risk   |
+| "Somalia"        | "High"                      | // High Risk   |
+| "Afghanistan"    | "High"                      | // High Risk   |
+| "Syria"          | "High"                      | // High Risk   |
+| "Libya"          | "High"                      | // High Risk   |
+| "South Sudan"    | "High"                      | // High Risk   |
+| "North Korea"    | "High"                      | // High Risk   |
+| "Venezuela"      | "High"                      | // High Risk   |
+| "Mexico"         | "Medium"                    | // Medium Risk |
+| "Egypt"          | "Medium"                    | // Medium Risk |
+| "Nigeria"        | "Medium"                    | // Medium Risk |
+| "Pakistan"       | "Medium"                    | // Medium Risk |
+| -                | "Low"                       | // Low Risk    |
+
+![Destination Risk Factor](/images/guides/examples/dmn/images/destination-risk-factor.png)
+
+#### Country Risk Assessment BKM
+
+The way we would approach this in typical approaches would be to do something like the following in pseudocode:
+
+    ```java
+    function checkCountryRisk(countries) {
+
+        high risk countries: [
+            "Afghanistan", "Syria", "Iraq", "Yemen",
+            "Libya", "Somalia", "South Sudan"
+        ],
+
+        medium risk countries: [
+            "Brazil", "Mexico", "Egypt", "Indonesia",
+            "Nigeria", "Venezuela"
+        ],
+
+        // Check if any country is high risk
+        has high risk: some c in countries
+            satisfies list contains(high risk countries, c),
+
+        // Check if any country is medium risk
+        has medium risk: some c in countries
+            satisfies list contains(medium risk countries, c),
+
+        return:
+    		if has high risk then "High"
+                else if has medium risk then "Medium"
+                else "Low"
+    	}
+    ```
+
+### Destination Risk Factor - Building a Decision Using a Context
+
+In FEEL, we can simplify this some with the use of our function we created in the previous section. This will allow us to invoke the function and return the results of the risk factor of a given country.
+
+Once this function is created, we need to edit our Decision for the Destination Risk Factor. This will be handled as a Context. When you create the context, you will need to do it in a few steps.
+
+1. First when editing the **Destination Risk Factor**, for the *Select expression* menu, select **Context**
+2. Edit _ContextEntry-1_ to being **Highest Risk** with a type string by clicking the first box.
+
+    
+    <img src="../images/highest-risk-context.png" class="annotated-image" alt="Context Expression for Risk Assessment">
+
+
+    Context Variable</div>
+    In a Context expression, you first define named variables that can be used within the calculation. "Highest Risk" is defined here as a string variable. This is the value that can be used in the next parts of your decision. By clicking this box, you will open the definition window for the particular Context variable you are selected to.</div>
+
+    Context Variable Definition</div>
+    In a Context expression, you first define named variables that can be used within the calculation. "Highest Risk" is defined here as a string variable. This is the value that can be used in the next parts of your decision. What you name in this box will define the context variable for the returned value for the rest of this Context Decision particular Context variable you are selected to.</div>
+
+    Data Type Dropdown</div>
+    DMN requires explicit typing of all variables. This dropdown allows selection from built-in types (string, number, boolean, date) or custom-defined complex types.</div>
+
+    Type Management</div>
+    The "Manage" button provides access to create, edit or import custom data types for use in your decision model.</div>
+
+
+3. Next on the _Select expression_ select **Literal**. The content for the literal expression will determine what is the highest risk rating. For reference on the different Expressions refer to the image or the reference section for [Select expression](/reference/dmn/select-expression)
+
+    
+    <img src="../images/context-select-expression.png" class="annotated-image" alt="DMN Expression Types Menu">
+
+
+    Literal Expression</div>
+    The simplest expression type. Used for direct values, mathematical operations, or simple FEEL expressions. Example: <code>Base Premium * Risk Factor</code></div>
+
+    Relation</div>
+    Creates a table structure for organizing data. Unlike a decision table, relations don't contain logic but represent structured data with columns and rows. See: [RelationReference](/reference/dmn/select-expression#relation).</div>
+
+    Context</div>
+    Defines a set of key-value pairs (named variables) that can be referenced within the context. Useful for multi-step calculations that build on previous values. See: [Context Reference](/reference/dmn/select-expression#context).</div>
+
+    Decision Table</div>
+    The most widely used DMN expression. Organizes conditions (inputs) and conclusions (outputs) in a tabular format with hit policies determining how rules are applied. See: [Decision Table Reference](/reference/dmn/select-expression#decision-table).</div>
+
+    List</div>
+    Creates an ordered collection of values or expressions. Each list item can be a different type of expression, allowing for complex collections. See: [List Reference](/reference/dmn/select-expression#list).</div>
+
+    Invocation</div>
+    Calls a Business Knowledge Model (BKM) or function defined elsewhere in the model. Parameters can be passed to the function being called. See: [Invocation Reference](/reference/dmn/select-expression#invocation).</div>
+
+    Function</div>
+    Defines a reusable function with parameters. Can contain any FEEL expression type and be used within other expressions through Invocation. See: [Function Reference](/reference/dmn/select-expression#function).</div>
+
+    Conditional (If/Then/Else)</div>
+    Creates branching logic with if, then, else statements. Allows for different results based on specific conditions being met. See: [Conditional Reference](/reference/dmn/select-expression#conditional).</div>
+
+    For Loop</div>
+    Iterates over items in a list or collection, applying an expression to each item. Useful for transforming collections or aggregating values. See: [For Loop Reference](/reference/dmn/select-expression#for-loop).</div>
+
+    Some</div>
+    Tests when a condition is true for at least one item See: [Some reference](/reference/dmn/select-expression#some).</div>
+
+    Filter</div>
+    Filters a collection based on a given condition. See: [Filter Reference](/reference/dmn/select-expression#filter).</div>
+
+    Every</div>
+    Tests if a condition is true for every item in a collection. Returns a boolean result based on whether all items satisfy the condition. See: [Every Reference](/reference/dmn/select-expression#every)</div>
+
+
+    ```java
+    	if
+
+    	some country in Trip Details.country satisfies Country Risk Level(country) = "High"
+
+    	then "High"
+
+    	else
+    		if some country in Trip Details.country satisfies Country Risk Level(country) = "Medium"
+
+    	then "Medium"
+
+    	else "Low"
+    ```
+
+4. Next, we will add another row for Risk Factor by **clicking the plus on the line between Highest Risk and <result>** , which is to utilize the highest factor used within the collection to set the risk factor and set the risk factor! Change the ContextEntry-2 to **Risk Factor** with type **(number)** and set the expression type as **Decision table** and _Select expression_ as a Decision Table and enter the following table:
+
+    | Highest Risk (string) | Risk Factor (number) | Annotations            |
+    | :-------------------- | :------------------- | :--------------------- |
+    | "High"                | 1.6                  | // High Risk Factor    |
+    | "Medium"              | 1.2                  | // Medium Risk  Factor |
+    | "Low"                 | 1                    | // Low Risk Factor     |
+
+5. Last on the _<result>_ input, we will return the **Risk Factor** - in DMN 1.5, you can simply put Risk Factor here to return the risk factor based on the highest deemed risk!
+
+    ![Destination Risk Factor Context Complete](/images/guides/examples/dmn/images/destination-risk-factor-context.png)
+
+	
+    <img src="images/destination-risk-context.png" class="annotated-image" alt="Full Context Expression Implementation">
+
+
+    Back to Diagram</div>
+    Returns to the Decision Requirements Diagram (DRD) view after editing the decision logic.</div>
+
+    Decision Name and Type</div>
+    The name of the decision being edited (Destination Risk Factor) and its output type (number).</div>
+
+    FEEL Conditional Logic</div>
+    This FEEL expression uses "some...in...satisfies" to check if any country in the trip details matches a high-risk criterion. The "Country Risk Level" refers to a Business Knowledge Model function.</div>
+
+    Context Entry Variable</div>
+    A second context entry named "Risk Factor" with a numeric type. Context expressions can contain multiple entries that build upon each other.</div>
+
+    Embedded Decision Table</div>
+    Within a context expression, you can embed other expression types like decision tables. This table maps risk levels to numerical factors.</div>
+
+    Result Expression</div>
+    The final line of a context expression defines what value is returned. Here, "Risk Factor" returns the variable defined earlier in the context.</div>
+
+
+### Final Premium
+
+Finally we need to calculate the Final Premium. This is a very simple decision to end on using a Literal FEEL Expression where we multiply the Base Premium by the various factors to get the Final Premium.
+
+    ```python
+    Base Premium * Medical Condition Assessment * Destination Risk Factor * Claims Assessment
+    ```
+
+## Example Test Case
+
+```json
+    {
+     traveler: {
+        age: 22,
+        claim history: [
+            {
+                total claim amount: 200,
+                status: "Pending",
+                tDate: date("2022-02-22")
+            },
+            {
+                total claim amount: 200,
+                status: "Approved",
+                tDate: date("2024-02-25")
+            }
+        ],
+        medical conditions: ["asthma"]
+      }
+
+    trip details: {
+        country: ["US"],
+        end date: date("2025-02-21"),
+        start date: date("2025-02-17")
+      }
+	}
+```
+
+### Expected Results
+
+- **Base Premium**: 75.00 (age < 25)
+- **Claims Factor**: 1.0 (one recent approved claim, low amount)
+- **Medical Factor**: 1.2 (one non-critical condition)
+- **Trip Factor**: 1.0 (short duration, low-risk country)
+- **Final Premium**: 90.00 (75 * 1.0 * 1.2 * 1.0)

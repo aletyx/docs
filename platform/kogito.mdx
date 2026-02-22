@@ -1,0 +1,140 @@
+---
+title: "Aletyx Enterprise Build of Kogito"
+description: "Kogito is a cloud-native business automation platform designed for the modern containerized infrastructure and DevOps practices. As part of the Aletyx Enterprise Build of Kogito and Drools, our..."
+---
+## What is Kogito?
+
+Kogito is a cloud-native business automation platform designed for the modern containerized infrastructure and DevOps practices. As part of the Aletyx Enterprise Build of Kogito and Drools, our enhanced Kogito implementation represents the next generation of business automation with a focus on cloud-native development, deployment, and scalability.
+
+<!-- ![Kogito Architecture Overview](/insert/image/here) -->
+
+## Key Concepts
+
+### Cloud-Native Design
+
+Kogito is built from the ground up for cloud environments:
+
+- **Container-first architecture**
+- **Kubernetes-native deployment**
+- **Independent scaling of services**
+- **Stateless operations with external state management**
+- **Event-driven communication between services**
+
+### Developer-Centric Approach
+
+Kogito prioritizes developer experience:
+
+- **Code-centric development model**
+- **Tight integration with favorite frameworks** (Quarkus, Spring Boot)
+- **Native compilation support** for reduced startup time and memory usage
+- **Automated native service generation** from business assets
+- **Codegen over runtime configuration**
+
+### Business-IT Alignment
+
+Kogito maintains business focus while being developer-friendly:
+
+- **Standard business formats** (BPMN, DMN)
+- **Domain-specific extensions** for common patterns
+- **Business-oriented interfaces** for monitoring and management
+- **Clear separation of business logic and technical code**
+
+## Core Components
+
+### Process Engine
+
+Kogito processes are cloud-optimized:
+
+- **Lightweight, distributed execution**
+- **Event-based coordination** between instances and services
+- **Reactive programming model** for scalability
+- **Optimized for serverless and microservice architectures**
+
+Our enhanced implementation adds:
+
+<!--  -->
+
+### Decision Engine
+
+Decision services in Kogito are:
+
+- **Independently deployable** as standalone services
+- **Stateless by design** for horizontal scaling
+- **Self-documenting** with OpenAPI integration
+
+<!-- The aletyx build extends decision capabilities with: -->
+
+
+### Supporting Services
+
+The Kogito ecosystem includes:
+
+- **Data Index Service** for unified data access
+- **Jobs Service** for asynchronous and scheduled tasks
+- **Management Console** for operational visibility
+
+Our extended service ecosystem adds:
+
+- **Process scalability**
+- **Integration with enterprise monitoring tools**
+- **Additional supported datasources**
+
+
+## Development Experience
+
+### Project Structure
+
+A typical Kogito project structure:
+
+```
+src/
+├── main/
+│   ├── java/
+│   │   └── org/example/
+│   │       ├── LoanApplication.java
+│   │       └── LoanService.java
+│   ├── resources/
+│   │   ├── application.properties
+│   │   ├── loanApproval.bpmn
+│   │   └── loanEligibility.dmn
+│   └── webapp/
+│       └── forms/
+│           └── loan-application.html
+├── test/
+│   └── java/
+└── pom.xml
+```
+
+### Java Application Development
+
+Kogito applications integrate seamlessly with Java code:
+
+<!-- add examples of Java APIs -->
+
+### Generated REST APIs
+
+Kogito automatically generates REST endpoints for business processes:
+
+```bash
+curl -X POST "http://localhost:8080/loans" \
+     -H "Content-Type: application/json" \
+     -d '{"applicant":{"name":"John Doe","age":30,"income":90000},"amount":250000,"term":30}'
+```
+
+## Integration Points
+
+Kogito integrates with:
+
+- **Quarkus and Spring Boot** as underlying frameworks
+- **Kafka** and other events based platforms for event-driven communication
+- **Prometheus and Grafana** for monitoring
+- **Red Hat OpenShift or Kubernetes distributions** for container orchestration
+- **Knative/Serverless** for event-driven functions
+
+
+## Next Steps
+
+- [Get started with your first Kogito application](/components/kogito/getting-started)
+- [Understand Kogito's cloud-native architecture](/components/kogito/architecture)
+- [Learn about serverless workflows](/components/kogito/serverless-workflows)
+- [Explore Kogito operator for Kubernetes](/components/kogito/kubernetes-deployment)

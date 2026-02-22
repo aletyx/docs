@@ -1,0 +1,1518 @@
+---
+title: "Drools Rule Engine - Core Concepts"
+description: "The Drools rule engine is the cornerstone of the aletyx business automation platform. It stores, processes, and evaluates data to execute the business rules or decision models that you define...."
+---
+## Introduction
+
+The Drools rule engine is the cornerstone of the aletyx business automation platform. It stores, processes, and evaluates data to execute the business rules or decision models that you define. Understanding how it works is essential for creating effective rule-based applications.
+
+### What Is a Rule Engine?
+
+At its simplest, a rule engine is a software component that:
+
+1. Stores business rules in a central repository
+2. Matches incoming data against these rules
+3. Executes rules when their conditions are met
+4. Updates the system state based on rule consequences
+
+The Drools rule engine follows a "forward-chaining" approach, meaning it starts with available data and uses rules to derive conclusions - as opposed to starting with a conclusion and working backward to find supporting data.
+
+### The Basic Function of the Drools Rule Engine
+
+The fundamental operation of the Drools rule engine involves matching incoming data (facts) to rule conditions and determining which rules to execute. This process works as follows:
+
+1. **Fact Insertion**: When business data enters the Drools system, it's inserted into the working memory as facts
+2. **Pattern Matching**: The Drools rule engine matches these facts against rule conditions stored in production memory
+3. **Rule Activation**: When conditions are met, rules are activated and registered in the agenda
+4. **Execution**: The Drools rule engine executes activated rules according to conflict resolution strategies
+5. **Updates**: Rule execution may modify facts, leading to further rule activations
+
+This cycle continues until no more rules can be activated or until the application explicitly ends execution.
+
+### Key Features
+
+* **Declarative Programming**: Focus on "what" should happen, not "how" it should happen
+* **Pattern Matching**: Efficiently match facts against rule conditions
+* **Inference**: Derive new facts from existing data
+* **Truth Maintenance**: Automatically maintain consistency in the knowledge base
+* **Conflict Resolution**: Determine execution order when multiple rules are activated
+
+## Core Components
+
+The Drools rule engine consists of several key components that work together:
+
+![Drools Rule Engine Components](https://placeholder-image-url.com/drools-components.png)
+
+### Production Memory
+
+The production memory is where your business rules are stored within the Drools rule engine. When you define rules in DRL files, decision tables, or other formats, they are compiled and stored in this memory area.
+
+### Working Memory
+
+Working memory (sometimes called the fact base) is where the data that your rules operate on is stored. When you insert data (facts) into the Drools rule engine, these facts go into the working memory.
+
+### Agenda
+
+The agenda is where activated rules are registered and sorted before execution. When rule conditions are met, the rule becomes activated and is placed on the agenda. The agenda determines the execution order of activated rules based on various conflict resolution strategies.
+
+### Pattern Matching
+
+The pattern matching process is what connects facts in working memory with rules in production memory. The Drools rule engine uses a sophisticated algorithm called Rete (or its more advanced versions like PHREAK) to efficiently match facts against rule conditions.
+
+The following diagram illustrates these basic components of the Drools rule engine:
+
+```
+                 ┌─────────────────────┐
+                 │   Business Rules    │
+                 └─────────┬───────────┘
+                           │
+                           ▼
+                 ┌─────────────────────┐
+                 │  Production Memory  │
+                 └────────┬────────────┘
+                          │
+                          │  Pattern Matching
+  ┌─────────────┐         │         ┌──────────────┐
+  │    Facts    │─────────┼────────▶│    Agenda    │
+  └─────┬───────┘         │         └──────┬───────┘
+        │                 │                │
+        ▼                 │                ▼
+┌───────────────┐         │         ┌─────────────┐
+│ Working Memory│◀────────┴────────▶│   Execute   │
+└───────────────┘                   └─────────────┘
+```
+
+## Basic Workflow
+
+The following steps outline the basic workflow of the Drools rule engine:
+
+1. **Rule Definition**: Define your business rules using DRL, decision tables, or other formats
+2. **Knowledge Base Creation**: Compile your rules into a knowledge base
+3. **Session Creation**: Create a session from the knowledge base
+4. **Fact Insertion**: Insert facts (data) into the session
+5. **Rule Evaluation**: The rule engine evaluates facts against rule conditions
+6. **Rule Execution**: Activated rules are executed based on priorities and conflict resolution
+7. **Result Collection**: Retrieve the results of rule execution
+
+## KIE Sessions
+
+KIE (Knowledge Is Everything) sessions are the primary interface between your application and the Drools rule engine. A KIE session stores and executes runtime data and is created from a KIE base.
+
+### KIE Base vs. KIE Session
+
+**KIE Base**: A repository that contains all rules, processes, functions, and data models. It does not contain any runtime data.
+
+**KIE Session**: A runtime environment that allows you to interact with the Drools rule engine by inserting facts, executing rules, and querying results.
+
+You can configure a KIE base and KIE session in the KIE module descriptor file (`kmodule.xml`):
+
+```xml
+<kmodule>
+  <kbase name="RuleBase" packages="org.mycompany.rules">
+    <ksession name="RuleSession" type="stateful" default="true"/>
+  </kbase>
+</kmodule>
+```
+
+In the module descriptor, you can configure various attributes for KIE bases:
+
+- **name**: A unique identifier for the KIE base
+- **packages**: Comma-separated list of packages to include in the KIE base
+- **includes**: Other KIE bases to include
+- **default**: Whether this is the default KIE base
+- **equalsBehavior**: Identity or equality (discussed in the Fact Equality Modes section)
+- **eventProcessingMode**: Cloud or stream (for event processing)
+- **declarativeAgenda**: Enabled or disabled (for declarative agenda control)
+
+And for KIE sessions:
+
+- **name**: A unique identifier for the KIE session
+- **type**: Stateful or stateless
+- **default**: Whether this is the default KIE session
+- **clockType**: Realtime or pseudo (for time-based rules)
+- **beliefSystem**: Simple, jtms, or defeasible (truth maintenance strategies)
+
+### Types of KIE Sessions
+
+Drools supports two types of KIE sessions, each designed for different use cases:
+
+#### Stateless KIE Sessions
+
+A stateless KIE session is designed for single-shot rule executions. It does not maintain state between invocations - facts and rules are evaluated, actions are executed, and the session is disposed of.
+
+Stateless sessions are ideal for:
+- **Validation** (e.g., validating a mortgage application)
+- **Calculation** (e.g., computing premiums or discounts)
+- **Routing and filtering** (e.g., categorizing customer requests)
+
+Stateless sessions are simple to use and don't require explicit disposal, making them suitable for high-throughput, independent rule evaluations.
+
+**Example of a stateless KIE session:**
+
+```java
+// Create the KIE container
+KieServices kieServices = KieServices.Factory.get();
+KieContainer kContainer = kieServices.getKieClasspathContainer();
+
+// Create a stateless KIE session
+StatelessKieSession kSession = kContainer.newStatelessKieSession();
+
+// Create data
+Applicant applicant = new Applicant("John Smith", 16);
+
+// Execute rules - this is a complete cycle (insert, fire, dispose)
+kSession.execute(applicant);
+
+// Check the result
+System.out.println("Is valid? " + applicant.isValid());
+```
+
+In a stateless KIE session configuration, the `execute()` call acts as a combination method that:
+
+1. Instantiates the KieSession object
+2. Adds all the user data
+3. Executes user commands
+4. Calls `fireAllRules()`
+5. Calls `dispose()`
+
+This is different from stateful sessions where you need to explicitly call `fireAllRules()` and `dispose()`.
+
+#### Working with Complex Data in Stateless Sessions
+
+For more complex use cases, stateless sessions can handle collections of objects or commands:
+
+```java
+// Execute on a collection of objects
+StatelessKieSession ksession = kbase.newStatelessKieSession();
+Applicant applicant = new Applicant("Mr John Smith", 16);
+Application application = new Application();
+
+// Method 1: Using a collection
+ksession.execute(Arrays.asList(applicant, application));
+
+// Method 2: Using CommandFactory
+ksession.execute(CommandFactory.newInsertIterable(Arrays.asList(applicant, application)));
+
+// Method 3: Using a batch execution
+List<Command> commands = new ArrayList<>();
+commands.add(CommandFactory.newInsert(applicant, "applicantOut"));
+commands.add(CommandFactory.newInsert(application, "applicationOut"));
+commands.add(CommandFactory.newFireAllRules());
+
+BatchExecutionResults results = ksession.execute(CommandFactory.newBatchExecution(commands));
+Applicant resultApplicant = (Applicant) results.getValue("applicantOut");
+```
+
+#### Stateful KIE Sessions
+
+A stateful KIE session maintains state between invocations. Facts inserted into a stateful session remain there until explicitly removed, and you can iteratively add, modify, or remove facts over time.
+
+Stateful sessions are ideal for:
+
+- **Monitoring** (e.g., stock market monitoring)
+- **Diagnostics** (e.g., fault detection systems)
+- **Logistics** (e.g., package tracking)
+- **Complex event processing** (e.g., fraud detection)
+
+**Example of a stateful KIE session:**
+
+```java
+// Create the KIE container
+KieServices kieServices = KieServices.Factory.get();
+KieContainer kContainer = kieServices.getKieClasspathContainer();
+
+// Create a stateful KIE session
+KieSession kSession = kContainer.newKieSession();
+
+// Insert facts
+Room kitchen = new Room("kitchen");
+Room bedroom = new Room("bedroom");
+kSession.insert(kitchen);
+kSession.insert(bedroom);
+kSession.insert(new Sprinkler(kitchen));
+kSession.insert(new Sprinkler(bedroom));
+
+// Fire rules to establish initial state
+kSession.fireAllRules();
+
+// Later, insert more facts to trigger rules
+FactHandle kitchenFireHandle = kSession.insert(new Fire(kitchen));
+kSession.fireAllRules();
+
+// Modify or retract facts
+kSession.delete(kitchenFireHandle);
+kSession.fireAllRules();
+
+// Always dispose of the session when done
+kSession.dispose();
+```
+
+<Warning title="Using Dispose">
+
+Always call `dispose()` on stateful KIE sessions when you're done with them to prevent memory leaks.
+</Warning>
+Stateful sessions differ from stateless sessions in that they retain data between invocations. This makes them suitable for scenarios where the rule engine needs to make iterative changes to facts over time using inference.
+
+For example, consider a loan application tracking system. As the application moves through different stages (submission, verification, approval, etc.), you can use a stateful session to track its progress and apply different rules at each stage.
+
+In stateful sessions, ensure that you use the appropriate methods to modify facts:
+
+- Use `modify` blocks (rather than just changing object properties) so the rule engine can track changes
+- Use `update()` when directly changing objects outside of rules
+- Use `delete()` when facts are no longer needed
+
+### When to Use Which Session Type
+
+| Use Stateless When                          | Use Stateful When                         |
+| ------------------------------------------- | ----------------------------------------- |
+| You need a simple validation or calculation | You need to track state changes over time |
+| Rule executions are independent             | Rules depend on previous executions       |
+| You have high-throughput requirements       | You need to maintain a history of facts   |
+| You want simpler resource management        | You need complex event processing         |
+
+## Working with Facts
+
+Facts are the data objects that you insert into the Drools rule engine. They represent the state of your system and are matched against rule conditions.
+
+### Inserting Facts
+
+Facts are inserted into the rule engine using the `insert()` method in stateful sessions or passed directly to the `execute()` method in stateless sessions:
+
+```java
+// Stateful session
+kSession.insert(new Customer("John Doe"));
+
+// Stateless session
+kSession.execute(new Customer("John Doe"));
+```
+
+<Info title="Example">
+
+One concept that has changed a lot with the introduction of RuleUnits is that insert still works with regards to the working memory of Drools, if you need to utilize data from the working memory (e.g. to pass back in a query) then instead of the usual `insert(new Charge($order.getItemsCount() * 7.50));` that you would use, it would become `charges.add(new Charge($order.getItemsCount() * 7.50));` where charges is the RuleUnit associated with the Charge object.
+</Info>
+### Modifying Facts
+
+In stateful sessions, you can modify facts using the `update()` method:
+
+```java
+// Get fact handle
+Customer customer = new Customer("John Doe");
+FactHandle factHandle = kSession.insert(customer);
+
+// Later, modify the fact
+customer.setStatus("Gold");
+kSession.update(factHandle, customer);
+```
+
+For more efficient updates in rule consequences, use the `modify` block:
+
+```java
+rule "Upgrade customer to gold"
+when
+    $customer : Customer(purchases > 1000, status != "Gold")
+then
+    modify($customer) {
+        setStatus("Gold"),
+        setDiscount(10)
+    }
+end
+```
+
+Using `modify` is critical because it notifies the rule engine that the fact has changed, allowing it to reconsider rules that might be affected by the change.
+
+### Retracting Facts
+
+To remove facts from working memory in stateful sessions, use the `delete()` method:
+
+```java
+FactHandle fireHandle = kSession.insert(new Fire(kitchen));
+// Later...
+kSession.delete(fireHandle);
+```
+
+### Global Variables
+
+Global variables provide a way to make external objects available to rules. Unlike facts, globals are not used for pattern matching in rule conditions. They primarily serve as a means to provide services or data to the rules that don't need to be asserted as facts.
+
+#### Types of Global Variables
+
+Globals can be used for various purposes:
+
+1. **Services**: Providing access to services like logging, databases, or external systems
+2. **Shared Data**: Making reference data available to all rules
+3. **Collectors**: Collecting output from rule execution
+
+#### Declaring and Setting Globals
+
+You can declare globals in your DRL files:
+
+```java
+global java.util.List results;
+global ai.aletyx.audit.AuditService auditService;
+```
+
+And set them in your application code:
+
+```java
+// Create a list to collect results
+List<String> results = new ArrayList<>();
+kSession.setGlobal("results", results);
+
+// Set a service global
+AuditService auditService = new AuditServiceImpl();
+kSession.setGlobal("auditService", auditService);
+```
+
+#### Using Globals in Rules
+
+Globals can be accessed directly in rule consequences:
+
+```java
+rule "Log High Value Orders"
+when
+    $order : Order(value > 1000)
+then
+    auditService.logHighValueOrder($order);
+    results.add("High value order: " + $order.getId());
+end
+```
+
+#### Globals in Stateless KIE Sessions
+
+The `StatelessKieSession` object supports global variables (globals) that you can configure to be resolved as session-scoped globals, delegate globals, or execution-scoped globals.
+
+##### Session-Scoped Globals
+
+For session-scoped globals, you can use the method `getGlobals()` to return a `Globals` instance that provides access to the KIE session globals. These globals are used for all execution calls. Use caution with mutable globals because execution calls can be executing simultaneously in different threads.
+
+```java
+import org.kie.api.runtime.StatelessKieSession;
+
+StatelessKieSession ksession = kbase.newStatelessKieSession();
+
+// Set a global `myGlobal` that can be used in the rules.
+ksession.setGlobal("myGlobal", "I am a global");
+
+// Execute while resolving the `myGlobal` identifier.
+ksession.execute(collection);
+```
+
+##### Delegate Globals
+
+For delegate globals, you can assign a value to a global (with `setGlobal(String, Object)`) so that the value is stored in an internal collection that maps identifiers to values. Identifiers in this internal collection have priority over any supplied delegate. If an identifier cannot be found in this internal collection, the delegate global (if any) is used.
+
+```java
+StatelessKieSession ksession = kbase.newStatelessKieSession();
+
+// Set some globals directly on the session
+ksession.setGlobal("service", new MyService());
+
+// Create a globals delegate
+Globals globals = new org.drools.core.common.DefaultGlobals();
+globals.setDelegate(delegate);
+ksession.setGlobals(globals);
+
+// When executing, globals are resolved first from the session globals,
+// then from the delegate if not found
+ksession.execute(collection);
+```
+
+##### Execution-Scoped Globals
+
+For execution-scoped globals, you can use the `Command` object to set a global that is passed to the `CommandExecutor` interface for execution-specific global resolution.
+
+```java
+StatelessKieSession ksession = kbase.newStatelessKieSession();
+
+// Create commands that include setting a global just for this execution
+List<Command> cmds = new ArrayList<Command>();
+cmds.add(CommandFactory.newSetGlobal("tempList", new ArrayList<>(), true));
+cmds.add(CommandFactory.newInsert(new Person("John")));
+cmds.add(CommandFactory.newFireAllRules());
+
+// The global is only available during this execution
+ksession.execute(CommandFactory.newBatchExecution(cmds));
+```
+
+##### Out Identifiers for Exporting Data
+
+The `CommandExecutor` interface also enables you to export data using out identifiers for globals, inserted facts, and query results:
+
+```java
+import org.kie.api.runtime.ExecutionResults;
+
+// Set up a list of commands.
+List cmds = new ArrayList();
+cmds.add(CommandFactory.newSetGlobal("list1", new ArrayList(), true));
+cmds.add(CommandFactory.newInsert(new Person("jon", 102), "person"));
+cmds.add(CommandFactory.newQuery("Get People", "getPeople"));
+
+// Execute the list.
+ExecutionResults results = ksession.execute(CommandFactory.newBatchExecution(cmds));
+
+// Retrieve the `ArrayList`.
+results.getValue("list1");
+// Retrieve the inserted `Person` fact.
+results.getValue("person");
+// Retrieve the query as a `QueryResults` instance.
+results.getValue("Get People");
+```
+
+This approach allows you to get data out of a stateless session execution, which is particularly useful for service-oriented architectures or when you need to process the results elsewhere in your application.
+
+## Inference and Truth Maintenance
+
+Inference is the process of deriving new facts from existing data. Truth maintenance is how the Drools rule engine ensures that inferred facts remain valid as the knowledge base changes.
+
+### The Power of Inference
+
+Inference allows you to write rules that build on each other. Early rules can establish facts that later rules use, creating complex reasoning chains.
+
+**Example of inference:**
+
+```java
+rule "Infer Adult"
+when
+    $p : Person(age >= 18)
+then
+    insert(new IsAdult($p));
+end
+
+rule "Issue Adult Bus Pass"
+when
+    $p : Person()
+    IsAdult(person == $p)
+then
+    insert(new AdultBusPass($p));
+end
+```
+
+In this example, the first rule infers that a person is an adult if they're at least 18 years old. The second rule uses this inferred fact to issue an adult bus pass.
+
+### Government ID Example: Knowledge Decoupling
+
+Let's examine a more substantial business example to illustrate how inference helps with modular rule design.
+
+Consider a government ID department responsible for issuing ID cards when citizens become adults. They might have a monolithic decision table that includes logic like this:
+
+RuleTable ID Card
+
+| Rule                             |                  | CONDITION      | CONDITION       | ACTION          |
+| -------------------------------- | ---------------- | -------------- | --------------- | --------------- |
+|                                  | p : Person       | location       | age >= $1       | issueIdCard($1) |
+|                                  | *Given a Person* | *The Location* | *Select Adults* | *Issue ID Card* |
+| Issue ID Card to Adults - London |                  | London         | 18              | p               |
+
+This approach has several problems:
+
+1. The ID department doesn't set policy on who qualifies as an adult - that's done at a central government level
+2. If the central government changes the age from 18 to 21, it requires coordination across departments
+3. The ID department's rules contain information it shouldn't need to know or manage
+
+A better approach is to decouple the knowledge responsibilities:
+
+**Central Government Policy Rules:**
+
+*RuleTable Age Policy*
+
+|                    | CONDITION                  | ACTION     |
+| ------------------ | -------------------------- | ---------- |
+| p : Person         | age >= $1                  | insert($1) |
+| *Adult Age Policy* | *Infer Adult Based on Age* |            |
+| 18                 | new IsAdult(p)             |            |
+
+**ID Department Rules:**
+
+*RuleTable ID Card*
+
+|            | CONDITION       | CONDITION       | ACTION          |
+| ---------- | --------------- | --------------- | --------------- |
+| p : Person | isAdult         | location        | issueIdCard($1) |
+|            | *Select Person* | *Select Adults* | *Issue ID Card* |
+|            | person == $1    | London          | p               |
+
+This improved design:
+
+1. Properly separates concerns by department
+2. Encapsulates the "age >= 18" logic behind a semantic abstraction (IsAdult)
+3. Allows the central government to change the adult age policy without requiring changes to the ID department's rules
+
+When designing rule systems, follow these principles:
+
+- **Decouple knowledge responsibilities**: Each department or domain expert should maintain only their own rules
+- **Encapsulate knowledge**: Hide implementation details behind logical facts
+- **Provide semantic abstractions**: Use meaningful fact types (like IsAdult) rather than raw conditions
+
+### Logical Insertions
+
+Logical insertions provide automatic truth maintenance. Facts inserted logically are automatically retracted when the conditions that led to their insertion are no longer true.
+
+```java
+rule "Infer Child"
+when
+    $p : Person(age < 18)
+then
+    insertLogical(new IsChild($p));
+end
+
+rule "Issue Child Bus Pass"
+when
+    $p : Person()
+    IsChild(person == $p)
+then
+    insertLogical(new ChildBusPass($p));
+end
+```
+
+If a person's age changes from 16 to 18, the `IsChild` fact would be automatically retracted, which would then cause the `ChildBusPass` fact to be retracted as well.
+
+When you use logical insertions, you can build a chain of dependencies that maintain themselves automatically as facts change. For example, we can extend our bus pass example:
+
+```java
+rule "Return ChildBusPass Request"
+when
+    $p : Person(age >= 18)
+    not(ChildBusPass(person == $p))
+    $oldPass : OldChildBusPass(person == $p, returned == false)
+then
+    modify($oldPass) { setRequestReturn(true) }
+    System.out.println("Please return your child bus pass");
+end
+```
+
+This rule will be triggered when a child becomes an adult, their `ChildBusPass` is automatically retracted, and they still have an old child bus pass that hasn't been returned.
+
+<Note title="Note">
+
+For logical insertions to work correctly, your fact objects must properly implement the `equals()` and `hashCode()` methods.
+</Note>
+### Benefits of Truth Maintenance
+
+- **Consistency**: The knowledge base remains consistent as facts change
+- **Modularity**: Rules can be broken down into smaller, more maintainable pieces
+- **Reduced Complexity**: You don't need to write rules to explicitly retract facts
+
+### Stated vs. Logical Insertions
+
+| Stated Insertion                 | Logical Insertion                                |
+| -------------------------------- | ------------------------------------------------ |
+| `insert(fact)`                   | `insertLogical(fact)`                            |
+| Remains until explicitly deleted | Automatically retracted when no longer justified |
+| Manual truth maintenance         | Automatic truth maintenance                      |
+| Better performance               | More complex tracking                            |
+
+## Fact Equality Modes
+
+The Drools rule engine supports two equality modes that determine how it stores and compares facts:
+
+### Identity Mode (Default)
+
+In identity mode, facts are compared using the `==` operator. Two facts are considered the same only if they are the exact same object in memory.
+
+```java
+Person p1 = new Person("John", 45);
+Person p2 = new Person("John", 45);
+
+// In identity mode, p1 and p2 are different objects
+FactHandle handle1 = kSession.insert(p1);
+FactHandle handle2 = kSession.insert(p2); // New fact handle
+
+// To retrieve a fact handle, you must use the exact object
+FactHandle retrieved = kSession.getFactHandle(p1); // Works
+kSession.getFactHandle(new Person("John", 45)); // Doesn't work
+```
+
+### Equality Mode
+
+In equality mode, facts are compared using the `equals()` method. Two facts are considered the same if they are equal according to their `equals()` implementation.
+
+```java
+Person p1 = new Person("John", 45);
+Person p2 = new Person("John", 45);
+
+// In equality mode, p1 and p2 are equal objects
+FactHandle handle1 = kSession.insert(p1);
+// No new fact handle created if equals() returns true
+FactHandle handle2 = kSession.insert(p2); // Same as handle1
+
+// You can retrieve a fact handle using any equal object
+kSession.getFactHandle(new Person("John", 45)); // Works
+```
+
+### Setting the Equality Mode
+
+You can set the equality mode in several ways:
+
+1. **System property**:
+
+    ```
+    -Ddrools.equalityBehavior=identity
+    -Ddrools.equalityBehavior=equality
+    ```
+
+2. **Programmatically**:
+
+    ```java
+    KieServices ks = KieServices.get();
+    KieBaseConfiguration kieBaseConf = ks.newKieBaseConfiguration();
+    kieBaseConf.setOption(EqualityBehaviorOption.EQUALITY);
+    KieBase kieBase = kieContainer.newKieBase(kieBaseConf);
+    ```
+
+3. **In kmodule.xml**:
+
+	```xml
+    <kmodule>
+      <kbase name="KBase2" equalsBehavior="equality" packages="org.domain.pkg2, org.domain.pkg3">
+        <ksession name="KSession2_1" type="stateful"/>
+      </kbase>
+    </kmodule>
+   ```
+
+## Advanced Execution Control
+
+Understanding how rules are evaluated and executed in the Drools rule engine is crucial for building efficient rule-based applications. This section explores the advanced concepts of execution control, including rule execution modes, fact propagation modes, and the Phreak algorithm.
+
+### Two-Phase Execution Process
+
+After the first call of `fireAllRules()` in your application, the Drools rule engine cycles repeatedly through two phases:
+
+1. **Agenda Evaluation Phase**: The Drools rule engine selects rules that can be executed. If no executable rules exist, the execution cycle ends. If an executable rule is found, the engine registers the match in the agenda and moves to the next phase.
+
+2. **Working Memory Actions Phase**: The engine performs the rule consequence actions (the `then` portion of each rule) for all activated rules previously registered in the agenda. After all consequence actions are complete or `fireAllRules()` is called again, the engine returns to the agenda evaluation phase.
+
+```
+┌─────────────────────────┐      ┌─────────────────────────┐
+│                         │      │                         │
+│   Agenda Evaluation     │──────▶   Working Memory        │
+│   Phase                 │      │   Actions Phase         │
+│                         │      │                         │
+└─────────────┬───────────┘      └───────────┬─────────────┘
+              │                              │
+              └──────────────────────────────┘
+```
+
+When multiple rules exist on the agenda, the execution of one rule may cause another rule to be removed from the agenda. To control this behavior, you can use several mechanisms for defining rule execution order.
+
+### Rule Execution Modes
+
+The Drools rule engine supports two execution modes that determine how and when rules are executed:
+
+#### Passive Mode (Default)
+
+In passive mode, the Drools rule engine evaluates rules only when your application explicitly calls `fireAllRules()`.
+
+This mode is best for:
+
+- Applications that require direct control over rule evaluation
+- Complex event processing (CEP) applications using the pseudo clock implementation
+
+Example using passive mode with a pseudo clock for CEP:
+
+```java
+KieSessionConfiguration config = KieServices.Factory.get().newKieSessionConfiguration();
+config.setOption(ClockTypeOption.get("pseudo"));
+KieSession session = kbase.newKieSession(conf, null);
+SessionPseudoClock clock = session.getSessionClock();
+
+session.insert(tick1);
+session.fireAllRules();
+
+clock.advanceTime(1, TimeUnit.SECONDS);
+session.insert(tick2);
+session.fireAllRules();
+
+clock.advanceTime(1, TimeUnit.SECONDS);
+session.insert(tick3);
+session.fireAllRules();
+
+session.dispose();
+```
+
+#### Active Mode
+
+In active mode, initiated by calling `fireUntilHalt()`, the Drools rule engine evaluates rules continuously until your application explicitly calls `halt()`.
+
+This mode is best for:
+
+- Applications that delegate control of rule evaluation to the engine
+- Complex event processing applications using real-time clock implementation
+- Applications using active queries
+
+Example using active mode with a real-time clock for CEP:
+
+```java
+KieSessionConfiguration config = KieServices.Factory.get().newKieSessionConfiguration();
+config.setOption(ClockTypeOption.get("realtime"));
+KieSession session = kbase.newKieSession(conf, null);
+
+// Start rule evaluation in a separate thread
+new Thread(new Runnable() {
+  @Override
+  public void run() {
+    session.fireUntilHalt();
+  }
+}).start();
+
+session.insert(tick1);
+
+// Sleep for 1 second - real events would arrive naturally over time
+Thread.sleep(1000L);
+
+session.insert(tick2);
+
+Thread.sleep(1000L);
+
+session.insert(tick3);
+
+// Stop rule evaluation
+session.halt();
+session.dispose();
+```
+
+#### Thread Safety in Active Mode
+
+For thread safety in active mode, the Drools rule engine provides a `submit()` method to group and perform operations atomically:
+
+```java
+KieSession session = ...;
+
+// Start rule evaluation in a separate thread
+new Thread(new Runnable() {
+  @Override
+  public void run() {
+    session.fireUntilHalt();
+  }
+}).start();
+
+final FactHandle fh = session.insert(factA);
+
+Thread.sleep(1000L);
+
+// Perform multiple operations atomically
+session.submit(new KieSession.AtomicAction() {
+  @Override
+  public void execute(KieSession kieSession) {
+    factA.setField("value");
+    kieSession.update(fh, factA);
+    kieSession.insert(fact1);
+    kieSession.insert(fact2);
+    kieSession.insert(fact3);
+  }
+});
+
+Thread.sleep(1000L);
+
+session.insert(factZ);
+
+session.halt();
+session.dispose();
+```
+
+This atomic action ensures that all the operations are performed as a single unit, preventing other threads from seeing partial updates.
+
+### Fact Propagation Modes
+
+The Drools rule engine supports different fact propagation modes that determine how inserted facts progress through the engine network:
+
+#### Lazy Propagation (Default)
+
+Facts are propagated in batch collections at rule execution time, not in real time as they are individually inserted. The order of propagation may differ from the insertion order.
+
+#### Immediate Propagation
+
+Facts are propagated immediately in the order they are inserted. This mode can be necessary for certain rules that depend on insertion order.
+
+#### Eager Propagation
+
+Facts are propagated lazily (in batch collections) but before rule execution. The Drools rule engine uses this propagation behavior for rules with the `no-loop` or `lock-on-active` attribute.
+
+To specify a propagation mode for a specific rule, use the `@Propagation(<type>)` tag:
+
+```java
+rule "Rule" @Propagation(IMMEDIATE)
+  when
+    $i : Integer()
+    ?Q($i;)
+  then
+    System.out.println($i);
+end
+```
+
+### Agenda Filters
+
+An `AgendaFilter` allows you to control which rules are allowed to fire during agenda evaluation:
+
+```java
+ksession.fireAllRules(new RuleNameEndsWithAgendaFilter("Test"));
+```
+
+This example will only allow rules whose names end with "Test" to be executed.
+
+### Activation Groups
+
+An activation group (also called a match group) is a set of rules bound together by the same `activation-group` rule attribute. In this group, only one rule can be executed - after conditions are met for a rule to execute, all other pending rule executions from that group are removed from the agenda.
+
+```java
+rule "Print balance for AccountPeriod1"
+  activation-group "report"
+when
+  ap : AccountPeriod1()
+  acc : Account()
+then
+  System.out.println(acc.accountNo + " : " + acc.balance);
+end
+
+rule "Print balance for AccountPeriod2"
+  activation-group "report"
+when
+  ap : AccountPeriod2()
+  acc : Account()
+then
+  System.out.println(acc.accountNo + " : " + acc.balance);
+end
+```
+
+In this example, if the first rule in the "report" activation group executes, the second rule and all other executable rules on the agenda are removed.
+
+### Phreak Rule Algorithm
+
+The Drools rule engine uses the Phreak algorithm for rule evaluation. Phreak offers several advantages over the traditional Rete algorithm:
+
+- **Lazy Evaluation**: Unlike Rete's eager evaluation, Phreak deliberately delays pattern matching until rule execution is required
+- **Goal-Oriented**: Focuses on executing the most promising rules first
+- **Stack-Based**: Uses a stack-based rather than recursion-based approach, allowing rule evaluation to be paused and resumed
+- **Three-Layer Memory System**: Uses node, segment, and rule memory types for more contextual understanding
+- **Set-Oriented Processing**: Processes batches of data rather than individual tuples
+
+#### How Phreak Works
+
+1. When the Drools rule engine starts, all rules are considered unlinked from pattern-matching data
+2. Insert, update, and delete actions are queued
+3. When all required input values for a rule are populated, the rule is linked to relevant data
+4. A goal is created for the linked rule and placed in a priority queue
+5. Only the rule for which the goal was created is evaluated, delaying other potential evaluations
+6. For the evaluating rule, the engine processes all queued actions at each node, propagating results to child nodes
+
+#### Memory Management in Phreak
+
+Phreak uses a three-layered memory system:
+
+1. **Node Memory**: Stores data at individual nodes in the network
+2. **Segment Memory**: Groups related nodes that share common rule dependencies
+3. **Rule Memory**: Maintains context for specific rules
+
+This layered approach enables more efficient memory management and allows better tracking of dependencies between rules.
+
+### Rule Base Configuration
+
+The Drools rule engine provides configuration options to tune execution behavior:
+
+#### Consequence Exception Handler
+
+You can specify a custom exception handler for rule consequences:
+
+```java
+// Using system property
+drools.consequenceExceptionHandler=org.mycompany.CustomConsequenceExceptionHandler
+
+// Using programmatic configuration
+KieServices ks = KieServices.Factory.get();
+KieBaseConfiguration kieBaseConf = ks.newKieBaseConfiguration();
+kieBaseConf.setOption(ConsequenceExceptionHandlerOption.get(MyCustomExceptionHandler.class));
+KieBase kieBase = kieContainer.newKieBase(kieBaseConf);
+```
+
+#### Parallel Execution
+
+To improve performance, you can enable parallel rule evaluation and execution:
+
+```java
+// Using system property
+drools.parallelExecution=fully_parallel
+
+// Using programmatic configuration
+KieServices ks = KieServices.Factory.get();
+KieBaseConfiguration kieBaseConf = ks.newKieBaseConfiguration();
+kieBaseConf.setOption(ParallelExecutionOption.FULLY_PARALLEL);
+KieBase kieBase = kieContainer.newKieBase(kieBaseConf);
+```
+
+This option has three possible values:
+
+- `sequential`: Evaluates and executes all rules sequentially (default)
+- `parallel_evaluation`: Evaluates rules in parallel but executes consequences sequentially
+- `fully_parallel`: Evaluates and executes everything in parallel
+
+<Note title="Parallel Mode">
+
+In fully parallel mode, rules that use queries, salience, or agenda groups are not supported. The engine will emit a warning and switch back to single-threaded evaluation if these elements are present.
+</Note>
+#### Sequential Mode
+
+Sequential mode makes the Drools rule engine evaluate rules one time in the order they are listed, ignoring any changes in working memory:
+
+```java
+// Using system property
+drools.sequential=true
+
+// Using programmatic configuration
+KieServices ks = KieServices.Factory.get();
+KieBaseConfiguration kieBaseConf = ks.newKieBaseConfiguration();
+kieBaseConf.setOption(SequentialOption.YES);
+KieBase kieBase = kieContainer.newKieBase(kieBaseConf);
+
+// Using kmodule.xml
+<kbase name="KBase2" sequential="true" packages="org.domain.pkg2, org.domain.pkg3">
+  <ksession name="KSession2_1" type="stateless"/>
+</kbase>
+```
+
+### Controlling Rule Execution Order
+
+#### Salience
+
+Salience is a rule attribute that determines execution priority. Rules with higher salience are executed before rules with lower salience. For performance reasons, salience is typically not recommended to use and should be used as a last effort to control the rule order if required.
+
+```java
+rule "High Priority Rule"
+    salience 100
+when
+    $fact : SomeFact(priority == "high")
+then
+    System.out.println("Executing high priority rule");
+end
+
+rule "Low Priority Rule"
+    salience 10
+when
+    $fact : SomeFact(priority == "low")
+then
+    System.out.println("Executing low priority rule");
+end
+```
+
+The default salience value is 0, and salience can be negative.
+
+#### Agenda Groups
+
+Agenda groups allow you to partition rules into groups and focus execution on specific groups:
+
+```java
+rule "Calculation Rule"
+    agenda-group "calculation"
+when
+    $account : Account()
+    $transaction : Transaction(account == $account)
+then
+    $account.balance += $transaction.amount;
+end
+
+rule "Reporting Rule"
+    agenda-group "reporting"
+when
+    $account : Account()
+then
+    System.out.println("Account balance: " + $account.getBalance());
+end
+```
+
+To execute rules in a specific agenda group, you must give that group focus:
+
+```java
+// First execute calculation rules
+kSession.getAgenda().getAgendaGroup("calculation").setFocus();
+
+// Then execute reporting rules
+kSession.getAgenda().getAgendaGroup("reporting").setFocus();
+
+// Fire all rules
+kSession.fireAllRules();
+```
+
+You can also use the `auto-focus` attribute to automatically give focus to a group when one of its rules is activated:
+
+```java
+rule "Auto-focus Rule"
+    agenda-group "important"
+    auto-focus true
+when
+    Emergency()
+then
+    // Handle emergency
+end
+```
+
+#### Rule Flow Groups
+
+Rule flow groups associate rules with a specific part of a process flow:
+
+```java
+rule "Validate Application"
+    ruleflow-group "validation"
+when
+    $application : Application(validated == false)
+then
+    validate($application);
+    modify($application) { setValidated(true) }
+end
+```
+
+Rule flow groups are activated programmatically or through a Business Process Management (BPM) workflow.
+
+## KIE Session Pools
+
+For applications with high-throughput requirements, creating and disposing of KIE sessions can become a performance bottleneck. KIE session pools provide a solution by reusing sessions.
+
+### Creating and Using a KIE Session Pool
+
+```java
+// Create a pool with 10 initial sessions
+KieContainerSessionsPool pool = kContainer.newKieSessionsPool(10);
+
+// Get a session from the pool
+KieSession kSession = pool.newKieSession();
+
+// Use the session as normal
+kSession.insert(new Customer("John"));
+kSession.fireAllRules();
+
+// When done, dispose() returns the session to the pool
+kSession.dispose();
+```
+
+### Benefits of Session Pools
+
+- **Performance**: Reduces the overhead of session creation
+- **Resource Efficiency**: Reuses sessions instead of creating new ones
+- **Scalability**: Dynamically grows as needed
+
+### When to Use Session Pools
+
+- High-volume rule processing scenarios
+- Applications with rapid session creation/disposal cycles
+- When performance optimization is critical
+
+### Lifecycle of KIE Sessions and Pools
+
+When working with a high turnover of KIE sessions, the creation and disposal process can become a bottleneck. Here's how a KIE session pool manages this lifecycle:
+
+1. **Pool Creation**: A pool is initialized with a specified number of KIE sessions
+
+   ```java
+   KieContainerSessionsPool pool = kContainer.newKieSessionsPool(10);
+   ```
+
+2. **Session Acquisition**: A session is obtained from the pool
+
+   ```java
+   KieSession kSession = pool.newKieSession();
+   ```
+
+3. **Session Use**: The session is used normally for rule execution
+
+   ```java
+   kSession.insert(fact);
+   kSession.fireAllRules();
+   ```
+
+4. **Session Return**: Instead of being destroyed, the session is reset and returned to the pool
+
+   ```java
+   kSession.dispose(); // Returns to pool instead of destroying
+   ```
+
+5. **Pool Shutdown**: When finished with the pool, shut it down to release resources
+
+   ```java
+   pool.shutdown();
+   // Or dispose the container to shut down all pools
+   kContainer.dispose();
+   ```
+
+The pool dynamically grows beyond the initial size if necessary to handle demand, making it suitable for applications with variable workloads.
+
+## Performance Tuning Considerations
+
+The following key concepts and practices can help you optimize Drools rule engine performance.
+
+### Sequential Mode for Improved Performance
+
+When using stateless KIE sessions that don't require important rule engine updates, consider using sequential mode for better performance. In sequential mode, the Drools rule engine evaluates rules one time in the order they are listed, ignoring any changes in working memory.
+
+```java
+// Enable sequential mode
+KieServices ks = KieServices.Factory.get();
+KieBaseConfiguration kieBaseConf = ks.newKieBaseConfiguration();
+kieBaseConf.setOption(SequentialOption.YES);
+KieBase kieBase = kieContainer.newKieBase(kieBaseConf);
+```
+
+### Optimizing Event Listeners
+
+Event listeners can impact performance if they perform complex operations. Use these best practices:
+
+1. **Keep operations simple**: Use event listeners for simple operations like debug logging and property settings
+2. **Limit the number of listeners**: Too many listeners can slow down rule execution
+3. **Remove listeners when done**: Clean up listeners after you're done with a session
+
+```java
+Listener listener = ...;
+StatelessKieSession ksession = createSession();
+try {
+    ksession.insert(fact);
+    ksession.fireAllRules();
+    // Use the session
+} finally {
+    if (ksession != null) {
+        ksession.detachListener(listener);
+        ksession.dispose();
+    }
+}
+```
+
+### Lambda Externalization for Executable Model
+
+To optimize memory consumption during runtime, enable lambda externalization:
+
+```java
+-Ddrools.externaliseCanonicalModelLambda=true
+```
+
+This rewrites lambdas that are generated and used in the executable model, allowing the same lambda to be reused multiple times.
+
+### Alpha Node Range Index Threshold
+
+Configure the threshold of the alpha node range index using the `drools.alphaNodeRangeIndexThreshold` system property. The default value is 9, but you can adjust it based on your rules:
+
+```java
+-Ddrools.alphaNodeRangeIndexThreshold=6
+```
+
+A lower threshold can improve performance depending on your rule patterns.
+
+### Join Node Range Index for Large Fact Sets
+
+When your application inserts a large number of facts (e.g., 256*16 combinations), enable the join node range index:
+
+```xml
+<kbase name="KBase1" betaRangeIndex="enabled">
+```
+
+Or using a system property:
+
+```java
+-Ddrools.betaNodeRangeIndexEnabled=true
+```
+
+### LambdaIntrospector Cache Size
+
+Configure the size of `LambdaIntrospector.methodFingerprintsMap` cache for executable model builds:
+
+```java
+-Ddrools.lambda.introspector.cache.size=16
+```
+
+The default size is 32. A smaller value reduces memory usage but may slow down build performance. Setting it to 0 provides minimum memory usage but maximum build slowdown.
+
+### Parallel Execution for Multi-Core Systems
+
+On systems with multiple processor cores, enable parallel execution to utilize the available hardware:
+
+```java
+KieBaseConfiguration kieBaseConf = ks.newKieBaseConfiguration();
+kieBaseConf.setOption(ParallelExecutionOption.FULLY_PARALLEL);
+```
+
+### Efficient Rule Design
+
+1. **Avoid cross-product patterns**: Patterns that generate a large number of combinations can slow down the engine
+2. **Use property reactivity**: Let the engine react only to relevant property changes
+3. **Optimize pattern order**: Put the most restrictive patterns first in your rule conditions
+4. **Use indexes effectively**: Mark frequently used constraints with the `@indexed` annotation
+
+### Memory Management
+
+1. **Dispose of sessions**: Always dispose of stateful sessions when done
+2. **Use stateless sessions**: For simple, independent rule evaluations
+3. **Manage fact lifecycle**: For event processing, set appropriate expiration policies for events
+4. **Use sliding windows**: For temporal reasoning, use sliding windows to limit the facts being processed
+
+By applying these performance tuning techniques appropriately for your use case, you can significantly improve the efficiency and scalability of your Drools applications.
+
+## Example: Loan Approval System
+
+Let's examine a complete example of a loan approval system that illustrates many of the concepts we've covered.
+
+### Domain Model
+
+```java
+public class Applicant {
+    private String name;
+    private int age;
+    private int creditScore;
+
+    // Constructors, getters, setters
+}
+
+public class Income {
+    private Applicant applicant;
+    private double monthlyAmount;
+    private String source; // "employment", "self-employment", "investment"
+
+    // Constructors, getters, setters
+}
+
+public class LoanApplication {
+    private Applicant applicant;
+    private double amount;
+    private int term; // months
+    private String status; // "pending", "approved", "denied"
+    private String reason; // reason for approval/denial
+
+    // Constructors, getters, setters
+}
+
+public class CreditRating {
+    private Applicant applicant;
+    private String rating; // "excellent", "good", "fair", "poor"
+
+    // Constructors, getters, setters
+}
+
+public class RiskAssessment {
+    private LoanApplication application;
+    private String level; // "low", "medium", "high"
+
+    // Constructors, getters, setters
+}
+```
+
+### Rules
+
+```java
+rule "Determine Credit Rating - Excellent"
+when
+    $applicant : Applicant(creditScore >= 750)
+    not CreditRating(applicant == $applicant)
+then
+    insertLogical(new CreditRating($applicant, "excellent"));
+end
+
+rule "Determine Credit Rating - Good"
+when
+    $applicant : Applicant(creditScore >= 700, creditScore < 750)
+    not CreditRating(applicant == $applicant)
+then
+    insertLogical(new CreditRating($applicant, "good"));
+end
+
+rule "Determine Credit Rating - Fair"
+when
+    $applicant : Applicant(creditScore >= 650, creditScore < 700)
+    not CreditRating(applicant == $applicant)
+then
+    insertLogical(new CreditRating($applicant, "fair"));
+end
+
+rule "Determine Credit Rating - Poor"
+when
+    $applicant : Applicant(creditScore < 650)
+    not CreditRating(applicant == $applicant)
+then
+    insertLogical(new CreditRating($applicant, "poor"));
+end
+
+rule "Calculate Debt-to-Income Ratio"
+when
+    $application : LoanApplication(status == "pending")
+    $applicant : Applicant(this == $application.applicant)
+    $income : Income(applicant == $applicant)
+then
+    // Calculate monthly payment using simplified formula
+    double monthlyPayment = $application.getAmount() / $application.getTerm();
+    double dti = monthlyPayment / $income.getMonthlyAmount();
+
+    // Store result as a fact
+    insertLogical(new DebtToIncomeRatio($application, dti));
+end
+
+rule "Assess Risk - Low"
+when
+    $application : LoanApplication(status == "pending")
+    $applicant : Applicant(this == $application.applicant)
+    CreditRating(applicant == $applicant, rating == "excellent")
+    DebtToIncomeRatio(application == $application, ratio < 0.3)
+then
+    insertLogical(new RiskAssessment($application, "low"));
+end
+
+rule "Assess Risk - Medium"
+when
+    $application : LoanApplication(status == "pending")
+    $applicant : Applicant(this == $application.applicant)
+    CreditRating(applicant == $applicant, rating == "good")
+    DebtToIncomeRatio(application == $application, ratio < 0.4)
+then
+    insertLogical(new RiskAssessment($application, "medium"));
+end
+
+rule "Assess Risk - High"
+when
+    $application : LoanApplication(status == "pending")
+    $applicant : Applicant(this == $application.applicant)
+    (CreditRating(applicant == $applicant, rating == "fair") ||
+     CreditRating(applicant == $applicant, rating == "poor") ||
+     DebtToIncomeRatio(application == $application, ratio >= 0.4))
+then
+    insertLogical(new RiskAssessment($application, "high"));
+end
+
+rule "Approve Loan - Low Risk"
+salience 10
+when
+    $application : LoanApplication(status == "pending")
+    RiskAssessment(application == $application, level == "low")
+then
+    modify($application) {
+        setStatus("approved"),
+        setReason("Low risk applicant with excellent credit")
+    };
+    System.out.println("Loan approved for " + $application.getApplicant().getName() +
+                       " - Amount: $" + $application.getAmount());
+end
+
+rule "Approve Loan - Medium Risk With Conditions"
+salience 10
+when
+    $application : LoanApplication(status == "pending", amount < 25000)
+    RiskAssessment(application == $application, level == "medium")
+then
+    modify($application) {
+        setStatus("approved"),
+        setReason("Medium risk applicant approved with conditions")
+    };
+    System.out.println("Loan conditionally approved for " + $application.getApplicant().getName() +
+                       " - Amount: $" + $application.getAmount());
+end
+
+rule "Deny Loan - High Risk"
+salience 10
+when
+    $application : LoanApplication(status == "pending")
+    RiskAssessment(application == $application, level == "high")
+then
+    modify($application) {
+        setStatus("denied"),
+        setReason("High risk applicant")
+    };
+    System.out.println("Loan denied for " + $application.getApplicant().getName() +
+                       " - Reason: High risk assessment");
+end
+
+rule "Deny Loan - Medium Risk Large Amount"
+salience 10
+when
+    $application : LoanApplication(status == "pending", amount >= 25000)
+    RiskAssessment(application == $application, level == "medium")
+then
+    modify($application) {
+        setStatus("denied"),
+        setReason("Medium risk with loan amount exceeding threshold")
+    };
+    System.out.println("Loan denied for " + $application.getApplicant().getName() +
+                       " - Reason: Amount too high for risk profile");
+end
+```
+
+### Application Code
+
+```java
+public class LoanApprovalExample {
+    public static void main(String[] args) {
+        KieServices kieServices = KieServices.Factory.get();
+        KieContainer kContainer = kieServices.getKieClasspathContainer();
+        KieSession kSession = kContainer.newKieSession();
+
+        // Create applicants
+        Applicant john = new Applicant("John Smith", 35, 760);
+        Applicant mary = new Applicant("Mary Johnson", 28, 680);
+        Applicant steve = new Applicant("Steve Brown", 42, 610);
+
+        // Create income facts
+        Income johnIncome = new Income(john, 5000.0, "employment");
+        Income maryIncome = new Income(mary, 6200.0, "self-employment");
+        Income steveIncome = new Income(steve, 4000.0, "employment");
+
+        // Create loan applications
+        LoanApplication johnLoan = new LoanApplication(john, 150000.0, 360, "pending"); // 30-year mortgage
+        LoanApplication maryLoan = new LoanApplication(mary, 20000.0, 60, "pending");   // 5-year car loan
+        LoanApplication steveLoan = new LoanApplication(steve, 30000.0, 120, "pending"); // 10-year personal loan
+
+        // Insert facts
+        kSession.insert(john);
+        kSession.insert(mary);
+        kSession.insert(steve);
+        kSession.insert(johnIncome);
+        kSession.insert(maryIncome);
+        kSession.insert(steveIncome);
+        kSession.insert(johnLoan);
+        kSession.insert(maryLoan);
+        kSession.insert(steveLoan);
+
+        // Fire all rules
+        System.out.println("=== Processing Loan Applications ===");
+        kSession.fireAllRules();
+
+        // Display results
+        System.out.println("\n=== Loan Application Results ===");
+        displayLoanResult(johnLoan);
+        displayLoanResult(maryLoan);
+        displayLoanResult(steveLoan);
+
+        // Update a fact and see what happens
+        System.out.println("\n=== Updating Mary's Credit Score ===");
+        mary.setCreditScore(750); // Upgrade to excellent
+        kSession.update(kSession.getFactHandle(mary), mary);
+        kSession.fireAllRules();
+
+        // Display updated results
+        System.out.println("\n=== Updated Loan Application Results ===");
+        displayLoanResult(maryLoan);
+
+        // Clean up
+        kSession.dispose();
+    }
+
+    private static void displayLoanResult(LoanApplication loan) {
+        System.out.println(loan.getApplicant().getName() + ": " +
+                           loan.getStatus() + " - " + loan.getReason());
+    }
+}
+```
+
+This example demonstrates:
+
+- Fact insertion and updating
+- Rule activation and execution based on business conditions
+- Pattern matching across multiple facts
+- Inference (credit ratings derived from credit scores)
+- Truth maintenance (risk assessments update when credit ratings change)
+- Rule prioritization with salience
+- Working memory updates with the modify block
+
+The system processes loan applications based on applicant credit scores, income, and requested loan amounts. It demonstrates a real-world business process with automated decision-making.
+
+## Conclusion
+
+The Drools rule engine is a powerful tool for implementing complex business logic in a declarative way. By understanding its core components and mechanisms, you can leverage its full potential for your business automation needs.
+
+In this guide, we've covered:
+
+- The basic components of the Drools rule engine
+- Types of KIE sessions and when to use each
+- Working with facts in the rule engine
+- Inference and truth maintenance
+- Controlling rule execution
+- Optimizing performance with session pools
+- Best practices for rule design

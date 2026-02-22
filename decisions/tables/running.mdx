@@ -1,0 +1,237 @@
+---
+title: "Running Your Decision Table"
+description: "This guide shows you how to load and execute a decision table in a Java application."
+---
+This guide shows you how to load and execute a decision table in a Java application.
+
+## Creating the Java Application
+
+Let's create a simple Java application that loads our shipping charges decision table and executes it with test data.
+
+### Main Application Class
+
+Create a class called `DecisionTableExample.java`:
+
+```java
+package com.example;
+
+import com.example.model.Charge;
+import com.example.model.Order;
+import org.kie.api.KieServices;
+import org.kie.api.builder.KieBuilder;
+import org.kie.api.builder.KieFileSystem;
+import org.kie.api.builder.KieRepository;
+import org.kie.api.builder.Message.Level;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+import org.kie.internal.io.ResourceFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class DecisionTableExample {
+
+    public static void main(String[] args) {
+        try {
+            // Setup KIE resources
+            KieServices kieServices = KieServices.Factory.get();
+            KieFileSystem kfs = kieServices.newKieFileSystem();
+            kfs.write(ResourceFactory.newClassPathResource("rules/ShippingCharges.drl.xlsx"));
+
+            KieBuilder kieBuilder = kieServices.newKieBuilder(kfs);
+            kieBuilder.buildAll();
+
+            if (kieBuilder.getResults().hasMessages(Level.ERROR)) {
+                throw new RuntimeException("Build Errors:\n" + kieBuilder.getResults().toString());
+            }
+
+            KieRepository kieRepository = kieServices.getRepository();
+            KieContainer kieContainer = kieServices.newKieContainer(kieRepository.getDefaultReleaseId());
+
+            // Create a new session and run test scenarios
+            testShippingCharge(kieContainer, 2, 150.0, 1, "Next-day shipping, under $300, 2 items");
+            testShippingCharge(kieContainer, 5, 150.0, 2, "2-day shipping, under $300, 5 items");
+            testShippingCharge(kieContainer, 3, 350.0, 3, "Standard shipping, over $300, 3 items");
+            testShippingCharge(kieContainer, 5, 400.0, 5, "Standard shipping, over $300, 5 items (free)");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void testShippingCharge(KieContainer kieContainer, int items, double total, int days, String description) {
+        System.out.println("\nTesting: " + description);
+
+        // Create a new session for each test to avoid rule interference
+        KieSession kieSession = kieContainer.newKieSession();
+
+        // Create a new order with the test parameters
+        Order order = new Order(items, total, days);
+        System.out.printf("Order: %d items, $%.2f total, %d delivery days\n",
+                order.getItemsCount(), order.getTotal(), order.getDeliverInDays());
+
+        // Insert the facts and fire the rules
+        kieSession.insert(order);
+        kieSession.fireAllRules();
+
+        // Collect and display results
+        List<Charge> charges = new ArrayList<>();
+        kieSession.getObjects(obj -> obj instanceof Charge)
+                .forEach(obj -> charges.add((Charge) obj));
+
+        if (charges.isEmpty()) {
+            System.out.println("No shipping charge calculated!");
+        } else {
+            System.out.printf("Shipping Charge: $%.2f\n", charges.get(0).getAmount());
+        }
+
+        // Clean up
+        kieSession.dispose();
+    }
+}
+```
+
+## Understanding the Code
+
+Let's break down the important parts of this example:
+
+### Setup and Build the Knowledge Base
+
+```java
+// Setup KIE resources
+KieServices kieServices = KieServices.Factory.get();
+KieFileSystem kfs = kieServices.newKieFileSystem();
+kfs.write(ResourceFactory.newClassPathResource("rules/ShippingCharges.drl.xlsx"));
+
+KieBuilder kieBuilder = kieServices.newKieBuilder(kfs);
+kieBuilder.buildAll();
+
+if (kieBuilder.getResults().hasMessages(Level.ERROR)) {
+    throw new RuntimeException("Build Errors:\n" + kieBuilder.getResults().toString());
+}
+
+KieRepository kieRepository = kieServices.getRepository();
+KieContainer kieContainer = kieServices.newKieContainer(kieRepository.getDefaultReleaseId());
+```
+
+This code:
+1. Gets a KIE services instance
+2. Creates a virtual file system to hold the rules
+3. Loads the decision table from the classpath
+4. Builds the knowledge base
+5. Checks for any build errors
+6. Creates a container that holds the compiled rules
+
+### Testing with Different Scenarios
+
+```java
+testShippingCharge(kieContainer, 2, 150.0, 1, "Next-day shipping, under $300, 2 items");
+testShippingCharge(kieContainer, 5, 150.0, 2, "2-day shipping, under $300, 5 items");
+testShippingCharge(kieContainer, 3, 350.0, 3, "Standard shipping, over $300, 3 items");
+testShippingCharge(kieContainer, 5, 400.0, 5, "Standard shipping, over $300, 5 items (free)");
+```
+
+This runs four different test cases with varying:
+- Number of items
+- Order total
+- Delivery days
+
+### The Test Method
+
+```java
+private static void testShippingCharge(KieContainer kieContainer, int items, double total, int days, String description) {
+    System.out.println("\nTesting: " + description);
+
+    // Create a new session for each test to avoid rule interference
+    KieSession kieSession = kieContainer.newKieSession();
+
+    // Create a new order with the test parameters
+    Order order = new Order(items, total, days);
+    System.out.printf("Order: %d items, $%.2f total, %d delivery days\n",
+            order.getItemsCount(), order.getTotal(), order.getDeliverInDays());
+
+    // Insert the facts and fire the rules
+    kieSession.insert(order);
+    kieSession.fireAllRules();
+
+    // Collect and display results
+    List<Charge> charges = new ArrayList<>();
+    kieSession.getObjects(obj -> obj instanceof Charge)
+            .forEach(obj -> charges.add((Charge) obj));
+
+    if (charges.isEmpty()) {
+        System.out.println("No shipping charge calculated!");
+    } else {
+        System.out.printf("Shipping Charge: $%.2f\n", charges.get(0).getAmount());
+    }
+
+    // Clean up
+    kieSession.dispose();
+}
+```
+
+For each test case, this method:
+1. Creates a new KIE session (a working memory for rules)
+2. Creates an Order object with the test parameters
+3. Inserts the order into the session
+4. Fires all the rules to calculate the shipping charge
+5. Collects any Charge objects that were created
+6. Displays the results
+7. Disposes of the session to free resources
+
+## Running the Application
+
+You can run this application by executing the main method in your IDE or by building and running the JAR file.
+
+### Expected Output
+
+When you run the application, you should see output similar to this:
+
+```
+Testing: Next-day shipping, under $300, 2 items
+Order: 2 items, $150.00 total, 1 delivery days
+Shipping Charge: $35.00
+
+Testing: 2-day shipping, under $300, 5 items
+Order: 5 items, $150.00 total, 2 delivery days
+Shipping Charge: $17.50
+
+Testing: Standard shipping, over $300, 3 items
+Order: 3 items, $350.00 total, 3 delivery days
+Shipping Charge: $4.50
+
+Testing: Standard shipping, over $300, 5 items (free)
+Order: 5 items, $400.00 total, 5 delivery days
+Shipping Charge: $0.00
+```
+
+## Alternative Loading Method
+
+For simpler applications, you can also use the SpreadsheetCompiler directly:
+
+```java
+// Alternative loading method using SpreadsheetCompiler
+SpreadsheetCompiler compiler = new SpreadsheetCompiler();
+String drl = compiler.compile(ResourceFactory.newClassPathResource("rules/ShippingCharges.drl.xlsx"),
+                             InputType.XLS);
+
+KieHelper kieHelper = new KieHelper();
+kieHelper.addContent(drl, ResourceType.DRL);
+KieContainer kieContainer = kieHelper.getKieContainer();
+```
+
+This method:
+1. Creates a SpreadsheetCompiler instance
+2. Compiles the decision table directly to DRL (Drools Rule Language)
+3. Creates a KieHelper to add the compiled DRL
+4. Gets a KieContainer from the helper
+
+## Next Steps
+
+Now that you know how to create and run a decision table, you can:
+
+1. Modify the existing rules to change the shipping charges
+2. Add more conditions like customer type or destination region
+3. Create more complex decision tables for other business scenarios
+
+In the next section, we'll explore the RuleSet definitions in more detail.

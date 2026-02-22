@@ -1,0 +1,93 @@
+---
+title: "Process API in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "After learning how to define and model a process using key BPMN nodes, it’s time to explore how to interact with these processes programmatically. In Aletyx Enterprise Build of Kogito and Drools,..."
+---
+After learning how to define and model a process using key BPMN nodes, it’s time to explore how to interact with these processes programmatically. In Aletyx Enterprise Build of Kogito and Drools, you have several options to manage and interact with processes, including a Domain-Specific REST API, a Technical REST API, and a Java API.
+
+Aletyx Enterprise Build of Kogito and Drools emphasizes domain-specific APIs that are automatically generated based on your BPMN models. However, for more flexibility or system-level interactions, the Technical API and Java API offer additional options.
+
+## REST Domain API
+
+Within Aletyx Enterprise Build of Kogito and Drools, the Kogito components have the built-in functionality to generate domain-specific REST endpoints that directly correspond to the processes defined in BPMN. These endpoints provide CRUD (Create, Read, Update, Delete) operations and are tailored to each process.
+Example: Hiring Process
+
+If you have a process named hiring, the following REST endpoints would be generated:
+
+| Method | Endpoint       | Description                                            |
+| ------ | -------------- | ------------------------------------------------------ |
+| GET    | /hiring        | Returns a list of instances for the hiring process.    |
+| POST   | /hiring        | Creates a new hiring process instance.                 |
+| GET    | /hiring/{id}   | Retrieves details of a specific instance by ID.        |
+| PUT    | /hiring/{id}   | Updates the process instance by ID.                    |
+| DELETE | /hiring/{id}   | Cancels or terminates the instance by ID.              |
+| PATCH  | /hiring/{id}   | Partially updates the instance (ignoring null values). |
+| GET    | /hiring/schema | Returns the JSON schema for the process.               |
+
+This approach simplifies process interaction for client applications, allowing easy access to instances and operations without requiring custom back-end development.
+
+## REST Technical API
+
+In addition to domain-specific endpoints, Apache KIE provides a Technical REST API through the /management endpoint. This API is part of the management-addon and is designed to offer system-level operations, such as process instance management, monitoring, and administrative functions.
+
+| Method | Endpoint                                                                                       | Description                                        |
+| ------ | ---------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| GET    | /management/processes                                                                          | Lists all available processes.                     |
+| GET    | /management/processes/{processId}                                                              | Retrieves details of a specific process by ID.     |
+| DELETE | /management/processes/{processId}/instances/{processInstanceId}                                | Deletes a process instance by ID.                  |
+| GET    | /management/processes/{processId}/instances/{processInstanceId}/error                          | Retrieves error details for a process instance.    |
+| POST   | /management/processes/{processId}/instances/{processInstanceId}/migrate                        | Migrates a process instance to a new process.      |
+| GET    | /management/processes/{processId}/instances/{processInstanceId}/nodeInstances                  | Lists node instances of a process instance.        |
+| POST   | /management/processes/{processId}/instances/{processInstanceId}/nodeInstances/{nodeInstanceId} | Re-triggers a node instance within a process.      |
+| DELETE | /management/processes/{processId}/instances/{processInstanceId}/nodeInstances/{nodeInstanceId} | Deletes a node instance within a process instance. |
+| POST   | /management/processes/{processId}/instances/{processInstanceId}/nodes/{nodeId}                 | Re-triggers a node within a process instance.      |
+| POST   | /management/processes/{processId}/instances/{processInstanceId}/retrigger                      | Re-triggers the execution of a process instance.   |
+| POST   | /management/processes/{processId}/instances/{processInstanceId}/skip                           | Skips the current node of a process instance.      |
+| POST   | /management/processes/{processId}/migrate                                                      | Migrates all instances of the specified process.   |
+| GET    | /management/processes/{processId}/nodes                                                        | Retrieves details about nodes in a process.        |
+| GET    | /management/processes/{processId}/source                                                       | Retrieves the source code of a process.            |
+| POST   | /management/jobs/{processId}/instances/{processInstanceId}/timers/{timerId}                    | Creates or updates a timer job for a process.      |
+
+<Note title="Note">
+
+The Technical API in version 10.0.0 includes a limited set of operations. Future releases are expected to expand its functionality.
+</Note>
+## Java API
+
+The Java API allows direct interaction with process instances from within your application. This approach is ideal for scenarios where REST is unnecessary or when deeper integration is required. Aletyx Enterprise Build of Kogito and Drools heavily relies on Dependency Injection (CDI) to access process definitions and instances.
+
+Here’s an example demonstrating how to interact with a process using the Java API:
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+import org.kie.kogito.Model;
+import org.kie.kogito.process.Process;
+import org.kie.kogito.process.ProcessInstance;
+import org.kie.kogito.process.ProcessService;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+
+@ApplicationScoped
+public class MyService {
+
+   @Inject
+   ProcessService processService;
+
+   @Inject
+   @Named("contentApproval")
+   Process<? extends Model> process;
+
+   public void startMyProcessCustomWay() {
+        Model m = process.createModel();
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("document", new Document("id", "name", "content"));
+        m.fromMap(parameters);
+
+        ProcessInstance<?> processInstance = processService.createProcessInstance((Process)process, null, m, null, null);
+        System.out.println("Status:" + processInstance.checkError().variables());
+    }
+}
+```

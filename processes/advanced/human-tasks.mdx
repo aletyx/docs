@@ -1,0 +1,500 @@
+---
+title: "Human Tasks in Detail"
+description: "Human tasks represent activities that require human judgment, approval, or interaction. They are a core component in business processes that need human involvement. The Aletyx Enterprise Build of..."
+---
+Human tasks represent activities that require human judgment, approval, or interaction. They are a core component in business processes that need human involvement. The Aletyx Enterprise Build of Kogito and Drools provides robust human task management capabilities through its task service APIs.
+
+## Human Task Lifecycle
+
+Human tasks in the Aletyx Enterprise Build of Kogito and Drools follow a defined lifecycle with well-established states and transitions.
+
+### Core Task States
+
+When a process execution reaches a user task node, the task enters the following states as it progresses:
+
+1. **Created**: Initial state when the task is instantiated
+2. **Ready**: The task is available to be worked on by potential owners
+3. **Reserved/Claimed**: The task has been claimed by a specific user
+4. **In Progress**: Work on the task has begun
+5. **Completed**: The task has been successfully finished
+6. **Failed**: The task could not be completed successfully
+7. **Error**: The task encountered an error during execution
+8. **Exited**: The task was ended before normal completion
+9. **Obsolete**: The task is no longer relevant
+
+![Human Task Lifecycle](/images/core/processes/advanced-bpmn/tasks/images/human-task-lifecycle.png)
+
+### Task Phase Transitions
+
+Tasks transition between phases through specific operations:
+
+- **Claim**: Assigns the task to a specific user, restricting access to others
+- **Start**: Indicates that work on the task has begun
+- **Complete**: Finishes the task successfully with result data
+- **Fail**: Marks the task as failed with fault data
+- **Skip**: Bypasses the task if it's optional
+- **Release**: Unassigns the task from a user, making it available to others
+- **Delegate**: Temporarily transfers ownership to another user
+- **Forward**: Completely changes ownership to another user
+- **Suspend**: Temporarily prevents work on the task
+- **Resume**: Allows a suspended task to be worked on again
+
+## Task Assignment
+
+The Aletyx Enterprise Build of Kogito and Drools provides multiple ways to assign tasks to users or groups.
+
+### Assignment Methods
+
+- **Direct Assignment**: Assigning to a specific user
+  ```xml
+  <userTask id="approveExpense" name="Approve Expense Report">
+    <extensionElements>
+      <tns:taskName>Expense Approval</tns:taskName>
+      <tns:actorId>john</tns:actorId>
+    </extensionElements>
+  </userTask>
+  ```
+
+- **Group Assignment**: Assigning to a group of users
+  ```xml
+  <userTask id="approveExpense" name="Approve Expense Report">
+    <extensionElements>
+      <tns:taskName>Expense Approval</tns:taskName>
+      <tns:groupId>managers</tns:groupId>
+    </extensionElements>
+  </userTask>
+  ```
+
+- **Expression-Based Assignment**: Using expressions to calculate assignment at runtime
+  ```xml
+  <userTask id="approveExpense" name="Approve Expense Report">
+    <extensionElements>
+      <tns:taskName>Expense Approval</tns:taskName>
+      <tns:actorId>#{manager}</tns:actorId>
+    </extensionElements>
+  </userTask>
+  ```
+
+### Assignment Parameters
+
+The Aletyx Enterprise Build of Kogito and Drools supports the following assignment parameters:
+
+| Parameter Name               | Description                                  | Example Value              |
+| ---------------------------- | -------------------------------------------- | -------------------------- |
+| ActorId                      | Comma-separated list of authorized users     | john,mary,#{actor}         |
+| GroupId                      | Comma-separated list of authorized groups    | managers,#{mygroup}        |
+| BusinessAdministratorId      | Comma-separated list of administrators       | administrator,#{adminuser} |
+| BusinessAdministratorGroupId | Comma-separated list of administrator groups | admins,#{admingroup}       |
+| ExcludedOwnerId              | Comma-separated list of unauthorized users   | paul,#{lastactor}          |
+
+### Assignment Best Practices
+
+1. **Prefer Group Assignment**: Assign to groups rather than individuals to avoid bottlenecks
+2. **Use Claim Pattern**: Have users claim tasks rather than directly assigning them
+3. **Define Escalation Paths**: Configure what happens if tasks aren't completed in time
+4. **Use Dynamic Assignment**: Calculate assignments at runtime based on workload, skills, etc.
+5. **Consider Business Admins**: Designate administrators who can intervene if needed
+
+## Task Data Management
+
+Tasks consume and produce data through a well-defined data mapping system.
+
+### Input and Output Data Handling
+
+- **Task Input**: Data passed to the task when it is created
+- **Task Output**: Data produced when the task is completed
+- **Content Storage**: Task data is stored separately from process data
+
+### Data Mapping Example
+
+```xml
+<userTask id="approveExpense" name="Approve Expense Report">
+  <ioSpecification>
+    <dataInput id="_DataInput_1" name="expense"/>
+    <dataInput id="_DataInput_2" name="requester"/>
+    <dataOutput id="_DataOutput_1" name="approved"/>
+    <dataOutput id="_DataOutput_2" name="comments"/>
+    <inputSet>
+      <dataInputRefs>_DataInput_1</dataInputRefs>
+      <dataInputRefs>_DataInput_2</dataInputRefs>
+    </inputSet>
+    <outputSet>
+      <dataOutputRefs>_DataOutput_1</dataOutputRefs>
+      <dataOutputRefs>_DataOutput_2</dataOutputRefs>
+    </outputSet>
+  </ioSpecification>
+  <dataInputAssociation>
+    <sourceRef>expenseReport</sourceRef>
+    <targetRef>_DataInput_1</targetRef>
+  </dataInputAssociation>
+  <dataInputAssociation>
+    <sourceRef>initiator</sourceRef>
+    <targetRef>_DataInput_2</targetRef>
+  </dataInputAssociation>
+  <dataOutputAssociation>
+    <sourceRef>_DataOutput_1</sourceRef>
+    <targetRef>expenseApproved</targetRef>
+  </dataOutputAssociation>
+  <dataOutputAssociation>
+    <sourceRef>_DataOutput_2</sourceRef>
+    <targetRef>approvalComments</targetRef>
+  </dataOutputAssociation>
+</userTask>
+```
+
+### Data Access Patterns
+
+Tasks provide several ways to access their data:
+
+1. **Through the Task Service API**: Programmatically access task content
+2. **Through Task Forms**: Render forms based on task data
+3. **Through Task Listeners**: React to task lifecycle events
+
+## Task API Interaction
+
+The Aletyx Enterprise Build of Kogito and Drools provides comprehensive APIs for interacting with human tasks.
+
+### Core Task Services
+
+#### TaskService API
+
+The `TaskService` is the main API for interacting with human tasks:
+
+```java
+@Inject
+private TaskService taskService;
+
+// Key methods
+long taskId = taskService.addTask(task, params);
+taskService.claim(taskId, userId);
+taskService.start(taskId, userId);
+taskService.complete(taskId, userId, results);
+taskService.fail(taskId, userId, faultData);
+taskService.forward(taskId, userId, targetUserId);
+taskService.release(taskId, userId);
+taskService.delegate(taskId, userId, targetUserId);
+```
+
+#### UserTaskService API
+
+The `UserTaskService` provides methods specific to user task management:
+
+```java
+@Inject
+private UserTaskService userTaskService;
+
+// Key methods
+List<TaskSummary> tasks = userTaskService.getTasksAssignedAsPotentialOwner(userId, language);
+List<TaskSummary> tasks = userTaskService.getTasksOwned(userId, language);
+Task task = userTaskService.getTask(taskId);
+```
+
+### Authentication and Authorization
+
+Task operations are protected by authentication and authorization:
+
+```java
+// Set up security policy with identity information
+StaticIdentityProvider identity = new StaticIdentityProvider("admin", Collections.singletonList("managers"));
+SecurityPolicy policy = SecurityPolicy.of(identity);
+
+// Get list of work items, taking security restrictions into account
+List<WorkItem> workItems = processInstance.workItems(policy);
+
+// Work on a task with security context
+processInstance.transitionWorkItem(wiId,
+                                   new HumanTaskTransition(Claim.ID, null, policy));
+```
+
+### REST API Endpoints
+
+Tasks can also be managed through REST endpoints:
+
+#### Task Lifecycle Management
+
+```
+[POST] /{processId}/{processInstanceId}/{taskName}/{taskInstanceId}/phase/{phaseName}
+```
+
+Example:
+```
+http://localhost:8080/approval/ec44f890-d21d-444f-a4ec-cb88589bd79/firstLineApproval/7a520588-d5ab-464a-8378-d34fda3ff7e9/phase/complete
+```
+
+#### Collaborative Features
+
+Tasks support comments and attachments through REST:
+
+```
+# Comments
+[GET] /{processId}/{processInstanceId}/{taskName}/{taskInstanceId}/comments
+[POST] /{processId}/{processInstanceId}/{taskName}/{taskInstanceId}/comments
+[PUT] /{processId}/{processInstanceId}/{taskName}/{taskInstanceId}/comments/{commentId}
+[DELETE] /{processId}/{processInstanceId}/{taskName}/{taskInstanceId}/comments/{commentId}
+
+# Attachments
+[GET] /{processId}/{processInstanceId}/{taskName}/{taskInstanceId}/attachments
+[POST] /{processId}/{processInstanceId}/{taskName}/{taskInstanceId}/attachments
+[PUT] /{processId}/{processInstanceId}/{taskName}/{taskInstanceId}/attachments/{attachmentId}
+[DELETE] /{processId}/{processInstanceId}/{taskName}/{taskInstanceId}/attachments/{attachmentId}
+```
+
+## Task Forms
+
+Human tasks typically include a form for collecting user input.
+
+### Form Types
+
+- **Generated Forms**: Automatically generated based on task data
+- **Form Modeler Forms**: Designed using the Form Modeler
+- **Custom Forms**: Custom HTML/JavaScript forms for maximum flexibility
+
+### Form Integration
+
+Forms are associated with tasks through form names that follow specific conventions:
+
+- `{processId}.{taskName}`: Task-specific form
+- `{taskName}`: Generic form for a task name
+- `{processId}.{taskName}-taskform`: Alternative naming convention
+
+### Displaying Forms
+
+Forms can be displayed in several ways:
+
+1. **Via Tasklist UI**: Default user interface for task management
+2. **Via Embedded Form Renderer**: Embedding forms in custom UIs
+3. **Via Custom UI Integration**: Building custom task interfaces
+
+## Task Notifications and Deadlines
+
+Tasks can have notifications and deadlines to ensure timely processing.
+
+### Deadline Configuration
+
+```xml
+<userTask id="approveExpense">
+  <extensionElements>
+    <tns:deadlines>
+      <tns:startDeadline>
+        <tns:deadline date="2023-12-31T23:59:59Z">
+          <tns:escalations>
+            <tns:escalation name="Start Deadline Escalation">
+              <tns:notifications>
+                <tns:notification>
+                  <tns:emailNotification>
+                    <tns:to>#{manager}</tns:to>
+                    <tns:subject>Task Start Deadline Approaching</tns:subject>
+                    <tns:body>The task "Approve Expense" needs to be started soon.</tns:body>
+                  </tns:emailNotification>
+                </tns:notification>
+              </tns:notifications>
+            </tns:escalation>
+          </tns:escalations>
+        </tns:deadline>
+      </tns:startDeadline>
+      <tns:endDeadline>
+        <tns:deadline period="2d">
+          <tns:escalations>
+            <tns:escalation name="End Deadline Escalation">
+              <tns:reassignments>
+                <tns:reassignment>
+                  <tns:users>
+                    <tns:user>manager</tns:user>
+                  </tns:users>
+                </tns:reassignment>
+              </tns:reassignments>
+            </tns:escalation>
+          </tns:escalations>
+        </tns:deadline>
+      </tns:endDeadline>
+    </tns:deadlines>
+  </extensionElements>
+</userTask>
+```
+
+### Notification Types
+
+- **Email Notifications**: Send emails when deadlines approach
+- **Reassignments**: Automatically reassign tasks when deadlines are missed
+- **Custom Notifications**: Implement custom notification handlers
+
+## Task Event Listeners
+
+Task event listeners allow you to react to task state changes.
+
+```java
+public class MyTaskEventListener implements TaskLifeCycleEventListener {
+
+    @Override
+    public void beforeTaskActivatedEvent(TaskEvent event) {
+        // Code executed before task is activated
+    }
+
+    @Override
+    public void afterTaskCompletedEvent(TaskEvent event) {
+        // Code executed after task is completed
+        Task task = event.getTask();
+        long processInstanceId = task.getTaskData().getProcessInstanceId();
+
+        // Custom logic here
+    }
+
+    // Implement other event methods as needed
+}
+```
+
+## Custom Task Lifecycle Implementation
+
+The Aletyx Enterprise Build of Kogito and Drools allows for custom task lifecycle definitions:
+
+```java
+public class CustomTaskLifecycleManager extends DefaultUserTaskManager {
+
+    @Override
+    public void beforeTaskTransition(TaskContext context, Task task, TaskTransition transition) {
+        // Custom logic before task transition
+        super.beforeTaskTransition(context, task, transition);
+    }
+
+    @Override
+    public void afterTaskTransition(TaskContext context, Task task, TaskTransition transition) {
+        // Custom logic after task transition
+        super.afterTaskTransition(context, task, transition);
+    }
+}
+```
+
+## Integration with External Systems
+
+Task management can be integrated with external systems:
+
+```java
+@ApplicationScoped
+public class ExternalTicketSystemIntegration implements TaskLifeCycleEventListener {
+
+    @Inject
+    private TicketSystemClient ticketClient;
+
+    @Override
+    public void afterTaskAddedEvent(TaskEvent event) {
+        Task task = event.getTask();
+
+        // Only create tickets for certain task types
+        if ("CustomerSupport".equals(task.getNames().get(0).getText())) {
+            // Extract relevant data
+            Map<String, Object> inputData = getTaskContent(task.getId());
+            String customerId = (String) inputData.get("customerId");
+            String issue = (String) inputData.get("issue");
+
+            // Create ticket in external system
+            String ticketId = ticketClient.createTicket(customerId, issue, "Created from task " + task.getId());
+
+            // Store ticket ID with task
+            Map<String, Object> outputData = new HashMap<>();
+            outputData.put("ticketId", ticketId);
+            taskService.addContent(task.getId(), outputData);
+        }
+    }
+
+    @Override
+    public void afterTaskCompletedEvent(TaskEvent event) {
+        Task task = event.getTask();
+
+        // Only process tickets for certain task types
+        if ("CustomerSupport".equals(task.getNames().get(0).getText())) {
+            // Get ticket ID
+            Map<String, Object> taskData = getTaskContent(task.getId());
+            String ticketId = (String) taskData.get("ticketId");
+
+            if (ticketId != null) {
+                // Get completion data
+                String resolution = (String) taskData.get("resolution");
+
+                // Update external ticket
+                ticketClient.closeTicket(ticketId, resolution);
+            }
+        }
+    }
+
+    private Map<String, Object> getTaskContent(long taskId) {
+        try {
+            return taskService.getTaskContent(taskId);
+        } catch (Exception e) {
+            return new HashMap<>();
+        }
+    }
+}
+```
+
+## Human Task Best Practices
+
+### Task Design Principles
+
+1. **Clear Ownership**: Make it obvious who should work on the task
+2. **Sufficient Context**: Provide enough information to perform the task
+3. **Appropriate Granularity**: Neither too large nor too small
+4. **Realistic Timeframes**: Set reasonable deadlines and notifications
+5. **Error Recovery**: Design for handling exceptions and error conditions
+
+### Common Anti-Patterns
+
+1. **Orphaned Tasks**: Tasks without clear owners or groups
+2. **Overburdened Actors**: Too many tasks assigned to the same person
+3. **Bottleneck Users**: Critical processes dependent on specific individuals
+4. **Unclear Task Purpose**: Tasks without clear instructions or outcomes
+5. **Missing Escalation Paths**: No handling for missed deadlines
+
+### Performance Considerations
+
+1. **Task Indexing**: Use appropriate indexing for task queries
+2. **Task Archiving**: Move completed tasks to archives
+3. **Task Data Size**: Keep task data reasonably sized
+4. **Batch Operations**: Use batch operations for bulk task management
+5. **Monitoring**: Track task performance and bottlenecks
+
+## Complete Task Lifecycle Example
+
+```java
+// Complete example showing task lifecycle management
+try {
+    // Get task service
+    TaskService taskService = runtimeEngine.getTaskService();
+
+    // Find tasks for potential owner
+    List<TaskSummary> tasks = taskService.getTasksAssignedAsPotentialOwner("john", "en-UK");
+
+    if (!tasks.isEmpty()) {
+        TaskSummary taskSummary = tasks.get(0);
+        long taskId = taskSummary.getId();
+
+        // Task details
+        System.out.println("Task: " + taskSummary.getName());
+        System.out.println("Status: " + taskSummary.getStatus());
+        System.out.println("Created: " + taskSummary.getCreatedOn());
+
+        // Claim the task
+        taskService.claim(taskId, "john");
+        System.out.println("Task claimed");
+
+        // Start the task
+        taskService.start(taskId, "john");
+        System.out.println("Task started");
+
+        // Get task input data
+        Map<String, Object> inputContent = taskService.getTaskContent(taskId);
+        System.out.println("Task input data: " + inputContent);
+
+        // Prepare task output data
+        Map<String, Object> results = new HashMap<>();
+        results.put("approved", true);
+        results.put("comments", "Looks good to me");
+
+        // Complete the task
+        taskService.complete(taskId, "john", results);
+        System.out.println("Task completed");
+    }
+} catch (Exception e) {
+    System.err.println("Error: " + e.getMessage());
+    e.printStackTrace();
+}
+```

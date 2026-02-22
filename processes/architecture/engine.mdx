@@ -1,0 +1,17 @@
+---
+title: "The Engine in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "At the core of any workflow system lies the engine, a state machine responsible for processing inputs and moving processes between states until they reach a waiting state or completion."
+---
+![The Engine](/images/core/processes/images/state-machine.png)
+
+At the core of any workflow system lies the **engine**, a state machine responsible for processing inputs and moving processes between states until they reach a waiting state or completion.
+
+In Apache KIE, the engine is provided by **Kogito**, which powers both **jBPM** and **SonataFlow**. These two frameworks offer different capabilities but share the same engine. In simplified terms, **jBPM** and **SonataFlow** expose the engine through their respective **domain-specific languages (DSLs)**—**BPMN** and **CNCF Serverless Workflow**, respectively.
+
+### Pluggable and Efficient Persistence
+
+One of the key strengths of Apache KIE is its **pluggable persistence mechanism**, allowing seamless switching between different storage solutions such as **PostgreSQL, RocksDB, Infinispan, MongoDB, or FileSystem**. Among these, **PostgreSQL** is the most mature and widely adopted.
+
+The engine employs a **de-normalized persistence model**, storing only essential data as **key/value pairs** to maintain efficiency. This is a deliberate design choice, addressing performance bottlenecks faced in previous generations of the engine, where a fully normalized data structure hindered scalability in high-volume environments. By separating **runtime data from queryable data**, the system ensures optimal performance even under intensive workloads.
+
+![Database Entities](/images/core/processes/images/engine-data-model.png)

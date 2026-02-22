@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="no-dark-filter">
+	<!-- Architect Icon - Simplified to match existing style -->
+	<style>
+		.navy {
+			fill: #000000;
+		}
+
+		.blue {
+			fill: #1a1a1a;
+		}
+
+		.orange {
+			fill: #FC764C;
+		}
+
+		.white {
+			fill: #FFFFFF;
+		}
+
+		.background {
+			fill: none;
+		}
+	</style>
+
+	<!-- Blueprint border - dotted line rectangle -->
+	<rect x="10" y="10" width="80" height="80" rx="10" stroke="#000000" stroke-width="2" stroke-dasharray="4,2"
+		class="background" />
+
+	<!-- Database -->
+	<ellipse cx="30" cy="35" rx="15" ry="10" class="navy" />
+
+	<!-- Server/Document -->
+	<rect x="65" y="25" width="20" height="25" rx="3" class="blue" />
+	<line x1="70" y1="30" x2="80" y2="30" stroke="white" stroke-width="2" />
+	<line x1="70" y1="37" x2="80" y2="37" stroke="white" stroke-width="2" />
+	<line x1="70" y1="44" x2="80" y2="44" stroke="white" stroke-width="2" />
+
+	<!-- Connection line -->
+	<line x1="45" y1="35" x2="65" y2="35" stroke="#000000" stroke-width="2" stroke-dasharray="4,2" />
+
+	<!-- Process boxes -->
+	<rect x="25" y="65" width="20" height="15" rx="3" class="orange" />
+	<rect x="65" y="65" width="20" height="15" rx="3" class="orange" />
+
+	<!-- Process flow arrow -->
+	<path d="M45,72.5 L55,72.5 L65,72.5" stroke="#000000" stroke-width="2" />
+	<path d="M55,67.5 L65,72.5 L55,77.5 Z" class="navy" />
+
+	<!-- Compass at bottom right -->
+	<circle cx="85" cy="85" r="8" stroke="#000000" stroke-width="2" fill="white" />
+	<line x1="85" y1="77" x2="85" y2="93" stroke="#000000" stroke-width="1.5" />
+	<line x1="77" y1="85" x2="93" y2="85" stroke="#000000" stroke-width="1.5" />
+	<line x1="85" y1="85" x2="90" y2="80" stroke="#FC764C" stroke-width="2" />
+</svg>

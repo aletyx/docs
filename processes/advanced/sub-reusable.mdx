@@ -1,0 +1,35 @@
+---
+title: "Reusable Subprocesses in Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx"
+description: "Reusable subprocesses are standalone processes that can be invoked by multiple parent processes. They promote reusability by allowing common process logic to be defined once and used in various..."
+---
+Reusable subprocesses are standalone processes that can be invoked by multiple parent processes. They promote reusability by allowing common process logic to be defined once and used in various contexts.
+
+## Key Characteristics
+
+Independence: Defined separately and can be called by different processes.
+Parameterization: Can accept input parameters and return outputs.
+Reusability: Ideal for common functionalities across multiple processes.
+
+## When to Use
+
+Use reusable subprocesses when you have a set of activities that are common across multiple processes. This approach reduces redundancy and simplifies maintenance, as changes to the subprocess logic need to be made only once.
+
+## Example
+
+Consider an Order Processing System where an order must go through a validation process before fulfillment. This validation involves multiple checks, such as:
+
+- Calculations
+- Manual Validation
+
+Rather than implementing these checks in every order-related workflow, you can encapsulate them within a reusable subprocess called "Validate Order Items." This subprocess can be invoked by various parent processes, such as:
+
+- Standard Order Processing
+- Bulk Order Handling
+
+ ![Embedded Subprocesses](/images/core/processes/advanced-bpmn/images/sub-reusable-1.png)
+
+By defining "Validate Order Items" as a reusable subprocess, any updates to the validation logic (e.g., new compliance rules or stock validation improvements) need to be made only once, ensuring consistency across all order workflows.
+
+ ![Embedded Subprocesses](/images/core/processes/advanced-bpmn/images/sub-reusable-2.png)
+
+ ![Embedded Subprocesses](/images/core/processes/advanced-bpmn/images/sub-reusable-3.png)
