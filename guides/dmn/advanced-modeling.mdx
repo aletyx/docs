@@ -119,7 +119,9 @@ For the claim structure you need to create 4 different properties as outlined in
 
 ![Claim Data Model](/images/guides/examples/dmn/images/claim-data-model.png)
 
-<Warning title="Warning">
+<Warning>
+**Warning**
+
 
 You will notice that Date above is prefixed as tDate, this is not a typo in the documentation, but because `Date/date` is a reserved word in DMN, you cannot use it as a variable name. For reference, please refer to our reference on [DMN](/reference/dmn/reserved-words)
 </Warning>
@@ -256,63 +258,13 @@ Once this function is created, we need to edit our Decision for the Destination 
 2. Edit _ContextEntry-1_ to being **Highest Risk** with a type string by clicking the first box.
 
     
-    <img src="/images/guides/examples/dmn/images/highest-risk-context.png" class="annotated-image" alt="Context Expression for Risk Assessment">
-
-
-    Context Variable</div>
-    In a Context expression, you first define named variables that can be used within the calculation. "Highest Risk" is defined here as a string variable. This is the value that can be used in the next parts of your decision. By clicking this box, you will open the definition window for the particular Context variable you are selected to.</div>
-
-    Context Variable Definition</div>
-    In a Context expression, you first define named variables that can be used within the calculation. "Highest Risk" is defined here as a string variable. This is the value that can be used in the next parts of your decision. What you name in this box will define the context variable for the returned value for the rest of this Context Decision particular Context variable you are selected to.</div>
-
-    Data Type Dropdown</div>
-    DMN requires explicit typing of all variables. This dropdown allows selection from built-in types (string, number, boolean, date) or custom-defined complex types.</div>
-
-    Type Management</div>
-    The "Manage" button provides access to create, edit or import custom data types for use in your decision model.</div>
+    <img src="/images/guides/examples/dmn/images/highest-risk-context.png" alt="Context Expression for Risk Assessment">
 
 
 3. Next on the _Select expression_ select **Literal**. The content for the literal expression will determine what is the highest risk rating. For reference on the different Expressions refer to the image or the reference section for [Select expression](/reference/dmn/select-expression)
 
     
-    <img src="/images/guides/examples/dmn/images/context-select-expression.png" class="annotated-image" alt="DMN Expression Types Menu">
-
-
-    Literal Expression</div>
-    The simplest expression type. Used for direct values, mathematical operations, or simple FEEL expressions. Example: <code>Base Premium * Risk Factor</code></div>
-
-    Relation</div>
-    Creates a table structure for organizing data. Unlike a decision table, relations don't contain logic but represent structured data with columns and rows. See: [RelationReference](/reference/dmn/select-expression#relation).</div>
-
-    Context</div>
-    Defines a set of key-value pairs (named variables) that can be referenced within the context. Useful for multi-step calculations that build on previous values. See: [Context Reference](/reference/dmn/select-expression#context).</div>
-
-    Decision Table</div>
-    The most widely used DMN expression. Organizes conditions (inputs) and conclusions (outputs) in a tabular format with hit policies determining how rules are applied. See: [Decision Table Reference](/reference/dmn/select-expression#decision-table).</div>
-
-    List</div>
-    Creates an ordered collection of values or expressions. Each list item can be a different type of expression, allowing for complex collections. See: [List Reference](/reference/dmn/select-expression#list).</div>
-
-    Invocation</div>
-    Calls a Business Knowledge Model (BKM) or function defined elsewhere in the model. Parameters can be passed to the function being called. See: [Invocation Reference](/reference/dmn/select-expression#invocation).</div>
-
-    Function</div>
-    Defines a reusable function with parameters. Can contain any FEEL expression type and be used within other expressions through Invocation. See: [Function Reference](/reference/dmn/select-expression#function).</div>
-
-    Conditional (If/Then/Else)</div>
-    Creates branching logic with if, then, else statements. Allows for different results based on specific conditions being met. See: [Conditional Reference](/reference/dmn/select-expression#conditional).</div>
-
-    For Loop</div>
-    Iterates over items in a list or collection, applying an expression to each item. Useful for transforming collections or aggregating values. See: [For Loop Reference](/reference/dmn/select-expression#for-loop).</div>
-
-    Some</div>
-    Tests when a condition is true for at least one item See: [Some reference](/reference/dmn/select-expression#some).</div>
-
-    Filter</div>
-    Filters a collection based on a given condition. See: [Filter Reference](/reference/dmn/select-expression#filter).</div>
-
-    Every</div>
-    Tests if a condition is true for every item in a collection. Returns a boolean result based on whether all items satisfy the condition. See: [Every Reference](/reference/dmn/select-expression#every)</div>
+    <img src="/images/guides/examples/dmn/images/context-select-expression.png" alt="DMN Expression Types Menu">
 
 
     ```java
@@ -343,26 +295,7 @@ Once this function is created, we need to edit our Decision for the Destination 
     ![Destination Risk Factor Context Complete](/images/guides/examples/dmn/images/destination-risk-factor-context.png)
 
 	
-    <img src="/images/guides/examples/dmn/images/destination-risk-factor-context.png" class="annotated-image" alt="Full Context Expression Implementation">
-
-
-    Back to Diagram</div>
-    Returns to the Decision Requirements Diagram (DRD) view after editing the decision logic.</div>
-
-    Decision Name and Type</div>
-    The name of the decision being edited (Destination Risk Factor) and its output type (number).</div>
-
-    FEEL Conditional Logic</div>
-    This FEEL expression uses "some...in...satisfies" to check if any country in the trip details matches a high-risk criterion. The "Country Risk Level" refers to a Business Knowledge Model function.</div>
-
-    Context Entry Variable</div>
-    A second context entry named "Risk Factor" with a numeric type. Context expressions can contain multiple entries that build upon each other.</div>
-
-    Embedded Decision Table</div>
-    Within a context expression, you can embed other expression types like decision tables. This table maps risk levels to numerical factors.</div>
-
-    Result Expression</div>
-    The final line of a context expression defines what value is returned. Here, "Risk Factor" returns the variable defined earlier in the context.</div>
+    <img src="/images/guides/examples/dmn/images/destination-risk-factor-context.png" alt="Full Context Expression Implementation">
 
 
 ### Final Premium

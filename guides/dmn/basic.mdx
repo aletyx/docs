@@ -64,44 +64,7 @@ First, let's define the base vacation entitlement that all employees receive:
 5. In the expression editor, select **Literal expression** as the expression type. For reference on the different expressions see the below image with annotations or refer to the [Select Expression Reference](/reference/dmn/select-expression#expression-types)
 
     
-    <img src="/images/guides/examples/dmn/images/context-select-expression.png" class="annotated-image" alt="DMN Expression Types Menu">
-
-
-    Literal Expression</div>
-    The simplest expression type. Used for direct values, mathematical operations, or simple FEEL expressions. Example: <code>Base Premium * Risk Factor</code></div>
-
-    Relation</div>
-    Creates a table structure for organizing data. Unlike a decision table, relations don't contain logic but represent structured data with columns and rows. See: [RelationReference](/reference/dmn/select-expression#relation).</div>
-
-    Context</div>
-    Defines a set of key-value pairs (named variables) that can be referenced within the context. Useful for multi-step calculations that build on previous values. See: [Context Reference](/reference/dmn/select-expression#context).</div>
-
-    Decision Table</div>
-    The most widely used DMN expression. Organizes conditions (inputs) and conclusions (outputs) in a tabular format with hit policies determining how rules are applied. See: [Decision Table Reference](/reference/dmn/select-expression#decision-table).</div>
-
-    List</div>
-    Creates an ordered collection of values or expressions. Each list item can be a different type of expression, allowing for complex collections. See: [List Reference](/reference/dmn/select-expression#list).</div>
-
-    Invocation</div>
-    Calls a Business Knowledge Model (BKM) or function defined elsewhere in the model. Parameters can be passed to the function being called. See: [Invocation Reference](/reference/dmn/select-expression#invocation).</div>
-
-    Function</div>
-    Defines a reusable function with parameters. Can contain any FEEL expression type and be used within other expressions through Invocation. See: [Function Reference](/reference/dmn/select-expression#function).</div>
-
-    Conditional (If/Then/Else)</div>
-    Creates branching logic with if, then, else statements. Allows for different results based on specific conditions being met. See: [Conditional Reference](/reference/dmn/select-expression#conditional).</div>
-
-    For Loop</div>
-    Iterates over items in a list or collection, applying an expression to each item. Useful for transforming collections or aggregating values. See: [For Loop Reference](/reference/dmn/select-expression#for-loop).</div>
-
-    Some</div>
-    Tests when a condition is true for at least one item See: [Some reference](/reference/dmn/select-expression#some).</div>
-
-    Filter</div>
-    Filters a collection based on a given condition. See: [Filter Reference](/reference/dmn/select-expression#filter).</div>
-
-    Every</div>
-    Tests if a condition is true for every item in a collection. Returns a boolean result based on whether all items satisfy the condition. See: [Every Reference](/reference/dmn/select-expression#every)</div>
+    <img src="/images/guides/examples/dmn/images/context-select-expression.png" alt="DMN Expression Types Menu">
 
 
 6. Enter the value "22" in the expression editor

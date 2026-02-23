@@ -1589,13 +1589,13 @@ yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ${SERVICE_NAME}-hpa
-  namespace: ${NAMESPACE}
+  name: $\{SERVICE_NAME\}-hpa
+  namespace: $\{NAMESPACE\}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ${SERVICE_NAME}
+    name: $\{SERVICE_NAME\}
   minReplicas: 2
   maxReplicas: 5
   metrics:
@@ -1605,7 +1605,6 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
- -->
 
 ## CI/CD Integration
 
@@ -1720,12 +1719,12 @@ Restrict network access between pods:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: ${SERVICE_NAME}-network-policy
-  namespace: ${NAMESPACE}
+  name: $\{SERVICE_NAME\}-network-policy
+  namespace: $\{NAMESPACE\}
 spec:
   podSelector:
     matchLabels:
-      app: ${SERVICE_NAME}
+      app: $\{SERVICE_NAME\}
   policyTypes:
   - Ingress
   - Egress
@@ -1733,7 +1732,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: ${SERVICE_NAME}-app
+          app.kubernetes.io/part-of: $\{SERVICE_NAME\}-app
     ports:
     - protocol: TCP
       port: 8080
@@ -1741,7 +1740,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app: ${SERVICE_NAME}-postgresql
+          app: $\{SERVICE_NAME\}-postgresql
     ports:
     - protocol: TCP
       port: 5432
@@ -1766,14 +1765,14 @@ For production, use a dedicated secrets management solution:
 - AWS Secrets Manager
 - Kubernetes External Secrets Operator
 
-Example with External Secrets: -->
+Example with External Secrets: 
 
 <!-- yaml
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: ${SERVICE_NAME}-db-credentials
-  namespace: ${NAMESPACE}
+  name: $\{SERVICE_NAME\}-db-credentials
+  namespace: $\{NAMESPACE\}
 spec:
   refreshInterval: "15m"
   secretStoreRef:
@@ -1784,12 +1783,12 @@ spec:
   data:
   - secretKey: database-user
     remoteRef:
-      key: ${SERVICE_NAME}/database
+      key: $\{SERVICE_NAME\}/database
       property: username
   - secretKey: database-password
     remoteRef:
-      key: ${SERVICE_NAME}/database
-      property: password -->
+      key: $\{SERVICE_NAME\}/database
+      property: password 
 
 ## Conclusion
 

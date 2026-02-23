@@ -47,24 +47,24 @@ When you access Aletyx Playground, you'll see a welcome screen with several key 
   <!-- Image map container on the left -->
   
     
-      <img src="/images/guides/getting-started/images/playground_welcome.png" usemap="#custom-map" class="image-map" alt="Alteryx Playground Welcome Screen">
-      <map name="custom-map"></map>
+      <img src="/images/guides/getting-started/images/playground_welcome.png" alt="Alteryx Playground Welcome Screen">
+      
 
 
   <!-- Descriptions on the right -->
 
   
-    <h3>1. Creation Area</h3>
-    <p>The top tiles allow you to create new projects or import existing ones.</p>
+    ### 1. Creation Area
+    The top tiles allow you to create new projects or import existing ones.
 
-    <h3>2. Import Area</h3>
-    <p>Import existing projects or DMN/BPMN files either from various Git providers or through direct file uploads.</p>
+    ### 2. Import Area
+    Import existing projects or DMN/BPMN files either from various Git providers or through direct file uploads.
 
-    <h3>3. Projects Area</h3>
-    <p>The lower section displays your locally imported projects and models.</p>
+    ### 3. Projects Area
+    The lower section displays your locally imported projects and models.
 
-    <h3>4. Toolbar</h3>
-    <p>The top bar provides access to:</p>
+    ### 4. Toolbar
+    The top bar provides access to:
     <ul>
       <li><strong>Dev Deployments</strong>: Test deployments to connected Kubernetes or OpenShift clusters</li>
       <li><strong>Extended Services</strong>: Connection to the DMN execution service for testing</li>
@@ -108,7 +108,7 @@ This hiring process demonstrates a complete hiring workflow with multiple branch
 Let's explore each piece in the diagram!
 
 
-<img src="/images/guides/getting-started/images/hiring-process-full.png" class="annotated-image" alt="BPMN Editor with Sample Hiring Process">
+<img src="/images/guides/getting-started/images/hiring-process-full.png" alt="BPMN Editor with Sample Hiring Process">
 <!-- Top Bar -->
 
 
@@ -122,87 +122,20 @@ Let's explore each piece in the diagram!
 
 <!-- Tooltips -->
 
-File Location and Local Status</div>
-Within Aletyx Playground you can see the status of a file and where it is located. If the file is saved in the local storage you will have confirmation hovering this icon. Just remember, Aletyx Playground operates in a way that when the memory storage is freed, this will go away.</div>
 
 <!-- core/processes/basic-bpmn/start-events/ -->
 
-Start Node</div>
-The BPMN End Node signifies the start of a process drawn in BPMN for the particular instance. This is the entry point for the process. These can be a generic start as seen here or triggered from timers, signals or event (like a Kafka event). See <b> <a href=../../../core/processes/basic-bpmn/start-events>Start Events Reference</a></b> for more details.</div>
-
-Boundary Event Timer</div>
-For Tasks (and other services) within BPMN you can set boundary events with timers to escalate, cancel or create new pathways for processes to take. More information on <b><a href=../../../core/processes/basic-bpmn/intermediate-events>Intermediate Events can be found in our documentation</a></b> These utilize ISO-8601 time standard, which is covered in <b><a href=../../../core/processes/advanced-bpmn/iso-8601-guide>8601 Reference</a></b>.</div>
-
-BPMN Human Task</div>
-The Human task allows ou to configure a task that can be delegated to a human to do work on. In this case we will assign someone to perform work on the HR Interview task. For more information on human tasks refer to <b> <a href=../../../core/processes/basic-bpmn/activities/#user-task>Human Task Reference</a></b>.</div>
-
-New Hiring Script Task</div>
-This node shows a BPMN node that does a script task associated with the basis of initializing the process. When you open the properties of this node, you will see things like: <br> <b>kcontext.setVariable( "hr_approval", false)</b> which is used to initialize the process variables associated with the process.</div>
-
-BPMN Gateway Node - Split</div>
-A BPMN Gateway Node can creates a point in which the process can go one to many ways depending on the type of Gateway used. In this case, it is an exclusive gateway signifying if the candidate meets the requirements, the process can move foward, otherwise the application is denied and approaches the end node.. For more information refer to <b> <a href=../../../core/processes/basic-bpmn/gateways>Gateway Reference</a></b></div>
-
-BPMN Gateway Node - Join</div>
-A BPMN Gateway Node can creates a point in which the process can bring multiple parts of a process back together. For more information refer to <b> <a href=../../../core/processes/basic-bpmn/gateways>Gateway Reference</a></b></div>
 
 <!-- Removed for now
 
-Create Offer Script Task</div>
-This node shows a BPMN node that does a script task associated with the basis of creating a base offer based on the details from the application so that our interviewers can review the details of what would be offered.</div>
 
 -->
 
 
-End Node</div>
-The BPMN End Node signifies the end of a process drawn in BPMN for the particular instance. When the process reaches this point it concludes. See <b> <a href=../../../core/processes/basic-bpmn/end-events>End Events Reference.</a></b>.</div>
-
-Apply Accelerator</div>
-The accelerators provide a means of easily creating a pre-scaffolded project based on standards attached to referenced projects. This allows you to utilized pre-created templates for building your projects from model to deployment very efficiently. For more information see <b> <a href=../../../components/playground/accelerators>Accelerators Reference</a></b></div>
-
-New File Button</div>
-Within the same project folder that you are working in, you can create new Workflow (.bpmn), Decision (.dmn) or (.pmml) files or upload other files from your workstation. This will build it within the project, if you apply an accelerator it will incorporate all of the files associated with the workspace.</div>
-
-Deploy - Using Dev Deployment</div>
-From Aletyx Playground you have the capability to trigger a Dev Deployment that can be used for trying out a service. This is not meant to replace a full deployment, but is an excellent quick testing tool! For reference to Dev Deployments, refer to <b> <a href=../../../components/playground/dev-deployment>Dev Deployment Reference</a></b> for more details.</div>
-
-Share - To Sync with Git or Download Files</div>
-With the Share button, you are able to synchronize your project with a Git provider utilizing your Git credentials. This also allows you to download the respective file (BPMN or DMN) in the XML format to be utilized elsewhere. For reference to Git connections, refer to <b> <a href=../../../getting-started/git-configuration>Git Configuration</a></b> for more details.</div>
-
-Custom Tasks</div>
-This portion of the BPMN palette allows for the use of custom tasks within the editor. These are typically tied to custom work item handlers.</div>
-
-BPMN Artifacts</div>
-BPMN Artifacts are annotations that allow you to describe/group your model, but they have no executable impact.</div>
-
-BPMN Start Nodes Palette</div>
-The BPMN End Node signifies the start of a process drawn in BPMN for the particular instance. This is the entry point for the process. These can be a generic start as seen here or triggered from timers, signals or event (like a Kafka event). See <b> <a href=../../../core/processes/basic-bpmn/start-events>Start Events Reference</a></b> for more details.</div>
-
-Catching and Throwing Nodes Palette</div>
-Used to create catching and throwing errors for a process. These can be compensation events, messages, signals, etc.</div>
-
-BPMN End Node Palette</div>
 The BPMN End Node signifies the end of a process drawn in BPMN for the particular instance. This is the palette item used for various end nodes. To learn more about these see <b> <a href=../../../core/processes/basic-bpmn/end-events>End Events Reference</div></b></a>
 
-BPMN Activities Palette</div>
 The BPMN Activities nodes are used to create activities that occur in the BPMN process. Activities include: User tasks, Business Rules tasks, Script tasks, and Service tasks. To learn more about these see <b> <a href=../../../core/processes/basic-bpmn/activities>BPMN Activities Reference</div></b></a>
 
-BPMN Subprocesses Palette</div>
-The BPMN palette option for the various types of subprocesses they can be used within the process. For reference, refer to <b> <a href=../../../core/processes/advanced-bpmn/subprocesses>Subprocesses Reference</a></b>.</div>
-
-BPMN Containers</div>
-Containers to help group tasks associated with a user/group by swimlane.</div>
-
-Gateway Palette</div>
-The BPMN element for different gateways that a process can utilize. For more on gateways, see <b> <a href=../../../core/processes/basic-bpmn/gateways>Gateway Reference.</a></b> </div>
-
-Decision Service</div>
-A Decision Service allows for decisions to be captured and exposed (or hidden) from execution.</div>
-
-Gate Way Branch</div>
-A gateway branch provides a conditional that the BPMN process can follow. These conditions are typically of a DRL syntax (MVEL or Java). For more on gateways, see <b> <a href=../../../core/processes/basic-bpmn/gateways>Gateway Reference.</a></b></div>
-
-Properties of Selected item</div>
-Clicking the pen and paper icon opens the selected node's properties to be opened.</div>
 
   <!-- Add more tooltips for other markers -->
 

@@ -49,24 +49,24 @@ When you navigate to Aletyx Playground , you'll see a welcome screen with severa
   <!-- Image map container on the left -->
   
     
-      <img src="/images/guides/getting-started/images/playground_welcome.png" usemap="#custom-map" class="image-map" alt="Alteryx Playground Welcome Screen">
-      <map name="custom-map"></map>
+      <img src="/images/guides/getting-started/images/playground_welcome.png" alt="Alteryx Playground Welcome Screen">
+      
 
 
   <!-- Descriptions on the right -->
   
     
-      <h3>1. Creation Area</h3>
-      <p>The top tiles allow you to create new projects or import existing ones.</p>
+      ### 1. Creation Area
+      The top tiles allow you to create new projects or import existing ones.
 
-      <h3>2. Import Area</h3>
-      <p>Import existing projects or DMN/BPMN files either from various Git providers or through direct file uploads.</p>
+      ### 2. Import Area
+      Import existing projects or DMN/BPMN files either from various Git providers or through direct file uploads.
 
-      <h3>3. Projects Area</h3>
-      <p>The lower section displays your locally imported projects and models.</p>
+      ### 3. Projects Area
+      The lower section displays your locally imported projects and models.
 
-      <h3>4. Toolbar</h3>
-      <p>The top bar provides access to:</p>
+      ### 4. Toolbar
+      The top bar provides access to:
       <ul>
         <li><strong>Dev Deployments</strong>: Test deployments to connected Kubernetes or OpenShift clusters</li>
         <li><strong>Extended Services</strong>: Connection to the DMN execution service for testing</li>
@@ -75,7 +75,9 @@ When you navigate to Aletyx Playground , you'll see a welcome screen with severa
       </ul>
 
 
-<Note title="Note">
+<Note>
+**Note**
+
 
 Projects in Aletyx Playground are stored in your browser's local storage by default. For persistent storage and collaboration, connect to a Git provider under Profile settings, Playground is not designed to be long term storage of your BPMN/DMN models and should be regularly synchronized with your Git provider!
 </Note>
@@ -90,7 +92,7 @@ Let's begin by exploring a sample Decision Model and Notation (DMN) model:
 2.  This opens a sample "Loan Pre-qualification" DMN model (DMN 1.5 Specification).
 
     
-    <img src="/images/guides/getting-started/images/dmn-editor.png" class="annotated-image" alt="DMN Editor with Decision Table">
+    <img src="/images/guides/getting-started/images/dmn-editor.png" alt="DMN Editor with Decision Table">
     <!-- Orange plus marker for the highlighted text field -->
 
     <!-- Gray X markers for other columns -->
@@ -98,56 +100,7 @@ Let's begin by exploring a sample Decision Model and Notation (DMN) model:
 
     <!-- Tooltips -->
     
-    Decision Editor</div>
-    This section of the DMN editor is currently activated and showing the DMN model or a selected.</div>
 
-    Decision Connectors</div>
-    From a given decision, you can either connect with the various lines to their appropriate types or connect another decision or knowledge source.</div>
-
-    Decision Output Type</div>
-    The pulldown allows you to map your decision's datatype to a particular part of your model and/or structures.</div>
-
-    Data Types Editor</div>
-    This section of the DMN editor allows you to view, create, or edit data types associated with the model.</div>
-
-    Included Models</div>
-    This section of the DMN editor allows you to reference other models for your DMN model. An included model allows decision/model/data object reuse easily.</div>
-
-    Credit Score Rating Decision Node</div>
-    The rectangle on the DMN editor represents a Decision Node. In this case it is used for representing the Credit Score Rating based on an input of Credit Score. This is data that would be required to execute the decision.</div>
-
-    Credit Score Input Node</div>
-    The oval on the DMN editor represents an Input Data Node used for the applicant's credit score. This is data that would be required to execute the decision.</div>
-
-    DRG Node Selector</div>
-    This section of the DMN editor allow you to easily navigate the different Decision Requirement Diagram's nodes.</div>
-
-    Annotations</div>
-    Annotations allow you to put various annotations on your DMN model, they have no executable impact, but are great for further explaining a model.</div>
-
-    Decision Input</div>
-    In DMN, an Oval represents the input for a DMN model. These can be mapped to specific data structures or types.</div>
-
-    Decision Node</div>
-    The Decision Node is used to place a decision on the DMN requirement diagram. A Decision node with no inputs to it will execute on DMN invocation, if there is a requirement node (e.g. another Decision Node or Input Node preceding it), then it will require that to be completed before its requirement is met and thus execute the decision contained within it.</div>
-
-    Decision BKM</div>
-    A BKM allows use of Friendly Enough Expression Language (FEEL), Java or PMML models to be used to further supplement decision execution.</div>
-
-    Decision BKM</div>
-    A BKM allows use of Friendly Enough Expression Language (FEEL), Java or PMML models to be used to further supplement decision execution.</div>
-
-    Knowledge Source</div>
-    Documents, committees, regulations, policies or people that define how a decision should be made. They are not executable.</div>
-
-    Decision Service</div>
-    A Decision Service allows for decisions to be captured and exposed (or hidden) from execution.</div>
-
-    Edit Decision</div>
-    Clicking the edit below a decision's node when clicked allows you to edit the logic of the selected decision node.</div>
-
-    Properties of Selected item</div>
-    Clicking the i icon opens the selected node's properties to be opened. This can also be done by pressing the "i" key on your keyboard.</div>
 
       <!-- Add more tooltips for other markers -->
 
@@ -169,53 +122,13 @@ Let's begin by exploring a sample Decision Model and Notation (DMN) model:
 5.  This decision table is used to determine the credit ratings based on FICO scores. If you hover over each icon, it will describe different parts of the Decision Table.
 
     
-    <img src="/images/guides/getting-started/images/credit-score-dmn-edit.png" class="annotated-image" alt="DMN Editor with Decision Table">
+    <img src="/images/guides/getting-started/images/credit-score-dmn-edit.png" alt="DMN Editor with Decision Table">
     <!-- Orange plus marker for the highlighted text field -->
 
 
     <!-- Tooltips -->
     
-    Decision Output <br>Credit Score Rating</div>
-    This column sets the value of the output that will be from the respective column. In this case the Credit Score Rating, which maps to the Data Type of Credit_Score_Rating would be set for all of the values in this column if the conditions are a match.</div>
 
-    Decision Input <br>Condition of FICO Credit Score</div>
-    This column sets the condition of the FICO Score of the Credit Score. The dot notation allows the table to take the property of FICO from the data, which is a number as highlighted in the column. The rows of rules below will use the score that's given to determine the credit score.</div>
-
-    FEEL Condition for Associated Decision Condition</div>
-    When creating decisions in DMN, comparative functions are commonly used. If you use a brackets `[]` - inclusive or parenthesis `()` - not inclusive, you can write more detailed ranges which create a range by utilizing the  `..`. Keep in mind the hit policies for ranges as Unique (U) hit policy requires a single rule being able to execute within the entirety of the table</div>
-
-    FEEL Output for Associated Decision Output</div>
-    If the requirements of the decision are met, then the condition within the output would be set. For strings, as in this case, you would use the quotes as seen here, but this could just as easily be a number, or FEEL function as well.</div>
-
-    Decision Annotation (Optional)</div>
-    This column sets allows the Decision editor to set notes about the decision, but this content is not used in the evaluation by the engine.</div>
-
-    Decision Connectors</div>
-    From a given decision, you can either connect with the various lines to their appropriate types or connect another decision or knowledge source.</div>
-
-    Decision Output Type</div>
-    The pulldown allows you to map your decision's datatype to a particular part of your model and/or structures.</div>
-
-    Annotations Decision</div>
-    This section of the Decision Table editor allows you to set an annotation, but the value from here is ignored by the decision engine.</div>
-
-    Rule 5 - Credit Score Less than 600</div>
-    This rule reads as when the FICO score of the Credit Score is less than 600, then set the Credit Score Rating to "Bad".</div>
-
-    Hit Policy</div>
-    Hit policies determine how to reach an outcome when multiple rules in a decision table match the provided input values. The following are options: Unique (U), Any (A), Priority (P), First (F), Collect (C) of various types for Collect/Sum (C+), Collect/Min (C<), Collect/Max (C>), Collect/Count (C#)</div>
-
-    Rule 4 - Credit Score greater than 600 and less than 650</div>
-    This rule evaluates when the FICO score of the Credit Score is inclusive of 600 to less than 650. If this evaluates true, then the Credit Score Rating is Poor.</div>
-
-    Rule 2 - Credit Score greater than 700 and less than 750</div>
-    This rule evaluates when the FICO score of the Credit Score is inclusive of 700 to less than 750, then the Credit Score Rating is set to Good.</div>
-
-    Rule 3 - Credit Score greater than 650 and less than 700</div>
-    This rule evaluates when the FICO score of the Credit Score is inclusive of 650 to less than 700. If this evaluates true, then the Credit Score Rating is Fair.</div>
-
-    Rule 1 - Credit Score Greater than or Equal to 750</div>
-    The rule evaluates when the FICO score of the Credit Score is 750 or greater, then the Credit Score Rating is set to Excellent.</div>
 
       <!-- Add more tooltips for other markers -->
 
@@ -272,7 +185,9 @@ Now that the model is created, we need to create the base of the model. Our mode
 
 1.  We know that we can put 2 input nodes (the ovals) and four decision nodes (the rectangles) onto the DMN designer area. You can drag and drop these from the left hand side and start changing the names.
 
-    <Tip title="Tip">
+    <Tip>
+**Tip**
+
 
     This can be done by double clicking the name of each node (double click New Input Data and then change the name, same with the New Decision) or by using the properties menu by **pressing either i on your keyboard when clicked on the node you want to change** or clicking the i button in the top right of the DRD editor.
     </Tip>
@@ -297,7 +212,9 @@ Now that the model is created, we need to create the base of the model. Our mode
 
     After this is done, we will work on the Decision nodes. Each one will have a Data type of number.
 
-    <Tip title="Tip">
+    <Tip>
+**Tip**
+
 
     Just to note as we’re working on this, everything is stored locally in the browser storage, so you’re not having to press a combination of keys to save your work while you go - the editor is constantly in motion and saving while you're working with it. These are all stored locally, later we will get to how this interaction works with Git.
     </Tip>
