@@ -44,43 +44,35 @@ Then access Aletyx Playground at [http://localhost:9090](http://localhost:9090)
 
 When you navigate to Aletyx Playground , you'll see a welcome screen with several key areas - as you hover over the below image, you will see background on the following areas:
 
-<!-- Main layout container -->
+![Aletyx Playground Welcome Screen](/images/guides/getting-started/images/playground_welcome.png)
 
-  <!-- Image map container on the left -->
-  
-    
-      <img src="/images/guides/getting-started/images/playground_welcome.png" alt="Alteryx Playground Welcome Screen">
-      
+### 1. Creation Area
 
+The top tiles allow you to create new projects or import existing ones.
 
-  <!-- Descriptions on the right -->
-  
-    
-      ### 1. Creation Area
-      The top tiles allow you to create new projects or import existing ones.
+### 2. Import Area
 
-      ### 2. Import Area
-      Import existing projects or DMN/BPMN files either from various Git providers or through direct file uploads.
+Import existing projects or DMN/BPMN files either from various Git providers or through direct file uploads.
 
-      ### 3. Projects Area
-      The lower section displays your locally imported projects and models.
+### 3. Projects Area
 
-      ### 4. Toolbar
-      The top bar provides access to:
-      <ul>
-        <li><strong>Dev Deployments</strong>: Test deployments to connected Kubernetes or OpenShift clusters</li>
-        <li><strong>Extended Services</strong>: Connection to the DMN execution service for testing</li>
-        <li><strong>Settings</strong> (⚙️): Configure your Playground instance, including DMN version settings</li>
-        <li><strong>Profile</strong> (👤): Configure connections to Git providers and Kubernetes environments</li>
-      </ul>
+The lower section displays your locally imported projects and models.
 
+### 4. Toolbar
+
+The top bar provides access to:
+
+- **Dev Deployments**: Test deployments to connected Kubernetes or OpenShift clusters
+- **Extended Services**: Connection to the DMN execution service for testing
+- **Settings** (gear icon): Configure your Playground instance, including DMN version settings
+- **Profile** (user icon): Configure connections to Git providers and Kubernetes environments
 
 <Note>
 **Note**
 
-
 Projects in Aletyx Playground are stored in your browser's local storage by default. For persistent storage and collaboration, connect to a Git provider under Profile settings, Playground is not designed to be long term storage of your BPMN/DMN models and should be regularly synchronized with your Git provider!
 </Note>
+
 ## Exploring Decisions with DMN
 
 Let's begin by exploring a sample Decision Model and Notation (DMN) model:
@@ -91,23 +83,11 @@ Let's begin by exploring a sample Decision Model and Notation (DMN) model:
 
 2.  This opens a sample "Loan Pre-qualification" DMN model (DMN 1.5 Specification).
 
-    
-    <img src="/images/guides/getting-started/images/dmn-editor.png" alt="DMN Editor with Decision Table">
-    <!-- Orange plus marker for the highlighted text field -->
+    ![DMN Editor with Decision Table](/images/guides/getting-started/images/dmn-editor.png)
 
-    <!-- Gray X markers for other columns -->
-
-
-    <!-- Tooltips -->
-    
-
-
-      <!-- Add more tooltips for other markers -->
-
-    <details>
-      <summary>View Sample DMN Model</summary>
-      <img src="/images/guides/getting-started/images/dmn-sample-view.png" alt="Sample DMN Model">
-    </details>
+<Accordion title="View Sample DMN Model">
+![Sample DMN Model](/images/guides/getting-started/images/dmn-sample-view.png)
+</Accordion>
 
 3.  Explore the model components:
 
@@ -121,16 +101,7 @@ Let's begin by exploring a sample Decision Model and Notation (DMN) model:
 
 5.  This decision table is used to determine the credit ratings based on FICO scores. If you hover over each icon, it will describe different parts of the Decision Table.
 
-    
-    <img src="/images/guides/getting-started/images/credit-score-dmn-edit.png" alt="DMN Editor with Decision Table">
-    <!-- Orange plus marker for the highlighted text field -->
-
-
-    <!-- Tooltips -->
-    
-
-
-      <!-- Add more tooltips for other markers -->
+    ![DMN Editor with Decision Table](/images/guides/getting-started/images/credit-score-dmn-edit.png)
 
 6.  In the next section, we will see how to interact with this model within Aletyx Playground!
 
@@ -185,22 +156,22 @@ Now that the model is created, we need to create the base of the model. Our mode
 
 1.  We know that we can put 2 input nodes (the ovals) and four decision nodes (the rectangles) onto the DMN designer area. You can drag and drop these from the left hand side and start changing the names.
 
-    <Tip>
+<Tip>
 **Tip**
 
+This can be done by double clicking the name of each node (double click New Input Data and then change the name, same with the New Decision) or by using the properties menu by **pressing either i on your keyboard when clicked on the node you want to change** or clicking the i button in the top right of the DRD editor.
+</Tip>
 
-    This can be done by double clicking the name of each node (double click New Input Data and then change the name, same with the New Decision) or by using the properties menu by **pressing either i on your keyboard when clicked on the node you want to change** or clicking the i button in the top right of the DRD editor.
-    </Tip>
-    ![DMN nodes on DRD showing modeling](/images/guides/getting-started/images/dmn-nodes-on.png)
+![DMN nodes on DRD showing modeling](/images/guides/getting-started/images/dmn-nodes-on.png)
 
-    ```text
-    Input Node 1: Age
-    Input Node 2: Years of Service
-    Decision Node 1: Base Vacation Days
-    Decision Node 2: Extra days case-1
-    Decision Node 3: Extra days case-2
-    Decision Node 4: Extra days case-3
-    ```
+```text
+Input Node 1: Age
+Input Node 2: Years of Service
+Decision Node 1: Base Vacation Days
+Decision Node 2: Extra days case-1
+Decision Node 3: Extra days case-2
+Decision Node 4: Extra days case-3
+```
 
 1.  Now that we have the names of the nodes, we need to modify the contents within the nodes. You will do this by clicking on the appropriate node and clicking on the i button to open the properties panel (you can also press the i key on your keyboard to instantly open it as well). This can also be edited by using the pull down above the node for quicker change, the properties panel can also provide extra context if needed.
 
@@ -212,47 +183,44 @@ Now that the model is created, we need to create the base of the model. Our mode
 
     After this is done, we will work on the Decision nodes. Each one will have a Data type of number.
 
-    <Tip>
+<Tip>
 **Tip**
 
+Just to note as we're working on this, everything is stored locally in the browser storage, so you're not having to press a combination of keys to save your work while you go - the editor is constantly in motion and saving while you're working with it. These are all stored locally, later we will get to how this interaction works with Git.
+</Tip>
 
-    Just to note as we’re working on this, everything is stored locally in the browser storage, so you’re not having to press a combination of keys to save your work while you go - the editor is constantly in motion and saving while you're working with it. These are all stored locally, later we will get to how this interaction works with Git.
-    </Tip>
-1.  Now we need to connect the Age and Years of Service input nodes to our Extra days case-1, Extra days case-2 and Extra days case-3 decision nodes (note we’re not connecting to Base Vacation Days and this will be explained later!). A good practice with DMN model design that Aletyx Playground allows is the use of the DMN Runner to see how your model is evolving while you’re working on it. If you **press Run** just above the editor, you will start seeing the model interact as the model changes. To do this, when your cursor hovers over the input node (Age or Years of Service), you will see an icon that is an arrow, this is the _Information Requirement_ arrow that we will use to make it so that the Extra days case-1, Extra days case-2 and Extra days case-3 cases all require both the Age and Years of Service inputs.
+1.  Now we need to connect the Age and Years of Service input nodes to our Extra days case-1, Extra days case-2 and Extra days case-3 decision nodes (note we're not connecting to Base Vacation Days and this will be explained later!). A good practice with DMN model design that Aletyx Playground allows is the use of the DMN Runner to see how your model is evolving while you're working on it. If you **press Run** just above the editor, you will start seeing the model interact as the model changes. To do this, when your cursor hovers over the input node (Age or Years of Service), you will see an icon that is an arrow, this is the _Information Requirement_ arrow that we will use to make it so that the Extra days case-1, Extra days case-2 and Extra days case-3 cases all require both the Age and Years of Service inputs.
 
     ![Age with Information Requirement Arrow](/images/guides/getting-started/images/age-info-require.png)
 
-    <details>
-    <summary>Click to see the process in action</summary>
-    ![Demo of the process](/images/guides/getting-started/images/draw-info-require.gif)
-    </details>
+<Accordion title="Click to see the process in action">
+![Demo of the process](/images/guides/getting-started/images/draw-info-require.gif)
+</Accordion>
 
 ## Building Extra Days Case-1
 
-The first Extra days case is modeled by the scenario: “Employees younger than 18 or older than 60 will receive an extra 5 days or greater than 30 years of service will receive 7 days”. To implement this we will be building a decision table to model this logic, note that our decision table is going to be using the Age and Years of Service that we are taking from the input nodes.
+The first Extra days case is modeled by the scenario: "Employees younger than 18 or older than 60 will receive an extra 5 days or greater than 30 years of service will receive 7 days". To implement this we will be building a decision table to model this logic, note that our decision table is going to be using the Age and Years of Service that we are taking from the input nodes.
 
-<details>
-<summary>Click to see a preview of Extra Days Case-1</summary>
-<img src="/images/guides/getting-started/images/extra-days-case-1.gif" alt="Demo of Extra Days"/>
-</details>
+<Accordion title="Click to see a preview of Extra Days Case-1">
+![Demo of Extra Days](/images/guides/getting-started/images/extra-days-case-1.gif)
+</Accordion>
 
 1.  To create the decision table, **click the Extra days case-1 node and select Edit** just below the box to open the decision editor.
 
 1.  From here, you will set the expression type to a Decision Table and then enter the following rows on the decision table.
 
-1.  The hit-policy of the decision table is by default set to **U**, which means Unique. This implies that only one rule is expected to fire for a given input. In this case however, we would like to set it to **Collect Max**, as, for a given input, multiple decisions might match, but we would like to collect the output from the rule with the highest number of additional vacation days. To do this, _click on the U_ in the upper-left corner of the decision table. Now, set the Hit Policy to _Collect_ and when you click this, **it will ask the Aggregator function to use, select MAX** so you pull the largest value from the table. This will allow all rules on the table to fire and whichever is the largest to be the chosen value. This can be tested with various test scenarios using the run immediately while writing by putting some test data that would trigger the scenario. You will see these executions under the Extra days case-1 on the right side of the DMN runner’s outputs. Also note, that if you add an extra row to the table after creating it, you can copy the two rows below and paste them as you would into a spreadsheet as they're in the format you need to work!
+1.  The hit-policy of the decision table is by default set to **U**, which means Unique. This implies that only one rule is expected to fire for a given input. In this case however, we would like to set it to **Collect Max**, as, for a given input, multiple decisions might match, but we would like to collect the output from the rule with the highest number of additional vacation days. To do this, _click on the U_ in the upper-left corner of the decision table. Now, set the Hit Policy to _Collect_ and when you click this, **it will ask the Aggregator function to use, select MAX** so you pull the largest value from the table. This will allow all rules on the table to fire and whichever is the largest to be the chosen value. This can be tested with various test scenarios using the run immediately while writing by putting some test data that would trigger the scenario. You will see these executions under the Extra days case-1 on the right side of the DMN runner's outputs. Also note, that if you add an extra row to the table after creating it, you can copy the two rows below and paste them as you would into a spreadsheet as they're in the format you need to work!
 
     | Age       | Years of Service | Extra days case-1 | Annotation                      |
     | :-------- | :--------------- | :---------------- | :------------------------------ |
     | <18, >=60 | -                | 5                 | "Less than 18 or older than 60" |
     | -         | >30              | 7                 | "More than 30 years of service" |
 
-1.  Now you may have noticed that there were situations that didn’t return a value, but also left it at null when you were testing. To avoid issues with a null, we can set a default value on the output column, which is great in the otherwise situations. To do this, you will click the column header of Extra days case-1 and open the property panel by clicking the i in a circle button on the name of the decision header. After doing this, scroll down in the properties panel looking for **Default Output Entry**. Since we’re just changing the value of the column on default, there is no expression language that has to be added, but can instead just **set the value equal to 0**. Once you leave the Content box, you will see the decision itself react.
+1.  Now you may have noticed that there were situations that didn't return a value, but also left it at null when you were testing. To avoid issues with a null, we can set a default value on the output column, which is great in the otherwise situations. To do this, you will click the column header of Extra days case-1 and open the property panel by clicking the i in a circle button on the name of the decision header. After doing this, scroll down in the properties panel looking for **Default Output Entry**. Since we're just changing the value of the column on default, there is no expression language that has to be added, but can instead just **set the value equal to 0**. Once you leave the Content box, you will see the decision itself react.
 
-    <details>
-    <summary>How to set default to 0</summary>
-    <img src="/images/guides/getting-started/images/default-to-zero.gif" alt="Demo of Extra Days"/>
-    </details>
+<Accordion title="How to set default to 0">
+![Demo of Extra Days](/images/guides/getting-started/images/default-to-zero.gif)
+</Accordion>
 
 1.  After this rule is done, click Back to Diagram.
 
@@ -260,10 +228,9 @@ The first Extra days case is modeled by the scenario: “Employees younger than 
 
 A lot of the same steps from before are going to be repeated for Extra Days Case-2, so let's jump right in!
 
-<details>
-<summary>Click to see a preview of Extra Days Case-2</summary>
-<img src="/images/guides/getting-started/images/extra-days-case-2.gif" alt="Demo of Extra Days"/>
-</details>
+<Accordion title="Click to see a preview of Extra Days Case-2">
+![Demo of Extra Days](/images/guides/getting-started/images/extra-days-case-2.gif)
+</Accordion>
 
 1. To implement the second use case, **Extra days case-2, click its decision node and select Edit** to open the decision editor.
 
@@ -289,39 +256,36 @@ This will be done with the case that based on years of service being between 15 
 
 1. This rule will be setup the exact same way as the other ones. You will edit the **Extra days case-3** decision and add the conditions for between 15 and 30 years of service for 3 days and if the Age is above 45 for 2 days. Make sure to set the default back to 0 as before with Extra days case-1 and Extra days case-2.
 
-<details>
-<summary>Click to see a preview of Extra Days Case-3</summary>
-<img src="/images/guides/getting-started/images/extra-days-case-3.gif" alt="Demo of Extra Days"/>
-</details>
+<Accordion title="Click to see a preview of Extra Days Case-3">
+![Demo of Extra Days](/images/guides/getting-started/images/extra-days-case-3.gif)
+</Accordion>
 
 1. Click Back to Diagram to return back to the Diagram to move to the next section
 
 ## Summary of the Extra Days Cases
 
-There’s an important component about the three extra cases that we want to visit first though before moving on. You will notice that all three had both input nodes connected to them and from that connection, the DMN editor built the columns that would be used as condition columns and the decision node itself was used as the output column for each specific column. This greatly helps with the building of your decisions. The reason being that as a Decision Requirements Diagram, the decision node uses the inputs to drive the decision based on the _information requirements_ you give it, you will see as we added more components to the diagram, it continued to execute them once the requirements were met. This is an essential part of DMN. Now that the extra days cases decisions are each completed, we can revisit Base Vacation Days.
+There's an important component about the three extra cases that we want to visit first though before moving on. You will notice that all three had both input nodes connected to them and from that connection, the DMN editor built the columns that would be used as condition columns and the decision node itself was used as the output column for each specific column. This greatly helps with the building of your decisions. The reason being that as a Decision Requirements Diagram, the decision node uses the inputs to drive the decision based on the _information requirements_ you give it, you will see as we added more components to the diagram, it continued to execute them once the requirements were met. This is an essential part of DMN. Now that the extra days cases decisions are each completed, we can revisit Base Vacation Days.
 
 ## Creating Base Vacation Days
 
-The last base decision that we need to create is the **Base Vacation Days** decision. On the base Decision Requirement Diagram and click on Base Vacation Days and click Edit. On the node’s “Select expression”, we’re going to select Literal and input 22 as the base number of vacation days is 22.
+The last base decision that we need to create is the **Base Vacation Days** decision. On the base Decision Requirement Diagram and click on Base Vacation Days and click Edit. On the node's "Select expression", we're going to select Literal and input 22 as the base number of vacation days is 22.
 
 ![Age with Information Requirement Arrow](/images/guides/getting-started/images/base-vacation-days.png)
 
-<details>
-<summary>Click to see a preview of Base Vacation Days</summary>
-<img src="/images/guides/getting-started/images/base-vacation-days.gif" alt="Demo of Base Days"/>
-</details>
+<Accordion title="Click to see a preview of Base Vacation Days">
+![Demo of Base Days](/images/guides/getting-started/images/base-vacation-days.gif)
+</Accordion>
 
 Bringing the decisions together
 You will notice that after the 22 is put in on the previous decision, that it executes the Base Vacation Day decision as soon as it is completed. This is because this decision has no requirements on the age or years of service, if you were to delete the data from Age and Years of Service, the decision for Base Vacation Days would remain at 22 and the others would return null as the data is assumed to be null/empty in this situation. This is the power of DMN at work, the decisions that can be made at the time of execution will be made based on the requirements met. So as more data is obtained (Age/Years of Service), the nodes attached to it will be executed since their requirements are met. However, now that we have these nodes all executing, we would like to get to a final decision that is made when the 4 components of the decision are executed.
 
 ## Building Total Vacation Days
 
-1. On the diagram, we are going to create one more decision that we’re going to call Total Vacation Days. To do this, click on any of the four decision nodes, and you will see a means to add a connection to another decision node. Click on this and drag it to an open area on the top of the Decision Requirement Diagram.
+1. On the diagram, we are going to create one more decision that we're going to call Total Vacation Days. To do this, click on any of the four decision nodes, and you will see a means to add a connection to another decision node. Click on this and drag it to an open area on the top of the Decision Requirement Diagram.
 
-<details>
-<summary>Click to see a preview of Drawing Total Vacation Days</summary>
-<img src="/images/guides/getting-started/images/drawing-total-vacation-days.gif" alt="Demo of Total Vacation Days"/>
-</details>
+<Accordion title="Click to see a preview of Drawing Total Vacation Days">
+![Demo of Total Vacation Days](/images/guides/getting-started/images/drawing-total-vacation-days.gif)
+</Accordion>
 
 1. Once this is added to the diagram, you will connect the remaining 3 decision nodes using the line with the arrow head on it to connect them. This will make it so that the Total Vacation Days decision requires all 4 nodes to be activated to be able to execute the decision.
 
@@ -331,17 +295,16 @@ You will notice that after the 22 is put in on the previous decision, that it ex
    Base Vacation Days + max(Extra days case-1, Extra days case-3) + Extra days case-2
    ```
 
-   <details>
-   <summary>Click to see a preview of Total Vacation Days</summary>
-   <img src="/images/guides/getting-started/images/total-vacation-days.gif" alt="Demo of Total Vacation Days"/>
-   </details>
+<Accordion title="Click to see a preview of Total Vacation Days">
+![Demo of Total Vacation Days](/images/guides/getting-started/images/total-vacation-days.gif)
+</Accordion>
 
 
 ## Connecting to Git
 
 To ensure your work is saved and versioned properly:
 
-1. Click the Profile icon (👤) in the top-right corner.
+1. Click the Profile icon in the top-right corner.
 
 2. Select **Git Providers** and click **Add Provider**.
 

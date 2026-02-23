@@ -44,33 +44,31 @@ When you access Aletyx Playground, you'll see a welcome screen with several key 
 
 <!-- Main layout container -->
 
-  <!-- Image map container on the left -->
-  
-    
-      <img src="/images/guides/getting-started/images/playground_welcome.png" alt="Alteryx Playground Welcome Screen">
-      
+<!-- Image map container on the left -->
 
+![Aletyx Playground Welcome Screen](/images/guides/getting-started/images/playground_welcome.png)
 
-  <!-- Descriptions on the right -->
+<!-- Descriptions on the right -->
 
-  
-    ### 1. Creation Area
-    The top tiles allow you to create new projects or import existing ones.
+### 1. Creation Area
 
-    ### 2. Import Area
-    Import existing projects or DMN/BPMN files either from various Git providers or through direct file uploads.
+The top tiles allow you to create new projects or import existing ones.
 
-    ### 3. Projects Area
-    The lower section displays your locally imported projects and models.
+### 2. Import Area
 
-    ### 4. Toolbar
-    The top bar provides access to:
-    <ul>
-      <li><strong>Dev Deployments</strong>: Test deployments to connected Kubernetes or OpenShift clusters</li>
-      <li><strong>Extended Services</strong>: Connection to the DMN execution service for testing</li>
-      <li><strong>Settings</strong> (⚙️): Configure your Playground instance, including DMN version settings</li>
-      <li><strong>Profile</strong> (👤): Configure connections to Git providers and Kubernetes environments</li>
-    </ul>
+Import existing projects or DMN/BPMN files either from various Git providers or through direct file uploads.
+
+### 3. Projects Area
+
+The lower section displays your locally imported projects and models.
+
+### 4. Toolbar
+
+The top bar provides access to:
+- **Dev Deployments**: Test deployments to connected Kubernetes or OpenShift clusters
+- **Extended Services**: Connection to the DMN execution service for testing
+- **Settings** (gear icon): Configure your Playground instance, including DMN version settings
+- **Profile** (user icon): Configure connections to Git providers and Kubernetes environments
 
 
 ## Exploring the Sample Hiring Process
@@ -93,6 +91,7 @@ Let's examine a sample hiring process BPMN model that demonstrates various workf
 <Accordion title="The properties of the diagram will be explored in more detail later, but to understand the process ID and name, you can get a preview of the panel here">
 ![Hiring Properties panel](/images/guides/getting-started/images/hiring-properties.png)
 </Accordion>
+
 ### Understanding the Hiring Process Flow
 
 This hiring process demonstrates a complete hiring workflow with multiple branches:
@@ -108,41 +107,30 @@ This hiring process demonstrates a complete hiring workflow with multiple branch
 Let's explore each piece in the diagram!
 
 
-<img src="/images/guides/getting-started/images/hiring-process-full.png" alt="BPMN Editor with Sample Hiring Process">
-<!-- Top Bar -->
+![BPMN Editor with Sample Hiring Process](/images/guides/getting-started/images/hiring-process-full.png)
 
+<!-- Top Bar -->
 
 <!-- Process Specific -->
 
-
-<!-- </div> -->
-
 <!-- Side Panel Palette Icons -->
-
 
 <!-- Tooltips -->
 
-
 <!-- core/processes/basic-bpmn/start-events/ -->
 
-
-<!-- Removed for now
-
-
--->
+<!-- Removed for now -->
 
 
-The BPMN End Node signifies the end of a process drawn in BPMN for the particular instance. This is the palette item used for various end nodes. To learn more about these see <b> <a href=../../../core/processes/basic-bpmn/end-events>End Events Reference</div></b></a>
+The BPMN End Node signifies the end of a process drawn in BPMN for the particular instance. This is the palette item used for various end nodes. To learn more about these see [End Events Reference](../../../core/processes/basic-bpmn/end-events).
 
-The BPMN Activities nodes are used to create activities that occur in the BPMN process. Activities include: User tasks, Business Rules tasks, Script tasks, and Service tasks. To learn more about these see <b> <a href=../../../core/processes/basic-bpmn/activities>BPMN Activities Reference</div></b></a>
+The BPMN Activities nodes are used to create activities that occur in the BPMN process. Activities include: User tasks, Business Rules tasks, Script tasks, and Service tasks. To learn more about these see [BPMN Activities Reference](../../../core/processes/basic-bpmn/activities).
 
+<!-- Add more tooltips for other markers -->
 
-  <!-- Add more tooltips for other markers -->
-
-<details>
-  <summary>View Sample DMN Model</summary>
-  <img src="/images/guides/getting-started/images/dmn-sample-view.png" alt="Sample DMN Model">
-</details>
+<Accordion title="View Sample DMN Model">
+![Sample DMN Model](/images/guides/getting-started/images/dmn-sample-view.png)
+</Accordion>
 
 ### Key BPMN Components
 
@@ -239,8 +227,6 @@ kcontext.setVariable("bonus", bonus);
 ```
 
 ## Modifying the Process
-
-Let's make some modifications to understand the editor better:
 
 ### Adding a New Task
 
@@ -342,7 +328,7 @@ For local testing with the Dev Deployment option:
 For deploying to Kubernetes:
 
 1. Set up Kubernetes configuration:
-   - Click on the Profile icon (👤)
+   - Click on the Profile icon
    - Select "Kubernetes" tab and add your cluster
 2. Deploy to Kubernetes:
    - Click "Deploy" in the top menu
