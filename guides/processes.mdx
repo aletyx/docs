@@ -1,12 +1,118 @@
 ---
 title: "Processes"
-description: "Orchestrate long-running business processes."
+description: "Orchestrate and automate long-running business processes with BPMN."
 ---
 
 Processes coordinate tasks, decisions, and integrations across systems and
-people, with full visibility into each running instance.
+people, with full visibility into every running instance. Aletyx models processes
+with the **BPMN** standard and executes them on its enterprise build of **jBPM and
+Kogito**, running cloud-natively on Quarkus.
 
-## Orchestration
+## BPMN modeling
 
-Define the sequence of tasks and gateways, wire in your decisions, and deploy
-the process to an environment for execution and monitoring.
+BPMN (Business Process Model and Notation) is an OMG standard that represents
+workflows as graphical **nodes and connectors**. It defines three core categories
+of flow objects:
+
+- **Events** — start, intermediate, and end events that begin, interrupt, or
+  conclude a flow (including messages, signals, and timers).
+- **Activities** — the work itself: tasks and subprocesses.
+- **Gateways** — branching and merging logic for parallel execution and
+  conditional flow.
+
+BPMN is primarily a *visual* specification of expected behavior; the jBPM/Kogito
+engine supplies the runtime execution semantics. See the
+[BPMN reference](https://docs.aletyx.ai/core/processes/basic-bpmn/) and
+[Start with BPMN](https://docs.aletyx.ai/guides/getting-started/getting-started-playground-bpmn/).
+
+### Task types
+
+| Task | Purpose |
+|---|---|
+| **Service task** | Call an API or integration |
+| **Business rule task** | Invoke a DMN/DRL [decision](/guides/decisions) |
+| **User (human) task** | Route work to a person for review or approval |
+| **Script task** | Run inline logic |
+
+### Common patterns
+
+- **Rules orchestration** — sequence multiple decisions within a process.
+- **SAGA** — coordinate long-running, distributed transactions with
+  compensation.
+- **Ad-hoc subprocesses** — model unstructured work without a fixed order.
+
+## Adaptive process architecture
+
+Aletyx's [compact (adaptive) architecture](https://docs.aletyx.ai/core/processes/architecture/compact-architecture/)
+intelligently groups related services into unified deployments — avoiding the
+choice between a rigid monolith and a fully distributed microservices sprawl. Its
+components:
+
+- **Process definition models** — BPMN files compiled into optimized executable
+  code.
+- **Orchestration engine** — the jBPM engine reimagined for the cloud,
+  coordinating parallel execution, conditional branching, and event-driven flow.
+- **Cloud-native runtime** — built on Quarkus for fast startup, handling
+  transactions, API exposure, security, and lifecycle.
+- **Data Intelligence Layer (Data-Index)** — real-time process visibility via
+  GraphQL without impacting operational performance.
+- **Process History Service (Data-Audit)** — immutable audit trails for
+  compliance, with replay and analysis.
+- **Temporal Event Coordinator (Jobs Service)** — timers, deadlines, and SLA
+  enforcement.
+- **Human Collaboration Framework** — task assignment, permissions, and
+  human-in-the-loop interactions.
+- **Persistent Context Store** — a relational database holding consistent process
+  state across components.
+
+The result is near-linear scalability with far less operational overhead than
+full microservices, sub-millisecond response times for critical in-memory calls,
+and comprehensive audit trails — well suited to stateful, human-in-the-loop, and
+regulated workloads.
+
+## Event-driven processes
+
+Aletyx ships **out-of-the-box Kafka and CloudEvents integration**, so processes
+can consume and emit events with minimal boilerplate:
+
+1. A CloudEvent arrives matching a configured BPMN **message node** type.
+2. Kogito routes it to the correct process instance and injects the event data
+   into the process context.
+3. The process executes its tasks.
+4. At key checkpoints, the process can emit new events to trigger downstream
+   services.
+
+Event metadata such as `type` and `source` is embedded automatically for correct
+routing. See the
+[event-driven guide](https://docs.aletyx.ai/core/processes/advanced-bpmn/event-driven/).
+
+## Calling processes from code
+
+By default Kogito generates REST endpoints for your processes, but you can drive
+them directly from Java when you need custom validation or want to call from other
+services — using CDI injection and the `ProcessService` API. See
+[Invoking Kogito processes with Java APIs](/faq/getting-started/kogito-java-apis).
+
+## Deployment & monitoring
+
+Deploy processes to Kubernetes, OpenShift, or Docker with multi-environment
+promotion. The Data-Index and Data-Audit services give real-time visibility into
+running instances and an immutable history of every step for compliance. See
+[deployment options](https://docs.aletyx.ai/deployment/).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart for Architects" icon="sitemap" href="/quickstart/architects">
+    Design enterprise-scale automation.
+  </Card>
+  <Card title="Decisions" icon="diagram-project" href="/guides/decisions">
+    Author the decisions your processes call.
+  </Card>
+  <Card title="Compact architecture" icon="layer-group" href="https://docs.aletyx.ai/core/processes/architecture/compact-architecture/">
+    The adaptive process architecture in depth.
+  </Card>
+  <Card title="Deployment options" icon="server" href="https://docs.aletyx.ai/deployment/">
+    Kubernetes, OpenShift, Docker, and DevOps.
+  </Card>
+</CardGroup>

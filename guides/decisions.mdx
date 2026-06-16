@@ -1,17 +1,163 @@
 ---
 title: "Decisions"
-description: "Author, test, and deploy decision models."
+description: "Author, test, deploy, and govern business decisions with DMN and DRL."
 ---
 
-Decision models capture business logic as inputs, rules, and outputs that can be
-versioned, tested, and governed independently of your application code.
+Decisions capture business logic as inputs, rules, and outputs that are
+versioned, tested, and governed independently of your application code. Because
+they run on a rules engine rather than a probabilistic model, decisions deliver
+**completely predictable outcomes** — identical inputs always produce identical
+results, and every outcome records exactly which rules fired and why. That
+determinism and traceability is what makes decisions auditable for regulated
+industries, where black-box models fall short.
 
-## Authoring
+Aletyx runs decisions on its enterprise build of **Drools and Kogito**, with
+**microsecond-level execution** that can evaluate thousands of rules in parallel —
+suitable for high-volume transaction processing and real-time use cases like
+fraud detection.
 
-Model your decision logic, then validate it against representative test cases
-before promoting it to a shared environment.
+## Authoring approaches
+
+You can express decision logic in three complementary ways. Most teams mix them:
+DMN for transparent, business-owned logic and DRL where they need more power.
+
+<CardGroup cols={3}>
+  <Card title="DMN" icon="diagram-project">
+    Visual, standards-based decision modeling for business users and analysts.
+  </Card>
+  <Card title="Decision tables" icon="table-cells">
+    Spreadsheet-style rule authoring that non-developers can read and change.
+  </Card>
+  <Card title="DRL" icon="code">
+    The native Drools rule language for complex inference beyond tables.
+  </Card>
+</CardGroup>
+
+## DMN (Decision Model and Notation)
+
+DMN is an OMG industry standard that separates decision logic from process flow.
+Aletyx supports DMN at **conformance level 3** — the highest standard — so models
+remain portable and vendor-neutral while still executing precisely. See the
+[DMN reference](https://docs.aletyx.ai/core/decisions/dmn/).
+
+### Decision Requirements Diagrams (DRDs)
+
+A DRD is the visual map of a decision: **input data**, **decision nodes**, and the
+**information requirements** (solid arrows) that show how each decision draws on
+inputs and other decisions.
+
+### Decision tables and hit policies
+
+Decision tables lay out conditions and outputs in rows so business analysts can
+author and review rules directly. A **hit policy** controls how multiple matching
+rows resolve. Aletyx supports all ten DMN hit policies:
+
+| Policy | Behavior |
+|---|---|
+| **Unique (U)** | Exactly one rule may match |
+| **Any (A)** | Multiple rules may match if outputs are identical |
+| **Priority (P)** | Highest-priority output wins |
+| **First (F)** | First matching rule wins |
+| **Collect (C)** | Aggregate all matching outputs |
+| **C+ / C# / C< / C>** | Sum / count / min / max variants of Collect |
+
+### FEEL and boxed expressions
+
+**FEEL** (Friendly Enough Expression Language) is the DMN standard's expression
+language — strongly typed, side-effect free, business-friendly, and rich in
+built-in functions. Beyond decision tables, DMN offers other **boxed
+expressions**: literal expressions, contexts (name-value pairs), relations
+(tabular data), functions (reusable logic), invocations (calls to business
+knowledge models), and lists. Aletyx also supports custom, domain-specific data
+types alongside numbers, strings, dates, and complex structures.
 
 <Tip>
-  Keep decision logic out of application code so business users can review and
-  change rules without a deployment.
+  Start in the [Aletyx Playground](https://playground.aletyx.ai): build a DRD,
+  implement the logic, and test it interactively. See the
+  [Decision Analyst quickstart](/quickstart/decision-analysts) for a guided walk
+  through your first model.
 </Tip>
+
+## DRL (Drools Rule Language)
+
+DRL is the native rule language for logic that goes beyond what decision tables
+express. Rules follow a declarative **when/then** pattern and run on the Drools
+inference engine. See the [DRL reference](https://docs.aletyx.ai/core/decisions/drl/).
+
+- **Conditions (`when` / LHS)** — pattern matching that evaluates *facts* against
+  business criteria.
+- **Actions (`then` / RHS)** — operations run when conditions match, such as
+  modifying working memory or calling functions.
+- **Facts & working memory** — facts are the data rules evaluate; the engine
+  tracks them in working memory and re-evaluates as they change.
+- **Phreak engine** — Drools' high-performance pattern-matching algorithm fires
+  rules efficiently as facts change.
+- **Rule units & queries** — organize rules into units and query working memory
+  for matching data.
+
+**DMN vs. DRL:** reach for DMN when business users own declarative, table-style
+logic that must stay transparent and portable; reach for DRL for complex
+procedural inference, chaining, and fine-grained control. See
+[DMN vs. DRL vs. BPMN](/faq/concepts/dmn-drl-bpmn).
+
+## Testing
+
+Validate decisions before they reach production:
+
+- **Real-time testing** in the Playground as you edit a model.
+- **Natural-language testing** — business users validate logic in plain English
+  (for example, *"What happens if income is $85,000 and credit score is 720?"*)
+  and get immediate feedback with no technical knowledge required.
+- **Test scenarios** that assert expected outputs for representative inputs and
+  guard against regressions.
+
+## Governance with Decision Control
+
+[Decision Control](https://docs.aletyx.ai/decision-control/) manages decisions as
+governed, testable assets across their full lifecycle:
+
+- **Multi-environment promotion** — isolated Development → Test/UAT → Production
+  environments with governance checkpoints and standard, fast-track, or
+  self-service approval workflows.
+- **Four-eyes principle** — the creator of a change cannot approve their own
+  change; separation of duties is enforced.
+- **Complete audit trail** — every change records **who** made it, **when**,
+  **what** changed, and **why** (a required justification) — regulator-ready
+  documentation and the foundation of
+  [Accountable AI](/faq/concepts/accountable-ai).
+
+## Safe AI integration
+
+Aletyx applies **deterministic guardrails** so LLM outputs can't override business
+policy or produce unaudited decisions. You can also expose DMN models to LLMs
+automatically through the **Model Context Protocol (MCP)** — no custom integration
+code. See [Decisions + GenAI/MCP](https://docs.aletyx.ai/components/mcp/) and
+[Connecting DMN decisions to LLMs with MCP](/faq/products-features/dmn-mcp).
+
+## Deployment & integration
+
+Package decisions as cloud-native services and promote them across environments.
+Integration options include:
+
+- **REST APIs** for millisecond decision execution.
+- **Event-driven** invocation via Kafka.
+- **SSO** through OAuth2/OIDC.
+- **Kubernetes-native** deployment; builds distributed via Maven and container
+  registries.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart for Decision Analysts" icon="table-cells" href="/quickstart/decision-analysts">
+    Model your first decision visually.
+  </Card>
+  <Card title="Processes" icon="arrows-spin" href="/guides/processes">
+    Orchestrate decisions inside business processes.
+  </Card>
+  <Card title="Decision Control" icon="shield-check" href="https://docs.aletyx.ai/decision-control/">
+    Governance, versioning, and multi-environment deployment.
+  </Card>
+  <Card title="API reference" icon="code" href="/api-reference/introduction">
+    Call decisions from your systems.
+  </Card>
+</CardGroup>

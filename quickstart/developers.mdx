@@ -1,0 +1,69 @@
+---
+title: "Quickstart for Developers"
+description: "Scaffold, build, and run an Aletyx service with code."
+---
+
+This path is for **developers** who integrate, customize, and extend Aletyx in
+code. You'll scaffold a project with [start.aletyx.ai](https://start.aletyx.ai)
+and run it locally.
+
+## Prerequisites
+
+- Java and Maven installed
+- A Maven access token for the Aletyx enterprise builds (if required)
+
+See [environment setup](https://docs.aletyx.ai/getting-started/environment-setup/)
+for the full workstation configuration.
+
+## Scaffold and run a service
+
+<Steps>
+  <Step title="Open the project starter">
+    Go to [start.aletyx.ai](https://start.aletyx.ai).
+  </Step>
+  <Step title="Configure your project">
+    Set the Group ID, Artifact ID, Version, Runtime (Spring Boot or Quarkus),
+    target version, and Maven access token.
+  </Step>
+  <Step title="Select a template">
+    Choose a starting point — for example *Intelligent Decision Service*,
+    *Decision Service*, *Rule Service*, *Hybrid Decision Service*, *Decision
+    Orchestration*, or *Workflow Automation*.
+  </Step>
+  <Step title="Generate and download">
+    Click **Download Project** to get a pre-configured ZIP.
+  </Step>
+  <Step title="Build it">
+    Unzip and run `mvn clean install`.
+  </Step>
+  <Step title="Run it">
+    Launch with `mvn spring-boot:run` (Spring Boot) or `mvn quarkus:dev`
+    (Quarkus), then open `localhost:8080`.
+  </Step>
+  <Step title="Customize and extend">
+    Modify decision models, add configuration, connect data sources, and
+    implement your business logic.
+  </Step>
+</Steps>
+
+<Check>
+  You have a running Aletyx service scaffolded from a template. Integrate it with
+  your systems via the API or call processes directly from Java.
+</Check>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Project scaffolding guide" icon="cubes" href="https://docs.aletyx.ai/guides/getting-started/getting-started-start-aletyx/">
+    Full walkthrough of start.aletyx.ai.
+  </Card>
+  <Card title="MCP for AI integration" icon="robot" href="https://docs.aletyx.ai/components/mcp/">
+    Expose decisions to LLMs via the Model Context Protocol.
+  </Card>
+  <Card title="Core concepts & Java" icon="java" href="https://docs.aletyx.ai/core/">
+    Core features and Java integration.
+  </Card>
+  <Card title="API reference" icon="code" href="/api-reference/introduction">
+    Integrate Aletyx with your systems.
+  </Card>
+</CardGroup>

@@ -1,0 +1,66 @@
+---
+title: "Quickstart for Decision Analysts"
+description: "Model decisions and processes visually — no coding required."
+---
+
+This path is for **decision analysts** who model business decisions and processes
+without writing code, using the visual [Aletyx Playground](https://playground.aletyx.ai).
+
+## Prerequisites
+
+Access to the [Aletyx Playground](https://playground.aletyx.ai) (or a local
+deployment via Docker). No development tools required.
+
+## Model a decision with DMN
+
+<Steps>
+  <Step title="Open the Playground">
+    Go to [playground.aletyx.ai](https://playground.aletyx.ai) and explore a
+    sample model — such as the *Loan Pre-qualification* example — to see decision
+    nodes, input nodes, and decision tables.
+  </Step>
+  <Step title="Create a new project">
+    Start a blank DMN 1.5 model and give it a name.
+  </Step>
+  <Step title="Design the decision structure">
+    Add input nodes and decision nodes, then set each node's data type (for
+    example, `number`).
+  </Step>
+  <Step title="Connect requirements">
+    Draw information-requirement arrows from inputs to the decisions that depend
+    on them.
+  </Step>
+  <Step title="Build decision tables">
+    Add conditions and outputs, choose the appropriate hit policy (for example,
+    *Collect Max*), and set default values.
+  </Step>
+  <Step title="Test in real time">
+    Use the **Run** feature to validate outputs as you change the model.
+  </Step>
+  <Step title="Save to Git">
+    Connect the project to a Git provider for persistent storage and version
+    control.
+  </Step>
+</Steps>
+
+<Check>
+  You've authored, tested, and versioned a decision visually. Next, orchestrate
+  it inside a process with BPMN.
+</Check>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Start with DMN" icon="table-cells" href="https://docs.aletyx.ai/guides/getting-started/getting-started-playground-dmn/">
+    Full visual decision-modeling walkthrough.
+  </Card>
+  <Card title="Start with BPMN" icon="diagram-project" href="https://docs.aletyx.ai/guides/getting-started/getting-started-playground-bpmn/">
+    Automate a process visually with BPMN.
+  </Card>
+  <Card title="Decisions guide" icon="diagram-project" href="/guides/decisions">
+    How decisions are authored, tested, and governed.
+  </Card>
+  <Card title="Processes guide" icon="arrows-spin" href="/guides/processes">
+    Orchestrate long-running business processes.
+  </Card>
+</CardGroup>

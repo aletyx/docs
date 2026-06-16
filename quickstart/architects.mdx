@@ -1,0 +1,50 @@
+---
+title: "Quickstart for Architects"
+description: "Design enterprise-scale, deployable automation systems."
+---
+
+This path is for **architects** designing enterprise-scale automation. Rather
+than a single linear tutorial, it points you to the architecture and deployment
+guidance you need to design a production system.
+
+## Prerequisites
+
+Familiarity with your target runtime platform (Kubernetes, OpenShift, or Docker)
+and your organization's deployment and DevOps practices.
+
+## Design the architecture
+
+<Steps>
+  <Step title="Choose an architecture style">
+    Decide between a compact microservices architecture and an event-driven
+    architecture based on your scale, coupling, and latency needs.
+  </Step>
+  <Step title="Model decisions and processes as services">
+    Package decisions (DMN/DRL) and processes (BPMN) as independently deployable,
+    cloud-native services.
+  </Step>
+  <Step title="Plan deployment">
+    Select your deployment target — Kubernetes, OpenShift, or Docker — and
+    multi-environment promotion strategy.
+  </Step>
+  <Step title="Integrate with DevOps">
+    Wire builds and deployments into your CI/CD and observability tooling.
+  </Step>
+</Steps>
+
+## Architecture & deployment guides
+
+<CardGroup cols={2}>
+  <Card title="Microservices architecture" icon="sitemap" href="https://docs.aletyx.ai/core/processes/architecture/compact-architecture/">
+    Compact, scalable process architecture.
+  </Card>
+  <Card title="Event-driven architecture" icon="bolt" href="https://docs.aletyx.ai/core/processes/advanced-bpmn/event-driven/">
+    Design event-driven automation.
+  </Card>
+  <Card title="Deployment options" icon="server" href="https://docs.aletyx.ai/deployment/">
+    Kubernetes, OpenShift, Docker, and DevOps integration.
+  </Card>
+  <Card title="Platform & tech stack" icon="layer-group" href="https://docs.aletyx.ai/components/">
+    The components that make up the Aletyx platform.
+  </Card>
+</CardGroup>

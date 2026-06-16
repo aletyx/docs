@@ -16,14 +16,24 @@
         "groups": [
           {
             "group": "Get started",
-            "pages": ["index", "quickstart"]
+            "pages": [
+              "index",
+              {
+                "group": "Quickstart",
+                "pages": [
+                  "quickstart/decision-analysts",
+                  "quickstart/developers",
+                  "quickstart/architects"
+                ]
+              }
+            ]
           },
           {
             "group": "Guides",
             "pages": ["guides/decisions", "guides/processes"]
           },
           {
-            "group": "Help",
+            "group": "FAQ",
             "pages": [
               "faq",
               {
