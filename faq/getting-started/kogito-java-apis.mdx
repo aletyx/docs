@@ -1,0 +1,14 @@
+---
+title: "How do I invoke Kogito processes with Java APIs instead of REST?"
+description: "Calling BPMN processes programmatically in Kogito."
+---
+
+By default Kogito auto-generates REST endpoints for your BPMN processes, but you
+can drive them directly from Java instead — useful when you need custom
+validation, want to call from other Java services, or prefer not to expose
+processes over REST. The pattern is two steps: disable the generated REST layer
+with `kogito.generate.rest=false`, then use CDI injection and the `ProcessService`
+API to instantiate and manage processes programmatically. This gives you full
+control over how and when your workflows are triggered.
+
+[Read the full post →](https://aletyx.ai/how-to-use-java-apis-with-kogito-process/)

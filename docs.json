@@ -1,0 +1,114 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Aletyx",
+  "description": "Enterprise decision and process automation platform.",
+  "colors": {
+    "primary": "#fc764c",
+    "light": "#fd9a78",
+    "dark": "#e85a2c"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": ["index", "quickstart"]
+          },
+          {
+            "group": "Guides",
+            "pages": ["guides/decisions", "guides/processes"]
+          },
+          {
+            "group": "Help",
+            "pages": [
+              "faq",
+              {
+                "group": "About Aletyx",
+                "pages": [
+                  "faq/about-aletyx/what-is-aletyx",
+                  "faq/about-aletyx/who-builds-aletyx",
+                  "faq/about-aletyx/who-is-aletyx-for"
+                ]
+              },
+              {
+                "group": "Products & features",
+                "pages": [
+                  "faq/products-features/products",
+                  "faq/products-features/decision-control",
+                  "faq/products-features/ai-safety",
+                  "faq/products-features/modernize-legacy-systems",
+                  "faq/products-features/ai-assistant",
+                  "faq/products-features/dmn-mcp"
+                ]
+              },
+              {
+                "group": "Concepts & technologies",
+                "pages": [
+                  "faq/concepts/accountable-ai",
+                  "faq/concepts/what-is-drools",
+                  "faq/concepts/what-is-kogito",
+                  "faq/concepts/what-is-kie",
+                  "faq/concepts/drools-kogito-kie",
+                  "faq/concepts/why-update-drools",
+                  "faq/concepts/modernize-drools",
+                  "faq/concepts/dmn-drl-bpmn",
+                  "faq/concepts/decision-tables",
+                  "faq/concepts/enterprise-ai-concepts",
+                  "faq/concepts/hybrid-intelligence",
+                  "faq/concepts/beyond-llms"
+                ]
+              },
+              {
+                "group": "Getting started",
+                "pages": [
+                  "faq/getting-started/get-started",
+                  "faq/getting-started/developer-tools",
+                  "faq/getting-started/ai-assistants",
+                  "faq/getting-started/kogito-java-apis"
+                ]
+              },
+              {
+                "group": "Deployment, pricing & support",
+                "pages": [
+                  "faq/deployment-pricing-support/deployment",
+                  "faq/deployment-pricing-support/pricing",
+                  "faq/deployment-pricing-support/support",
+                  "faq/deployment-pricing-support/performance"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "groups": [
+          {
+            "group": "API reference",
+            "pages": ["api-reference/introduction"]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://aletyx.com"
+    }
+  },
+  "footer": {
+    "socials": {
+      "website": "https://aletyx.com"
+    }
+  }
+}

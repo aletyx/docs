@@ -1,0 +1,21 @@
+---
+title: "What is the difference between DMN, DRL, and BPMN?"
+description: "Decision and process modeling languages compared."
+---
+
+They are different modeling languages for different jobs:
+
+- **DMN** (Decision Model and Notation) — an OMG standard for modeling
+  **decisions** visually, using decision tables and boxed expressions (FEEL). It
+  is portable, business-friendly, and vendor-neutral.
+- **DRL** (Drools Rule Language) — Drools' **native rule language** for authoring
+  rules in a text/code form. It is more expressive and powerful than DMN for
+  complex inference, but specific to Drools.
+- **BPMN** (Business Process Model and Notation) — an OMG standard for modeling
+  **processes and workflows**: the sequence of tasks, gateways, and events that
+  orchestrate work over time.
+
+A simple way to remember it: **DMN and DRL decide _what_ the answer is; BPMN
+orchestrates _when and in what order_ work happens.** DMN and DRL model decisions
+(one standards-based, one Drools-native), while BPMN models the surrounding
+process.

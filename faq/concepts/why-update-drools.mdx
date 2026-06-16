@@ -1,0 +1,36 @@
+---
+title: "Why do I need to update Drools?"
+description: "Security, support, and modernization reasons to stay current."
+---
+
+Staying on an old Drools release is a growing risk, for several reasons:
+
+- **Critical security vulnerabilities (CVEs).** Older Drools and KIE versions —
+  and the dependencies they bundle — carry known, published CVEs that are never
+  back-ported once a release goes end-of-life. Notable examples affecting the
+  ecosystem include deserialization and remote-code-execution issues
+  (for example, the `XStream`-related CVEs that impacted older KIE Server and
+  Business Central deployments) as well as high-severity flaws in transitive
+  dependencies such as Log4j (Log4Shell). Running an unpatched version leaves
+  these paths exposed.
+- **End of support.** Drools 7.x and the legacy RHPAM / KIE Server line are no
+  longer actively maintained, so new CVEs receive no fixes and you cannot get
+  vendor security patches.
+- **Outdated platform dependencies.** Old releases pin old Java, application
+  server, and library versions that themselves accumulate vulnerabilities and
+  block you from modern, hardened runtimes.
+- **Compliance exposure.** In regulated industries, running software with known
+  unpatched CVEs can itself be an audit and compliance finding.
+
+Updating closes these gaps while also bringing faster execution, cloud-native
+deployment, and continued support. Aletyx ships a maintained, enterprise build of
+Drools and is a **drop-in replacement** for aging Drools 7.x, jBPM, RHPAM, and
+KIE Server systems — so you can get current **without rewrites, behavior changes,
+or re-certification**.
+
+<Note>
+  Always confirm the specific CVEs that apply to your exact versions against an
+  authoritative source such as the [NVD](https://nvd.nist.gov) or your vendor's
+  advisories. See [docs.aletyx.ai](https://docs.aletyx.ai) for modernization
+  guidance.
+</Note>
