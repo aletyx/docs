@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "maple",
   "name": "Aletyx",
   "description": "Enterprise decision and process automation platform.",
   "colors": {
@@ -102,7 +102,7 @@
   "navbar": {
     "primary": {
       "type": "button",
-      "label": "Dashboard",
+      "label": "Aletyx",
       "href": "https://aletyx.com"
     }
   },
