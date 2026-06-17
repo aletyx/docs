@@ -1,0 +1,64 @@
+---
+title: "Core Concepts"
+description: "Understand processes, decisions, and rules fundamentals."
+---
+
+This section explains how the Aletyx Enterprise Build of Kogito and Drools works
+structurally and operationally. It's aimed at architects and senior developers
+designing mission-critical decision and process systems, and it grounds the rest
+of the documentation in a shared vocabulary.
+
+## Decision automation
+
+Rules-based systems deliver **completely predictable outcomes** for a given set
+of inputs. Aletyx supports several complementary ways to author decision logic:
+
+<CardGroup cols={3}>
+  <Card title="DRL" icon="code" href="https://docs.aletyx.ai/core/decisions/drl/">
+    The native Drools Rule Language for complex inference.
+  </Card>
+  <Card title="Decision tables" icon="table-cells" href="https://docs.aletyx.ai/core/decisions/drl/decision-tables/">
+    Spreadsheet-style rule authoring for business users.
+  </Card>
+  <Card title="DMN" icon="diagram-project" href="https://docs.aletyx.ai/core/decisions/dmn/">
+    Standards-based visual decision modeling.
+  </Card>
+</CardGroup>
+
+## Process automation
+
+**BPMN**-based orchestration manages both automated and human tasks, with
+process variables carrying data between steps.
+
+- [BPMN basics](https://docs.aletyx.ai/core/processes/basic-bpmn/) — the building
+  blocks of a process model.
+- [Advanced BPMN](https://docs.aletyx.ai/core/processes/advanced-bpmn/) —
+  events, gateways, and sub-processes.
+- [Process architecture](https://docs.aletyx.ai/core/processes/architecture/compact-architecture/)
+  — compact and event-driven styles.
+
+## Integration patterns
+
+Rules and processes combine in several patterns: rule-driven workflows,
+process-embedded rules, and event-driven architectures.
+
+- [Integration patterns](https://docs.aletyx.ai/core/integration/)
+- [Decision & process integration](https://docs.aletyx.ai/core/integration/decision-process/)
+- [Event-driven integration](https://docs.aletyx.ai/core/integration/event-driven/)
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Decisions guide" icon="diagram-project" href="/guides/decisions">
+    Author, test, and deploy decision models.
+  </Card>
+  <Card title="Processes guide" icon="arrows-spin" href="/guides/processes">
+    Orchestrate long-running business processes.
+  </Card>
+  <Card title="Tech stack" icon="layer-group" href="/tech-stack">
+    The Drools, jBPM, and Kogito builds behind the platform.
+  </Card>
+  <Card title="DMN vs. DRL vs. BPMN" icon="circle-question" href="/faq/concepts/dmn-drl-bpmn">
+    When to use each modeling approach.
+  </Card>
+</CardGroup>

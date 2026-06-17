@@ -15,22 +15,30 @@
         "tab": "Documentation",
         "groups": [
           {
+            "group": "Home",
+            "pages": ["index"]
+          },
+          {
             "group": "Get started",
             "pages": [
-              "index",
-              {
-                "group": "Quickstart",
-                "pages": [
-                  "quickstart/decision-analysts",
-                  "quickstart/developers",
-                  "quickstart/architects"
-                ]
-              }
+              "quickstart/decision-analysts",
+              "quickstart/developers",
+              "quickstart/tech-leads"
             ]
           },
           {
             "group": "Guides",
             "pages": ["guides/decisions", "guides/processes"]
+          },
+          {
+            "group": "Platform",
+            "pages": [
+              "core-concepts",
+              "tech-stack",
+              "decision-control",
+              "decisions-genai",
+              "deployment"
+            ]
           },
           {
             "group": "FAQ",

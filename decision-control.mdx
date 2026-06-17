@@ -1,0 +1,70 @@
+---
+title: "Decision Control"
+description: "Enterprise decision management with governance, testing, and multi-environment deployment."
+---
+
+Decision Control is the enterprise platform for managing business decisions as
+governed, testable assets across their full lifecycle. Author and test decision
+models in **DMN**, then promote them through environments with version control
+and CI/CD for your business rules — compliance built in.
+
+## Core capabilities
+
+Decision Control brings together the people who own, build, and audit decisions
+through three purpose-built interfaces:
+
+<CardGroup cols={3}>
+  <Card title="Authoring UI" icon="pen-ruler">
+    Visual DMN modeling for analysts who own the business logic.
+  </Card>
+  <Card title="Prompt UI" icon="vials">
+    Test decisions in plain language and validate outcomes before release.
+  </Card>
+  <Card title="Management UI" icon="shield-check">
+    Govern promotion, approvals, and compliance across environments.
+  </Card>
+</CardGroup>
+
+## Governance & compliance
+
+Decision Control treats every change as a governed event:
+
+- **Multi-environment promotion** — isolated Development → Test/UAT → Production
+  environments with governance checkpoints and standard, fast-track, or
+  self-service approval workflows.
+- **Four-eyes principle** — the creator of a change cannot approve their own
+  change; separation of duties is enforced.
+- **Complete audit trail** — every change records **who** made it, **when**,
+  **what** changed, and **why** — regulator-ready documentation and the
+  foundation of [Accountable AI](/faq/concepts/accountable-ai).
+
+## Architecture
+
+Decision Control is built on three pillars running on Kubernetes
+infrastructure: the **Decision Control Tower** (management and governance), the
+**Decision Control Application** (the core execution engine), and the
+**Governance API**.
+
+## Integration & deployment
+
+- **REST APIs** for integrating decisions with existing applications.
+- **Event-driven** processing via Kafka.
+- **SSO** authentication through OAuth2/OIDC.
+- **Kubernetes-native** deployment options.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Setup & configuration" icon="gear" href="https://docs.aletyx.ai/decision-control/setup-and-config/">
+    Install and configure Decision Control.
+  </Card>
+  <Card title="Governance workflow" icon="diagram-project" href="https://docs.aletyx.ai/decision-control/governance-workflow/">
+    Approvals, environments, and the four-eyes principle.
+  </Card>
+  <Card title="Integration & APIs" icon="code" href="https://docs.aletyx.ai/decision-control/integration-and-apis/">
+    Connect decisions to your systems.
+  </Card>
+  <Card title="Decisions guide" icon="diagram-project" href="/guides/decisions">
+    Author, test, and deploy decision models.
+  </Card>
+</CardGroup>

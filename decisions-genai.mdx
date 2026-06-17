@@ -1,0 +1,68 @@
+---
+title: "Decisions + GenAI"
+description: "Empower your LLMs to reach the right decision, not just a statistical one."
+---
+
+The **Model Context Protocol (MCP)** is Aletyx's framework for combining
+traditional business automation — rules and processes — with advanced AI models
+like Claude. Deterministic business logic governs the decision; the LLM handles
+the language and context. You get the best of both worlds: AI flexibility with
+auditable, business-owned outcomes.
+
+## Why rules and processes still matter in the AI era
+
+Business rules and process automation remain superior for core enterprise needs:
+
+- **Deterministic execution** — identical inputs always produce identical
+  outputs.
+- **Microsecond-level speed** at high volume.
+- **Full auditability** — every outcome records which rules fired and why.
+- **Business ownership** — analysts own the logic, not a black-box model.
+
+MCP lets you keep these guarantees while still leveraging AI where it adds
+value.
+
+## How MCP works
+
+MCP is an orchestration framework with bidirectional communication between rules
+engines, process automation, and AI services. It spans three layers:
+
+<CardGroup cols={3}>
+  <Card title="Decision layer" icon="diagram-project">
+    Deterministic logic in Drools and DMN.
+  </Card>
+  <Card title="Process layer" icon="arrows-spin">
+    Orchestration with Kogito.
+  </Card>
+  <Card title="AI integration layer" icon="robot">
+    Standardized connectors and prompt management for LLMs.
+  </Card>
+</CardGroup>
+
+Its core components include a Rule-Governed AI Gateway, a Context Provider, a
+Prompt Management System, a Response Processor, and an Integration Framework.
+
+## Real-world applications
+
+- **Dynamic customer service** processes that adapt to the conversation while
+  staying within policy.
+- **Compliant document processing** with full auditability.
+- **Intelligent underwriting** that pairs AI assessment with governed decision
+  rules.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="First interaction" icon="play" href="https://docs.aletyx.ai/components/mcp/first-interaction/">
+    Get started connecting an LLM to your decisions.
+  </Card>
+  <Card title="Connecting DMN to LLMs with MCP" icon="plug" href="/faq/products-features/dmn-mcp">
+    How DMN models are exposed to LLMs automatically.
+  </Card>
+  <Card title="Decisions guide" icon="diagram-project" href="/guides/decisions">
+    Author, test, and deploy decision models.
+  </Card>
+  <Card title="Decision Control" icon="shield-check" href="/decision-control">
+    Enterprise governance for AI-integrated decisions.
+  </Card>
+</CardGroup>
