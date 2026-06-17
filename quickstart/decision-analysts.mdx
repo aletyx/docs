@@ -8,45 +8,30 @@ without writing code, using the visual [Aletyx Playground](https://playground.al
 
 ## Prerequisites
 
-Access to the [Aletyx Playground](https://playground.aletyx.ai) (or a local
-deployment via Docker). No development tools required.
+Access to the [Aletyx Playground](https://playground.aletyx.ai). No development tools required.
 
-## Model a decision with DMN
+## Visual Decision Modeling with [DMN](/faq/concepts/dmn)
 
-<Steps>
-  <Step title="Open the Playground">
-    Go to [playground.aletyx.ai](https://playground.aletyx.ai) and explore a
-    sample model — such as the *Loan Pre-qualification* example — to see decision
-    nodes, input nodes, and decision tables.
-  </Step>
-  <Step title="Create a new project">
-    Start a blank DMN 1.5 model and give it a name.
-  </Step>
-  <Step title="Design the decision structure">
-    Add input nodes and decision nodes, then set each node's data type (for
-    example, `number`).
-  </Step>
-  <Step title="Connect requirements">
-    Draw information-requirement arrows from inputs to the decisions that depend
-    on them.
-  </Step>
-  <Step title="Build decision tables">
-    Add conditions and outputs, choose the appropriate hit policy (for example,
-    *Collect Max*), and set default values.
-  </Step>
-  <Step title="Test in real time">
-    Use the **Run** feature to validate outputs as you change the model.
-  </Step>
-  <Step title="Save to Git">
-    Connect the project to a Git provider for persistent storage and version
-    control.
-  </Step>
-</Steps>
+Create business decisions using industry-standard Decision Model and Notation (DMN) without writing a single line of code.
 
-<Check>
-  You've authored, tested, and versioned a decision visually. Next, orchestrate
-  it inside a process with BPMN.
-</Check>
+* Drag-and-drop decision table creation
+* Visual decision requirements diagrams
+* FEEL expression language for business-friendly logic
+* Testing and simulation capabilities
+
+<Frame caption="A simple DMN model: the Applicant Data input feeds a Loan Eligibility decision, whose rules live in a decision table.">
+  <img src="/images/dmn-editor-sample.png" alt="DMN example showing a decision requirements diagram and a loan eligibility decision table" />
+</Frame>
+
+<div className="flex flex-wrap gap-4 my-8">
+  <a
+    href="/guides/dmn-playground"
+    className="no-underline inline-flex items-center justify-center rounded-lg px-6 py-3 font-semibold text-white bg-primary dark:bg-primary-light hover:opacity-90 transition-opacity"
+  >
+    Start with DMN
+  </a>
+</div>
+
 
 ## Next steps
 

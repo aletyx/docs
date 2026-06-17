@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sL \"https://docs.aletyx.ai/guides/getting-started/getting-started-playground-dmn/\" -o dmn.html)",
+      "Bash(curl -sL \"https://docs.aletyx.ai/guides/getting-started/getting-started-playground-dmn.md\")",
+      "Bash(file dmn-pg-*)",
+      "Bash(awk '{print $5, $9}')"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+---
+title: "What is BPMN?"
+description: "A plain-language introduction to Business Process Model and Notation."
+---
+
+**BPMN (Business Process Model and Notation)** is an
+[OMG](https://www.omg.org/bpmn/) standard for modeling **business processes and
+workflows** visually. Where DMN and DRL decide *what* the answer is, BPMN
+orchestrates *when and in what order* work happens — the sequence of **tasks,
+gateways, and events** that move work through to completion.
+
+A process is drawn as a flow that everyone can read: it **starts** with an event,
+runs **tasks** (work performed by people or systems), branches at **gateways**
+(decision points), and **ends** with an outcome. Because it is a portable,
+vendor-neutral standard, the same diagram can be reviewed by business teams and
+executed directly by a process engine.
+
+<Frame caption="A simple BPMN process: an application is received, reviewed, and routed by a gateway to an approved or declined outcome.">
+  <img src="/images/bpmn-example.svg" alt="BPMN example showing a start event, a review task, an exclusive gateway, and approved or declined end events" />
+</Frame>
+
+In practice, BPMN and DMN work together: the process (BPMN) calls out to a
+decision (DMN or DRL) at a gateway, then continues based on the answer.
+
+<Card title="Related" icon="arrow-right" href="/faq/concepts/dmn-drl-bpmn">
+  How BPMN compares to DMN and DRL
+</Card>

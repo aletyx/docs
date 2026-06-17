@@ -1,0 +1,29 @@
+---
+title: "What is DMN?"
+description: "A plain-language introduction to Decision Model and Notation."
+---
+
+**DMN (Decision Model and Notation)** is an [OMG](https://www.omg.org/dmn/)
+standard for modeling business decisions visually. Instead of burying logic in
+code, you describe **what the decision is, what inputs it needs, and how the
+inputs map to outcomes** — using decision tables and boxed expressions written in
+FEEL (Friendly Enough Expression Language).
+
+Because it is a portable, vendor-neutral standard, the same DMN model can be read
+by business analysts, validated by compliance teams, and executed directly by an
+engine — no translation step between the diagram and the running logic.
+
+A DMN model usually has two parts: a **Decision Requirements Diagram (DRD)** that
+shows which inputs feed which decisions, and a **decision table** that spells out
+the rules.
+
+<Frame caption="A simple DMN model: the Applicant Data input feeds a Loan Eligibility decision, whose rules live in a decision table.">
+  <img src="/images/dmn-editor-sample.png" alt="DMN example showing a decision requirements diagram and a loan eligibility decision table" />
+</Frame>
+
+If you can read a spreadsheet, you can read the decision table: **conditions on
+the left, outcomes on the right**.
+
+<Card title="Related" icon="arrow-right" href="/faq/concepts/dmn-drl-bpmn">
+  How DMN compares to DRL and BPMN
+</Card>

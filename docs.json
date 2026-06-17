@@ -28,7 +28,7 @@
           },
           {
             "group": "Guides",
-            "pages": ["guides/decisions", "guides/processes"]
+            "pages": ["guides/decisions", "guides/dmn-playground", "guides/processes"]
           },
           {
             "group": "Platform",
@@ -66,6 +66,9 @@
               {
                 "group": "Concepts & technologies",
                 "pages": [
+                  "faq/concepts/what-is-dmn",
+                  "faq/concepts/what-is-drl",
+                  "faq/concepts/what-is-bpmn",
                   "faq/concepts/accountable-ai",
                   "faq/concepts/what-is-drools",
                   "faq/concepts/what-is-kogito",

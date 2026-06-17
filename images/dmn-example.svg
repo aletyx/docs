@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" role="img" aria-label="A simple DMN model: Applicant Data input feeds a Loan Eligibility decision, defined by a decision table">
+  <rect width="720" height="420" fill="#ffffff"/>
+
+  <!-- Decision Requirements Diagram (DRD) -->
+  <text x="40" y="40" font-size="15" font-weight="700" fill="#1f2937">Decision Requirements Diagram</text>
+
+  <!-- Decision node (rectangle) -->
+  <rect x="250" y="70" width="220" height="60" rx="6" fill="#fff1ea" stroke="#e85a2c" stroke-width="2"/>
+  <text x="360" y="98" font-size="15" font-weight="600" fill="#1f2937" text-anchor="middle">Loan Eligibility</text>
+  <text x="360" y="117" font-size="12" fill="#6b7280" text-anchor="middle">Decision</text>
+
+  <!-- Input data node (oval/stadium) -->
+  <rect x="280" y="230" width="160" height="54" rx="27" fill="#f3f4f6" stroke="#9ca3af" stroke-width="2"/>
+  <text x="360" y="252" font-size="14" font-weight="600" fill="#1f2937" text-anchor="middle">Applicant Data</text>
+  <text x="360" y="270" font-size="12" fill="#6b7280" text-anchor="middle">Input Data</text>
+
+  <!-- Information requirement (arrow input -> decision) -->
+  <line x1="360" y1="230" x2="360" y2="132" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+    </marker>
+  </defs>
+
+  <!-- Decision table -->
+  <text x="40" y="335" font-size="15" font-weight="700" fill="#1f2937">Decision Table: Loan Eligibility</text>
+
+  <g font-size="13">
+    <!-- header row -->
+    <rect x="40" y="350" width="120" height="28" fill="#e85a2c"/>
+    <rect x="160" y="350" width="120" height="28" fill="#e85a2c"/>
+    <rect x="280" y="350" width="120" height="28" fill="#fc764c"/>
+    <text x="100" y="369" fill="#ffffff" font-weight="600" text-anchor="middle">Credit Score</text>
+    <text x="220" y="369" fill="#ffffff" font-weight="600" text-anchor="middle">Income</text>
+    <text x="340" y="369" fill="#ffffff" font-weight="600" text-anchor="middle">Eligibility</text>
+
+    <!-- row 1 -->
+    <rect x="40" y="378" width="120" height="26" fill="#ffffff" stroke="#e5e7eb"/>
+    <rect x="160" y="378" width="120" height="26" fill="#ffffff" stroke="#e5e7eb"/>
+    <rect x="280" y="378" width="120" height="26" fill="#fafafa" stroke="#e5e7eb"/>
+    <text x="100" y="396" fill="#374151" text-anchor="middle">&gt;= 700</text>
+    <text x="220" y="396" fill="#374151" text-anchor="middle">&gt;= 50,000</text>
+    <text x="340" y="396" fill="#16a34a" font-weight="600" text-anchor="middle">Approved</text>
+
+    <!-- row 2 -->
+    <rect x="40" y="404" width="120" height="26" fill="#ffffff" stroke="#e5e7eb"/>
+    <rect x="160" y="404" width="120" height="26" fill="#ffffff" stroke="#e5e7eb"/>
+    <rect x="280" y="404" width="120" height="26" fill="#fafafa" stroke="#e5e7eb"/>
+    <text x="100" y="422" fill="#374151" text-anchor="middle">&lt; 700</text>
+    <text x="220" y="422" fill="#374151" text-anchor="middle">-</text>
+    <text x="340" y="422" fill="#dc2626" font-weight="600" text-anchor="middle">Declined</text>
+  </g>
+</svg>

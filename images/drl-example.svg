@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" role="img" aria-label="A simple DRL rule that flags a loan application as high risk when the credit score is below 600">
+  <rect width="720" height="320" fill="#1f2937"/>
+
+  <!-- editor chrome -->
+  <rect x="0" y="0" width="720" height="34" fill="#111827"/>
+  <circle cx="22" cy="17" r="6" fill="#ef4444"/>
+  <circle cx="44" cy="17" r="6" fill="#f59e0b"/>
+  <circle cx="66" cy="17" r="6" fill="#22c55e"/>
+  <text x="360" y="22" font-size="13" fill="#9ca3af" text-anchor="middle">loan-rules.drl</text>
+
+  <g font-size="15" xml:space="preserve">
+    <!-- line numbers -->
+    <g fill="#4b5563" text-anchor="end">
+      <text x="46" y="74">1</text>
+      <text x="46" y="100">2</text>
+      <text x="46" y="126">3</text>
+      <text x="46" y="152">4</text>
+      <text x="46" y="178">5</text>
+      <text x="46" y="204">6</text>
+      <text x="46" y="230">7</text>
+      <text x="46" y="256">8</text>
+      <text x="46" y="282">9</text>
+    </g>
+
+    <!-- code -->
+    <text x="64" y="74"><tspan fill="#c792ea">rule</tspan><tspan fill="#ecc48d"> "High risk applicant"</tspan></text>
+    <text x="64" y="100"><tspan fill="#c792ea">  when</tspan></text>
+    <text x="64" y="126"><tspan fill="#82aaff">    $a</tspan><tspan fill="#d6deeb"> : Applicant( creditScore </tspan><tspan fill="#c792ea">&lt;</tspan><tspan fill="#f78c6c"> 600</tspan><tspan fill="#d6deeb"> )</tspan></text>
+    <text x="64" y="152"><tspan fill="#c792ea">  then</tspan></text>
+    <text x="64" y="178"><tspan fill="#82aaff">    $a</tspan><tspan fill="#d6deeb">.setRiskLevel(</tspan><tspan fill="#ecc48d">"HIGH"</tspan><tspan fill="#d6deeb">);</tspan></text>
+    <text x="64" y="204"><tspan fill="#82aaff">    $a</tspan><tspan fill="#d6deeb">.setRequiresReview(</tspan><tspan fill="#f78c6c">true</tspan><tspan fill="#d6deeb">);</tspan></text>
+    <text x="64" y="230"><tspan fill="#d6deeb">    update(</tspan><tspan fill="#82aaff">$a</tspan><tspan fill="#d6deeb">);</tspan></text>
+    <text x="64" y="256"><tspan fill="#c792ea">end</tspan></text>
+  </g>
+</svg>

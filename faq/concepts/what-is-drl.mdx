@@ -1,0 +1,27 @@
+---
+title: "What is DRL?"
+description: "A plain-language introduction to the Drools Rule Language."
+---
+
+**DRL (Drools Rule Language)** is [Drools'](/faq/concepts/what-is-drools) native,
+text-based language for authoring business rules. Each rule follows a simple
+**when / then** shape: a `when` block describes the conditions to match against
+the facts in working memory, and a `then` block describes the actions to take
+when those conditions hold.
+
+Because it is written as code rather than diagrams, DRL is more expressive and
+powerful than DMN for complex inference — chaining rules, reasoning over large
+fact sets, and fine-grained control — at the cost of being Drools-specific rather
+than a portable standard.
+
+<Frame caption="A simple DRL rule: when an applicant's credit score is below 600, flag them as high risk and require review.">
+  <img src="/images/drl-example.svg" alt="DRL example showing a when/then rule that flags a high-risk loan applicant" />
+</Frame>
+
+The engine evaluates DRL rules with a high-performance pattern-matching algorithm
+(Rete), so you declare *what* should happen and the engine decides *when* each
+rule fires.
+
+<Card title="Related" icon="arrow-right" href="/faq/concepts/dmn-drl-bpmn">
+  How DRL compares to DMN and BPMN
+</Card>

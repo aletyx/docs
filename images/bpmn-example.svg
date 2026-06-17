@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 200" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" role="img" aria-label="A simple BPMN process: a loan application starts, a review task runs, a gateway branches on the decision, and the process ends as approved or declined">
+  <rect width="760" height="200" fill="#ffffff"/>
+
+  <defs>
+    <marker id="seq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+    </marker>
+  </defs>
+
+  <!-- Start event -->
+  <circle cx="50" cy="90" r="22" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="50" y="134" font-size="12" fill="#374151" text-anchor="middle">Application</text>
+  <text x="50" y="149" font-size="12" fill="#374151" text-anchor="middle">received</text>
+
+  <!-- seq: start -> task -->
+  <line x1="72" y1="90" x2="160" y2="90" stroke="#6b7280" stroke-width="2" marker-end="url(#seq)"/>
+
+  <!-- Task -->
+  <rect x="160" y="62" width="150" height="56" rx="8" fill="#fff1ea" stroke="#e85a2c" stroke-width="2"/>
+  <text x="235" y="95" font-size="14" font-weight="600" fill="#1f2937" text-anchor="middle">Review application</text>
+
+  <!-- seq: task -> gateway -->
+  <line x1="310" y1="90" x2="372" y2="90" stroke="#6b7280" stroke-width="2" marker-end="url(#seq)"/>
+
+  <!-- Exclusive gateway (diamond) -->
+  <rect x="378" y="62" width="40" height="40" transform="rotate(45 398 82)" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+  <line x1="390" y1="74" x2="406" y2="90" stroke="#f59e0b" stroke-width="2"/>
+  <line x1="406" y1="74" x2="390" y2="90" stroke="#f59e0b" stroke-width="2"/>
+  <text x="398" y="134" font-size="12" fill="#374151" text-anchor="middle">Eligible?</text>
+
+  <!-- branch: approved (up/right) -->
+  <path d="M 420 82 L 470 82 L 470 50 L 580 50" fill="none" stroke="#6b7280" stroke-width="2" marker-end="url(#seq)"/>
+  <text x="500" y="42" font-size="12" fill="#16a34a" font-weight="600" text-anchor="middle">Yes</text>
+
+  <!-- branch: declined (down/right) -->
+  <path d="M 420 82 L 470 82 L 470 130 L 580 130" fill="none" stroke="#6b7280" stroke-width="2" marker-end="url(#seq)"/>
+  <text x="500" y="122" font-size="12" fill="#dc2626" font-weight="600" text-anchor="middle">No</text>
+
+  <!-- End event: approved -->
+  <circle cx="602" cy="50" r="22" fill="#f0fdf4" stroke="#16a34a" stroke-width="4"/>
+  <text x="660" y="46" font-size="12" fill="#374151" text-anchor="middle">Approved</text>
+
+  <!-- End event: declined -->
+  <circle cx="602" cy="130" r="22" fill="#fef2f2" stroke="#dc2626" stroke-width="4"/>
+  <text x="660" y="134" font-size="12" fill="#374151" text-anchor="middle">Declined</text>
+</svg>
