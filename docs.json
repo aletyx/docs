@@ -30,9 +30,9 @@
             "group": "Guides",
             "pages": [
               "guides/decisions",
+              "guides/processes",
               "guides/dmn-playground",
               "guides/bpmn-playground",
-              "guides/processes",
               {
                 "group": "Real-World Use Cases",
                 "pages": [
