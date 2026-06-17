@@ -4,7 +4,9 @@
       "Bash(curl -sL \"https://docs.aletyx.ai/guides/getting-started/getting-started-playground-dmn/\" -o dmn.html)",
       "Bash(curl -sL \"https://docs.aletyx.ai/guides/getting-started/getting-started-playground-dmn.md\")",
       "Bash(file dmn-pg-*)",
-      "Bash(awk '{print $5, $9}')"
+      "Bash(awk '{print $5, $9}')",
+      "Bash(curl -sL \"https://docs.aletyx.ai/guides/getting-started/getting-started-playground-bpmn/\" -o bpmn-src.html)",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

@@ -28,7 +28,21 @@
           },
           {
             "group": "Guides",
-            "pages": ["guides/decisions", "guides/dmn-playground", "guides/processes"]
+            "pages": [
+              "guides/decisions",
+              "guides/dmn-playground",
+              "guides/bpmn-playground",
+              "guides/processes",
+              {
+                "group": "Real-World Use Cases",
+                "pages": [
+                  "guides/use-cases/lending",
+                  "guides/use-cases/insurance",
+                  "guides/use-cases/onboarding",
+                  "guides/use-cases/compliance"
+                ]
+              }
+            ]
           },
           {
             "group": "Platform",

@@ -1,0 +1,457 @@
+---
+title: "From Models to Execution: BPMN in Aletyx Playground"
+description: "A hands-on walkthrough of exploring, modeling, testing, and deploying BPMN process models in the browser-based Aletyx Playground."
+---
+
+Business Process Model and Notation (BPMN) is a standardized graphical notation for
+business process modeling. Aletyx Playground provides a powerful environment for
+creating, editing, and executing BPMN models. This getting started guide will walk
+you through exploring and understanding a sample hiring process, identifying key
+BPMN components, and deploying your process to different environments.
+
+<Info>
+  This guide uses the Aletyx Enterprise Build of Kogito and Drools.
+</Info>
+
+## Accessing Aletyx Playground
+
+Aletyx Playground is available in two formats: a free-to-use cloud option and your
+own containerized option.
+
+<Tabs>
+  <Tab title="Cloud">
+    Navigate to [playground.aletyx.ai](https://playground.aletyx.ai). No
+    installation required — just start playing immediately!
+  </Tab>
+  <Tab title="Local container">
+    As long as you have set up your local environment to meet the Local Environment
+    Requirements, you can run one of these commands to get everything deployed
+    locally:
+
+    <CodeGroup>
+    ```bash macOS
+    curl -sL https://raw.githubusercontent.com/aletyx-labs/kie-10.0.0-sandbox/refs/heads/main/docker-compose.yaml | docker compose -f - up
+    ```
+
+    ```bash Linux
+    curl -sL https://raw.githubusercontent.com/aletyx-labs/kie-10.0.0-sandbox/refs/heads/main/docker-compose.yaml | docker-compose -f - up
+    ```
+
+    ```bash Windows
+    curl -sL https://raw.githubusercontent.com/aletyx-labs/kie-10.0.0-sandbox/refs/heads/main/docker-compose.yaml | docker-compose -f - up
+    ```
+    </CodeGroup>
+
+    Then access Aletyx Playground at [http://localhost:9090](http://localhost:9090).
+  </Tab>
+</Tabs>
+
+## The Aletyx Playground Interface
+
+When you access Aletyx Playground, you'll see a welcome screen with several key areas:
+
+<Frame>
+  <img src="/images/bpmn-pg-playground_welcome.png" alt="Aletyx Playground Welcome Screen" />
+</Frame>
+
+<AccordionGroup>
+  <Accordion title="1. Creation Area">
+    The top tiles allow you to create new projects or import existing ones.
+  </Accordion>
+  <Accordion title="2. Import Area">
+    Import existing projects or DMN/BPMN files either from various Git providers or
+    through direct file uploads.
+  </Accordion>
+  <Accordion title="3. Projects Area">
+    The lower section displays your locally imported projects and models.
+  </Accordion>
+  <Accordion title="4. Toolbar">
+    The top bar provides access to:
+
+    - **Dev Deployments**: Test deployments to connected Kubernetes or OpenShift clusters
+    - **Extended Services**: Connection to the DMN execution service for testing
+    - **Settings** (⚙️): Configure your Playground instance, including DMN version settings
+    - **Profile** (👤): Configure connections to Git providers and Kubernetes environments
+  </Accordion>
+</AccordionGroup>
+
+## Exploring the Sample Hiring Process
+
+Let's examine a sample hiring process BPMN model that demonstrates various workflow
+patterns. It gives us a basis for understanding what the Aletyx Enterprise Build of
+Kogito and Drools offers for process design and, later, process management.
+
+<Steps>
+  <Step title="Open the sample">
+    From the welcome screen, click **Try Sample** under the Process section of the
+    Aletyx Playground Create area to start seeing the basics of a BPMN workflow.
+
+    <Frame>
+      <img src="/images/bpmn-pg-bpmn-try-sample.png" alt="BPMN - Try Sample" />
+    </Frame>
+  </Step>
+  <Step title="Review the model">
+    The hiring process BPMN model will open in the editor.
+
+    <Frame>
+      <img src="/images/bpmn-pg-hiring-process.png" alt="Sample BPMN Process" />
+    </Frame>
+  </Step>
+  <Step title="Rename the process">
+    If you click the name **Sample** on the top of the editor, you can change the
+    name. As a best practice, this typically matches the process identification behind
+    the `processID` for the BPMN model. For this change, we'll shift it from **Sample**
+    to **hiring**.
+
+    <Frame>
+      <img src="/images/bpmn-pg-name_change.png" alt="Change BPMN Name" />
+    </Frame>
+  </Step>
+  <Step title="Preview the properties">
+    The properties of the diagram will be explored in more detail later, but to
+    understand the process ID and name, you can get a preview of the panel here.
+
+    <Frame>
+      <img src="/images/bpmn-pg-hiring-properties.png" alt="Hiring Properties panel" />
+    </Frame>
+  </Step>
+</Steps>
+
+### Understanding the Hiring Process Flow
+
+This hiring process demonstrates a complete hiring workflow with multiple branches:
+
+- **Start**: The process begins with a "New Hiring" event that initializes the candidate evaluation.
+- **Decision Gateway**: Evaluates if the candidate meets minimum requirements.
+- **Offer Creation**: If qualified, an offer is created with salary and bonus calculations.
+- **Parallel Interviews**: HR and IT interviews proceed in parallel.
+- **Interview Timeouts**: Both interviews have timer events (180-second timeouts).
+- **Hiring Decision Gateway**: Based on approvals from both departments.
+- **Final Steps**: Either sending an offer or application denial.
+
+Let's explore each piece in the diagram!
+
+<Frame>
+  <img src="/images/bpmn-pg-hiring-process-full.png" alt="BPMN Editor with Sample Hiring Process" />
+</Frame>
+
+<AccordionGroup>
+  <Accordion title="What each part of the BPMN editor does">
+    - **File Location and Local Status** — Within Aletyx Playground you can see the status of a file and where it is located. If the file is saved in local storage you'll have confirmation when hovering this icon. Just remember, Aletyx Playground operates in a way that when the memory storage is freed, this will go away.
+    - **Start Node** — The BPMN Start Node signifies the start of a process drawn in BPMN for the particular instance. This is the entry point for the process. These can be a generic start as seen here, or triggered from timers, signals, or events (like a Kafka event). See the [Start Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/start-events) for more details.
+    - **Boundary Event Timer** — For Tasks (and other services) within BPMN you can set boundary events with timers to escalate, cancel, or create new pathways for processes to take. More information on [Intermediate Events can be found in our documentation](https://docs.aletyx.ai/core/processes/basic-bpmn/intermediate-events). These utilize the ISO-8601 time standard, which is covered in the [ISO-8601 Reference](https://docs.aletyx.ai/core/processes/advanced-bpmn/iso-8601-guide).
+    - **BPMN Human Task** — The Human Task allows you to configure a task that can be delegated to a human to work on. In this case we assign someone to perform work on the HR Interview task. For more information on human tasks refer to the [Human Task Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/activities/#user-task).
+    - **New Hiring Script Task** — This node does a script task associated with initializing the process. When you open the properties of this node, you'll see things like `kcontext.setVariable("hr_approval", false)`, which is used to initialize the process variables associated with the process.
+    - **BPMN Gateway Node — Split** — A BPMN Gateway Node creates a point at which the process can go one of many ways depending on the type of Gateway used. In this case, it is an exclusive gateway: if the candidate meets the requirements, the process can move forward, otherwise the application is denied and approaches the end node. For more information refer to the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
+    - **BPMN Gateway Node — Join** — A BPMN Gateway Node also creates a point at which the process can bring multiple parts of a process back together. For more information refer to the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
+    - **Create Offer Script Task** — This node does a script task associated with creating a base offer based on the details from the application, so that our interviewers can review the details of what would be offered.
+    - **End Node** — The BPMN End Node signifies the end of a process drawn in BPMN for the particular instance. When the process reaches this point it concludes. See the [End Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/end-events).
+    - **Apply Accelerator** — The accelerators provide a means of easily creating a pre-scaffolded project based on standards attached to referenced projects. This lets you use pre-created templates for building your projects from model to deployment very efficiently. For more information see the [Accelerators Reference](https://docs.aletyx.ai/components/playground/accelerators).
+    - **New File Button** — Within the same project folder you're working in, you can create new Workflow (.bpmn), Decision (.dmn), or (.pmml) files, or upload other files from your workstation. This builds it within the project; if you apply an accelerator it incorporates all of the files associated with the workspace.
+    - **Deploy — Using Dev Deployment** — From Aletyx Playground you can trigger a Dev Deployment that can be used for trying out a service. This is not meant to replace a full deployment, but it is an excellent quick testing tool! For reference, see the [Dev Deployment Reference](https://docs.aletyx.ai/components/playground/dev-deployment).
+    - **Share — To Sync with Git or Download Files** — With the Share button, you can synchronize your project with a Git provider using your Git credentials. This also lets you download the respective file (BPMN or DMN) in XML format to be used elsewhere. For reference, see [Git Configuration](https://docs.aletyx.ai/getting-started/git-configuration).
+    - **Custom Tasks** — This portion of the BPMN palette allows for the use of custom tasks within the editor. These are typically tied to custom work item handlers.
+    - **BPMN Artifacts** — BPMN Artifacts are annotations that allow you to describe/group your model, but they have no executable impact.
+    - **BPMN Start Nodes Palette** — The palette items used for the various start nodes. These can be a generic start or triggered from timers, signals, or events. See the [Start Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/start-events) for more details.
+    - **Catching and Throwing Nodes Palette** — Used to create catching and throwing events for a process. These can be compensation events, messages, signals, etc.
+    - **BPMN End Node Palette** — The palette item used for various end nodes. To learn more about these see the [End Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/end-events).
+    - **BPMN Activities Palette** — The BPMN Activities nodes are used to create activities that occur in the BPMN process. Activities include User tasks, Business Rules tasks, Script tasks, and Service tasks. To learn more about these see the [BPMN Activities Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/activities).
+    - **BPMN Subprocesses Palette** — The BPMN palette option for the various types of subprocesses that can be used within the process. For reference, see the [Subprocesses Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/subprocesses).
+    - **BPMN Containers** — Containers to help group tasks associated with a user/group by swimlane.
+    - **Gateway Palette** — The BPMN element for the different gateways that a process can utilize. For more on gateways, see the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
+    - **Decision Service** — A Decision Service allows decisions to be captured and exposed (or hidden) from execution.
+    - **Gateway Branch** — A gateway branch provides a conditional that the BPMN process can follow. These conditions are typically of a DRL syntax (MVEL or Java). For more on gateways, see the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
+    - **Properties of Selected item** — Clicking the pen-and-paper icon opens the selected node's properties.
+  </Accordion>
+  <Accordion title="View Sample DMN Model">
+    <Frame>
+      <img src="/images/bpmn-pg-dmn-sample-view.png" alt="Sample DMN Model" />
+    </Frame>
+  </Accordion>
+</AccordionGroup>
+
+### Key BPMN Components
+
+#### 1. Events
+
+Events represent significant occurrences in a process. In our hiring process, we have:
+
+- **Start Event**: Marks the beginning of the process
+- **End Events**: Marks process completion
+- **Boundary Timer Events**: The clock symbols attached to interview tasks that trigger after 180 seconds
+
+#### 2. Activities
+
+Activities represent work performed in the process:
+
+- **Script Tasks**: "New Hiring", "Create Offer", "Send notification HR Interview avoided", etc.
+- **User Tasks**: "HR Interview" and "IT Interview" requiring human interaction
+- **Service Tasks**: Automated tasks that execute system services (not in this example)
+
+#### 3. Gateways
+
+Gateways control the flow of the process:
+
+- **Exclusive Gateways** (Diamond with X): Decision points like "Candidate meets requirements?"
+- **Parallel Gateways**: Points where the process splits into parallel paths (not explicitly shown but parallel flow exists)
+- **Inclusive Gateways**: Points where some paths are taken based on conditions (not in this example)
+
+#### 4. Sequence Flows
+
+The arrows connecting the elements represent the sequence of execution:
+
+- **Normal Flow**: Standard progression path
+- **Conditional Flow**: Follows specific conditions (e.g., "Candidate doesn't meet requirements")
+- **Default Flow**: Followed when no other conditions are met
+
+#### 5. Data Objects
+
+Data that flows through the process:
+
+- **Process Variables**: `candidate`, `experience`, `skills`, `category`, `salary`
+- **Input/Output Mappings**: Data passed between tasks
+
+## Working with the BPMN Editor
+
+### Understanding the Editor Interface
+
+- **Left Palette**: Contains BPMN elements you can drag onto the modeller
+- **Modeller**: The main editing area where you build your process
+- **Properties Panel**: Right-side panel for configuring selected elements
+- **Top Menu**: Tools for saving, deploying, and validating your model
+
+### Exploring Element Properties
+
+Let's examine the properties of key elements.
+
+<Steps>
+  <Step title="HR Interview Task properties">
+    1. Click on the "HR Interview" task to select it.
+    2. Open the properties panel (right side).
+    3. Observe:
+       - **General**: Name, ID, Documentation
+       - **Implementation**: User task details
+       - **Data Assignments**: Input/Output mappings
+       - **Actors**: Who can perform this task ("jdoe")
+  </Step>
+  <Step title="Gateway properties">
+    1. Click on the gateway after "Create Offer".
+    2. The properties panel shows:
+       - Gateway type
+       - Default flow
+       - Outgoing conditions
+  </Step>
+  <Step title="Script Task properties">
+    1. Click on the "Create Offer" script task.
+    2. Examine the script content calculating salary and bonus:
+
+    ```java
+    // Example script from "Create Offer" task
+    if (experience <= 5) {
+        salary = 30000;
+        category = "Software Engineer";
+    } else if (experience <= 10) {
+        salary = 40000;
+        category = "Senior Software Engineer";
+    } else {
+        salary = 50000;
+        category = "Software Architect";
+    }
+
+    bonus = skills.split(",").length * 150;
+
+    kcontext.setVariable("category", category);
+    kcontext.setVariable("salary", salary);
+    kcontext.setVariable("bonus", bonus);
+    ```
+  </Step>
+</Steps>
+
+## Modifying the Process
+
+Let's make some modifications to understand the editor better.
+
+### Adding a New Task
+
+1. From the left palette, drag a "User Task" onto the modeller after "Create Offer".
+2. Connect it to the flow:
+   - Click on the sequence flow between "Create Offer" and "HR Interview".
+   - Delete it by pressing Delete/Backspace.
+   - Use the arrow tool to connect "Create Offer" to your new task.
+   - Connect your new task to "HR Interview".
+3. Configure the task:
+   - Name it "Manager Approval".
+   - Set the actor to "manager".
+   - Add data inputs/outputs as needed.
+
+### Adding a Condition to a Gateway
+
+1. Click on the exclusive gateway after "New Hiring".
+2. In the properties panel, select a sequence flow to edit.
+3. Add a condition like: `return experience >= 2;`
+
+### Adding a Service Task
+
+1. Drag a "Service Task" from the palette to the modeller.
+2. Configure it with:
+   - **Name**: "Background Check"
+   - **Implementation**: Select "Java" implementation type
+   - **Class name**: `org.acme.hiring.BackgroundCheckService`
+   - **Method**: `performCheck`
+
+## Process Variables and Data Flow
+
+The hiring process uses several variables:
+
+- **Input Variables**:
+  - `candidate` (String): Candidate's name
+  - `experience` (Integer): Years of experience
+  - `skills` (String): Comma-separated list of skills
+- **Process Variables**:
+  - `hr_approval` (Boolean): HR interview approval
+  - `it_approval` (Boolean): IT interview approval
+- **Output Variables**:
+  - `category` (String): Job category based on experience
+  - `salary` (Integer): Base salary calculation
+  - `bonus` (Integer): Bonus calculation based on skills
+
+### Data Mapping Example
+
+Let's examine how data is passed between tasks:
+
+- **HR Interview Task**:
+  - Inputs:
+    - `candidate`: Candidate name
+    - `approve`: Current approval status (hr_approval)
+    - `category`: Job category
+    - `baseSalary`: Salary amount
+    - `bonus`: Bonus amount
+  - Outputs:
+    - `approve`: Updated approval status (hr_approval)
+    - `category`: Potentially modified category
+    - `baseSalary`: Potentially modified salary
+    - `bonus`: Potentially modified bonus
+
+## Process Execution and Testing
+
+### Testing Your BPMN Process
+
+1. Click the "Deploy" button in the top-right corner.
+2. Select the "Deploy to Dev" option.
+3. Once deployed, click "Start Process".
+4. Enter test data:
+   - **Candidate**: "John Doe"
+   - **Experience**: 8
+   - **Skills**: "Java,Spring,Drools"
+5. Click "Start" to begin the process instance.
+6. Navigate to the "Instances" tab to see the running process.
+7. Complete user tasks as they appear in the "Tasks" tab.
+
+### Monitoring Process Execution
+
+1. In the "Instances" tab, click on a running instance.
+2. View the process diagram with the highlighted current state.
+3. Examine the "Variables" tab to see current values.
+4. Check the "Logs" tab for execution history.
+
+## Deployment Options
+
+### Local Deployment
+
+For local testing with the Dev Deployment option:
+
+1. Click "Deploy" in the top menu.
+2. Select "Deploy to Dev".
+3. Access the runtime at [http://localhost:9090/management](http://localhost:9090/management).
+
+### Kubernetes Deployment
+
+For deploying to Kubernetes:
+
+1. Set up Kubernetes configuration:
+   - Click on the Profile icon (👤).
+   - Select the "Kubernetes" tab and add your cluster.
+2. Deploy to Kubernetes:
+   - Click "Deploy" in the top menu.
+   - Select your Kubernetes environment.
+   - Configure deployment options (replicas, resources).
+   - Click "Deploy".
+
+## Integrating BPMN with DMN
+
+The hiring process could be enhanced with decision models:
+
+1. Create a DMN model for determining eligibility:
+   - Click "New File" > "Decision".
+   - Name it "CandidateEligibility".
+   - Create a decision table with inputs for experience and skills.
+   - Connect it to your BPMN model.
+2. Integrate the DMN with your BPMN:
+   - Replace the exclusive gateway condition with a business rule task.
+   - Configure the task to call your DMN model.
+   - Map process variables to DMN inputs/outputs.
+
+## Java Application Integration
+
+### Setting Up a Java Project
+
+```xml
+<!-- Maven dependency for KIE API -->
+<dependency>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-api</artifactId>
+    <version>10.0.0</version>
+</dependency>
+```
+
+### Invoking the Process from Java
+
+```java
+import org.kie.kogito.process.Process;
+import org.kie.kogito.process.ProcessInstance;
+
+@Inject
+Process<HiringModel> hiringProcess;
+
+public void startHiringProcess(String candidate, int experience, String skills) {
+    HiringModel model = HiringModel.builder()
+        .candidate(candidate)
+        .experience(experience)
+        .skills(skills)
+        .build();
+
+    ProcessInstance<HiringModel> instance = hiringProcess.createInstance(model);
+    instance.start();
+}
+```
+
+## Next Steps
+
+Now that you're familiar with BPMN in Aletyx Playground, here are some recommended
+next steps:
+
+- **Create Custom Service Tasks**: Develop Java components for integration.
+- **Use Process Variables**: Define complex data structures.
+- **Add Error Handling**: Implement boundary error events and compensation.
+- **Create Multi-Instance Tasks**: Handle collections of data in parallel.
+- **Build End-to-End Applications**: Combine BPMN with DMN and Java services.
+
+<CardGroup cols={2}>
+  <Card title="Processes guide" icon="arrows-spin" href="/guides/processes">
+    Orchestrate long-running business processes.
+  </Card>
+  <Card title="DMN in Playground" icon="table-cells" href="/guides/dmn-playground">
+    Build and test DMN decision models in the browser.
+  </Card>
+  <Card title="Decisions guide" icon="diagram-project" href="/guides/decisions">
+    How decisions are authored, tested, and governed.
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+- [BPMN 2.0 Specification](https://www.omg.org/spec/BPMN/2.0/)
+- [Aletyx Documentation](https://docs.aletyx.ai/)
+- [KIE Apache Projects](https://kie.apache.org/)
+- [Drools Documentation](https://www.drools.org/learn/documentation.html)
+- [jBPM Documentation](https://www.jbpm.org/learn/documentation.html)

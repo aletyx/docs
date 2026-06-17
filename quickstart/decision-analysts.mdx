@@ -9,43 +9,106 @@ without writing code, using the visual [Aletyx Playground](https://playground.al
 ## Prerequisites
 
 Access to the [Aletyx Playground](https://playground.aletyx.ai). No development tools required.
+Get up and running in less than 5 minutes:
+
+* Access Aletyx Playground - no installation required
+* Create a new project or use a starter template
+* Model your first decision or process
+* Test with sample data
+* Export or deploy your solution
 
 ## Visual Decision Modeling with [DMN](/faq/concepts/dmn)
 
-Create business decisions using industry-standard Decision Model and Notation (DMN) without writing a single line of code.
+<div className="grid md:grid-cols-2 gap-8 items-center my-8">
+  <div>
+    Create business decisions using industry-standard Decision Model and Notation (DMN) without writing a single line of code.
 
-* Drag-and-drop decision table creation
-* Visual decision requirements diagrams
-* FEEL expression language for business-friendly logic
-* Testing and simulation capabilities
+    * Drag-and-drop decision table creation
+    * Visual decision requirements diagrams
+    * FEEL expression language for business-friendly logic
+    * Testing and simulation capabilities
 
-<Frame caption="A simple DMN model: the Applicant Data input feeds a Loan Eligibility decision, whose rules live in a decision table.">
-  <img src="/images/dmn-editor-sample.png" alt="DMN example showing a decision requirements diagram and a loan eligibility decision table" />
-</Frame>
+    <a
+      href="/guides/dmn-playground"
+      className="no-underline inline-flex items-center justify-center rounded-lg px-6 py-3 font-semibold text-white bg-primary dark:bg-primary-light hover:opacity-90 transition-opacity"
+    >
+      Start with DMN
+    </a>
+  </div>
 
-<div className="flex flex-wrap gap-4 my-8">
-  <a
-    href="/guides/dmn-playground"
-    className="no-underline inline-flex items-center justify-center rounded-lg px-6 py-3 font-semibold text-white bg-primary dark:bg-primary-light hover:opacity-90 transition-opacity"
-  >
-    Start with DMN
-  </a>
+  <Frame caption="A simple DMN model: the Applicant Data input feeds a Loan Eligibility decision, whose rules live in a decision table.">
+    <img src="/images/dmn-editor-sample.png" alt="DMN example showing a decision requirements diagram and a loan eligibility decision table" />
+  </Frame>
 </div>
 
 
-## Next steps
+## Process Automation with BPMN
+
+<div className="grid md:grid-cols-2 gap-8 items-center my-8">
+  <Frame caption="A simple BPMN process: an application is received, reviewed, and routed by a gateway to an approved or declined outcome.">
+    <img src="/images/bpmn-editor-sample.svg" alt="BPMN example showing a start event, a review task, an exclusive gateway, and approved or declined end events" />
+  </Frame>
+
+  <div>
+    Design executable business processes that orchestrate people, systems, and decisions.
+
+    * Intuitive BPMN 2.0 visual editor
+    * Human task management
+    * System integration capabilities
+    * Process monitoring dashboard
+
+    <a
+      href="/guides/dmn-playground"
+      className="no-underline inline-flex items-center justify-center rounded-lg px-6 py-3 font-semibold text-white bg-primary dark:bg-primary-light hover:opacity-90 transition-opacity"
+    >
+      Start with BPMN
+    </a>
+  </div>
+</div>
+
+## Real-World Use Cases
 
 <CardGroup cols={2}>
-  <Card title="Start with DMN" icon="table-cells" href="https://docs.aletyx.ai/guides/getting-started/getting-started-playground-dmn/">
-    Full visual decision-modeling walkthrough.
+  <Card title="Lending Automation" icon="building-columns" href="/guides/use-cases/lending">
+    Streamline loan origination and approval with rules-based decisioning and process orchestration.
   </Card>
-  <Card title="Start with BPMN" icon="diagram-project" href="https://docs.aletyx.ai/guides/getting-started/getting-started-playground-bpmn/">
-    Automate a process visually with BPMN.
+  <Card title="Claims Processing" icon="file-shield" href="/guides/use-cases/insurance">
+    Automate insurance claims with dynamic routing, risk assessment, and straight-through processing.
   </Card>
-  <Card title="Decisions guide" icon="diagram-project" href="/guides/decisions">
-    How decisions are authored, tested, and governed.
+  <Card title="Customer Onboarding" icon="user-plus" href="/guides/use-cases/onboarding">
+    Create frictionless customer experiences with intelligent workflows and AI-assisted verification.
   </Card>
-  <Card title="Processes guide" icon="arrows-spin" href="/guides/processes">
-    Orchestrate long-running business processes.
+  <Card title="Regulatory Compliance" icon="scale-balanced" href="/guides/use-cases/compliance">
+    Ensure compliance with complex regulations through auditable decisions and adaptive processes.
+  </Card>
+</CardGroup>
+
+## Ready for the next steps?
+
+<CardGroup cols={2}>
+  <Card title="1. Try Aletyx Playground" icon="browser" href="https://playground.aletyx.ai">
+    Model decisions and processes in your browser.
+  </Card>
+  <Card title="2. Set Up Your Dev Environment" icon="wrench" href="https://docs.aletyx.ai/getting-started/environment-setup/">
+    Configure your local environment for development.
+  </Card>
+  <Card title="3. See Lots of Guides or Follow a Tutorial!" icon="book-open" href="https://docs.aletyx.ai/guides/">
+    Follow our various guides and examples here!
+  </Card>
+  <Card title="4. Deploy to Production" icon="rocket" href="/deployment">
+    Learn about deployment options for production.
+  </Card>
+</CardGroup>
+
+### Need Help Getting Started?
+
+Our team is ready to assist with your business automation journey.
+
+<CardGroup cols={2}>
+  <Card title="Contact Us" icon="envelope" href="https://aletyx.ai/contact-us/">
+    Reach out to the Aletyx team for help.
+  </Card>
+  <Card title="Join the Community" icon="people-group" href="https://kie.apache.org/docs/community/">
+    Join the Apache KIE™ (incubating) Community.
   </Card>
 </CardGroup>
