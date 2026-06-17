@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#
+# pre-push hook — block pushes that contain broken internal doc links.
+#
+# Enabled via a tracked hooks dir:
+#   git config core.hooksPath scripts/git-hooks
+# (run once per clone; see scripts/git-hooks/install-hooks.sh)
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+
+echo "pre-push: checking internal documentation links..."
+if ! "$repo_root/scripts/links-check.sh"; then
+  echo
+  echo "pre-push: broken internal links found (see above). Push aborted." >&2
+  echo "Fix the links, or bypass with: git push --no-verify" >&2
+  exit 1
+fi
+
+echo "pre-push: all internal links OK."
+exit 0
