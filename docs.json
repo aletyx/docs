@@ -116,6 +116,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "References",
+            "pages": ["references"]
           }
         ]
       },

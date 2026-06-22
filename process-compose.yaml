@@ -1,0 +1,21 @@
+version: "0.5"
+
+processes:
+  mintlify-dev:
+    description: "Mintlify local docs dev server"
+    command: "mint dev"
+    working_dir: "."
+    availability:
+      restart: "on_failure"
+      backoff_seconds: 2
+    readiness_probe:
+      http_get:
+        host: "127.0.0.1"
+        scheme: http
+        path: "/"
+        port: 3000
+      initial_delay_seconds: 5
+      period_seconds: 5
+      timeout_seconds: 3
+      success_threshold: 1
+      failure_threshold: 12
