@@ -1,0 +1,92 @@
+---
+title: "Basic Examples"
+description: "This tutorial will guide you through creating a complete DMN model for calculating employee vacation days."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/guides/examples/dmn/dmn-basic-example/"
+---
+
+This tutorial will guide you through creating a complete DMN model for calculating employee vacation days. We'll start from scratch and build a decision model that considers an employee's age and years of service to determine their vacation entitlement.
+
+## Understanding the Business Requirements
+
+Before modeling, let's understand what we're trying to achieve. Our vacation days calculation follows these business rules:
+
+- All employees receive a base allocation of 22 vacation days for their [Base Vacation Days](#creating-the-base-vacation-days-decision)
+- Three additional day categories exist:
+- [**Extra Days Case 1**](#extra-days-case-1):
+  - Employees younger than 18 or older than 60 get 5 extra days
+  - Employees with more than 30 years of service get 7 extra days
+- [**Extra Days Case 2**](#extra-days-case-2):
+  - Employees older than 60 get 3 extra days
+  - Employees with more than 30 years of service get 4 extra days
+- [**Extra Days Case 3**](#extra-days-case-3):
+  - Employees with 15-30 years of service get 3 extra days
+  - Employees aged 45 or older get 2 extra days
+- [**Total vacation days**](#creating-the-total-vacation-days-decision) are calculated as:
+  - Base days + maximum of (Case 1, Case 3) + Case 2
+
+## Setting Up Aletyx Playground
+
+1. Navigate to [Aletyx Playground](https://playground.aletyx.ai) in your browser
+2. From the landing page, click **New Decision** to create a new DMN model
+3. You'll be presented with an empty DMN model editor. This is where we'll design our decision model
+4. First, change the name of the model from "Untitled" to "vacation-days"
+
+## Creating Input Nodes
+
+Our decision model relies on two inputs: the employee's age and their years of service.
+
+1. Drag an **Input Data** node (oval shape) from the left palette onto the model editor
+2. Double-click the node and rename it to "Age"
+3. With the node selected, open the properties panel by clicking the "i" icon in the top right or pressing the "i" key
+4. Change the **Data Type** to "number"
+5. Repeat steps 1-4 to create another Input Data node named "Years of Service" with the data type "number"
+
+{/* TODO: missing image — "Input nodes on DRD" (images/dmn-inputs.png); source returns 404, re-add when the asset is available */}
+
+## Creating the Base Vacation Days Decision
+
+First, let's define the base vacation entitlement that all employees receive:
+
+1. Drag a **Decision** node (rectangle shape) onto the model editor
+2. Name the node "Base Vacation Days"
+3. Set its **Data Type** to "number"
+4. Click on the node and select **Edit** to define the decision logic
+5. In the expression editor, select **Literal expression** as the expression type. For reference on the different expressions see the below image with annotations or refer to the [Select Expression Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#expression-types)
+
+  [![DMN Expression Types Menu](/images/guides/guides/examples/dmn/images/context-select-expression.png)](/images/guides/guides/examples/dmn/images/context-select-expression.png)
+
+  Literal Expression
+  The simplest expression type. Used for direct values, mathematical operations, or simple FEEL expressions. Example: `Base Premium * Risk Factor`
+
+  Relation
+  Creates a table structure for organizing data. Unlike a decision table, relations don't contain logic but represent structured data with columns and rows. See: [RelationReference](https://docs.aletyx.ai/reference/dmn/select-reference/#relation).
+
+  Context
+  Defines a set of key-value pairs (named variables) that can be referenced within the context. Useful for multi-step calculations that build on previous values. See: [Context Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#context).
+
+  Decision Table
+  The most widely used DMN expression. Organizes conditions (inputs) and conclusions (outputs) in a tabular format with hit policies determining how rules are applied. See: [Decision Table Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#decision-table).
+
+  List
+  Creates an ordered collection of values or expressions. Each list item can be a different type of expression, allowing for complex collections. See: [List Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#list).
+
+  Invocation
+  Calls a Business Knowledge Model (BKM) or function defined elsewhere in the model. Parameters can be passed to the function being called. See: [Invocation Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#invocation).
+
+  Function
+  Defines a reusable function with parameters. Can contain any FEEL expression type and be used within other expressions through Invocation. See: [Function Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#function).
+
+  Conditional (If/Then/Else)
+  Creates branching logic with if, then, else statements. Allows for different results based on specific conditions being met. See: [Conditional Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#conditional).
+
+  For Loop
+  Iterates over items in a list or collection, applying an expression to each item. Useful for transforming collections or aggregating values. See: [For Loop Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#for-loop).
+
+  Some
+  Tests when a condition is true for at least one item See: [Some reference](https://docs.aletyx.ai/reference/dmn/select-reference/#some).
+
+  Filter
+  Filters a collection based on a given condition. See: [Filter Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#filter).
+
+  Every
+  Tests if a condition is true for every item in a collection. Returns a boolean result based on whether all items satisfy the condition. See: [Every Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#every)

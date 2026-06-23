@@ -163,7 +163,28 @@
                   "guides/use-cases/onboarding",
                   "guides/use-cases/compliance"
                 ]
-              }
+              },
+              "guides/drools-7-eol",
+              {
+                "group": "Decision Modeling",
+                "pages": [
+                  "guides/examples/dmn/overview",
+                  "guides/examples/dmn/dmn-intro",
+                  "guides/examples/dmn/dmn-basic-example",
+                  "guides/examples/dmn/dmn-accelerators",
+                  "guides/examples/dmn/dmn-basic-deployment",
+                  "guides/examples/dmn/dmn-deeper",
+                  "guides/examples/dmn/dmn-advanced-deployment",
+                  "guides/examples/drl-example"
+                ]
+              },
+              {
+                "group": "Process Development",
+                "pages": [
+                  "guides/examples/bpmn-example"
+                ]
+              },
+              "guides/best-practices"
             ]
           },
           {
