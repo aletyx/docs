@@ -1,0 +1,156 @@
+---
+title: "Architecture"
+description: "This section explains how Aletyx Enterprise Build of Kogito and Drools works at a structural and execution level. It is intended for architects, senior..."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/core/"
+---
+
+This section explains **how Aletyx Enterprise Build of Kogito and Drools works** at a structural and execution level. It is intended for architects, senior developers, and platform engineers designing long-lived decision and process systems.
+
+---
+
+## Quick Navigation
+
+### Decision Automation
+
+- [Decision Automation Overview](/architecture/decisions/overview)
+- [DRL (Drools Rule Language)](/architecture/decisions/drl/overview)
+- [Decision Tables](/architecture/decisions/decision-tables/overview)
+- [DMN (Decision Model & Notation)](/architecture/decisions/dmn/overview)
+
+### Process Automation
+
+- [Process Foundations](/architecture/processes/overview)
+- [BPMN Basics](/architecture/processes/basic-bpmn/overview)
+- [Advanced BPMN](/architecture/processes/advanced-bpmn/overview)
+- [Process Architecture](/architecture/processes/architecture/adaptive-process-architecture)
+
+### Integration
+
+- [Integration Patterns](/architecture/integration/overview)
+- [Decision & Process Integration](/architecture/integration/decision-process)
+- [Event-Driven Integration](/architecture/integration/event-driven)
+
+---
+
+## Business Automation in the AI Era: Why Rules and Processes Matter
+
+In today's rapidly evolving technological landscape, generative AI and large language models promise transformation across industries. However, established business rules management systems (BRMS) and business process management (BPM) approaches remain essential for mission-critical operations that require precision, reliability, and governance.
+
+Aletyx Enterprise Build of Kogito and Drools delivers enterprise-grade business automation through our enhanced implementation of the Apache KIE projects (Drools, jBPM, Kogito), providing organizations with capabilities that complement and enhance AI-driven approaches.
+
+### The Enduring Value of Rule and Process-Based Systems
+
+While AI excels at handling unstructured data and generating creative content, business rules and process automation provide critical advantages for core enterprise operations:
+
+#### Deterministic Execution with Complete Predictability
+
+Rules-based systems deliver **completely predictable outcomes** for given inputs. Unlike AI models with probabilistic outputs, business rules execute with absolute consistency—identical scenarios always produce identical results. This predictability is not just beneficial but mandatory for regulated industries including finance, healthcare, and insurance.
+
+```java
+rule "Loan Pre-Qualification"
+when
+    $applicant: Applicant(creditScore > 700, debtToIncomeRatio < 0.36)
+    $loan: LoanApplication(amount <= 500000)
+then
+    $loan.setPreQualified(true);
+    $loan.setReason("Good credit score and acceptable DTI ratio");
+end
+```
+
+The rule above will always produce the same outcome for the same inputs, providing the consistency required for regulatory compliance and auditability.
+
+#### Microsecond-Level Performance
+
+Aletyx Enterprise Build of Kogito and Drools's optimized rule engine provides **microsecond-level decision execution**, processing thousands of complex business rules in parallel with minimal latency. This performance advantage makes our solution ideal for high-volume transaction processing, real-time fraud detection, and other scenarios where near-instantaneous decisions are critical.
+
+#### Complete Auditability and Compliance
+
+Every decision made by Aletyx Enterprise Build of Kogito and Drools is fully traceable and explainable, capturing:
+
+- Which rules fired and in what sequence
+- The exact data points that influenced each decision
+- When and why a particular outcome was determined
+
+This transparent decision logic allows organizations to demonstrate regulatory compliance with confidence—a capability that black-box AI models struggle to provide.
+
+#### Business Ownership of Automation Logic
+
+Business rules and processes are expressed in near-natural language and visual notations that business experts can understand, validate, and modify without deep technical expertise. This empowers business stakeholders to:
+
+- Directly implement policy changes
+- Respond rapidly to market opportunities
+- Ensure alignment between business intent and system behavior
+
+#### Resource Efficiency
+
+Aletyx Enterprise Build of Kogito and Drools operates efficiently on standard infrastructure, delivering enterprise-grade decision automation with:
+
+- Lower operational costs
+- Reduced energy consumption
+- Minimal infrastructure footprint
+
+### Bridging Rules, Processes, and AI
+
+Aletyx Enterprise Build of Kogito and Drools provides [Model-Centric Processing (MCP)](https://docs.aletyx.ai/components/mcp/) to bridge traditional business automation with AI capabilities, delivering the best of both worlds:
+
+- The governance and precision of rules and processes
+- The flexibility and intelligence of AI
+
+This approach enables your organization to maintain control while leveraging AI's capabilities where they add the most value.
+
+## Decision Engine
+
+The Decision Engine section covers core concepts related to business rules and decision management:
+
+### Rule Language
+
+The [Drools Rule Language (DRL)](https://docs.aletyx.ai/core/decisions/drl/introduction/) provides a powerful syntax for expressing complex business rules with complete precision and control. DRL enables you to define when and how rules fire, what actions they take, and how they interact with your data model.
+
+### Decision Tables
+
+[Decision Tables](/architecture/decisions/decision-tables/overview) offer a spreadsheet-based approach to rule authoring, making rule management accessible to business users. Decision tables excel at organizing large sets of related rules in a format that business stakeholders can easily understand and modify.
+
+### Decision Model and Notation (DMN)
+
+[DMN](/architecture/decisions/dmn/overview) is a standard approach to modeling decisions that separates decision logic from process flow. DMN models provide a business-friendly visualization of complex decision logic while maintaining the precision required for automated execution.
+
+## Process Engine
+
+The Process Engine section covers core concepts related to business process management:
+
+### BPMN Support
+
+[Business Process Model and Notation](/architecture/processes/basic-bpmn/overview) (BPMN) provides a standard visual notation for specifying business processes. Aletyx Enterprise Build of Kogito and Drools's BPMN support enables you to design, deploy, and execute processes that orchestrate both automated and human tasks.
+
+### Human Tasks
+
+The [Human Task](/architecture/processes/components/user-tasks) system manages the assignment, tracking, and completion of work items that require human intervention. This system integrates with your organizational structure to route tasks to the right individuals or groups based on roles, skills, or workload.
+
+### Process Variables
+
+[Process Variables](/architecture/processes/components/data-index-audit) enable the management of data within process instances. This data management approach ensures that information flows correctly between process steps, whether they involve rules, services, or human interactions.
+
+## Integration Patterns
+
+Learn about common integration patterns for combining rules and processes:
+
+### Rule-driven Processes
+
+Using rules to drive process execution enables dynamic, responsive workflows that adapt based on business conditions. This pattern is ideal for complex case management scenarios where the process path depends on evolving data.
+
+### Process-driven Rules
+
+Invoking rules from within processes allows you to encapsulate complex decision logic within well-defined process steps. This pattern maintains process visibility while leveraging the power of rule-based decision-making.
+
+### Event Processing
+
+Handling complex events within rules and processes enables real-time responsiveness to business situations. This pattern combines the event processing capabilities of the rule engine with the orchestration capabilities of the process engine.
+
+## Getting Started
+
+Ready to explore Aletyx Enterprise Build of Kogito and Drools's core capabilities? Start with these guides:
+
+- [First Steps with Drools](https://docs.aletyx.ai/components/drools/drools-getting-started/)
+- [Introduction to jBPM](https://docs.aletyx.ai/components/jbpm/)
+- [Kogito Overview](https://docs.aletyx.ai/components/kogito/)
+- [Model-Centric Processing (MCP)](https://docs.aletyx.ai/components/mcp/)

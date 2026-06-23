@@ -1,0 +1,2333 @@
+---
+title: "FEEL Handbook"
+description: "This handbook serves as a comprehensive reference for the FEEL expression language from the DMN specification, as implemented within the Aletyx Enterprise."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/core/decisions/dmn/feel-handbook/"
+---
+
+## DMN FEEL Handbook
+
+This handbook serves as a comprehensive reference for the FEEL expression language from the [DMN specification](https://www.omg.org/dmn), as implemented within the Aletyx Enterprise Build of Kogito and Drools. The credit for this FEEL Handbook originates in the KIE Group™ Community found [here](https://kiegroup.github.io/dmn-feel-handbook/#dmn-feel-handbook) and this guide was seen as an extension and further enhancement to it since the KIE Group has been transferred to Apache KIE and this is not yet a part of the Apache repositories.
+
+<Tip>
+**Looking for an introduction to DMN?**
+
+If you're new to DMN, check out our [Introduction to Decision Model and Notation (DMN)](/architecture/decisions/overview) guide first!
+</Tip>
+
+## What is DMN FEEL?
+
+FEEL (Friendly Enough Expression Language) is the expression language defined in the Decision Model and Notation (DMN) standard. It provides business analysts, developers, and domain experts with a common language for expressing decision logic in a business-friendly way.
+
+FEEL was designed with these key principles:
+
+- **Business-friendly syntax**: Easy to read and write for non-programmers
+- **Side-effect free**: Expressions cannot modify external state
+- **Simple data model**: Works with common business data types (numbers, dates, strings, etc.)
+- **Three-valued logic**: Supports `true`, `false`, and `null` values for handling unknown/undefined states
+
+## Why Learn FEEL?
+
+While there are many expression languages available, FEEL offers unique advantages for business decision modeling:
+
+1. **Bridge between business and IT**: Common language that both business analysts and developers can understand
+2. **Standardized**: Part of the OMG DMN specification, ensuring consistency across implementations
+3. **Designed for decisions**: Optimized specifically for decision logic with appropriate built-in functions
+4. **Readable expressions**: Logic expressed in a way that business stakeholders can validate
+5. **Integration with DMN**: Seamless use within decision tables, decision requirements diagrams, and other DMN elements
+
+## Quick Start Guide: Essential FEEL Concepts
+
+If you're new to FEEL or need a refresher, here are the key concepts to understand:
+
+### Basic Data Types and Literals
+
+```text
+42                      // number literal
+"Hello, World"          // string literal
+true                    // boolean literal
+date("2023-04-15")      // date value
+time("14:30:00")        // time value
+date and time("2023-04-15T14:30:00")  // combined date and time
+duration("P2D")         // duration (2 days)
+[1, 2, 3]               // list
+{ name: "John", age: 30 }  // context (similar to an object/map)
+```
+
+### Simple Expressions
+
+```text
+// Arithmetic
+price * quantity
+
+// String concatenation
+"Hello, " + customer.name
+
+// Comparison
+applicant.age >= 18
+
+// Conditional logic
+if applicant.creditScore > 700 then "Approved" else "Review"
+
+// List comprehension
+for item in order.items return item.price * item.quantity
+```
+
+### Decision Table Logic in FEEL
+
+The power of FEEL becomes apparent in decision tables. For example, a loan approval decision table might use FEEL expressions like:
+
+- Input expression: `applicant.creditScore`
+- Input expression: `applicant.debtToIncome`
+- Output expression: `if applicant.creditScore >= 700 and applicant.debtToIncome < 0.3 then "Approved" else "Declined"`
+
+### Common Business Use Cases for FEEL
+
+| Business Domain | FEEL Use Case Example |
+| --- | --- |
+| Finance | `if customer.annualIncome > 100000 and customer.creditScore > 720 then "Premium" else "Standard"` |
+| Insurance | `premium * (1 - if policyYears > 5 then 0.1 else if policyYears > 3 then 0.05 else 0)` |
+| Retail | `for item in order.items return item.price * item.quantity` |
+| Healthcare | `if patient.systolicBP > 140 or patient.diastolicBP > 90 then "Hypertension" else "Normal"` |
+| Manufacturing | `if inventory.level < inventory.reorderPoint then "Order" else "Adequate"` |
+
+## Getting Started with FEEL in Your Organization
+
+1. **Start small**: Begin with simple decision tables using basic FEEL expressions
+2. **Practice with real examples**: Convert existing business rules to FEEL expressions
+3. **Use validation tools**: Leverage DMN-compliant tools to check your FEEL syntax
+4. **Build a library**: Create a repository of common FEEL patterns for your organization
+5. **Integrate with systems**: Connect your DMN models to your business applications
+
+In the following sections, we'll explore FEEL in detail, covering data types, expressions, functions, and more complex patterns for decision modeling.
+
+## Introduction to FEEL Data Types
+
+FEEL supports a rich set of data types designed to handle common business decision needs. Understanding these types helps you model your business domain accurately.
+
+## Number
+
+```text
+47                // Integer value (e.g., quantity of items)
+-9.123            // Decimal value (e.g., negative account balance)
+1.2*10**3         // Expression resulting in 1200 (e.g., large monetary value)
+```
+
+**Business Applications**: Numbers in FEEL are used for quantities, monetary values, rates, scores, and metrics. Whether you're calculating insurance premiums, interest rates, or inventory levels, the FEEL number type handles both integers and decimals with high precision.
+
+Numbers are based on the IEEE 754-2008 Decimal 128 format with 34 digits of precision, making them suitable for financial calculations where accuracy is critical.
+
+**Technical Implementation**: In Drools, FEEL numbers are represented as `BigDecimals` with `MathContext DECIMAL128`.
+
+<Tip>
+**Business Consideration: FEEL Numbers Precision**
+
+FEEL numbers provide higher precision than typical programming languages, which is crucial for financial calculations where rounding errors can have significant impacts.
+</Tip>
+
+## String
+
+```text
+"John Doe"                // Customer name
+"PREMIUM-123-456-789"     // Product or subscription code
+"123 Salem St, Boston"    // Address information
+```
+
+**Business Applications**: Strings store text data such as names, descriptions, codes, addresses, and other non-numeric information. They're essential for customer identity management, product descriptions, and document processing.
+
+<Tip>
+**Business Consideration: Remember what an object's data type is!**
+
+String values need explicit comparison operations. `"123"` is different from the number `123`, which matters when validating input from systems that may provide numeric identifiers as strings. If the input is a string, it will need to be converted to a number if you were to do an arithmetic operation on it!
+</Tip>
+
+## Boolean
+
+```python
+true               // Eligibility flag, compliance verification
+false              // Failed validation check
+null               // Unknown or missing status information
+```
+
+**Business Applications**: Boolean values represent yes/no or true/false conditions in business rules. They're used for eligibility flags, compliance verification, feature toggles, and decision outcomes.
+
+FEEL uses three-valued logic, which adds the concept of `null` (unknown/undefined) alongside `true` and `false`. This is particularly useful in business scenarios where information might be missing or not applicable.
+
+## Date
+
+```python
+// Evaluate if a contract has expired
+if today() > contract.expirationDate then "Expired" else "Active"
+
+// Determine if a customer is in a 30-day trial period
+if today() < customer.signupDate + duration("P30D") then "In Trial" else "Regular"
+```
+
+**Business Applications**: Dates are used for deadlines, eligibility periods, contract terms, event scheduling, and age calculations. They're essential in insurance rules, loan qualification, promotion periods, and compliance tracking.
+
+Date values have these accessible properties that are useful in business rules:
+
+```python
+date("2025-12-31").year    // 2025 - For fiscal year determination
+date("2025-12-31").month   // 12 - For monthly reporting cycles
+date("2025-12-31").day     // 31 - For end-of-month processing
+date("2025-12-31").weekday // 3 (Wednesday) - For business day calculations
+```
+
+## Time
+
+```python
+// Check if current time is during business hours
+if time(now().hour, now().minute, 0) between time("09:00:00") and time("17:00:00")
+then "Business Hours" else "After Hours"
+
+// Apply peak hour pricing
+if orderTime between time("17:00:00") and time("19:00:00")
+then basePrice * 1.25 else basePrice
+```
+
+**Business Applications**: Time values are critical for operating hours rules, shift differentials, service level agreements, peak/off-peak pricing, and international business coordination.
+
+## Date and Time
+
+```python
+// Calculate if an SLA has been breached
+if now() > incident.reportedTime + duration("PT4H") and incident.priority = "High"
+then "SLA Breached" else "Within SLA"
+
+// Determine if an appointment is upcoming
+if appointment.scheduledTime between now() and now() + duration("PT24H")
+then "Upcoming" else "Future"
+```
+
+**Business Applications**: Combined date and time values are used for precise event timing, service level agreements, appointment scheduling, transaction timestamps, and shift scheduling.
+
+## Duration (Days and Time, Years and Months)
+
+```python
+// Calculate prorated subscription fee
+if customerTenure < duration("P1Y")
+then subscription.annualFee * (customerTenure.days / 365)
+else subscription.annualFee
+
+// Determine loan term category
+if loan.term <= duration("P5Y") then "Short-term"
+else if loan.term <= duration("P15Y") then "Medium-term"
+else "Long-term"
+```
+
+**Business Applications**: Durations represent time periods for contract terms, service intervals, aging calculations, SLA timeframes, and experience-based rules. FEEL supports two types of durations:
+
+1. **Days and Time Duration** - For precise intervals in days, hours, minutes, and seconds
+2. **Years and Months Duration** - For calendar-based periods like contract terms
+
+## Range (Interval)
+
+```python
+// Determine tax bracket based on income
+if income in [0..9950] then 0.10
+else if income in (9950..40525] then 0.12
+else if income in (40525..86375] then 0.22
+else 0.24
+
+// Check if delivery date is within acceptable window
+if estimatedDelivery in [requestedDate..requestedDate + duration("P2D")]
+then "On Time" else "Delayed"
+```
+
+**Business Applications**: Ranges define intervals for pricing tiers, risk levels, performance categories, acceptable thresholds, and eligibility brackets. They're powerful tools for expressing business rules involving limits and boundaries.
+
+The brackets `[` and `]` indicate inclusive endpoints (closed intervals), while parentheses `(` and `)` indicate exclusive endpoints (open intervals). This precision is essential in business rules where boundary conditions matter.
+
+## List
+
+```python
+// Calculate total order value from line items
+sum(for item in order.items return item.price * item.quantity)
+
+// Find highest-risk customer in portfolio
+max(for customer in portfolio return customer.riskScore)
+
+// Check if order contains any restricted products
+some item in order.items satisfies item.productCode in restrictedProducts
+```
+
+**Business Applications**: Lists store collections of related items such as order line items, customer segments, product categories, or risk factors. They enable operations across multiple items, such as summing order values, finding maximum risk scores, or checking eligibility conditions.
+
+<Tip>
+**Business Consideration: Indexes start at 1, not 0!**
+
+In FEEL, list indexing starts at 1, not 0 as in many programming languages. This can be confusing for developers but is more natural for business users!
+</Tip>
+
+## Context
+
+```python
+// Create a loan application assessment result
+{
+  applicant: customer.name,
+  approved: customer.creditScore >= 700,
+  maxAmount: if customer.creditScore >= 800
+             then 500000
+             else customer.income * 4,
+  interestRate: 0.05 + (0.15 - customer.creditScore/1000)
+}
+
+// Collect multiple decision outcomes
+{
+  eligibility: customerEligible,
+  pricing: calculatePricing(customer, product),
+  risksIdentified: identifyRisks(customer)
+}
+```
+
+**Business Applications**: Contexts are key-value structures that group related information, similar to JSON objects or dictionaries. They're ideal for organizing complex decision outputs, creating structured results, and managing related data points.
+
+In DMN 1.4, powerful context functions were added (`context()`, `context put()`, `context merge()`) that make it easier to create and manipulate these structures. This is particularly valuable for progressive enrichment of customer profiles, order details, or application evaluations.
+
+## Function
+
+```python
+// Define a custom function for calculating a loyalty discount
+function(customer, orderTotal) {
+  if customer.years > 5 then orderTotal * 0.10
+  else if customer.years > 2 then orderTotal * 0.05
+  else 0
+}
+
+// Define a risk assessment function
+function(claim) {
+  if claim.amount > 10000 and claim.daysSinceIncident < 2 then "High"
+  else if claim.amount > 5000 or contains(claim.description, "theft") then "Medium"
+  else "Low"
+}
+```
+
+**Business Applications**: Functions allow you to define reusable logic that can be applied in multiple contexts. They're valuable for creating consistent calculation methods, standard assessment approaches, or modular decision components that can be shared across rules.
+
+Functions can be defined inline as shown above, or they can be defined in Business Knowledge Models (BKMs) within your DMN model for wider reuse.
+
+FEEL provides several expression types that form the building blocks of decision logic. Understanding these expressions is essential for creating effective business rules.
+
+## If Expression: Conditional Business Logic
+
+```python
+// Determine shipping method based on order value
+if order.total > 100 then "Free Shipping" else "Standard Shipping"
+
+// Multi-tier customer classification
+if customer.spendYTD > 10000 then "Platinum"
+else if customer.spendYTD > 5000 then "Gold"
+else if customer.spendYTD > 1000 then "Silver"
+else "Bronze"
+
+// Loan approval with multiple conditions
+if applicant.creditScore > 720 and applicant.debtToIncome < 0.3
+then "Approved"
+else if applicant.creditScore > 680 and applicant.debtToIncome < 0.25
+then "Conditionally Approved"
+else "Declined"
+```
+
+The if expression is the fundamental building block for business rules, allowing you to express conditional logic in an intuitive way. It follows the structure `if <condition> then <result1> else <result2>`.
+
+> **Important**: The `else` part is always mandatory in FEEL expressions, unlike some programming languages. This forces explicit handling of all cases, which is a good practice for business rules where all scenarios should be accounted for.
+
+## For Expression: Iterative Processing
+
+```python
+// Calculate order subtotal
+for item in order.items return item.price * item.quantity
+
+// Create a list of high-value customers
+for customer in customers
+    if customer.lifetimeValue > 10000
+    return { name: customer.name, tier: "High Value", since: customer.joinDate }
+
+// Calculate total risk exposure by customer segment
+for segment in portfolio,
+    customers in segment.customers
+return {
+    segmentName: segment.name,
+    totalExposure: sum(for c in customers return c.accountBalance)
+}
+```
+
+The for expression iterates over items in a list or range and produces a new list based on the iteration context. This is similar to list comprehension in functional programming languages but designed to be more approachable for business users.
+
+**Business Applications:**
+
+- Processing order line items
+- Calculating revenue by product category
+- Identifying customers matching specific criteria
+- Transforming raw data into business-friendly formats
+
+## Quantified Expressions: Verification Logic
+
+### Some: At Least One Match
+
+```python
+// Check if any order item exceeds the per-item limit
+some item in order.items satisfies item.price * item.quantity > 10000
+
+// Verify if customer has any past-due accounts
+some account in customer.accounts satisfies
+    account.status = "Past Due" and account.daysPastDue > 30
+
+// Determine if any risk factor is present
+some factor in riskFactors satisfies
+    applicant[factor.field] = factor.triggerValue
+```
+
+The `some` expression checks if at least one element in a list or range satisfies a condition. This is particularly useful for flagging scenarios where a single match is significant.
+
+**Business Applications:**
+- Fraud detection (any suspicious transaction)
+- Compliance verification (any missing document)
+- Risk assessment (any critical risk factor present)
+- Eligibility checking (any qualifying condition)
+
+### Every: All Must Match
+
+```python
+// Verify all required documents are submitted
+every doc in requiredDocuments satisfies
+    application.documents[doc.id].status = "Submitted"
+
+// Check if all items in an order are available
+every item in order.items satisfies item.inventoryStatus = "In Stock"
+
+// Ensure all compliance checks have passed
+every check in complianceChecks satisfies
+    customer.verificationResults[check.id] = "Passed"
+```
+
+The `every` expression checks if all elements in a list or range satisfy a condition. This is essential for rules requiring universal compliance or complete verification.
+
+**Business Applications:**
+
+- Compliance verification (all requirements met)
+- Order fulfillment (all items available)
+- Application completeness (all fields provided)
+- Quality control (all tests passed)
+
+## In Expression: Range Checking
+
+```python
+// Determine if a credit score is in the "Good" range
+customer.creditScore in [670..739]
+
+// Check if delivery date is within the promised window
+order.estimatedDelivery in [order.date + duration("P1D")..order.date + duration("P5D")]
+
+// Verify if inventory level is in critical range
+inventory.onHandQuantity in [0..inventory.reorderPoint)
+
+// Age-based eligibility verification
+customer.age in [21..65]
+```
+
+The `in` expression checks if a value falls within a specified range. This is a powerful tool for expressing business rules involving thresholds, limits, and acceptable values.
+
+**Business Applications:**
+- Credit score evaluation
+- Age verification
+- Pricing tiers
+- Performance metrics
+- Inventory management
+- Service level agreement monitoring
+
+<Tip>
+**Tip**
+
+Pay careful attention to inclusive `[]` vs. exclusive `()` range boundaries. This precision is crucial for business rules where boundary conditions matter, such as eligibility cutoffs.
+</Tip>
+
+## Boolean Logic in Business Rules
+
+```python
+// Loan approval with multiple criteria
+applicant.creditScore >= 700 and
+applicant.debtToIncome < 0.4 and
+applicant.employmentStatus = "Employed"
+
+// Promotional eligibility
+customer.isNewCustomer or
+(customer.daysSinceLastPurchase > 90 and customer.accountStatus = "Active")
+
+// Fraud detection (three-valued logic example)
+hasKnownFraudIndicator or
+(transactionAmount > 10000 and transactionLocation != customer.homeCountry)
+```
+
+FEEL supports three-valued logic with `and` and `or` operators, allowing for the modeling of complex business conditions. The three-valued approach handles unknown (`null`) values in addition to `true` and `false`.
+
+**Truth Tables for Three-Valued Logic:**
+
+**AND Operator:**
+
+| X AND Y | true | false | null |
+| --- | --- | --- | --- |
+| true | true | false | null |
+| false | false | false | false |
+| null | null | false | null |
+
+**OR Operator:**
+
+| X OR Y | true | false | null |
+| --- | --- | --- | --- |
+| true | true | true | true |
+| false | true | false | null |
+| null | true | null | null |
+
+!!! note "`and` and `or` precendence is important!
+
+```text
+`and` has higher precedence than `or`. Use parentheses when combining operations to ensure the intended evaluation order.
+```
+
+## String Operations
+
+```python
+// Customer name formatting
+upper case(substring(customer.firstName, 1, 1)) + ". " + customer.lastName
+
+// Product code validation
+if starts with(product.code, "XYZ-") and string length(product.code) = 10
+then "Valid" else "Invalid"
+
+// Masked credit card display
+substring(creditCard.number, 1, 4) + "-XXXX-XXXX-" +
+substring(creditCard.number, 13, 4)
+
+// Domain extraction from email
+substring after(customer.email, "@")
+```
+
+String operations allow manipulation and validation of text data, which is common in business rules involving identifiers, codes, and human-readable information.
+
+**Business Applications:**
+
+- Data formatting for display
+- Validation of format-specific inputs
+- Extraction of components from complex strings
+- Pattern matching in text data
+
+## Arithmetic Operations
+
+```python
+// Calculate discount amount
+order.subtotal * (discount.percentage / 100)
+
+// Determine shipping cost based on weight
+base.shippingRate + (package.weightKg - 1) * additional.ratePerKg
+
+// Calculate loan payment
+loan.principal * (loan.interestRate/12) *
+  (1 + loan.interestRate/12) ** (loan.termMonths) /
+  ((1 + loan.interestRate/12) ** (loan.termMonths) - 1)
+
+// Calculate projected growth
+investment.initial * (1 + investment.annualRate) ** investment.years
+```
+
+Arithmetic operations in FEEL follow standard mathematical conventions but with precise decimal handling for business calculations.
+
+**Business Applications:**
+- Financial calculations
+- Pricing models
+- Resource allocation
+- Performance metrics
+- Forecasting
+
+String processing is essential for business rules involving product codes, customer information, addresses, and other text data. FEEL provides a comprehensive set of string functions to help with these common tasks.
+
+## Extracting and Manipulating String Data
+
+```text
+// Extract region code from product ID (e.g., "US-1234-A")
+substring before(productId, "-")  // Returns "US"
+
+// Get customer surname from full name
+substring after(customer.fullName, " ")  // Returns surname if format is "First Last"
+
+// Extract the account number from a formatted string
+substring("Account: 12345-678", 10)  // Returns "12345-678"
+
+// Extract first 5 digits of a postal code
+substring(customer.postalCode, 1, 5)  // Returns first 5 characters
+```
+
+These functions help you extract meaningful segments from business data strings:
+
+| Function | Business Use Case |
+| --- | --- |
+| `substring(string, start, length?)` | Extract account numbers, specific segments of codes |
+| `substring before(string, match)` | Parse product codes, split reference numbers |
+| `substring after(string, match)` | Extract domain names from emails, get last names |
+
+## String Testing and Validation
+
+```text
+// Check if a product code is for the premium category
+starts with(product.code, "PREM")
+
+// Verify email domain for corporate customers
+ends with(customer.email, "@acme.com")
+
+// Check if a description contains a restricted term
+contains(product.description, "guaranteed")
+
+// Validate format of a reference number using regex
+matches(referenceNumber, "^[A-Z]{2}-\d{4}-[A-Z]\d$")
+```
+
+These functions let you validate string content against business rules:
+
+| Function | Business Use Case |
+| --- | --- |
+| `contains(string, match)` | Check for specific terms, validate included features |
+| `starts with(string, match)` | Identify product categories, validate prefix codes |
+| `ends with(string, match)` | Verify email domains, check file types |
+| `matches(input, pattern, flags?)` | Complex format validation, pattern matching |
+
+## String Transformation
+
+```text
+// Standardize product codes to uppercase
+upper case(product.code)
+
+// Normalize customer input for case-insensitive comparison
+lower case(customer.preferredLanguage)
+
+// Replace sensitive information for logging
+replace(creditCard.number, "(\d{4})(\d{4})(\d{4})(\d{4})", "$1-$2-$3-XXXX")
+
+// Split comma-separated values into a list
+split("Red,Green,Blue", ",")  // Returns ["Red", "Green", "Blue"]
+
+// Combine customer name parts into a formatted greeting
+string join(["Dear", customer.title, customer.lastName], " ")
+```
+
+These functions transform strings to meet business requirements:
+
+| Function | Business Use Case |
+| --- | --- |
+| `upper case(string)` | Standardize codes, case-insensitive matching |
+| `lower case(string)` | Normalize user input, case-insensitive comparison |
+| `replace(input, pattern, replacement)` | Format data, mask sensitive information |
+| `split(string, delimiter)` | Process CSV data, parse multi-value fields |
+| `string join(list, delimiter?)` | Create formatted labels, combine name parts |
+
+## Comprehensive String Function Reference
+
+### substring(string, start position, length?)
+
+```text
+substring("testing", 3) = "sting"      // From position 3 to end
+substring("testing", 3, 3) = "sti"     // 3 characters from position 3
+substring("testing", -2, 1) = "n"      // Counting from the end
+```
+
+Returns the substring from the start position for the specified length. Position numbering starts at 1 for the first character.
+
+**Parameters:**
+- `string`: The source string
+- `start position`: Position to start from (1 = first character, negative numbers count from end)
+- `length` (Optional): Number of characters to include
+
+### string length(string)
+
+```text
+string length("Customer ID") = 11  // Counts all characters
+string length("🔑ABC") = 4         // Unicode characters are counted correctly
+```
+
+Returns the number of characters in the string, useful for validation and formatting rules.
+
+**Parameters:**
+- `string`: The string to measure
+
+### upper case(string) and lower case(string)
+
+```text
+upper case("Product-a1") = "PRODUCT-A1"  // Convert all to uppercase
+lower case("Product-A1") = "product-a1"  // Convert all to lowercase
+```
+
+Transform the case of all characters in the string, essential for standardization and case-insensitive comparison.
+
+**Parameters:**
+- `string`: The string to transform
+
+### substring before(string, match) and substring after(string, match)
+
+```text
+// For string "order-123456-approved"
+substring before("order-123456-approved", "-") = "order"
+substring after("order-123456-approved", "-") = "123456-approved"
+substring after(substring after("order-123456-approved", "-"), "-") = "approved"
+```
+
+Extract portions of text before or after a specific match, ideal for parsing structured text.
+
+**Parameters:**
+- `string`: The source string
+- `match`: The string to search for
+
+### replace(input, pattern, replacement, flags?)
+
+```text
+// Simple replacement
+replace("Invoice-2023", "2023", "2024") = "Invoice-2024"
+
+// Regex replacement
+replace("Credit Score: 720", "(\\d+)", "XXX") = "Credit Score: XXX"
+
+// Format telephone number
+replace("5551234567", "(\\d{3})(\\d{3})(\\d{4})", "($1) $2-$3") = "(555) 123-4567"
+```
+
+Performs search and replace operations, supporting both simple text and regular expressions.
+
+**Parameters:**
+- `input`: Source string
+- `pattern`: Search pattern (can be regex)
+- `replacement`: Replacement text
+- `flags` (Optional): Regex flags like "i" for case-insensitive
+
+### matches(input, pattern, flags?)
+
+```text
+// Validate email format
+matches("user@example.com", "^[\\w.-]+@[\\w.-]+\\.[a-z]{2,}$")
+
+// Check if string is numeric
+matches("12345", "^\\d+$")
+
+// Validate product code format (case insensitive)
+matches("PRD-12345", "^prd-\\d{5}$", "i")
+```
+
+Tests if a string matches a pattern, essential for format validation.
+
+**Parameters:**
+- `input`: String to test
+- `pattern`: Regular expression pattern
+- `flags` (Optional): Regex flags
+
+### split(string, delimiter)
+
+```text
+// Parse CSV data
+split("John,Doe,42,New York", ",") = ["John", "Doe", "42", "New York"]
+
+// Split address components
+split("123 Main St, Suite 101", ", ") = ["123 Main St", "Suite 101"]
+
+// Parse tags
+split("urgent;priority;customer", ";") = ["urgent", "priority", "customer"]
+```
+
+Divides a string into a list based on a delimiter pattern.
+
+**Parameters:**
+- `string`: The string to split
+- `delimiter`: Regular expression pattern for splitting
+
+### string join(list, delimiter)
+
+```text
+// Create formatted address
+string join(["123 Main St", "Suite 101", "New York", "NY 10001"], ", ")
+// Returns "123 Main St, Suite 101, New York, NY 10001"
+
+// Create display name
+string join([customer.title, customer.firstName, customer.lastName], " ")
+// Returns "Mr. John Smith"
+
+// Create CSV row
+string join([product.id, product.name, product.price], ",")
+// Returns "P123,Deluxe Widget,29.99"
+```
+
+Combines list elements into a single string with the specified delimiter.
+
+**Parameters:**
+- `list`: List of strings to join
+- `delimiter`: String to insert between elements (optional)
+
+## Business Scenario Examples
+
+### Customer Data Formatting
+
+```text
+// Format phone number for display
+function formatPhone(phone) {
+  replace(
+    replace(phone, "[^0-9]", ""),  // Remove non-digits
+    "(\\d{3})(\\d{3})(\\d{4})",    // Group digits
+    "($1) $2-$3"                   // Format with parentheses and hyphen
+  )
+}
+
+// Create full name with proper capitalization
+function formatName(first, last) {
+  upper case(substring(first, 1, 1)) +
+  lower case(substring(first, 2)) + " " +
+  upper case(substring(last, 1, 1)) +
+  lower case(substring(last, 2))
+}
+```
+
+### Product Code Processing
+
+```text
+// Extract product category from product code (e.g., "ELEC-TV-55-4K")
+function getCategory(productCode) {
+  substring before(substring after(productCode, "-"), "-")
+}
+
+// Validate product code format
+function isValidProductCode(code) {
+  matches(code, "^[A-Z]{4}-[A-Z]{2,4}-\\d{2,3}(-[A-Z0-9]{2,4})?$")
+}
+
+// Standardize product codes
+function standardizeCode(code) {
+  upper case(replace(code, "\\s", ""))  // Remove spaces and uppercase
+}
+```
+
+### Document and Reference Number Processing
+
+```python
+// Extract document number from reference (e.g., "INV-2023-12345")
+function getDocNumber(reference) {
+  substring after(substring after(reference, "-"), "-")
+}
+
+// Create masked account number for display
+function maskAccount(accountNumber) {
+  "XXXX-XXXX-XXXX-" + substring(accountNumber, 13, 4)
+}
+
+// Generate reference number with prefix
+function generateReference(prefix, id) {
+  string join([upper case(prefix), today().year, substring("00000" + id, string length("00000" + id) - 5)], "-")
+}
+```
+
+These examples demonstrate how FEEL string functions can be combined to solve common business data processing challenges.
+
+## Quick Start Guide: The FEEL Essentials
+
+If you're new to FEEL or just need a refresher, here are the most essential concepts and functions to know. This section will help you get productive quickly with the most commonly used aspects of FEEL.
+
+### What Makes FEEL Different?
+
+FEEL (Friendly Enough Expression Language) is designed as a common ground between business analysts, programmers, domain experts, and stakeholders. Its primary goal is to make decision logic approachable for all users while remaining powerful enough for complex business requirements.
+
+**Key Characteristics:**
+
+- **Side-effect free** - Expressions cannot modify external state
+- **Simple data model** - Works with numbers, dates, strings, lists, and contexts
+- **Business-friendly syntax** - Designed for a broad audience beyond just programmers
+- **Three-valued logic** - Supports `true`, `false`, and `null` values
+
+### Essential FEEL Expressions
+
+| Expression Type | Example | Business Use Case |
+| --- | --- | --- |
+| If Expression | `if customer.age >= 18 then "Adult" else "Minor"` | Categorize customers by age group |
+| For Expression | `for product in order.items return product.price * product.quantity` | Calculate line item totals in an order |
+| Some/Every | `some item in order.items satisfies item.price > 1000` | Check if any order item exceeds a threshold |
+| In Operator | `customer.creditScore in [700..850]` | Verify if a value falls within an acceptable range |
+| Context Literals | `{ name: customer.name, eligible: customer.creditScore > 700 }` | Create structured data packages for decision results |
+
+### Most Commonly Used FEEL Functions
+
+| Category | Key Functions | Common Business Applications |
+| --- | --- | --- |
+| String | `contains()`, `starts with()`, `substring()` | Validate product codes, format customer information |
+| List | `count()`, `sum()`, `min()`, `max()` | Calculate order statistics, find price extremes |
+| Numeric | `decimal()`, `floor()`, `ceiling()` | Proper rounding of financial calculations |
+| Date/Time | `date()`, `now()`, `date and time()` | Calculate deadlines, age verification, SLA metrics |
+| Context | `context put()`, `get value()` | Update customer profiles, accumulate order details |
+
+## FEEL Data Types in Business Context
+
+FEEL supports a rich set of data types designed to handle common business decision needs. Understanding these types helps you model your business domain accurately.
+
+### Number
+
+FEEL Number Examples
+
+```python
+47                // Integer value (e.g., quantity of items)
+-9.123            // Decimal value (e.g., negative account balance)
+1.2*10**3         // Expression resulting in 1200 (e.g., large monetary value)
+```
+
+**Business Applications:** Numbers in FEEL are used for quantities, monetary values, rates, scores, and metrics. Whether you're calculating insurance premiums, interest rates, or inventory levels, the FEEL number type handles both integers and decimals with high precision.
+
+Numbers are based on the IEEE 754-2008 Decimal 128 format with 34 digits of precision, making them suitable for financial calculations where accuracy is critical. They're represented as `BigDecimals` with `MathContext DECIMAL128`.
+
+<Tip>
+**Business Consideration**
+
+FEEL numbers provide higher precision than typical programming languages, which is crucial for financial calculations where rounding errors can have significant impacts.
+</Tip>
+
+### String
+
+FEEL String Examples
+
+```python
+"John Doe"                // Customer name
+"PREMIUM-123-456-789"     // Product or subscription code
+"123 Salem St, Boston"    // Address information
+```
+
+**Business Applications:** Strings store text data such as names, descriptions, codes, addresses, and other non-numeric information. They're essential for customer identity management, product descriptions, and document processing.
+
+<Note>
+**Business Consideration**
+
+Remember that string values need explicit comparison operations. `"123"` is different from the number `123`, which matters when validating input from systems that may provide numeric identifiers as strings.
+</Note>
+
+### Boolean
+
+FEEL Boolean Examples
+
+```python
+true               // Eligibility flag, compliance verification
+false              // Failed validation check
+null               // Unknown or missing status information
+```
+
+**Business Applications:** Boolean values represent yes/no or true/false conditions in business rules. They're used for eligibility flags, compliance verification, feature toggles, and decision outcomes.
+
+FEEL uses three-valued logic, which adds the concept of `null` (unknown/undefined) alongside `true` and `false`. This is particularly useful in business scenarios where information might be missing or not applicable.
+
+### Date
+
+FEEL Date Example with Business Context
+
+```python
+// Evaluate if a contract has expired
+if today() > contract.expirationDate then "Expired" else "Active"
+
+// Determine if a customer is in a 30-day trial period
+if today() < customer.signupDate + duration("P30D") then "In Trial" else "Regular"
+```
+
+**Business Applications:** Dates are used for deadlines, eligibility periods, contract terms, event scheduling, and age calculations. They're essential in insurance rules, loan qualification, promotion periods, and compliance tracking.
+
+Date values have these accessible properties that are useful in business rules:
+
+```python
+date("2025-12-31").year    // 2025 - For fiscal year determination
+date("2025-12-31").month   // 12 - For monthly reporting cycles
+date("2025-12-31").day     // 31 - For end-of-month processing
+date("2025-12-31").weekday // 3 (Wednesday) - For business day calculations
+```
+
+### Time
+
+FEEL Time Examples in Business Context
+
+```python
+// Check if current time is during business hours
+if time(now().hour, now().minute, 0) between time("09:00:00") and time("17:00:00")
+then "Business Hours" else "After Hours"
+
+// Apply peak hour pricing
+if orderTime between time("17:00:00") and time("19:00:00")
+then basePrice * 1.25 else basePrice
+```
+
+**Business Applications:** Time values are critical for operating hours rules, shift differentials, service level agreements, peak/off-peak pricing, and international business coordination.
+
+### Date and Time
+
+Date and Time FEEL Examples in Business Context
+
+```python
+// Calculate if an SLA has been breached
+if now() > incident.reportedTime + duration("PT4H") and incident.priority = "High"
+then "SLA Breached" else "Within SLA"
+
+// Determine if an appointment is upcoming
+if appointment.scheduledTime between now() and now() + duration("PT24H")
+then "Upcoming" else "Future"
+```
+
+**Business Applications:** Combined date and time values are used for precise event timing, service level agreements, appointment scheduling, transaction timestamps, and shift scheduling.
+
+### Duration (Days and Time, Years and Months)
+
+Duration FEEL Examples in Business Context
+
+```python
+// Calculate prorated subscription fee
+if customerTenure < duration("P1Y")
+then subscription.annualFee * (customerTenure.days / 365)
+else subscription.annualFee
+
+// Determine loan term category
+if loan.term <= duration("P5Y") then "Short-term"
+else if loan.term <= duration("P15Y") then "Medium-term"
+else "Long-term"
+```
+
+**Business Applications:** Durations represent time periods for contract terms, service intervals, aging calculations, SLA timeframes, and experience-based rules. FEEL supports two types of durations:
+
+1. **Days and Time Duration** - For precise intervals in days, hours, minutes, and seconds
+2. **Years and Months Duration** - For calendar-based periods like contract terms
+
+### Range (Interval)
+
+FEEL Range/Interval Examples in Business Context
+
+```python
+// Determine tax bracket based on income
+if income in [0..9950] then 0.10
+else if income in (9950..40525] then 0.12
+else if income in (40525..86375] then 0.22
+else 0.24
+
+// Check if delivery date is within acceptable window
+if estimatedDelivery in [requestedDate..requestedDate + duration("P2D")]
+then "On Time" else "Delayed"
+```
+
+**Business Applications:** Ranges define intervals for pricing tiers, risk levels, performance categories, acceptable thresholds, and eligibility brackets. They're powerful tools for expressing business rules involving limits and boundaries.
+
+The brackets `[` and `]` indicate inclusive endpoints (closed intervals), while parentheses `(` and `)` indicate exclusive endpoints (open intervals). This precision is essential in business rules where boundary conditions matter.
+
+### List
+
+FEEL List Examples in Business Context
+
+```python
+// Calculate total order value from line items
+sum(for item in order.items return item.price * item.quantity)
+
+// Find highest-risk customer in portfolio
+max(for customer in portfolio return customer.riskScore)
+
+// Check if order contains any restricted products
+some item in order.items satisfies item.productCode in restrictedProducts
+```
+
+**Business Applications:** Lists store collections of related items such as order line items, customer segments, product categories, or risk factors. They enable operations across multiple items, such as summing order values, finding maximum risk scores, or checking eligibility conditions.
+
+<Note>
+**Business Consideration**
+
+In FEEL, list indexing starts at 1, not 0 as in many programming languages. This can be confusing for developers but is more natural for business users.
+</Note>
+
+### Context
+
+FEEL Context Examples in Business Context
+
+```python
+// Create a loan application assessment result
+{
+  applicant: customer.name,
+  approved: customer.creditScore >= 700,
+  maxAmount: if customer.creditScore >= 800
+             then 500000
+             else customer.income * 4,
+  interestRate: 0.05 + (0.15 - customer.creditScore/1000)
+}
+
+// Collect multiple decision outcomes
+{
+  eligibility: customerEligible,
+  pricing: calculatePricing(customer, product),
+  risksIdentified: identifyRisks(customer)
+}
+```
+
+**Business Applications:** Contexts are key-value structures that group related information, similar to JSON objects or dictionaries. They're ideal for organizing complex decision outputs, creating structured results, and managing related data points.
+
+In DMN 1.4, powerful context functions were added (`context()`, `context put()`, `context merge()`) that make it easier to create and manipulate these structures. This is particularly valuable for progressive enrichment of customer profiles, order details, or application evaluations.
+
+## Core FEEL Expressions for Business Logic
+
+FEEL provides several expression types that form the building blocks of decision logic. Understanding these expressions is essential for creating effective business rules.
+
+### If Expression: Conditional Business Logic
+
+If Expression in Business Context
+
+```python
+// Determine shipping method based on order value
+if order.total > 100 then "Free Shipping" else "Standard Shipping"
+
+// Multi-tier customer classification
+if customer.spendYTD > 10000 then "Platinum"
+else if customer.spendYTD > 5000 then "Gold"
+else if customer.spendYTD > 1000 then "Silver"
+else "Bronze"
+
+// Loan approval with multiple conditions
+if applicant.creditScore > 720 and applicant.debtToIncome < 0.3
+then "Approved"
+else if applicant.creditScore > 680 and applicant.debtToIncome < 0.25
+then "Conditionally Approved"
+else "Declined"
+```
+
+The if expression is the fundamental building block for business rules, allowing you to express conditional logic in an intuitive way. It follows the structure `if <condition> then <result1> else <result2>`.
+
+<Warning>
+**Business Rule Consideration**
+
+The `else` part is always mandatory in FEEL expressions, unlike some programming languages. This forces explicit handling of all cases, which is a good practice for business rules where all scenarios should be accounted for.
+</Warning>
+
+### For Expression: Iterative Processing
+
+For Expression in Business Context
+
+```python
+// Calculate order subtotal
+for item in order.items return item.price * item.quantity
+
+// Create a list of high-value customers
+for customer in customers
+    if customer.lifetimeValue > 10000
+    return { name: customer.name, tier: "High Value", since: customer.joinDate }
+
+// Calculate total risk exposure by customer segment
+for segment in portfolio,
+    customers in segment.customers
+return {
+    segmentName: segment.name,
+    totalExposure: sum(for c in customers return c.accountBalance)
+}
+```
+
+The for expression iterates over items in a list or range and produces a new list based on the iteration context. This is similar to list comprehension in functional programming languages but designed to be more approachable for business users.
+
+**Business Applications:**
+- Processing order line items
+- Calculating revenue by product category
+- Identifying customers matching specific criteria
+- Transforming raw data into business-friendly formats
+
+### Quantified Expressions: Verification Logic
+
+#### Some: At Least One Match
+
+Using "Some" in Business Rules
+
+```python
+// Check if any order item exceeds the per-item limit
+some item in order.items satisfies item.price * item.quantity > 10000
+
+// Verify if customer has any past-due accounts
+some account in customer.accounts satisfies
+    account.status = "Past Due" and account.daysPastDue > 30
+
+// Determine if any risk factor is present
+some factor in riskFactors satisfies
+    applicant[factor.field] = factor.triggerValue
+```
+
+The `some` expression checks if at least one element in a list or range satisfies a condition. This is particularly useful for flagging scenarios where a single match is significant.
+
+**Business Applications:**
+- Fraud detection (any suspicious transaction)
+- Compliance verification (any missing document)
+- Risk assessment (any critical risk factor present)
+- Eligibility checking (any qualifying condition)
+
+#### Every: All Must Match
+
+Using "Every" in Business Rules
+
+```python
+// Verify all required documents are submitted
+every doc in requiredDocuments satisfies
+    application.documents[doc.id].status = "Submitted"
+
+// Check if all items in an order are available
+every item in order.items satisfies item.inventoryStatus = "In Stock"
+
+// Ensure all compliance checks have passed
+every check in complianceChecks satisfies
+    customer.verificationResults[check.id] = "Passed"
+```
+
+The `every` expression checks if all elements in a list or range satisfy a condition. This is essential for rules requiring universal compliance or complete verification.
+
+**Business Applications:**
+- Compliance verification (all requirements met)
+- Order fulfillment (all items available)
+- Application completeness (all fields provided)
+- Quality control (all tests passed)
+
+### In Expression: Range Checking
+
+Range Checking in Business Rules
+
+```python
+// Determine if a credit score is in the "Good" range
+customer.creditScore in [670..739]
+
+// Check if delivery date is within the promised window
+order.estimatedDelivery in [order.date + duration("P1D")..order.date + duration("P5D")]
+
+// Verify if inventory level is in critical range
+inventory.onHandQuantity in [0..inventory.reorderPoint)
+
+// Age-based eligibility verification
+customer.age in [21..65]
+```
+
+The `in` expression checks if a value falls within a specified range. This is a powerful tool for expressing business rules involving thresholds, limits, and acceptable values.
+
+**Business Applications:**
+- Credit score evaluation
+- Age verification
+- Pricing tiers
+- Performance metrics
+- Inventory management
+- Service level agreement monitoring
+
+<Tip>
+**Business Rule Tip**
+
+Pay careful attention to inclusive `[]` vs. exclusive `()` range boundaries. This precision is crucial for business rules where boundary conditions matter, such as eligibility cutoffs.
+</Tip>
+
+### Boolean Logic in Business Rules
+
+Boolean Logic in Business Context
+
+```python
+// Loan approval with multiple criteria
+applicant.creditScore >= 700 and
+applicant.debtToIncome < 0.4 and
+applicant.employmentStatus = "Employed"
+
+// Promotional eligibility
+customer.isNewCustomer or
+(customer.daysSinceLastPurchase > 90 and customer.accountStatus = "Active")
+
+// Fraud detection (three-valued logic example)
+hasKnownFraudIndicator or
+(transactionAmount > 10000 and transactionLocation != customer.homeCountry)
+```
+
+FEEL supports three-valued logic with `and` and `or` operators, allowing for the modeling of complex business conditions. The three-valued approach handles unknown (`null`) values in addition to `true` and `false`.
+
+**Truth Tables for Three-Valued Logic:**
+
+**AND Operator:**
+
+| X AND Y | true | false | null |
+| --- | --- | --- | --- |
+| true | true | false | null |
+| false | false | false | false |
+| null | null | false | null |
+
+**OR Operator:**
+
+| X OR Y | true | false | null |
+| --- | --- | --- | --- |
+| true | true | true | true |
+| false | true | false | null |
+| null | true | null | null |
+
+<Note>
+**Precedence Rule**
+
+`and` has higher precedence than `or`. Use parentheses when combining operations to ensure the intended evaluation order.
+</Note>
+
+## String Functions for Business Data Processing
+
+String processing is essential for business rules involving product codes, customer information, addresses, and other text data. FEEL provides a comprehensive set of string functions to help with these common tasks.
+
+### Extracting and Manipulating String Data
+
+String Extraction Functions in Business Context
+
+```python
+// Extract region code from product ID (e.g., "US-1234-A")
+substring before(productId, "-")  // Returns "US"
+
+// Get customer surname from full name
+substring after(customer.fullName, " ")  // Returns surname if format is "First Last"
+
+// Extract the account number from a formatted string
+substring("Account: 12345-678", 10)  // Returns "12345-678"
+
+// Extract first 5 digits of a postal code
+substring(customer.postalCode, 1, 5)  // Returns first 5 characters
+```
+
+These functions help you extract meaningful segments from business data strings:
+
+| Function | Business Use Case |
+| --- | --- |
+| `substring(string, start, length?)` | Extract account numbers, specific segments of codes |
+| `substring before(string, match)` | Parse product codes, split reference numbers |
+| `substring after(string, match)` | Extract domain names from emails, get last names |
+
+### String Testing and Validation
+
+String Validation in Business Rules
+
+```python
+// Check if a product code is for the premium category
+starts with(product.code, "PREM")
+
+// Verify email domain for corporate customers
+ends with(customer.email, "@acme.com")
+
+// Check if a description contains a restricted term
+contains(product.description, "guaranteed")
+
+// Validate format of a reference number using regex
+matches(referenceNumber, "^[A-Z]{2}-\d{4}-[A-Z]\d$")
+```
+
+These functions let you validate string content against business rules:
+
+| Function | Business Use Case |
+| --- | --- |
+| `contains(string, match)` | Check for specific terms, validate included features |
+| `starts with(string, match)` | Identify product categories, validate prefix codes |
+| `ends with(string, match)` | Verify email domains, check file types |
+| `matches(input, pattern, flags?)` | Complex format validation, pattern matching |
+
+### String Transformation
+
+String Transformation for Business Data
+
+```python
+// Standardize product codes to uppercase
+upper case(product.code)
+
+// Normalize customer input for case-insensitive comparison
+lower case(customer.preferredLanguage)
+
+// Replace sensitive information for logging
+replace(creditCard.number, "(\d{4})(\d{4})(\d{4})(\d{4})", "$1-$2-$3-XXXX")
+
+// Split comma-separated values into a list
+split("Red,Green,Blue", ",")  // Returns ["Red", "Green", "Blue"]
+
+// Combine customer name parts into a formatted greeting
+string join(["Dear", customer.title, customer.lastName], " ")
+```
+
+These functions transform strings to meet business requirements:
+
+| Function | Business Use Case |
+| --- | --- |
+| `upper case(string)` | Standardize codes, case-insensitive matching |
+| `lower case(string)` | Normalize user input, case-insensitive comparison |
+| `replace(input, pattern, replacement)` | Format data, mask sensitive information |
+| `split(string, delimiter)` | Process CSV data, parse multi-value fields |
+| `string join(list, delimiter?)` | Create formatted labels, combine name parts |
+
+## List Functions for Collection Processing
+
+Business decisions often involve processing collections of items, such as order lines, customer segments, or transaction histories. FEEL provides powerful functions to analyze and manipulate these collections.
+
+### Basic List Operations
+
+Essential List Functions in Business Context
+
+```python
+// Count the number of items in an order
+count(order.items)
+
+// Find the highest transaction amount
+max(for tx in customer.transactions return tx.amount)
+
+// Calculate the total order value
+sum(for item in order.items return item.price * item.quantity)
+
+// Get the average customer satisfaction score
+mean(customerSurvey.responses)
+```
+
+These fundamental list functions help analyze collections of business data:
+
+| Function | Business Use Case |
+| --- | --- |
+| `count(list)` | Count items in an order, track number of qualifying customers |
+| `min(list)` | Find lowest price, earliest date, minimum inventory level |
+| `max(list)` | Identify highest risk score, largest transaction, best performer |
+| `sum(list)` | Calculate total revenue, aggregate measurements, sum quantities |
+| `mean(list)` | Determine average processing time, typical order value |
+
+### List Modification and Creation
+
+List Manipulation in Business Scenarios
+
+```python
+// Create a curated product list for a customer
+append(recommendedProducts, specialOffer)
+
+// Combine products from multiple categories
+concatenate(category1Products, category2Products, featuredProducts)
+
+// Add a priority flag to a task list
+insert before(workflow.tasks, 1, {name: "Compliance Check", priority: "High"})
+
+// Remove a canceled item from an order
+remove(order.items, indexOfCanceledItem)
+
+// Present products in descending price order
+reverse(sort(products, function(x,y) x.price < y.price))
+```
+
+These functions help create and modify lists for business processing:
+
+| Function | Business Use Case |
+| --- | --- |
+| `append(list, items...)` | Add special offers, include additional conditions |
+| `concatenate(lists...)` | Merge product categories, combine eligible customers |
+| `insert before(list, position, item)` | Add priority tasks, insert verification steps |
+| `remove(list, position)` | Remove canceled items, exclude unavailable options |
+| `reverse(list)` | Show newest first, present in descending order |
+
+### List Analysis and Filtering
+
+Advanced List Analysis for Business Intelligence
+
+```python
+// Get unique product categories in an order
+distinct values(for item in order.items return item.category)
+
+// Check if a product is in the restricted list
+list contains(restrictedProducts, product.code)
+
+// Find all positions where high-value items appear
+index of(for item in order.items return item.value > 1000, true)
+
+// Combine customer segments with no duplicates
+union(highValueCustomers, loyaltyProgramMembers)
+
+// Calculate total revenue by product
+product(for item in order.items return item.price)
+```
+
+These advanced list functions support sophisticated business analysis:
+
+| Function | Business Use Case |
+| --- | --- |
+| `list contains(list, item)` | Check for restricted products, verify document submission |
+| `distinct values(list)` | Find unique categories, identify distinct customer types |
+| `index of(list, match)` | Locate high-risk items, find position for insertions |
+| `union(lists...)` | Combine customer segments with no duplicates |
+| `flatten(list)` | Process nested hierarchies, normalize complex structures |
+
+### Statistical Functions for Business Analytics
+
+Statistical Analysis for Business Metrics
+
+```python
+// Find the middle value in a set of processing times
+median(processingTimes)
+
+// Determine the most common error code
+mode(for incident in systemLogs return incident.errorCode)
+
+// Calculate the variability in customer order values
+stddev(for order in customer.orders return order.total)
+
+// Analyze spread of risk scores in a portfolio
+stddev(customers.riskScores)
+```
+
+These statistical functions are valuable for business analytics:
+
+| Function | Business Use Case |
+| --- | --- |
+| `median(list)` | Find typical processing time, representative price point |
+| `mode(list)` | Identify most common issue type, popular product choice |
+| `stddev(list)` | Analyze consistency of process times, variation in performance |
+| `product(list)` | Calculate compound growth, cumulative probability |
+
+## Context Functions for Complex Data Structures
+
+Added in DMN 1.4, context functions provide powerful capabilities for working with structured business data like customer profiles, product configurations, and application states.
+
+### Context Creation and Modification
+
+Building and Updating Contexts for Business Data
+
+```python
+// Create a customer profile from data elements
+context([
+  {key: "name", value: customer.fullName},
+  {key: "riskLevel", value: assessRisk(customer)},
+  {key: "eligibleProducts", value: determineEligibility(customer)}
+])
+
+// Add a calculated field to a customer profile
+context put(customerProfile, "lifetimeValue",
+  sum(for order in customer.orders return order.total))
+
+// Update a nested property in a complex structure
+context put(application, ["applicant", "verificationStatus"], "Verified")
+
+// Combine base configuration with customer-specific settings
+context merge([defaultConfig, customerPreferences, sessionOverrides])
+```
+
+These functions revolutionize how you work with structured data in FEEL:
+
+| Function | Business Use Case |
+| --- | --- |
+| `context()` | Create structured profiles, assemble decision outputs |
+| `context put()` | Update status fields, add calculated metrics |
+| `context put()` with nested keys | Modify deep properties, update specific attributes |
+| `context merge()` | Combine configuration layers, apply overrides |
+
+### Context Inspection and Extraction
+
+Analyzing Context Data for Business Processing
+
+```python
+// Safe retrieval of a configuration value with default
+get value(settings, "retryAttempts")
+
+// Extract all verification status entries for processing
+get entries(application.verificationResults)
+
+// Use entries to build a status summary
+for entry in get entries(application.verificationResults)
+return {
+  field: entry.key,
+  passed: entry.value = "Passed"
+}
+```
+
+These functions help you safely access and process structured data:
+
+| Function | Business Use Case |
+| --- | --- |
+| `get value(context, key)` | Safely retrieve configuration settings, access optional fields |
+| `get entries(context)` | Process all verification results, iterate through properties |
+
+<Tip>
+**Business Process Advantage**
+
+Context functions introduced in DMN 1.4 eliminate the need for complex iterations and manual key checks. They're particularly valuable when progressively building complex decision outputs or handling configuration layers.
+</Tip>
+
+## Range Functions for Temporal and Sequential Business Logic
+
+Range functions offer sophisticated ways to express relationships between time periods, numerical ranges, and sequences. These are particularly valuable for business rules involving schedules, eligibility periods, and process sequences.
+
+### Temporal Relationship Analysis
+
+Analyzing Time Relationships in Business Processes
+
+```python
+// Check if an order was placed before the promotion period
+before(order.date, promotionPeriod)
+
+// Verify if a maintenance event occurred after the warranty period
+after(maintenance.date, [product.purchaseDate..product.purchaseDate + duration("P1Y")])
+
+// Check if a payment due date coincides with a holiday
+coincides(payment.dueDate, holiday.date)
+
+// Determine if a customer's subscription overlaps a discount period
+overlaps(customer.subscriptionPeriod, promotionPeriod)
+```
+
+## FEEL Data Types Reference Material
+
+FEEL supports the following data types:
+
+| Type | Description | Example |
+| --- | --- | --- |
+| Number | IEEE 754-2008 Decimal 128 format | `47`, `-9.123` |
+| String | Character sequences | `"John Doe"` |
+| Boolean | Logical true/false values | `true` |
+| Date | Calendar date values | `date("2023-12-31")` |
+| Time | Time of day values | `time("14:30:00")` |
+| Date and time | Combined date and time values | `date and time("2023-12-31T14:30:00")` |
+| Days and time duration | Time periods in days, hours, minutes, seconds | `duration("P2DT3H")` |
+| Years and months duration | Time periods in years and months | `duration("P1Y6M")` |
+| Function | Reusable expressions | `function(a, b) a + b` |
+| Context | Key-value collections | `{ name: "John", age: 30 }` |
+| Range | Intervals of values | `[1..10]` |
+| List | Collections of values | `[1, 2, 3, 4]` |
+
+## FEEL Values in Detail
+
+### Number
+
+FEEL Number Examples
+
+```python
+47
+-9.123
+1.2*10**3 // expression resulting in 1.2e3
+```
+
+Numbers in FEEL are based on the IEEE 754-2008 Decimal 128 format, with 34 digits of precision. Internally, they're represented as `BigDecimals` with `MathContext DECIMAL128`. FEEL supports only one number data type, used for both integers and floating point numbers, there isn't a distinction between these and the numerical accuracy seen in different types of Java integers/numbers/decimals/etc should be treated as a BigDecimal function.
+
+FEEL numbers use a dot (`.`) as a decimal separator and don't support `-INF`, `+INF`, or `NaN`. Invalid numbers are represented as `null`.
+
+The Aletyx Enterprise Build of Drools extends the DMN specification with additional number notations:
+
+- **Scientific notation**: `1.2e3` (equivalent to `1.2*10**3`)
+- **Hexadecimal**: `0xff` (equivalent to decimal `255`)
+- **Type suffixes**: `f`, `F`, `d`, `D`, `l`, `L` (ignored but allowed for compatibility)
+
+### String
+
+FEEL String Examples
+
+```python
+"John Doe"
+"123 Salem St"
+```
+
+Strings in FEEL are any sequence of characters delimited by double quotation marks. Similar rules to programming languages in that `"123"` is different than `123` - so if you need to parse out parts of the string, functions will need to be used to do so.
+
+### Boolean
+
+FEEL Boolean Examples
+
+```python
+true
+false
+null // the third boolean value for unknown/undefined
+```
+
+FEEL uses three-valued logic, so a boolean expression may evaluate to `true`, `false`, or `null`.
+
+### Date
+
+FEEL Date Example
+
+```python
+date("2023-12-31")
+```
+
+#### Date Properties
+
+Date literals aren't directly supported in FEEL, but you can construct date values using the built-in `date()` function. Date strings follow the format defined in XML Schema: `"YYYY-MM-DD"`.
+
+Date values have these accessible properties:
+
+Accessing Date Properties in FEEL
+
+```python
+date("2025-12-31").year    // 2025
+date("2025-12-31").month   // 12
+date("2025-12-31").day     // 31
+date("2025-12-31").weekday // 3 (Wednesday)
+```
+
+### Time
+
+FEEL Time Examples
+
+```python
+time("14:30:00")
+time("14:30:00+02:00")     // with timezone offset
+time("14:30:00.500Z")      // with milliseconds and UTC timezone
+time("14:30:00@Europe/Rome") // with IANA timezone
+```
+
+#### Accessing Properties of Time
+
+Time literals aren't directly supported, but you can construct time values using the `time()` function. Time strings follow XML Schema format: `"hh:mm:ss[.uuu][(+-)hh:mm]"`.
+
+Time values have these accessible properties:
+
+Accessing Time Properties with FEEL
+
+```python
+time("14:30:45").hour         // 14
+time("14:30:45").minute       // 30
+time("14:30:45").second       // 45
+time("14:30:45-05:00").time offset // duration("PT-5H")
+time("14:30:45@Europe/Rome").timezone // "Europe/Rome"
+```
+
+### Date and Time
+
+Date and Time FEEL Examples
+
+```python
+date and time("2023-12-31T14:30:00")
+date and time("2023-12-31T14:30:00+02:00")
+date and time("2023-12-31T14:30:00@Europe/Rome")
+```
+
+#### Accessing Date and Time Properties
+
+Date and time values combine both date and time information. They can be created using the `date and time()` function with the format `"<date>T<time>"`.
+
+Date and time values have these accessible properties:
+
+Properties
+
+```python
+date and time("2023-12-31T14:30:45").year        // 2023
+date and time("2023-12-31T14:30:45").month       // 12
+date and time("2023-12-31T14:30:45").day         // 31
+date and time("2023-12-31T14:30:45").weekday     // 7 (Sunday)
+date and time("2023-12-31T14:30:45").hour        // 14
+date and time("2023-12-31T14:30:45").minute      // 30
+date and time("2023-12-31T14:30:45").second      // 45
+date and time("2023-12-31T14:30:45-05:00").time offset // duration("PT-5H")
+date and time("2023-12-31T14:30:45@Europe/Rome").timezone // "Europe/Rome"
+```
+
+### Days and Time Duration
+
+Days and Time Duration FEEL Examples
+
+```python
+duration("P1DT23H12M30S")  // 1 day, 23 hours, 12 minutes, 30 seconds
+duration("P23D")           // 23 days
+duration("PT12H")          // 12 hours
+duration("PT35M")          // 35 minutes
+-duration("P23D")          // Negative duration of 23 days
+```
+
+#### Accessing Day and Time Duration Properties in FEEL
+
+Days and time duration values represent periods of time in days, hours, minutes, and seconds. They can be created using the `duration()` function with strings that follow the XML Schema duration format.
+
+Days and time duration values have these accessible properties:
+
+Accessing Duration Properties in FEEL
+
+```python
+duration("P2DT20H14M5S").days    // 2
+duration("P2DT20H14M5S").hours   // 20
+duration("P2DT20H14M5S").minutes // 14
+duration("P2DT20H14M5S").seconds // 5
+```
+
+### Years and Months Duration
+
+Years and Months Duration FEEL Examples
+
+```python
+duration("P3Y5M")  // 3 years and 5 months
+duration("P2Y")    // 2 years
+duration("P10M")   // 10 months
+duration("P25M")   // 2 years and 1 month (automatically normalized)
+-duration("P2Y")   // Negative duration of 2 years
+```
+
+#### Accessing Year and Months Duration Properties
+
+Years and months duration values represent periods of time in years and months. They can be created using the `duration()` function with strings that follow the XML Schema duration format, but only with year and month components.
+
+Years and months duration values have these accessible properties:
+
+Access Duration Years and Months Properties
+
+```python
+duration("P1Y6M").years   // 1
+duration("P1Y6M").months  // 6
+```
+
+### Function
+
+FEEL Function Example
+
+```python
+function(a, b) a + b
+```
+
+FEEL supports function literals (anonymous functions) that let you create functions on the fly. The example creates a function that adds parameters `a` and `b` and returns the result.
+
+### Context
+
+FEEL Context Example
+
+```python
+{ x: 5, y: 3 }
+```
+
+Contexts in FEEL are collections of key-value pairs, similar to maps or dictionaries in other languages.
+
+#### Understanding FEEL Context Literals
+
+FEEL has context literals that you can use to create contexts. A context in FEEL is a list of key and value pairs, similar to maps in languages like Java. In the example, the expression creates a context with two entries, x and y, representing a coordinate in a chart.
+
+In DMN 1.2, another way to create contexts is to create an item definition that contains the list of keys as attributes, and then declare the variable as having that item definition type.
+
+#### Java Implementation in Drools DMN API
+
+The Drools DMN API supports DMN `ItemDefinition` structural types in a `DMNContext` in two ways:
+
+- **User-defined Java type**: Must be a valid JavaBeans object defining properties and getters for each of the components in the DMN ItemDefinition. If necessary, you can also use the @FEELProperty annotation for those getters representing a component name which would result in an invalid Java identifier.
+- **java.util.Map interface**: The map needs to define the appropriate entries, with the keys corresponding to the component name in the DMN ItemDefinition.
+
+#### New Context Functions since DMN 1.2
+
+Several new context functions were added in DMN 1.4, with the most useful being `context put()`. Before this function, adding a column to a table required iterating a context BKM with one context entry per column creating more complex implementations than should've been required.
+
+DMN 1.4 introduced three new built-in functions for contexts: `context()`, `context put()`, and `context merge()`.
+These functions make it easier to create and manipulate contexts:
+
+- **context()** - Takes a list of key-value pairs and creates a context with those entries
+- **context put()** - Adds or updates a key-value pair in an existing context
+- **context merge()** - Combines multiple contexts into a single context
+
+### Range (Interval)
+
+FEEL Range Interval Examples
+
+#### Examples of Range
+
+| range parameter | What the function does                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| `(`             | The value starts at, but is not inclusive, think like greater than 10, represented as &gt; 10 |
+| `)`             | The value ends at, but is not inclusive, think like less than 10, represented as &lt; 10      |
+| `[`             | The value starts at, and is inclusive of 10, could be represented as &gt;= 10                 |
+| `]`             | The value ends at, and is inclusive of 10, could be represented as &lt;= 10                   |
+| `(`             | The value starts at, but is not inclusive, think like greater than 10, represented as &gt; 10 |
+
+```python
+[1..10]            // Closed interval on both ends, range is from 1 to 10
+[1..10)            // Closed at start, open at end, range starts at 1 and is less than 10
+(1..10]            // Range starts at 1, but must be greater than and goes to 10, inclusive
+(1..10)            // Range is between 1 and 10, but not inclusive of either
+```
+
+#### FEEL Properties of Range
+
+Ranges represent intervals of values. The brackets `[` and `]` indicate inclusive endpoints (closed intervals), while parentheses `(` and `)` indicate exclusive endpoints (open intervals).
+
+Range values have these accessible properties:
+
+Accessing Properties of Ranges in FEEL
+
+```python
+[1..10].start           // 1
+[1..10].end             // 10
+[1..10].start included  // true
+[1..10].end included    // true
+(1..10).start included  // false
+(1..10).end included    // false
+```
+
+### List
+
+FEEL List Example
+
+```python
+[2, 3, 4, 5]
+```
+
+#### List Indexing
+
+Lists contain ordered collections of items. In FEEL, you can create lists using square brackets with comma-separated values.
+
+Elements in a list can be accessed by index, with the first element at index 1:
+
+FEEL List Indexing
+
+```python
+[2, 3, 4, 5][2]  // Returns 3 (the second element)
+```
+
+#### List Negative Indexing
+
+Negative indexes access elements from the end of the list:
+
+FEEL List Negative Indexing
+
+```python
+[2, 3, 4, 5][-1]  // Returns 5 (the last element)
+```
+
+## FEEL Expressions
+
+FEEL provides several expression types that form the building blocks of decision logic.
+
+### If Expression
+
+Examples Utilizing If Expression in FEEL
+
+```python
+if 20 > 0 then "YES" else "NO"
+if (20 - (10 * 2)) > 0 then "YES" else "NO"   // "NO"
+if (2 ** 3) = 8 then "YES" else "NO"   // "YES"
+if (4 / 2) != 2 then "YES" else "NO"   // "NO"
+```
+
+The if expression works like the classic if-then-else operator in other languages. The `else` part is always mandatory in FEEL.
+
+<Warning>
+**Warning**
+
+The `else` part is always mandatory in FEEL expressions.
+</Warning>
+
+### For Expression
+
+Utilizing the For Expression in Feel Examples
+
+```python
+for i in [1, 2, 3] return i * i              // [1, 4, 9]
+for i in 1..3 return i * i                    // [1, 4, 9]
+for i in [1,2,3], j in [1,2,3] return i*j     // [1, 2, 3, 2, 4, 6, 3, 6, 9]
+for x in date("2021-01-01")..date("2021-01-03") return x + duration("P1D")
+// [date("2021-01-02"), date("2021-01-03"), date("2021-01-04")]
+```
+
+The for expression iterates over items in a list or range and produces a new list based on the iteration context. This is similar to list comprehension in functional programming languages.
+
+### Quantified Expressions
+
+#### Some
+
+Utilizing the Some Expression in FEEL Examples
+
+```python
+some i in [1, 2, 3] satisfies i > 2   // true
+some i in [1, 2, 3] satisfies i > 4   // false
+```
+
+The `some` expression checks if at least one element in a list or range satisfies a condition. This allows for determining if at least item in the expression list meets the conditions.
+
+#### Every
+
+Utilizing the Every Expression in FEEL Examples
+
+```python
+every i in [1, 2, 3] satisfies i > 0   // true
+every i in [1, 2, 3] satisfies i > 1   // false
+```
+
+The `every` expression checks if all elements in a list or range satisfy a condition. Every element must match to be evaluated as true.
+
+### In Expression
+
+Utilization of the In Expression Examples
+
+```python
+1 in [1..10]    // true
+1 in (1..10]    // false
+10 in [1..10]   // true
+10 in [1..10)   // false
+```
+
+The `in` expression checks if a value falls within a specified range. With the `in` expression, it is very important if ranges are used to be aware of the use of inclusive `[]` or exclusive `()`.
+
+### Boolean Logic
+
+Using Boolean Logic in FEEL Examples
+
+```python
+true and true           // true
+true and false          // false
+true and null           // null
+false and null          // false
+
+true or false           // true
+false or false          // false
+false or null           // null
+true or null            // true
+
+true or false and false   // true (and has higher precedence)
+(true or false) and false // false
+```
+
+FEEL supports three-valued logic with `and` and `or` operators. Note that `and` has higher precedence than `or`.
+
+### String Concatenation
+
+String Concatenation FEEL Examples
+
+```python
+"some" + "string" = "somestring"
+"very" + "long" + "word" = "verylongword"
+```
+
+String concatenation in FEEL is done using the `+` operator. This allows building larger strings or merging statements together.
+
+## String Functions
+
+This section covers the built-in functions for working with strings in FEEL.
+
+### substring(string, start position, length?)
+
+Substring FEEL Examples
+
+```python
+substring("testing", 3) = "sting"
+substring("testing", 3, 3) = "sti"
+substring("testing", -2, 1) = "n"
+substring("🐎ab", 2) = "ab"
+```
+
+Returns the substring from the start position for the specified length. The first character is at position value `1`.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+| `start position` | `number` |
+| `length` (Optional) | `number` |
+
+<Note>
+**Note**
+
+In FEEL, Unicode characters are counted based on their code points.
+</Note>
+
+### string length(string)
+
+String Length FEEL Examples
+
+```python
+string length("tes") = 3
+string length("🐎ab") = 3
+```
+
+Calculates the length of the specified string.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+
+### upper case(string)
+
+Transforming Strings to Upper Case in FEEL Example
+
+```python
+upper case("aBc4") = "ABC4"
+```
+
+Produces an uppercase version of the specified string.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+
+### lower case(string)
+
+Transforming Strings to Lower Case in FEEL Example
+
+```python
+lower case("aBc4") = "abc4"
+```
+
+Produces a lowercase version of the specified string.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+
+### substring before(string, match)
+
+Using Substring Before in FEEL Examples
+
+```python
+substring before("testing", "ing") = "test"
+substring before("testing", "xyz") = ""
+```
+
+Calculates the substring before the match.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+| `match` | `string` |
+
+### substring after(string, match)
+
+Using Substring After in FEEL Examples
+
+```python
+substring after("testing", "test") = "ing"
+substring after("", "a") = ""
+```
+
+Calculates the substring after the match.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+| `match` | `string` |
+
+### replace(input, pattern, replacement, flags?)
+
+Using the Replace Function in FEEL Examples
+
+```python
+replace("banana", "a", "o") = "bonono"
+replace("abcd", "(ab)|(a)", "[1=$1][2=$2]") = "[1=ab][2=]cd"
+```
+
+Calculates the regular expression replacement.
+
+| Parameter | Type |
+| --- | --- |
+| `input` | `string` |
+| `pattern` | `string` |
+| `replacement` | `string` |
+| `flags` (Optional) | `string` |
+
+<Note>
+**Note**
+
+This function uses regular expression parameters as defined in [XQuery 1.0 and XPath 2.0 Functions and Operators](https://www.w3.org/TR/xquery-operators/#regex-syntax).
+</Note>
+
+### contains(string, match)
+
+Using the Contains Expression in FEEL Example
+
+```python
+contains("testing", "test") = true
+contains("testing", "xyz") = false
+```
+
+Returns `true` if the string contains the match.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+| `match` | `string` |
+
+### starts with(string, match)
+
+Using the Starts With Function in FEEL Example
+
+```python
+starts with("testing", "te") = true
+starts with("testing", "st") = false
+```
+
+Returns `true` if the string starts with the match.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+| `match` | `string` |
+
+### ends with(string, match)
+
+Example
+
+```python
+ends with("testing", "g") = true
+ends with("testing", "ng") = true
+ends with("testing", "est") = false
+```
+
+Returns `true` if the string ends with the match.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+| `match` | `string` |
+
+### matches(input, pattern, flags?)
+
+Using the Matches Fucntion in FEEL Example
+
+```python
+matches("teeesting", "^te*sting") = true
+matches("testing", "^zzz") = false
+```
+
+Returns `true` if the input matches the regular expression.
+
+| Parameter | Type |
+| --- | --- |
+| `input` | `string` |
+| `pattern` | `string` |
+| `flags` (Optional) | `string` |
+
+<Note>
+**Note**
+
+This function uses regular expression parameters as defined in [XQuery 1.0 and XPath 2.0 Functions and Operators](https://www.w3.org/TR/xquery-operators/#regex-syntax).
+</Note>
+
+### split(string, delimiter)
+
+Using the Split Function in FEEL Examples
+
+```python
+split("John Doe", "\\s") = ["John", "Doe"]
+split("a;b;c;;", ";") = ["a","b","c","",""]
+```
+
+Returns a list of the original string split at the delimiter regular expression pattern.
+
+| Parameter | Type |
+| --- | --- |
+| `string` | `string` |
+| `delimiter` | `string` for a regular expression pattern |
+
+<Note>
+**Note**
+
+This function uses regular expression parameters as defined in [XQuery 1.0 and XPath 2.0 Functions and Operators](https://www.w3.org/TR/xquery-operators/#regex-syntax).
+</Note>
+
+### string join(list, delimiter)
+
+Using the String Join in List FEEL Function Examples
+
+```python
+string join(["a","b","c"], "_and_") = "a_and_b_and_c"
+string join(["a","b","c"], "") = "abc"
+string join(["a","b","c"], null) = "abc"
+string join(["a"], "X") = "a"
+string join(["a",null,"c"], "X") = "aXc"
+string join([], "X") = ""
+```
+
+Returns a string which is composed by joining all the string elements from the list parameter, separated by the delimiter.
+The `delimiter` can be an empty string.
+Null elements in the list parameter are ignored.
+If `list` is empty, the result is the empty string.
+If `delimiter` is null, the string elements are joined without a separator.
+
+| Parameter | Type |
+| --- | --- |
+| `list` | `list` of `string` |
+| `delimiter` | `string` |
+
+### string join(list)
+
+String Join Function in FEEL Example
+
+```python
+string join(["a","b","c"]) = "abc"
+string join(["a",null,"c"]) = "ac"
+string join([]) = ""
+```
+
+Returns a string which is composed by joining all the string elements from the list parameter.
+Null elements in the `list` parameter are ignored.
+If `list` is empty, the result is the empty string.
+
+| Parameter | Type |
+| --- | --- |
+| `list` | `list` of `string` |
+
+## List Functions
+
+This section covers the built-in functions for working with lists in FEEL.
+
+<Note>
+**Note**
+
+In FEEL, the index of the first element in a list is `1`. The index of the last element in a list can be identified as `-1`.
+</Note>
+
+### list contains(list, element)
+
+FEEL List Contains Function in FEEL Example
+
+```python
+list contains([1,2,3], 2) = true
+list contains([1,2,3], 5) = false
+list contains([1,2,null], null) = true
+```
+
+Returns `true` if the list contains the element.
+
+| Parameter | Type |
+| --- | --- |
+| `list` | `list` |
+| Parameter | Type |
+| `list` | `list` |
+| `element` | Any type, including null |
+| Parameter | Type |
+| `list` | `list` |
+| `position` | non-zero integer in the range [1..L], where L is the length of the list |
+| `newItem` | Any type, including null |
+| Parameter | Type |
+| `list` | `list` |
+| `match` | boolean function(item, newItem) |
+| `newItem` | Any type, including null |
+| Parameter | Type |
+| `list` | `list` |
+| Parameter | Type |
+| `list` | `list` of comparable elements |
+| Parameter | Type |
+| `list` | `list` of comparable elements |
+| Parameter | Type |
+| `list` | `list` of `number` elements |
+| Parameter | Type |
+| `list` | `list` of `number` elements |
+| Parameter | Type |
+| `list` | `list` of `boolean` elements |
+| Parameter | Type |
+| `list` | `list` of `boolean` elements |
+| Parameter | Type |
+| `list` | `list` |
+| `start position` | `number` |
+| `length` (Optional) | `number` |
+| Parameter | Type |
+| `list` | `list` |
+| `items` | Any type (multiple items allowed) |
+| Parameter | Type |
+| `lists` | Multiple `list` parameters |
+| Parameter | Type |
+| `list` | `list` |
+| `position` | `number` |
+| `newItem` | Any type |
+| Parameter | Type |
+| `list` | `list` |
+| `position` | `number` |
+| Parameter | Type |
+| `list` | `list` |
+| Parameter | Type |
+| `list` | `list` |
+| `match` | Any type |
+| Parameter | Type |
+| `lists` | Multiple `list` parameters |
+| Parameter | Type |
+| `list` | `list` |
+| Parameter | Type |
+| `list` | `list` (possibly containing nested lists) |
+| Parameter | Type |
+| `list` | `list` of `number` elements |
+| Parameter | Type |
+| `list` | `list` of `number` elements |
+| Parameter | Type |
+| `list` | `list` of `number` elements |
+| Parameter | Type |
+| `list` | `list` of `number` elements |
+| Parameter | Type |
+| `entries` | `list` of `context`, each with required "key" and "value" entries |
+| Parameter | Type |
+| `context` | `context` |
+| `key` | `string` |
+| `value` | Any type |
+| Parameter | Type |
+| `context` | `context` |
+| `keys` | `list` of `string` |
+| `value` | Any type |
+| Parameter | Type |
+| `contexts` | `list` of `context` |
+| Parameter | Type |
+| `m` | `context` |
+| `key` | `string` |
+| Parameter | Type |
+| `m` | `context` |

@@ -6,7 +6,10 @@
       "Bash(file dmn-pg-*)",
       "Bash(awk '{print $5, $9}')",
       "Bash(curl -sL \"https://docs.aletyx.ai/guides/getting-started/getting-started-playground-bpmn/\" -o bpmn-src.html)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "WebFetch(domain:aletyx-docs-preview.aletyx.workers.dev)",
+      "mcp__mintlify-docs__search_mintlify",
+      "mcp__mintlify-docs__query_docs_filesystem_mintlify"
     ]
   }
 }

@@ -27,6 +27,128 @@
             ]
           },
           {
+            "group": "Architecture",
+            "pages": [
+              "architecture/overview",
+              {
+                "group": "Decision Automation",
+                "pages": [
+                  "architecture/decisions/overview",
+                  "architecture/decisions/rule-language",
+                  {
+                    "group": "DRL",
+                    "pages": [
+                      "architecture/decisions/drl/overview",
+                      "architecture/decisions/drl/syntax-basics",
+                      "architecture/decisions/drl/building-blocks",
+                      "architecture/decisions/drl/data-stores",
+                      "architecture/decisions/drl/rule-units",
+                      "architecture/decisions/drl/phreak",
+                      "architecture/decisions/drl/oopath",
+                      "architecture/decisions/drl/conditions",
+                      "architecture/decisions/drl/actions",
+                      "architecture/decisions/drl/decision-services"
+                    ]
+                  },
+                  {
+                    "group": "Decision Tables",
+                    "pages": [
+                      "architecture/decisions/decision-tables/overview",
+                      "architecture/decisions/decision-tables/first-table",
+                      "architecture/decisions/decision-tables/running"
+                    ]
+                  },
+                  {
+                    "group": "DMN",
+                    "pages": [
+                      "architecture/decisions/dmn/overview",
+                      "architecture/decisions/dmn/concepts",
+                      "architecture/decisions/dmn/decision-services",
+                      "architecture/decisions/dmn/feel-handbook",
+                      "architecture/decisions/dmn/listeners"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Process Automation",
+                "pages": [
+                  "architecture/processes/overview",
+                  {
+                    "group": "Architecture",
+                    "pages": [
+                      "architecture/processes/architecture/adaptive-process-architecture",
+                      "architecture/processes/architecture/engine",
+                      "architecture/processes/architecture/runtimes",
+                      "architecture/processes/architecture/data-intelligence-layer",
+                      "architecture/processes/architecture/process-history"
+                    ]
+                  },
+                  {
+                    "group": "Core Components",
+                    "pages": [
+                      "architecture/processes/components/data-index-audit",
+                      "architecture/processes/components/job-service",
+                      "architecture/processes/components/user-tasks"
+                    ]
+                  },
+                  {
+                    "group": "BPMN Basics",
+                    "pages": [
+                      "architecture/processes/basic-bpmn/overview",
+                      "architecture/processes/basic-bpmn/editor",
+                      "architecture/processes/basic-bpmn/start-events",
+                      "architecture/processes/basic-bpmn/end-events",
+                      "architecture/processes/basic-bpmn/intermediate-events",
+                      "architecture/processes/basic-bpmn/gateways",
+                      "architecture/processes/basic-bpmn/activities",
+                      "architecture/processes/basic-bpmn/api"
+                    ]
+                  },
+                  {
+                    "group": "Advanced BPMN",
+                    "pages": [
+                      "architecture/processes/advanced-bpmn/overview",
+                      "architecture/processes/advanced-bpmn/iso-8601",
+                      "architecture/processes/advanced-bpmn/event-driven",
+                      "architecture/processes/advanced-bpmn/flexible-processes",
+                      "architecture/processes/advanced-bpmn/graphql",
+                      "architecture/processes/advanced-bpmn/listeners",
+                      "architecture/processes/advanced-bpmn/monitoring",
+                      {
+                        "group": "Subprocesses",
+                        "pages": [
+                          "architecture/processes/advanced-bpmn/subprocesses/overview",
+                          "architecture/processes/advanced-bpmn/subprocesses/embedded",
+                          "architecture/processes/advanced-bpmn/subprocesses/reusable",
+                          "architecture/processes/advanced-bpmn/subprocesses/event"
+                        ]
+                      },
+                      "architecture/processes/advanced-bpmn/human-tasks",
+                      "architecture/processes/advanced-bpmn/process-versioning"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Integration Patterns",
+                "pages": [
+                  "architecture/integration/overview",
+                  "architecture/integration/decision-process",
+                  "architecture/integration/event-driven",
+                  "architecture/integration/service-orchestration"
+                ]
+              },
+              {
+                "group": "Testing",
+                "pages": [
+                  "architecture/testing/overview",
+                  "architecture/testing/test-scenarios"
+                ]
+              }
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "guides/decisions",
