@@ -1,0 +1,4038 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  
+<!-- Mirrored from docs.aletyx.ai/guides/drools-7-eol/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 24 Jun 2026 11:23:24 GMT -->
+<head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Observed architectural, performance, and governance impacts encountered when migrating enterprise Drools 7 systems to community Drools 10.
+">
+      
+      
+        <meta name="author" content="Aletyx, Inc.">
+      
+      
+        <link rel="canonical" href="index.html">
+      
+      
+        <link rel="prev" href="../index.html">
+      
+      
+        <link rel="next" href="../examples/dmn/index.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+    
+    
+      
+        <title>Drools 7 End-of-Life: Migration Realities for Enterprise Systems - Aletyx Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+  
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+  
+  <style>:root{--md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M1%207.775V2.75C1%201.784%201.784%201%202.75%201h5.025c.464%200%20.91.184%201.238.513l6.25%206.25a1.75%201.75%200%200%201%200%202.474l-5.026%205.026a1.75%201.75%200%200%201-2.474%200l-6.25-6.25A1.75%201.75%200%200%201%201%207.775m1.5%200c0%20.066.026.13.073.177l6.25%206.25a.25.25%200%200%200%20.354%200l5.025-5.025a.25.25%200%200%200%200-.354l-6.25-6.25a.25.25%200%200%200-.177-.073H2.75a.25.25%200%200%200-.25.25ZM6%205a1%201%200%201%201%200%202%201%201%200%200%201%200-2%22/%3E%3C/svg%3E');--md-admonition-icon--abstract:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2.5%201.75v11.5c0%20.138.112.25.25.25h3.17a.75.75%200%200%201%200%201.5H2.75A1.75%201.75%200%200%201%201%2013.25V1.75C1%20.784%201.784%200%202.75%200h8.5C12.216%200%2013%20.784%2013%201.75v7.736a.75.75%200%200%201-1.5%200V1.75a.25.25%200%200%200-.25-.25h-8.5a.25.25%200%200%200-.25.25m13.274%209.537zl-4.557%204.45a.75.75%200%200%201-1.055-.008l-1.943-1.95a.75.75%200%200%201%201.062-1.058l1.419%201.425%204.026-3.932a.75.75%200%201%201%201.048%201.074M4.75%204h4.5a.75.75%200%200%201%200%201.5h-4.5a.75.75%200%200%201%200-1.5M4%207.75A.75.75%200%200%201%204.75%207h2a.75.75%200%200%201%200%201.5h-2A.75.75%200%200%201%204%207.75%22/%3E%3C/svg%3E');--md-admonition-icon--info:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M0%208a8%208%200%201%201%2016%200A8%208%200%200%201%200%208m8-6.5a6.5%206.5%200%201%200%200%2013%206.5%206.5%200%200%200%200-13M6.5%207.75A.75.75%200%200%201%207.25%207h1a.75.75%200%200%201%20.75.75v2.75h.25a.75.75%200%200%201%200%201.5h-2a.75.75%200%200%201%200-1.5h.25v-2h-.25a.75.75%200%200%201-.75-.75M8%206a1%201%200%201%201%200-2%201%201%200%200%201%200%202%22/%3E%3C/svg%3E');--md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M3.499.75a.75.75%200%200%201%201.5%200v.996C5.9%202.903%206.793%203.65%207.662%204.376l.24.202c-.036-.694.055-1.422.426-2.163C9.1.873%2010.794-.045%2012.622.26%2014.408.558%2016%201.94%2016%204.25c0%201.278-.954%202.575-2.44%202.734l.146.508.065.22c.203.701.412%201.455.476%202.226.142%201.707-.4%203.03-1.487%203.898C11.714%2014.671%2010.27%2015%208.75%2015h-6a.75.75%200%200%201%200-1.5h1.376a4.5%204.5%200%200%201-.563-1.191%203.84%203.84%200%200%201-.05-2.063%204.65%204.65%200%200%201-2.025-.293.75.75%200%200%201%20.525-1.406c1.357.507%202.376-.006%202.698-.318l.009-.01a.747.747%200%200%201%201.06%200%20.75.75%200%200%201-.012%201.074c-.912.92-.992%201.835-.768%202.586.221.74.745%201.337%201.196%201.621H8.75c1.343%200%202.398-.296%203.074-.836.635-.507%201.036-1.31.928-2.602-.05-.603-.216-1.224-.422-1.93l-.064-.221c-.12-.407-.246-.84-.353-1.29a2.4%202.4%200%200%201-.507-.441%203.1%203.1%200%200%201-.633-1.248.75.75%200%200%201%201.455-.364c.046.185.144.436.31.627.146.168.353.305.712.305.738%200%201.25-.615%201.25-1.25%200-1.47-.95-2.315-2.123-2.51-1.172-.196-2.227.387-2.706%201.345-.46.92-.27%201.774.019%203.062l.042.19.01.05c.348.443.666.949.94%201.553a.75.75%200%201%201-1.365.62c-.553-1.217-1.32-1.94-2.3-2.768L6.7%205.527c-.814-.68-1.75-1.462-2.692-2.619a3.7%203.7%200%200%200-1.023.88c-.406.495-.663%201.036-.722%201.508.116.122.306.21.591.239.388.038.797-.06%201.032-.19a.75.75%200%200%201%20.728%201.31c-.515.287-1.23.439-1.906.373-.682-.067-1.473-.38-1.879-1.193L.75%205.677V5.5c0-.984.48-1.94%201.077-2.664.46-.559%201.05-1.055%201.673-1.353z%22/%3E%3C/svg%3E');--md-admonition-icon--success:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M13.78%204.22a.75.75%200%200%201%200%201.06l-7.25%207.25a.75.75%200%200%201-1.06%200L2.22%209.28a.75.75%200%200%201%20.018-1.042.75.75%200%200%201%201.042-.018L6%2010.94l6.72-6.72a.75.75%200%200%201%201.06%200%22/%3E%3C/svg%3E');--md-admonition-icon--question:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M0%208a8%208%200%201%201%2016%200A8%208%200%200%201%200%208m8-6.5a6.5%206.5%200%201%200%200%2013%206.5%206.5%200%200%200%200-13M6.92%206.085h.001a.749.749%200%201%201-1.342-.67c.169-.339.436-.701.849-.977C6.845%204.16%207.369%204%208%204a2.76%202.76%200%200%201%201.637.525c.503.377.863.965.863%201.725%200%20.448-.115.83-.329%201.15-.205.307-.47.513-.692.662-.109.072-.22.138-.313.195l-.006.004a6%206%200%200%200-.26.16%201%201%200%200%200-.276.245.75.75%200%200%201-1.248-.832c.184-.264.42-.489.692-.661q.154-.1.313-.195l.007-.004c.1-.061.182-.11.258-.161a1%201%200%200%200%20.277-.245C8.96%206.514%209%206.427%209%206.25a.61.61%200%200%200-.262-.525A1.27%201.27%200%200%200%208%205.5c-.369%200-.595.09-.74.187a1%201%200%200%200-.34.398M9%2011a1%201%200%201%201-2%200%201%201%200%200%201%202%200%22/%3E%3C/svg%3E');--md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M6.457%201.047c.659-1.234%202.427-1.234%203.086%200l6.082%2011.378A1.75%201.75%200%200%201%2014.082%2015H1.918a1.75%201.75%200%200%201-1.543-2.575Zm1.763.707a.25.25%200%200%200-.44%200L1.698%2013.132a.25.25%200%200%200%20.22.368h12.164a.25.25%200%200%200%20.22-.368Zm.53%203.996v2.5a.75.75%200%200%201-1.5%200v-2.5a.75.75%200%200%201%201.5%200M9%2011a1%201%200%201%201-2%200%201%201%200%200%201%202%200%22/%3E%3C/svg%3E');--md-admonition-icon--failure:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2.344%202.343za8%208%200%200%201%2011.314%2011.314A8.002%208.002%200%200%201%20.234%2010.089a8%208%200%200%201%202.11-7.746m1.06%2010.253a6.5%206.5%200%201%200%209.108-9.275%206.5%206.5%200%200%200-9.108%209.275M6.03%204.97%208%206.94l1.97-1.97a.749.749%200%200%201%201.275.326.75.75%200%200%201-.215.734L9.06%208l1.97%201.97a.749.749%200%200%201-.326%201.275.75.75%200%200%201-.734-.215L8%209.06l-1.97%201.97a.749.749%200%200%201-1.275-.326.75.75%200%200%201%20.215-.734L6.94%208%204.97%206.03a.75.75%200%200%201%20.018-1.042.75.75%200%200%201%201.042-.018%22/%3E%3C/svg%3E');--md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M9.504.43a1.516%201.516%200%200%201%202.437%201.713L10.415%205.5h2.123c1.57%200%202.346%201.909%201.22%203.004l-7.34%207.142a1.25%201.25%200%200%201-.871.354h-.302a1.25%201.25%200%200%201-1.157-1.723L5.633%2010.5H3.462c-1.57%200-2.346-1.909-1.22-3.004zm1.047%201.074L3.286%208.571A.25.25%200%200%200%203.462%209H6.75a.75.75%200%200%201%20.694%201.034l-1.713%204.188%206.982-6.793A.25.25%200%200%200%2012.538%207H9.25a.75.75%200%200%201-.683-1.06l2.008-4.418.003-.006-.004-.009-.006-.006-.008-.001q-.005%200-.009.004%22/%3E%3C/svg%3E');--md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M4.72.22a.75.75%200%200%201%201.06%200l1%20.999a3.5%203.5%200%200%201%202.441%200l.999-1a.748.748%200%200%201%201.265.332.75.75%200%200%201-.205.729l-.775.776c.616.63.995%201.493.995%202.444v.327q0%20.15-.025.292c.408.14.764.392%201.029.722l1.968-.787a.75.75%200%200%201%20.556%201.392L13%207.258V9h2.25a.75.75%200%200%201%200%201.5H13v.5q-.002.615-.141%201.186l2.17.868a.75.75%200%200%201-.557%201.392l-2.184-.873A5%205%200%200%201%208%2016a5%205%200%200%201-4.288-2.427l-2.183.873a.75.75%200%200%201-.558-1.392l2.17-.868A5%205%200%200%201%203%2011v-.5H.75a.75.75%200%200%201%200-1.5H3V7.258L.971%206.446a.75.75%200%200%201%20.558-1.392l1.967.787c.265-.33.62-.583%201.03-.722a1.7%201.7%200%200%201-.026-.292V4.5c0-.951.38-1.814.995-2.444L4.72%201.28a.75.75%200%200%201%200-1.06m.53%206.28a.75.75%200%200%200-.75.75V11a3.5%203.5%200%201%200%207%200V7.25a.75.75%200%200%200-.75-.75ZM6.173%205h3.654A.17.17%200%200%200%2010%204.827V4.5a2%202%200%201%200-4%200v.327c0%20.096.077.173.173.173%22/%3E%3C/svg%3E');--md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M5%205.782V2.5h-.25a.75.75%200%200%201%200-1.5h6.5a.75.75%200%200%201%200%201.5H11v3.282l3.666%205.76C15.619%2013.04%2014.543%2015%2012.767%2015H3.233c-1.776%200-2.852-1.96-1.899-3.458Zm-2.4%206.565a.75.75%200%200%200%20.633%201.153h9.534a.75.75%200%200%200%20.633-1.153L12.225%2010.5h-8.45ZM9.5%202.5h-3V6c0%20.143-.04.283-.117.403L4.73%209h6.54L9.617%206.403A.75.75%200%200%201%209.5%206Z%22/%3E%3C/svg%3E');--md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M1.75%202.5h10.5a.75.75%200%200%201%200%201.5H1.75a.75.75%200%200%201%200-1.5m4%205h8.5a.75.75%200%200%201%200%201.5h-8.5a.75.75%200%200%201%200-1.5m0%205h8.5a.75.75%200%200%201%200%201.5h-8.5a.75.75%200%200%201%200-1.5M2.5%207.75v6a.75.75%200%200%201-1.5%200v-6a.75.75%200%200%201%201.5%200%22/%3E%3C/svg%3E');}</style>
+
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aspekta:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Aspekta";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/fonts.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/base.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/aletyx.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/footer.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/extra.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/typography.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/images.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/buttons.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/cards.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/layout.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/header.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/code-annotations.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/getting-started.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/universal-annotations.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/cookie-consent.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/404.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/version-selector.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/override.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-EDZLDSFK6T"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-EDZLDSFK6T",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-EDZLDSFK6T",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>if("undefined"!=typeof __md_analytics){var consent=__md_get("__consent");consent&&consent.analytics&&__md_analytics()}</script>
+  
+
+    
+    
+
+
+   <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#drools-7-end-of-life-architectural-and-migration-considerations" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+<div class="top-banner" id="announcement-banner">
+  <span class="banner-badge-small">NEW</span>
+  <strong>Introducing Aletyx Decision Control</strong> — Enterprise decision management with governance and multi-environment deployment
+  <a href="../../decision-control/index.html" class="banner-link">Learn more &rarr;</a>
+  <button type="button" class="close-button" onclick="closeBanner()" aria-label="Close">&times;</button>
+</div>
+
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+
+    <!-- Logo -->
+    <a href="../../index.html"
+       title="Aletyx Documentation"
+       class="md-header__button md-logo"
+       aria-label="Aletyx Documentation"
+       data-md-component="logo">
+      
+  <img src="../../assets/images/A-aletyx-orange.svg" alt="logo">
+
+    </a>
+
+    <!-- Edition selector inserted by JS after logo -->
+
+    <!-- Navigation tabs inline -->
+    
+    <nav class="md-header__nav" aria-label="Tabs">
+      <ul class="md-header__nav-list">
+        
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../getting-started/index.html" class="md-header__nav-link">
+                Getting Started
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../core/index.html" class="md-header__nav-link">
+                Architecture
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../index.html" class="md-header__nav-link md-header__nav-link--active">
+                Guides
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../components/index.html" class="md-header__nav-link">
+                Platform
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../deployment/index.html" class="md-header__nav-link">
+                Deployment
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../reference/index.html" class="md-header__nav-link">
+                Reference
+              </a>
+            </li>
+          
+        
+      </ul>
+    </nav>
+    
+
+    <!-- Spacer -->
+    <div class="md-header__spacer"></div>
+
+    <!-- Search -->
+    
+    <label class="md-header__button md-icon" for="__search">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+    </label>
+    <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    <!-- Theme toggle -->
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+
+    <!-- Mobile menu -->
+    <label class="md-header__button md-icon md-header__hamburger" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+
+  </nav>
+</header>
+
+<!-- Hide default tabs since we render them in header -->
+<style>.md-tabs { display: none !important; }</style>
+
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="Aletyx Documentation" class="md-nav__button md-logo" aria-label="Aletyx Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/A-aletyx-orange.svg" alt="logo">
+
+    </a>
+    Aletyx Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../getting-started/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../core/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drools 7 EOL - What you need to know
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="index.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drools 7 EOL - What you need to know
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Findings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope-and-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope and Methodology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-sensitivity-by-execution-model-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Sensitivity by Execution Model Dependency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architectural-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Impact
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-implications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Implications
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#governance-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Governance Impact
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-patterns-by-execution-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Patterns by Execution Dependency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cost-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost Factors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-path-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Path Options
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently Asked Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources-and-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources and References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../examples/dmn/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Modeling
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decision Modeling
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/dmn/dmn-intro/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction to DMN
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/dmn/dmn-basic-example/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Basic Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/dmn/dmn-accelerators/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DMN Accelerators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/dmn/dmn-basic-deployment/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Basic Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/dmn/dmn-deeper/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Modeling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/dmn/dmn-advanced-deployment/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../core/tutorials/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules Development
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Rules Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/tutorials/first-rule/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First DRL Rule
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/tutorials/decision-tables/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Tables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/drl-example/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DRL Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/decisions/drl/intro-queries/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DRL Queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Process Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/processes/basic-bpmn/lab-rules-orchestration/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules Orchestration Lab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/processes/basic-bpmn/lab-saga/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SAGA Pattern Lab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/processes/advanced-bpmn/lab-eda/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event-Driven Lab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/bpmn-example/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BPMN Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/processes/advanced-bpmn/sub-adhoc/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ad-Hoc Subprocesses
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../getting-started/use-cases/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Industry Use Cases
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_6" id="__nav_4_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Industry Use Cases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/use-cases/compliance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/use-cases/finance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Finance & Banking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/use-cases/healthcare/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/use-cases/human-resources/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Resources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/use-cases/insurance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Insurance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/use-cases/lending/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lending
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/use-cases/manufacturing/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Manufacturing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/use-cases/onboarding/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Onboarding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/use-cases/retail/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retail
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../best-practices/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Best Practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../components/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deployment/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Findings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope-and-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope and Methodology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#problem-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Problem Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-sensitivity-by-execution-model-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Sensitivity by Execution Model Dependency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architectural-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Impact
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-implications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Implications
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#governance-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Governance Impact
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-patterns-by-execution-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Patterns by Execution Dependency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cost-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost Factors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-path-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Path Options
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frequently-asked-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequently Asked Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources-and-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources and References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../index.html" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../index.html" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Guides
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+
+
+
+                  
+
+  <nav class="md-tags" >
+    
+      
+      
+      
+      
+        <span class="md-tag">apache-kie</span>
+      
+    
+      
+      
+      
+      
+        <span class="md-tag">drools</span>
+      
+    
+      
+      
+      
+      
+        <span class="md-tag">drools-7</span>
+      
+    
+      
+      
+      
+      
+        <span class="md-tag">end-of-life</span>
+      
+    
+      
+      
+      
+      
+        <span class="md-tag">enterprise-architecture</span>
+      
+    
+      
+      
+      
+      
+        <span class="md-tag">governance</span>
+      
+    
+      
+      
+      
+      
+        <span class="md-tag">jbpm</span>
+      
+    
+      
+      
+      
+      
+        <span class="md-tag">kogito</span>
+      
+    
+      
+      
+      
+      
+        <span class="md-tag">migration</span>
+      
+    
+      
+      
+      
+      
+        <span class="md-tag">performance</span>
+      
+    
+  </nav>
+
+
+
+<h1 id="drools-7-end-of-life-architectural-and-migration-considerations">Drools 7 End of Life: Architectural and Migration Considerations<a class="headerlink" href="#drools-7-end-of-life-architectural-and-migration-considerations" title="Permanent link">&para;</a></h1>
+<p class="meta-info">
+<strong>Last updated:</strong> February 23, 2026 &nbsp;|&nbsp; <strong>Reading time:</strong> 20 min &nbsp;|&nbsp; <strong>Audience:</strong> Enterprise Architects, Platform Owners, Technical Leads
+</p>
+
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Drools 7 and its enterprise ecosystem (JBoss EAP 7, Business Central, KIE Server, and KieScanner) are reaching end-of-life or extended support only. Organizations running Drools 7 in production face a critical platform decision affecting security posture, compliance status, and operational continuity. The path forward is not straightforward.</p>
+<p>This document analyzes the execution model changes, performance characteristics, governance shifts, and deployment model differences introduced in Drools 10 (the community release distributed through Apache KIE). It is intended for enterprise architects, platform owners, and technical leads responsible for modernization decisions.</p>
+<h3 id="architectural-constraint">Architectural Constraint<a class="headerlink" href="#architectural-constraint" title="Permanent link">&para;</a></h3>
+<p>Community Drools 10 is not a drop-in replacement for orchestration-heavy Drools 7 systems. Session isolation, execution model changes, and removal of <code>startProcess()</code> alter runtime behavior and performance characteristics.</p>
+<p>Drools 10 preserves DRL syntax compatibility but changes the execution and deployment model fundamentally.</p>
+<hr />
+<h2 id="key-findings">Key Findings<a class="headerlink" href="#key-findings" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Not a drop-in replacement</strong>: Community Drools 10 requires architectural changes for systems using BPMN orchestration, shared working memory, or <code>startProcess()</code> patterns.</li>
+<li><strong>Core components removed</strong>: KIE Server, Business Central, KieScanner, and the KJAR runtime deployment model do not exist in community Drools 10.</li>
+<li><strong>Execution model changed</strong>: Drools 10 uses session-per-task isolation; facts are no longer shared implicitly across BPMN tasks.</li>
+<li><strong>Performance impact observed</strong>: 5× to 30× degradation measured in orchestration-heavy BPMN workflows under internal benchmarking conditions.</li>
+<li><strong>Deployment model shifted</strong>: Every rule change requires container image rebuild and redeployment; no runtime hot-deploy capability exists.</li>
+<li><strong>Governance gaps</strong>: Business Central retirement eliminates built-in audit trails, approval workflows, and visual DRL authoring; KIE Sandbox supports only BPMN and DMN editing.</li>
+<li><strong>Migration feasibility varies</strong>: Simple rule-only projects can migrate; orchestration-heavy systems may require fundamental architectural redesign.</li>
+</ul>
+<hr />
+<h2 id="scope-and-methodology">Scope and Methodology<a class="headerlink" href="#scope-and-methodology" title="Permanent link">&para;</a></h2>
+<p>This document synthesizes observed migration patterns, architectural mismatches, and operational challenges encountered across multiple enterprise Drools 7 environments attempting to move to community Drools 10 through Apache KIE.</p>
+<p>Observations reflect real migration efforts across regulated industries and analysis of upstream Apache KIE project changes. Outcomes vary significantly based on orchestration depth, execution model reliance, and governance requirements.</p>
+<h3 id="how-to-read-this-document">How to Read This Document<a class="headerlink" href="#how-to-read-this-document" title="Permanent link">&para;</a></h3>
+<p>Performance characteristics, governance impacts, and migration feasibility described here are observational. They reflect patterns encountered across real systems and may vary based on architecture, workload, and operational constraints.</p>
+<h3 id="about-the-authors">About the Authors<a class="headerlink" href="#about-the-authors" title="Permanent link">&para;</a></h3>
+<p>Aletyx Engineering has led multiple enterprise Drools 7 modernization efforts across regulated industries, including financial services, healthcare, and public sector environments. This document reflects patterns observed during those migrations and analysis of upstream Apache KIE changes.</p>
+<p>The approaches described here informed internal architectural models designed to mitigate orchestration and governance regressions introduced in community Drools 10.</p>
+<hr />
+<h2 id="problem-overview">Problem Overview<a class="headerlink" href="#problem-overview" title="Permanent link">&para;</a></h2>
+<p>Organizations running Drools 7 in production face three possible outcomes:</p>
+<ol>
+<li><strong>Accept unsupported platform risk</strong> — Continue running EOL software with no security patches</li>
+<li><strong>Migrate to an alternative execution model</strong> — Evaluate commercial alternatives or different automation approaches</li>
+<li><strong>Perform architectural redesign for community Drools 10</strong> — Accept the breaking changes and rebuild</li>
+</ol>
+<p>Migration complexity correlates strongly with the degree of dependency on the legacy Drools 7 execution model.</p>
+<h2 id="migration-sensitivity-by-execution-model-dependency">Migration Sensitivity by Execution Model Dependency<a class="headerlink" href="#migration-sensitivity-by-execution-model-dependency" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Execution Model Dependency</th>
+<th>Migration Complexity</th>
+<th>Typical Characteristics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Rule-Only Execution</strong></td>
+<td>Low</td>
+<td>Stateless or simple rule services without BPMN orchestration</td>
+</tr>
+<tr>
+<td><strong>Orchestrated Rule Execution</strong></td>
+<td>Moderate</td>
+<td>BPMN workflows with gateways, multiple tasks, limited shared session reliance</td>
+</tr>
+<tr>
+<td><strong>Session-Dependent Orchestration</strong></td>
+<td>High</td>
+<td>Heavy <code>startProcess()</code> usage, deep shared working memory reliance across task boundaries</td>
+</tr>
+</tbody>
+</table>
+<p>Systems with deep reliance on ruleflow orchestration experience the highest migration risk.</p>
+<h3 id="end-of-life-component-status">End-of-Life Component Status<a class="headerlink" href="#end-of-life-component-status" title="Permanent link">&para;</a></h3>
+<p>The following table summarizes the lifecycle status of components in the Drools 7 ecosystem. Status definitions:</p>
+<ul>
+<li><strong>End of life</strong>: No further releases, patches, or support from the upstream project</li>
+<li><strong>Extended support only</strong>: Vendor support available at additional cost; no new features</li>
+<li><strong>Maintenance mode</strong>: Limited updates; approaching end of active development</li>
+<li><strong>Retired</strong>: Component discontinued; no replacement with equivalent functionality</li>
+<li><strong>Removed in Drools 10</strong>: Capability does not exist in community Drools 10</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Status</th>
+<th>Impact</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Drools 7.x engine</td>
+<td>End of life</td>
+<td>No security patches; last community release July 2023</td>
+<td><a href="https://github.com/apache/incubator-kie-drools/releases">Apache KIE</a></td>
+</tr>
+<tr>
+<td>Java 7</td>
+<td>End of life</td>
+<td>Security vulnerabilities unpatched since 2015</td>
+<td><a href="https://www.oracle.com/java/technologies/java-se-support-roadmap.html">Oracle</a></td>
+</tr>
+<tr>
+<td>Java 8</td>
+<td>Extended support only</td>
+<td>Oracle Premier Support ended Jan 2019; extended until Dec 2030</td>
+<td><a href="https://www.oracle.com/java/technologies/java-se-support-roadmap.html">Oracle</a></td>
+</tr>
+<tr>
+<td>Java 11</td>
+<td>Maintenance mode</td>
+<td>Oracle Premier Support ends Sep 2026; migration to 17/21 required</td>
+<td><a href="https://www.oracle.com/java/technologies/java-se-support-roadmap.html">Oracle</a></td>
+</tr>
+<tr>
+<td>Spring Boot 2.x</td>
+<td>End of life</td>
+<td>No security patches after Nov 2023</td>
+<td><a href="https://spring.io/projects/spring-boot#support">Spring</a></td>
+</tr>
+<tr>
+<td>JBoss EAP 7.x</td>
+<td>Extended support only</td>
+<td>ELS until Oct 2027; no EAP 8+ planned on Drools 7</td>
+<td><a href="https://access.redhat.com/support/policy/updates/jboss_notes/">Red Hat</a></td>
+</tr>
+<tr>
+<td>Business Central</td>
+<td>Retired</td>
+<td>No equivalent in community Drools 10</td>
+<td><a href="https://blog.kie.org/2024/08/the-new-kie-tools-releases.html">Apache KIE Blog</a></td>
+</tr>
+<tr>
+<td>KIE Server</td>
+<td>Retired</td>
+<td>No centralized deployment; no unified REST entry point</td>
+<td><a href="https://blog.kie.org/2024/08/the-new-kie-tools-releases.html">Apache KIE Blog</a></td>
+</tr>
+<tr>
+<td>KJAR deployment model</td>
+<td>Removed in Drools 10</td>
+<td>Runtime deployment via REST eliminated; container rebuild required</td>
+<td><a href="https://docs.kie.apache.org/kogito/latest/migration-guide/index.html">Apache KIE Migration Guide</a>*</td>
+</tr>
+<tr>
+<td>KieScanner</td>
+<td>Removed in Drools 10</td>
+<td>Dynamic KJAR reloading not available</td>
+<td><a href="https://docs.kie.apache.org/kogito/latest/migration-guide/index.html">Apache KIE Migration Guide</a>*</td>
+</tr>
+</tbody>
+</table>
+<p>*URL may shift with future Apache KIE releases.</p>
+<div class="admonition info">
+<p class="admonition-title">JBoss EAP 7 Future</p>
+<p>JBoss EAP 7.x has no planned successor releases that support Drools 7. JBoss EAP 8 targets Jakarta EE 10 and Java 17+, which is not certified with Drools 7.x and introduces dependency incompatibilities. Organizations on EAP 7 face a parallel migration challenge.</p>
+</div>
+<h3 id="security-implications">Security Implications<a class="headerlink" href="#security-implications" title="Permanent link">&para;</a></h3>
+<p>Java 17+ introduces security manager deprecation and module system enforcement that breaks many Drools 7 patterns:</p>
+<ul>
+<li><strong>Security Manager removal</strong>: Java 17 deprecates <code>SecurityManager</code> for removal (JEP 411), and later Java releases progressively restrict or disable its functionality. Drools 7 deployments relying on security policies require rearchitecture.</li>
+<li><strong>Strong encapsulation</strong>: Internal JDK APIs used by reflection-heavy frameworks are no longer accessible by default. Common workarounds (<code>--add-opens</code>) create maintenance burden.</li>
+<li><strong>Dependency chain breakage</strong>: Libraries compatible with Java 8/11 often fail on Java 17+ due to illegal reflective access, requiring version upgrades throughout the dependency tree.</li>
+</ul>
+<h3 id="operational-implications">Operational Implications<a class="headerlink" href="#operational-implications" title="Permanent link">&para;</a></h3>
+<p>End-of-life creates compounding risks:</p>
+<ul>
+<li><strong>Security exposure</strong>: Known vulnerabilities in JBoss EAP 7, Java 8/11, Spring Boot 2.x, and related dependencies will not receive patches or require costly extended support contracts</li>
+<li><strong>Compliance risk</strong>: Regulated industries require supported software stacks; running EOL software may violate audit requirements</li>
+<li><strong>Operational fragility</strong>: Compatible dependencies, documentation, and skilled resources become increasingly difficult to source</li>
+<li><strong>No forward path within 7.x</strong>: No Drools 7.x releases will address emerging Java runtime requirements or security issues</li>
+<li><strong>Java runtime modernization</strong>: Organizations must migrate from Java 7, 8, or 11 to Java 17 or 21 to run community Drools 10, which cascades into dependency upgrades, module system constraints, and security policy changes</li>
+<li><strong>Spring Boot migration</strong>: Spring Boot 2.x end-of-life forces migration to Spring Boot 3.x, which itself requires Java 17+ and introduces breaking changes in configuration and dependencies</li>
+</ul>
+<h3 id="platform-lifecycle-alignment">Platform Lifecycle Alignment<a class="headerlink" href="#platform-lifecycle-alignment" title="Permanent link">&para;</a></h3>
+<p>Drools 7 deployments rarely exist in isolation. The rule engine is typically embedded within a broader platform stack including Java runtimes, application servers, Spring frameworks, CI/CD pipelines, and governance tooling.</p>
+<p>Drools 7 end-of-life often coincides with other platform end-of-life events:</p>
+<ul>
+<li><strong>Java Runtime</strong>: Many Drools 7 systems were certified on Java 7, 8, or 11. Community Drools 10 requires Java 17 or later, with Java 21 recommended for long-term support.</li>
+<li><strong>Spring Framework</strong>: Drools 7 deployments using Spring Boot 2.x face a parallel migration to Spring Boot 3.x with its own breaking changes.</li>
+<li><strong>Application Server</strong>: Enterprise deployments are frequently coupled with JBoss EAP 7.x or WildFly releases targeting older Java versions.</li>
+</ul>
+<p>Treating these end-of-life events independently leads to repeated revalidation cycles, fragmented modernization efforts, and increased operational risk.</p>
+<hr />
+<h2 id="architectural-impact">Architectural Impact<a class="headerlink" href="#architectural-impact" title="Permanent link">&para;</a></h2>
+<p>Migration outcomes are driven more by execution model changes than by rule syntax compatibility.</p>
+<h3 id="what-changed-in-the-drools-10-execution-model">What Changed in the Drools 10 Execution Model?<a class="headerlink" href="#what-changed-in-the-drools-10-execution-model" title="Permanent link">&para;</a></h3>
+<p>The following subsections detail the specific architectural changes introduced in community Drools 10.</p>
+<h3 id="execution-model-changes">Execution Model Changes<a class="headerlink" href="#execution-model-changes" title="Permanent link">&para;</a></h3>
+<p>Community Drools 10 introduces significant architectural changes from Drools 7, particularly in how orchestration and session management function. These changes began with the Drools 8 release<sup id="fnref:drools-8-announcement"><a class="footnote-ref" href="#fn:drools-8-announcement">3</a></sup> and continued through subsequent versions:</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Drools 7</th>
+<th>Community Drools 10</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Execution model</td>
+<td>Shared working memory across tasks</td>
+<td>Isolated session per BPMN task</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>KJAR artifacts deployed to KIE Server at runtime</td>
+<td>Immutable container images with code-generated rule execution</td>
+</tr>
+<tr>
+<td>REST API</td>
+<td>Prebuilt command-based endpoints</td>
+<td>Custom endpoints required per execution path</td>
+</tr>
+<tr>
+<td>Orchestration</td>
+<td><code>startProcess()</code> with BPMN-driven ruleflow</td>
+<td>Code generation with explicit data marshalling</td>
+</tr>
+<tr>
+<td>Governance</td>
+<td>Business Central with visual authoring</td>
+<td>GitOps-based workflows; KIE Sandbox for BPMN/DMN design only</td>
+</tr>
+<tr>
+<td>Build system</td>
+<td>kie-maven-plugin with implicit dependencies</td>
+<td>Explicit dependency management across multiple BOMs</td>
+</tr>
+<tr>
+<td>Dynamic reloading</td>
+<td>KieScanner for runtime KJAR updates</td>
+<td>Not available; container rebuild required</td>
+</tr>
+</tbody>
+</table>
+<h3 id="spring-embedded-model-and-kiescanner">Spring Embedded Model and KieScanner<a class="headerlink" href="#spring-embedded-model-and-kiescanner" title="Permanent link">&para;</a></h3>
+<p>Many Drools 7 deployments use the Spring embedded model, where the rule engine runs within a Spring application context. This pattern often relies on:</p>
+<ul>
+<li><strong>KieScanner</strong>: Automatic polling for updated KJARs in Maven repositories, enabling hot-reload of rules without application restart</li>
+<li><strong>Spring integration</strong>: KieContainer and KieSession beans managed by Spring dependency injection</li>
+<li><strong>Embedded execution</strong>: Rules execute within the same JVM as the application</li>
+</ul>
+<p><strong>Impact in community Drools 10:</strong></p>
+<ul>
+<li>KieScanner is not available; there is no mechanism for runtime KJAR updates</li>
+<li>Rule changes require container image rebuild and redeployment</li>
+<li>Spring Boot 3.x migration is required for Java 17+ compatibility</li>
+<li>Kogito's code generation model replaces the embedded KieContainer pattern</li>
+</ul>
+<h3 id="removal-of-startprocess">Removal of startProcess()<a class="headerlink" href="#removal-of-startprocess" title="Permanent link">&para;</a></h3>
+<p>The <code>startProcess()</code> API has been the foundation of orchestration models since Drools 5. As discussed on the Apache KIE developer mailing list (early 2025)<sup id="fnref:kie-mailing-startprocess"><a class="footnote-ref" href="#fn:kie-mailing-startprocess">9</a></sup>, maintainers indicated that the legacy process runtime supporting this pattern is being phased out in favor of the code-generated execution model.</p>
+<p><strong>Impact:</strong></p>
+<ul>
+<li><code>startProcess()</code> is deprecated and is not supported under the Drools 10/Kogito execution model</li>
+<li>The method signature may remain on shared interfaces due to jBPM dependencies, allowing code to compile but fail at runtime</li>
+<li>As indicated by project maintainers<sup id="fnref:kie-mailing-legacy"><a class="footnote-ref" href="#fn:kie-mailing-legacy">10</a></sup>, the legacy runtime that supported this pattern is no longer being maintained</li>
+</ul>
+<p><strong>Affected Pattern:</strong></p>
+<ol>
+<li>Insert multiple fact objects into working memory</li>
+<li>Invoke a BPMN-driven ruleflow via <code>startProcess()</code></li>
+<li>Rely on shared session state across multiple tasks</li>
+</ol>
+<p>This pattern cannot be replicated directly in community Drools 10 without fundamental redesign.</p>
+<h3 id="session-isolation">Session Isolation<a class="headerlink" href="#session-isolation" title="Permanent link">&para;</a></h3>
+<p>In Drools 7, a single KIE Session managed facts across an entire orchestration. In community Drools 10, each task in the BPMN process creates a new KIE Session. Session-per-task execution changes performance characteristics more than rule complexity.</p>
+<table>
+<thead>
+<tr>
+<th>Drools 7 Behavior</th>
+<th>Community Drools 10 Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Facts flow implicitly between tasks</td>
+<td>Facts must be explicitly mapped as process variables</td>
+</tr>
+<tr>
+<td>Intermediate results remain in working memory</td>
+<td>Intermediate results require explicit extraction and reinsertion</td>
+</tr>
+<tr>
+<td>Global variables accessible across orchestration</td>
+<td>Global scope limited to individual task sessions</td>
+</tr>
+<tr>
+<td>Facts persist throughout process execution</td>
+<td>Facts are created and destroyed per task; not shared</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Practical impact:</strong></p>
+<ul>
+<li>Every fact previously implicitly available must now be explicitly declared as process variables</li>
+<li>Input/output mappings must be defined at each BPMN task node</li>
+<li>Parallel gateways become serial constructs requiring explicit synchronization</li>
+<li>Manual analysis of every task and data dependency is required</li>
+</ul>
+<h3 id="rest-api-elimination">REST API Elimination<a class="headerlink" href="#rest-api-elimination" title="Permanent link">&para;</a></h3>
+<p>KIE Server provided a standardized REST API supporting command-based rule execution. All deployed KJARs were accessible through a single, consistent interface.</p>
+<p><strong>Impact:</strong></p>
+<ul>
+<li>KIE Server is no longer present in community Drools 10</li>
+<li>No centralized prebuilt REST execution server equivalent exists</li>
+<li>Each execution path requires custom endpoint implementation</li>
+<li>Client systems integrated with KIE Server require interface rewrites</li>
+</ul>
+<h3 id="business-central-retirement">Business Central Retirement<a class="headerlink" href="#business-central-retirement" title="Permanent link">&para;</a></h3>
+<p>Business Central provided:</p>
+<ul>
+<li>Visual rule authoring environment for business users</li>
+<li>DRL, guided rules, guided decision tables, and spreadsheet decision table editing</li>
+<li>Deployment pipeline orchestration</li>
+<li>Version management and rollback capabilities</li>
+<li>Test scenario execution</li>
+<li>Audit trails and governance workflows</li>
+<li>Repository management and access control</li>
+</ul>
+<p><strong>Community Drools 10 alternatives:</strong></p>
+<ul>
+<li><strong>KIE Sandbox</strong>: Provides visual editing for BPMN and DMN assets only; does not support DRL, guided rules, guided decision tables, or other rule asset types</li>
+<li><strong>GitOps workflows</strong>: Rules must be managed as source code in version control systems</li>
+<li><strong>CI/CD pipelines</strong>: Deployment becomes pipeline responsibility with container image builds per version</li>
+<li><strong>No direct governance replacement</strong>: Audit trails, approval workflows, and role-based access require custom implementation or third-party solutions</li>
+</ul>
+<p>The limitation of KIE Sandbox to BPMN and DMN editing means organizations with significant DRL or spreadsheet decision table assets have no visual authoring environment in community Drools 10.</p>
+<h3 id="excel-decision-table-changes">Excel Decision Table Changes<a class="headerlink" href="#excel-decision-table-changes" title="Permanent link">&para;</a></h3>
+<p>Excel decision tables require specific file naming conventions in community Drools 10:</p>
+<ul>
+<li>Files must be renamed from <code>.xls</code>, <code>.xlsx</code>, or <code>.csv</code> to <code>.drl.xls</code>, <code>.drl.xlsx</code>, or <code>.drl.csv</code></li>
+<li>In the current Kogito-based build tooling, the build does not fail if files are misnamed</li>
+<li>Rules are silently excluded from compilation with no warnings or errors</li>
+</ul>
+<p>This creates a class of silent failures detectable only through comprehensive test coverage. File naming conventions are documented in the Drools 10 decision tables reference<sup id="fnref:drools-decision-tables"><a class="footnote-ref" href="#fn:drools-decision-tables">4</a></sup>.</p>
+<hr />
+<h2 id="performance-implications">Performance Implications<a class="headerlink" href="#performance-implications" title="Permanent link">&para;</a></h2>
+<h3 id="why-does-drools-10-performance-differ">Why Does Drools 10 Performance Differ?<a class="headerlink" href="#why-does-drools-10-performance-differ" title="Permanent link">&para;</a></h3>
+<p>Performance degradation is not uniform. Some systems experience modest impact; others experience severe nonlinear scaling degradation. The session-per-task model is the dominant variable, but orchestration structure often determines whether degradation is tolerable or catastrophic.</p>
+<h3 id="benchmarking-methodology">Benchmarking Methodology<a class="headerlink" href="#benchmarking-methodology" title="Permanent link">&para;</a></h3>
+<p>Performance observations in this document are based on internal benchmarking conducted by Aletyx Engineering across multiple client environments. Testing focused on orchestration-heavy BPMN workflows with 10+ tasks per process instance, comparing Drools 7 and community Drools 10 under equivalent infrastructure conditions (same hardware, JVM settings, and data volumes). These findings may not apply to simple rule services without BPMN orchestration or to workloads with fundamentally different execution patterns.</p>
+<h3 id="session-per-task-model">Session-per-Task Model<a class="headerlink" href="#session-per-task-model" title="Permanent link">&para;</a></h3>
+<p>The session-per-task execution model produces the most significant performance impact. Where Drools 7 maintained a single session across an orchestration, community Drools 10 creates a new session for each task in the BPMN process.</p>
+<p><strong>Observed impacts:</strong></p>
+<ul>
+<li>Performance degradation of 5× to 30× measured across multiple enterprise environments with orchestration-heavy workflows</li>
+<li>Sub-200ms executions can degrade to multi-second runtimes</li>
+<li>Memory overhead increases due to fact recreation across task boundaries</li>
+<li>CPU utilization increases due to repeated session initialization and garbage collection</li>
+</ul>
+<p><strong>Scaling characteristics:</strong></p>
+<ul>
+<li>Simple orchestration: moderate degradation</li>
+<li>Moderate orchestration: severe degradation</li>
+<li>Heavy orchestration: often fails to meet existing SLA thresholds</li>
+</ul>
+<h3 id="resource-overhead">Resource Overhead<a class="headerlink" href="#resource-overhead" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Drools 7</th>
+<th>Community Drools 10</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sessions per execution</td>
+<td>1</td>
+<td>N (one per task)</td>
+</tr>
+<tr>
+<td>Fact instances</td>
+<td>Shared across tasks</td>
+<td>Created and destroyed per task</td>
+</tr>
+<tr>
+<td>GC pressure</td>
+<td>Baseline (single session lifecycle)</td>
+<td>Elevated due to per-task session lifecycle</td>
+</tr>
+<tr>
+<td>Initialization overhead</td>
+<td>Once per process</td>
+<td>Per task execution</td>
+</tr>
+</tbody>
+</table>
+<h3 id="performance-acceptability-criteria">Performance Acceptability Criteria<a class="headerlink" href="#performance-acceptability-criteria" title="Permanent link">&para;</a></h3>
+<p>Performance degradation may be acceptable when:</p>
+<ul>
+<li>Execution times are well under SLA requirements</li>
+<li>Transaction volumes are low and horizontal scaling is feasible</li>
+<li>Orchestration is simple (limited tasks, no gateways)</li>
+</ul>
+<p>Performance degradation is likely unacceptable when:</p>
+<ul>
+<li>Existing execution times are close to SLA thresholds</li>
+<li>High transaction volumes make horizontal scaling cost-prohibitive</li>
+<li>Complex orchestration multiplies the degradation factor</li>
+</ul>
+<hr />
+<h2 id="governance-impact">Governance Impact<a class="headerlink" href="#governance-impact" title="Permanent link">&para;</a></h2>
+<p>In most migrations, governance and operational gaps surface before functional incompatibilities. Community Drools 10 shifts to a primarily GitOps-based and container release strategy versus the traditional KJAR methods found in Drools 7 which could be released through multiple mechanisms.</p>
+<h3 id="capability-comparison">Capability Comparison<a class="headerlink" href="#capability-comparison" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Business Central</th>
+<th>Community Drools 10</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Role-based access control</td>
+<td>Built-in with LDAP integration</td>
+<td>Must implement in application layer</td>
+</tr>
+<tr>
+<td>Audit trails</td>
+<td>Automatic</td>
+<td>Must implement custom logging</td>
+</tr>
+<tr>
+<td>Version history</td>
+<td>Built-in</td>
+<td>Git history via GitOps workflows</td>
+</tr>
+<tr>
+<td>Deployment approval</td>
+<td>Workflow-based</td>
+<td>Must implement in CI/CD pipelines</td>
+</tr>
+<tr>
+<td>Rule visibility</td>
+<td>Visual, accessible to business users</td>
+<td>Code-based for DRL; KIE Sandbox for BPMN/DMN only</td>
+</tr>
+<tr>
+<td>Asset coverage</td>
+<td>Full (DRL, guided rules, decision tables, BPMN, DMN)</td>
+<td>KIE Sandbox: BPMN and DMN only</td>
+</tr>
+</tbody>
+</table>
+<h3 id="operational-model-shift">Operational Model Shift<a class="headerlink" href="#operational-model-shift" title="Permanent link">&para;</a></h3>
+<p><strong>Drools 7 operational model:</strong></p>
+<ul>
+<li>Business Central as deployment controller</li>
+<li>Hot deployment of KJARs via REST API</li>
+<li>KieScanner for automatic KJAR updates</li>
+<li>Centralized monitoring and management</li>
+<li>Single point of configuration for exception handling</li>
+</ul>
+<p><strong>Community Drools 10 operational model:</strong></p>
+<ul>
+<li>Immutable container images built per version</li>
+<li>CI/CD pipeline-driven deployments</li>
+<li>Container rebuild required for any rule change</li>
+<li>Distributed monitoring across services</li>
+<li>Exception handling implemented per service</li>
+<li>GitOps workflows for version control and deployment</li>
+</ul>
+<h3 id="deployment-model-change">Deployment Model Change<a class="headerlink" href="#deployment-model-change" title="Permanent link">&para;</a></h3>
+<p>The shift from KJAR deployment to container images represents a fundamental operational change:</p>
+<ul>
+<li><strong>Drools 7</strong>: Deploy KJAR artifacts to running KIE Server; use KieScanner for automatic updates</li>
+<li><strong>Community Drools 10</strong>: Build new container image for every rule change; deploy through container orchestration</li>
+</ul>
+<p>This means every rule modification, regardless of scope, requires:</p>
+<ol>
+<li>Code generation and compilation</li>
+<li>Container image build</li>
+<li>Image registry push</li>
+<li>Container deployment/restart</li>
+</ol>
+<h3 id="exception-handling">Exception Handling<a class="headerlink" href="#exception-handling" title="Permanent link">&para;</a></h3>
+<p>The pluggable <code>ConsequenceExceptionHandler</code>, which allowed centralized exception handling at the KIE Server level, is not available in community Drools 10 as KIE Server itself has been retired.</p>
+<p><strong>Implications:</strong></p>
+<ul>
+<li>Exception handling becomes fragmented across services</li>
+<li>Each microservice must implement its own exception capture logic</li>
+<li>Inconsistency risk increases across different team implementations</li>
+<li>Observability and compliance exposure increase without centralized handling</li>
+</ul>
+<hr />
+<h2 id="migration-patterns-by-execution-dependency">Migration Patterns by Execution Dependency<a class="headerlink" href="#migration-patterns-by-execution-dependency" title="Permanent link">&para;</a></h2>
+<p>In practice, projects cluster into patterns based on their execution model dependency.</p>
+<h3 id="migration-effort-by-system-type">Migration Effort by System Type<a class="headerlink" href="#migration-effort-by-system-type" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>System Type</th>
+<th>Typical Characteristics</th>
+<th>Migration Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Rule-Only Systems</strong></td>
+<td>Stateless rule services, no BPMN orchestration, no shared session reliance</td>
+<td>Lower effort; weeks of engineering work</td>
+</tr>
+<tr>
+<td><strong>Orchestrated Systems</strong></td>
+<td>BPMN workflows with gateways, multiple tasks, limited shared session reliance</td>
+<td>Moderate effort; multiple engineering iterations</td>
+</tr>
+<tr>
+<td><strong>Session-Dependent Systems</strong></td>
+<td>Heavy <code>startProcess()</code> usage, deep shared working memory reliance across task boundaries</td>
+<td>High effort; architectural rebuild required</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rule-only-systems">Rule-Only Systems<a class="headerlink" href="#rule-only-systems" title="Permanent link">&para;</a></h3>
+<p><strong>Characteristics:</strong></p>
+<ul>
+<li>Limited BPMN complexity (small number of tasks)</li>
+<li>No parallel or complex gateways</li>
+<li>Minimal reliance on shared working memory</li>
+<li>Clean Java 17 compatibility</li>
+<li>Relatively simple dependency footprints</li>
+<li>No reliance on KieScanner for dynamic updates</li>
+</ul>
+<p><strong>Approach:</strong></p>
+<ul>
+<li>Replace BPMN orchestration with programmatic Java flows</li>
+<li>Implement custom REST endpoints</li>
+<li>Rename Excel decision tables</li>
+<li>Establish unit testing before migration</li>
+<li>Implement container build pipelines</li>
+</ul>
+<h3 id="orchestrated-systems">Orchestrated Systems<a class="headerlink" href="#orchestrated-systems" title="Permanent link">&para;</a></h3>
+<p><strong>Characteristics:</strong></p>
+<ul>
+<li>Heavier use of workflow orchestration (moderate task counts)</li>
+<li>Gateway constructs requiring conditional logic reimplementation</li>
+<li>Multiple processes within a single project</li>
+<li>Reliance on KieScanner or hot-deploy patterns</li>
+</ul>
+<p><strong>Risk factors:</strong></p>
+<ul>
+<li>Loss of visual workflow representation</li>
+<li>Uncertain performance under load</li>
+<li>Increased testing burden</li>
+<li>Potential for subtle behavioral differences</li>
+<li>Container rebuild overhead for rule changes</li>
+</ul>
+<h3 id="session-dependent-systems">Session-Dependent Systems<a class="headerlink" href="#session-dependent-systems" title="Permanent link">&para;</a></h3>
+<p><strong>Characteristics:</strong></p>
+<ul>
+<li>Heavy reliance on <code>startProcess()</code> orchestration with large numbers of tasks</li>
+<li>Deep dependencies on shared working memory across task boundaries</li>
+<li>Facts created dynamically during execution that must persist across tasks</li>
+<li>Performance requirements incompatible with session-per-task model</li>
+<li>Critical dependency on KieScanner for runtime updates</li>
+</ul>
+<p><strong>Options for session-dependent systems:</strong></p>
+<ol>
+<li>Remain on unsupported Drools 7 (security and compliance risk)</li>
+<li>Rebuild using alternative technology (high cost, loss of existing investment)</li>
+<li>Evaluate commercial alternatives that preserve architectural patterns</li>
+</ol>
+<hr />
+<h2 id="testing-considerations">Testing Considerations<a class="headerlink" href="#testing-considerations" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>Passing unit tests does not imply orchestration equivalence.</strong></p>
+</blockquote>
+<p>Common failure modes include:</p>
+<ul>
+<li>Silent rule exclusion due to file naming</li>
+<li>Behavioral drift caused by session isolation</li>
+<li>Performance collapse under load</li>
+<li>Correct results produced through incorrect intermediate states</li>
+</ul>
+<p>Comprehensive integration and performance testing is required to surface these issues.</p>
+<h3 id="silent-failure-detection">Silent Failure Detection<a class="headerlink" href="#silent-failure-detection" title="Permanent link">&para;</a></h3>
+<p>The most challenging testing requirement is detecting silent failures:</p>
+<ul>
+<li>Rules excluded due to file naming (no compilation error)</li>
+<li>Behavioral differences due to session isolation</li>
+<li>Missing fact propagation between tasks</li>
+<li>Performance degradation that only appears under load</li>
+</ul>
+<p><strong>Approach:</strong></p>
+<ul>
+<li>Establish comprehensive test coverage before migration</li>
+<li>Implement automated verification that all expected rules fire</li>
+<li>Create integration tests that validate end-to-end behavior</li>
+<li>Perform load testing with production-representative data volumes</li>
+</ul>
+<h3 id="regression-testing-limitations">Regression Testing Limitations<a class="headerlink" href="#regression-testing-limitations" title="Permanent link">&para;</a></h3>
+<p>Traditional regression testing may be insufficient because:</p>
+<ul>
+<li>Functionality may pass unit tests but fail under orchestration</li>
+<li>Performance characteristics are fundamentally different</li>
+<li>Session isolation may produce correct results with incorrect intermediate states</li>
+<li>Excel decision table changes may introduce subtle data type coercion issues</li>
+</ul>
+<h3 id="test-environment-requirements">Test Environment Requirements<a class="headerlink" href="#test-environment-requirements" title="Permanent link">&para;</a></h3>
+<p>Test environments must account for:</p>
+<ul>
+<li>Java 17 or 21 runtime requirements</li>
+<li>Container-based deployment model</li>
+<li>Custom REST endpoint testing</li>
+<li>Performance baseline comparison with Drools 7</li>
+<li>Container build and deployment pipeline validation</li>
+</ul>
+<hr />
+<h2 id="cost-factors">Cost Factors<a class="headerlink" href="#cost-factors" title="Permanent link">&para;</a></h2>
+<p>Cost multiplier ranges reflect internal estimates based on multiple enterprise migration engagements. Actual values vary based on organizational size, regulatory environment, and existing infrastructure maturity.</p>
+<h3 id="common-underestimations">Common Underestimations<a class="headerlink" href="#common-underestimations" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Impact</th>
+<th>Commonly Underestimated By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Governance reconstruction</td>
+<td>Building audit, versioning, and approval workflows</td>
+<td>3-5×</td>
+</tr>
+<tr>
+<td>Client system integration</td>
+<td>Rewriting API contracts and client code</td>
+<td>2-3×</td>
+</tr>
+<tr>
+<td>Performance optimization</td>
+<td>Addressing degradation to meet SLAs</td>
+<td>2-4×</td>
+</tr>
+<tr>
+<td>Excel decision table remediation</td>
+<td>Fixing naming and silent failures</td>
+<td>2×</td>
+</tr>
+<tr>
+<td>Container pipeline implementation</td>
+<td>Building CI/CD for container-based deployment</td>
+<td>2×</td>
+</tr>
+<tr>
+<td>Regulatory re-approval</td>
+<td>Validating compliant behavior post-migration</td>
+<td>Variable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="organizational-impacts">Organizational Impacts<a class="headerlink" href="#organizational-impacts" title="Permanent link">&para;</a></h3>
+<p><strong>Skills transition:</strong></p>
+<ul>
+<li>Teams must adapt to Quarkus or Spring Boot 3.x development patterns, even if already familiar with earlier versions</li>
+<li>DevOps skills for container orchestration become essential</li>
+<li>Business users lose direct access to rule authoring for non-BPMN/DMN assets</li>
+<li>Container build and deployment expertise required across teams</li>
+</ul>
+<p><strong>Operational responsibility shift:</strong></p>
+<ul>
+<li>Platform teams absorb workflow orchestration responsibilities</li>
+<li>Engineering owns deployment pipelines previously managed by Business Central</li>
+<li>Governance becomes distributed rather than centralized</li>
+<li>Every rule change triggers container rebuild and redeployment</li>
+</ul>
+<hr />
+<h2 id="migration-path-options">Migration Path Options<a class="headerlink" href="#migration-path-options" title="Permanent link">&para;</a></h2>
+<p>The following paths reflect strategies organizations have attempted. None represent a universally correct approach. Outcomes have varied significantly depending on system architecture, governance requirements, and performance sensitivity.</p>
+<h3 id="option-1-community-drools-10-migration">Option 1: Community Drools 10 Migration<a class="headerlink" href="#option-1-community-drools-10-migration" title="Permanent link">&para;</a></h3>
+<p><strong>Approach:</strong></p>
+<ul>
+<li>Accept the architectural constraints of the community release</li>
+<li>Implement workarounds for removed capabilities</li>
+<li>Build custom governance and operational tooling</li>
+<li>Establish container build pipelines for deployment</li>
+</ul>
+<p><strong>We have only seen this succeed when:</strong></p>
+<ul>
+<li>Projects are primarily rules-based with minimal orchestration</li>
+<li>Performance degradation is within acceptable bounds</li>
+<li>Organization has capacity to build and maintain custom tooling</li>
+<li>Container rebuild per rule change is acceptable</li>
+</ul>
+<p><strong>Risks:</strong></p>
+<ul>
+<li>Bug resolution timelines depend on community prioritization and contributor availability</li>
+<li>Performance constraints may block some projects</li>
+<li>Governance gaps require significant custom development</li>
+<li>KIE Sandbox limitations affect rule authoring workflows</li>
+</ul>
+<h3 id="option-2-phased-migration-with-project-triage">Option 2: Phased Migration with Project Triage<a class="headerlink" href="#option-2-phased-migration-with-project-triage" title="Permanent link">&para;</a></h3>
+<p><strong>Approach:</strong></p>
+<ul>
+<li>Classify portfolio by migration feasibility</li>
+<li>Migrate feasible projects first to establish patterns</li>
+<li>Evaluate alternatives for blocked projects</li>
+</ul>
+<p><strong>Migration phases:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Focus</th>
+<th>Relative Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pilot</td>
+<td>Single project end-to-end migration</td>
+<td>Initial iteration to establish patterns</td>
+</tr>
+<tr>
+<td>Rollout</td>
+<td>Feasible projects using pilot patterns</td>
+<td>Incremental, leveraging pilot learnings</td>
+</tr>
+<tr>
+<td>Evaluation</td>
+<td>Determine path for blocked projects</td>
+<td>Ongoing assessment</td>
+</tr>
+</tbody>
+</table>
+<p><strong>We have only seen this succeed when:</strong></p>
+<ul>
+<li>Portfolio has mixed complexity levels</li>
+<li>Organization needs to demonstrate progress while managing risk</li>
+<li>Time allows for iterative learning</li>
+</ul>
+<h3 id="option-3-platform-re-evaluation">Option 3: Platform Re-evaluation<a class="headerlink" href="#option-3-platform-re-evaluation" title="Permanent link">&para;</a></h3>
+<p><strong>Approach:</strong></p>
+<ul>
+<li>Evaluate whether Drools remains the appropriate technology choice</li>
+<li>Consider commercial alternatives or different automation approaches</li>
+<li>Factor in total cost of ownership over 5-10 year horizon</li>
+</ul>
+<p><strong>We have only seen this succeed when:</strong></p>
+<ul>
+<li>Significant portion of portfolio is blocked from migration</li>
+<li>Strategic direction favors commercial support and SLAs</li>
+<li>Governance requirements exceed community release capabilities</li>
+</ul>
+<h3 id="runtime-selection-quarkus-vs-spring-boot">Runtime Selection: Quarkus vs. Spring Boot<a class="headerlink" href="#runtime-selection-quarkus-vs-spring-boot" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Quarkus</th>
+<th>Spring Boot 3.x</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Startup time</td>
+<td>Fast (native compilation)</td>
+<td>Slower</td>
+</tr>
+<tr>
+<td>Memory footprint</td>
+<td>Lower</td>
+<td>Higher</td>
+</tr>
+<tr>
+<td>Throughput (JVM mode)</td>
+<td>Comparable; workload-dependent</td>
+<td>Comparable; workload-dependent</td>
+</tr>
+<tr>
+<td>Ecosystem maturity</td>
+<td>Emerging</td>
+<td>Established</td>
+</tr>
+<tr>
+<td>Developer familiarity</td>
+<td>Limited</td>
+<td>Widespread</td>
+</tr>
+<tr>
+<td>Migration from Spring Boot 2.x</td>
+<td>New framework adoption</td>
+<td>Configuration and dependency updates</td>
+</tr>
+</tbody>
+</table>
+<p>Throughput characteristics are workload-dependent and may vary based on rule complexity, JVM configuration, and infrastructure.</p>
+<p>The orchestration model—not the runtime—is the primary determinant of migration feasibility.</p>
+<hr />
+<h2 id="frequently-asked-questions">Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permanent link">&para;</a></h2>
+<h3 id="is-drools-10-a-drop-in-replacement-for-drools-7">Is Drools 10 a drop-in replacement for Drools 7?<a class="headerlink" href="#is-drools-10-a-drop-in-replacement-for-drools-7" title="Permanent link">&para;</a></h3>
+<p>No. Community Drools 10 introduces breaking changes to orchestration, session management, and deployment models. Systems using <code>startProcess()</code>, shared working memory across BPMN tasks, or KIE Server REST APIs require architectural redesign. Simple rule-only services without orchestration have higher compatibility.</p>
+<h3 id="what-happened-to-kie-server-in-drools-10">What happened to KIE Server in Drools 10?<a class="headerlink" href="#what-happened-to-kie-server-in-drools-10" title="Permanent link">&para;</a></h3>
+<p>KIE Server has been retired and does not exist in community Drools 10. There is no centralized runtime server for deploying and executing KJARs via REST. Each rule service must implement its own REST endpoints, and deployment occurs through container images rather than runtime artifact deployment.</p>
+<h3 id="what-replaces-business-central-in-drools-10">What replaces Business Central in Drools 10?<a class="headerlink" href="#what-replaces-business-central-in-drools-10" title="Permanent link">&para;</a></h3>
+<p>There is no direct replacement. KIE Sandbox provides visual editing for BPMN and DMN assets only. DRL files, guided rules, and decision tables must be managed as source code through GitOps workflows. Audit trails, approval workflows, and role-based access control require custom implementation.</p>
+<h3 id="why-is-drools-10-performance-different">Why is Drools 10 performance different?<a class="headerlink" href="#why-is-drools-10-performance-different" title="Permanent link">&para;</a></h3>
+<p>Community Drools 10 uses session-per-task isolation in BPMN orchestration. Each task creates a new KIE Session with its own working memory, requiring facts to be explicitly marshalled between tasks. As measured in internal benchmarking, this architectural change produces 5× to 30× performance degradation in orchestration-heavy workflows compared to Drools 7's shared session model.</p>
+<h3 id="how-do-i-migrate-from-drools-7-to-drools-10">How do I migrate from Drools 7 to Drools 10?<a class="headerlink" href="#how-do-i-migrate-from-drools-7-to-drools-10" title="Permanent link">&para;</a></h3>
+<p>First, classify your projects by migration feasibility based on orchestration complexity and <code>startProcess()</code> usage. Establish comprehensive test coverage before migration. For feasible projects, replace BPMN orchestration with programmatic flows, implement custom REST endpoints, and establish container build pipelines. Blocked projects require architectural redesign or evaluation of alternative platforms.</p>
+<hr />
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
+<h3 id="platform-status">Platform Status<a class="headerlink" href="#platform-status" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Migration is required for organizations needing security updates and supported dependencies</li>
+<li>The ecosystem is retiring: Business Central, KIE Server, KieScanner, and KJAR deployment model are removed</li>
+<li>Remaining on Drools 7 carries escalating security, compliance, and operational risk</li>
+<li>Java 7, 8, 11 and Spring Boot 2.x end-of-life compounds migration requirements</li>
+</ul>
+<h3 id="architectural-changes">Architectural Changes<a class="headerlink" href="#architectural-changes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>startProcess()</code> removal breaks a common enterprise orchestration pattern</li>
+<li>Session isolation eliminates shared working memory between tasks</li>
+<li>Performance degradation of 5×–30× observed in orchestration-heavy enterprise environments under internal benchmarking conditions</li>
+<li>No centralized prebuilt REST execution server equivalent exists</li>
+<li>Requiring a container rebuild for every rule change is an operational shift, not a tooling detail</li>
+<li>KIE Sandbox supports only BPMN and DMN editing</li>
+</ul>
+<h3 id="migration-constraints">Migration Constraints<a class="headerlink" href="#migration-constraints" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Not all Drools 7 systems can migrate to community Drools 10 without architectural redesign, particularly those with orchestration-heavy usage</li>
+<li>Governance gaps emerge before functional gaps in most migration efforts</li>
+<li>Cost multipliers from governance reconstruction, client integration, and regulatory re-approval are consistently underestimated</li>
+<li>Container-based deployment model changes operational workflows</li>
+</ul>
+<h3 id="patterns-observed-in-successful-evaluations">Patterns Observed in Successful Evaluations<a class="headerlink" href="#patterns-observed-in-successful-evaluations" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Classify portfolio by migration feasibility before committing to timelines</li>
+<li>Establish test coverage before attempting migration</li>
+<li>Validate performance under production-representative load conditions</li>
+<li>Plan for governance reconstruction as a parallel workstream</li>
+<li>Consider total cost of migration versus alternative platform strategies</li>
+</ol>
+<hr />
+<h2 id="glossary">Glossary<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
+<p><strong>Business Central</strong>: Web-based development and governance environment for Drools 7, providing rule authoring, deployment management, and audit capabilities. Retired in community Drools 10.</p>
+<p><strong>Community Drools 10</strong>: Open-source release of Drools 10.x from the Apache KIE project, distinct from commercial distributions.</p>
+<p><strong>DRL (Drools Rule Language)</strong>: Native syntax for defining rules in Drools. DRL syntax compatibility is preserved in community Drools 10, though execution context differs.</p>
+<p><strong>KIE Sandbox</strong>: Web-based design tool in community Drools 10 for creating and editing BPMN and DMN assets. Does not support DRL, guided rules, or decision table editing.</p>
+<p><strong>KIE Server</strong>: Runtime execution server for Drools 7 providing REST APIs for rule execution and KJAR deployment. Retired in community Drools 10.</p>
+<p><strong>KIE Session</strong>: Runtime context in which rules execute. In Drools 7, a single session could span an entire orchestration. In community Drools 10, each task creates a new session.</p>
+<p><strong>KieScanner</strong>: Component in Drools 7 that automatically polls Maven repositories for updated KJARs, enabling hot-reload of rules. Not available in community Drools 10.</p>
+<p><strong>KJAR (Knowledge JAR)</strong>: Packaging format for Drools artifacts deployable to KIE Server at runtime. Removed in community Drools 10.</p>
+<p><strong>Ruleflow Group</strong>: Mechanism for organizing rules into execution groups activated in sequence or through BPMN orchestration.</p>
+<p><strong>startProcess()</strong>: API method for initiating BPMN-driven rule orchestration in Drools 7. Deprecated and not supported under the Drools 10/Kogito execution model.</p>
+<p><strong>Working Memory</strong>: Runtime fact store where objects are inserted for rule evaluation. In Drools 7, shared across tasks. In community Drools 10, each task session has isolated working memory with facts created and destroyed per task.</p>
+<hr />
+<h2 id="sources-and-references">Sources and References<a class="headerlink" href="#sources-and-references" title="Permanent link">&para;</a></h2>
+<hr />
+<style>
+.meta-info {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+</style>
+
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:drools7">
+<p>Apache KIE GitHub – Drools release history: <a href="https://github.com/apache/incubator-kie-drools/releases">https://github.com/apache/incubator-kie-drools/releases</a>&#160;<a class="footnote-backref" href="#fnref:drools7" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:kie-blog">
+<p>Apache KIE Project Blog – KIE Tools releases and roadmap: <a href="https://blog.kie.org/2024/08/the-new-kie-tools-releases.html">https://blog.kie.org/2024/08/the-new-kie-tools-releases.html</a>&#160;<a class="footnote-backref" href="#fnref:kie-blog" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:drools-8-announcement">
+<p>Drools 8 Final: Toward a Modular and Cloud-Native Rule Engine (October 2022): <a href="https://blog.kie.org/2022/10/drools-8-final-toward-a-modular-and-cloud-native-rule-engine.html">https://blog.kie.org/2022/10/drools-8-final-toward-a-modular-and-cloud-native-rule-engine.html</a>&#160;<a class="footnote-backref" href="#fnref:drools-8-announcement" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:drools-decision-tables">
+<p>Drools 10.1.x Decision Tables Reference – File naming conventions: <a href="https://kie.apache.org/docs/10.1.x/drools/drools/language-reference/index.html#decision-tables-con_decision-tables">https://kie.apache.org/docs/10.1.x/drools/drools/language-reference/index.html#decision-tables-con_decision-tables</a>&#160;<a class="footnote-backref" href="#fnref:drools-decision-tables" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:kie-migration">
+<p>Apache KIE Migration Documentation – Kogito migration guide: <a href="https://docs.kie.apache.org/kogito/latest/migration-guide/index.html">https://docs.kie.apache.org/kogito/latest/migration-guide/index.html</a> (URL may shift with future Apache KIE releases)&#160;<a class="footnote-backref" href="#fnref:kie-migration" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:oracle-java">
+<p>Oracle Java SE Support Roadmap: <a href="https://www.oracle.com/java/technologies/java-se-support-roadmap.html">https://www.oracle.com/java/technologies/java-se-support-roadmap.html</a>&#160;<a class="footnote-backref" href="#fnref:oracle-java" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+<li id="fn:spring-support">
+<p>Spring Boot Support Policy: <a href="https://spring.io/projects/spring-boot#support">https://spring.io/projects/spring-boot#support</a>&#160;<a class="footnote-backref" href="#fnref:spring-support" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+</li>
+<li id="fn:redhat-eap">
+<p>Red Hat JBoss EAP Lifecycle Policy: <a href="https://access.redhat.com/support/policy/updates/jboss_notes/">https://access.redhat.com/support/policy/updates/jboss_notes/</a>&#160;<a class="footnote-backref" href="#fnref:redhat-eap" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+</li>
+<li id="fn:kie-mailing-startprocess">
+<p>Apache KIE Developer Mailing List – Discussion on startProcess() deprecation and removal (early 2025): <a href="https://lists.apache.org/thread/t3o842mbj03c57cg5yw3tmo25qf2br1t">https://lists.apache.org/thread/t3o842mbj03c57cg5yw3tmo25qf2br1t</a>&#160;<a class="footnote-backref" href="#fnref:kie-mailing-startprocess" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+</li>
+<li id="fn:kie-mailing-legacy">
+<p>Apache KIE Developer Mailing List – Legacy runtime removal discussion: <a href="https://lists.apache.org/thread/cftmsopn0tgz9prt3ronfkrz9l4llq1o">https://lists.apache.org/thread/cftmsopn0tgz9prt3ronfkrz9l4llq1o</a>&#160;<a class="footnote-backref" href="#fnref:kie-mailing-legacy" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+
+
+
+
+                
+
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+
+        <!-- Footer HTML Template for docs/overrides/partials/footer.html -->
+
+<!-- Previous/Next Navigation -->
+
+<nav class="md-footer__inner md-grid" aria-label="Footer">
+  
+  <a href="../index.html" class="md-footer__link md-footer__link--prev" rel="prev">
+    <div class="md-footer__button md-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/>
+      </svg>
+    </div>
+    <div class="md-footer__title">
+      <span class="md-footer__direction">Previous</span>
+      <span class="md-ellipsis">Guides</span>
+    </div>
+  </a>
+  
+  
+  <a href="../examples/dmn/index.html" class="md-footer__link md-footer__link--next" rel="next">
+    <div class="md-footer__title">
+      <span class="md-footer__direction">Next</span>
+      <span class="md-ellipsis">Decision Model and Notation (DMN)</span>
+    </div>
+    <div class="md-footer__button md-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/>
+      </svg>
+    </div>
+  </a>
+  
+</nav>
+
+
+<div class="md-footer-meta">
+  <div class="aletyx-footer">
+    <div class="footer-column brand-column">
+      <a href="../../../www.aletyx.ai/index.html" class="footer-logo">
+        <img
+          src="../../assets/images/aletyx-logo-all-white.png"
+          alt="Aletyx Logo"
+          class="logo-light footer-logo-img"
+        />
+        <img
+          src="../../assets/images/aletyx-logo-all-white.png"
+          alt="Aletyx Logo"
+          class="logo-dark footer-logo-img"
+        />
+      </a>
+      <p class="footer-tagline">
+        Empowering businesses with AI-driven decision-making and intelligent
+        automation. Scalable solutions for Apache KIE, Drools, and Kogito.
+      </p>
+    </div>
+
+    <div class="footer-column">
+      <ul class="footer-links">
+        <li>
+          <a href="../../../aletyx.ai/build-of-drools/index.html"
+            >Enterprise build of Drools</a
+          >
+        </li>
+        <li>
+          <a href="../../../aletyx.ai/build-of-kogito/index.html"
+            >Enterprise build of Kogito</a
+          >
+        </li>
+        <li><a href="../../../www.aletyx.ai/pricing/index.html">Pricing</a></li>
+      </ul>
+      <h3 class="footer-heading">SERVICES</h3>
+      <ul class="footer-links">
+        <li><a href="../../../aletyx.ai/training-programs/index.html">Training</a></li>
+        <li>
+          <a href="../../../aletyx.ai/consulting-services/index.html">Consulting</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">RESOURCES</h3>
+      <ul class="footer-links">
+        <li>
+          <a href="../../../aletyx.ai/experience/index.html" target="_blank" rel="noopener"
+            >Aletyx Experience
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../index.html" target="_blank" rel="noopener"
+            >Documentation
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li><a href="../../../aletyx.ai/category/blog/index.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">DEVELOPER TOOLS</h3>
+      <ul class="footer-links">
+        <li>
+          <a href="../../../aletyx.ai/experience/index.html" target="_blank" rel="noopener"
+            >vs.code
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../start.aletyx.ai/index.html" target="_blank" rel="noopener"
+            >start.aletyx.ai
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../playground.aletyx.ai/index.html" target="_blank" rel="noopener"
+            >playground.aletyx.ai
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="https://maven-innovator.aletyx.services/" target="_blank" rel="noopener"
+            >maven-innovator.aletyx.services
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a
+            href="https://registry-innovator.aletyx.services/"
+            target="_blank"
+            rel="noopener"
+            >registry-innovator.aletyx.services
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">COMPANY</h3>
+      <ul class="footer-links">
+        <li><a href="../../../aletyx.ai/about-us/index.html">About Us</a></li>
+        <li><a href="../../../aletyx.ai/careers/index.html">Careers</a></li>
+        <li><a href="../../../aletyx.ai/contact-us/index.html">Contact Us</a></li>
+      </ul>
+
+      <div class="social-links">
+        <a
+          href="https://www.linkedin.com/company/aletyx"
+          target="_blank"
+          rel="noopener"
+          aria-label="LinkedIn"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://github.com/aletyx"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://www.youtube.com/@aletyxai"
+          target="_blank"
+          rel="noopener"
+          aria-label="YouTube"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://twitter.com/aletyxai"
+          target="_blank"
+          rel="noopener"
+          aria-label="Twitter"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+            />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="footer-legal">
+      <p>&copy; 2025 Aletyx, Inc. All rights reserved.</p>
+      <div class="legal-links">
+        <a href="../../../www.aletyx.ai/terms/index.html">Terms of Use</a>
+        <a href="../../../www.aletyx.ai/privacy/index.html">Privacy Policy</a>
+        <a href="../../../www.aletyx.ai/cookie-policy/index.html">Cookie Policy</a>
+        <a href="#__consent">Cookie Settings</a>
+      </div>
+    </div>
+  </div>
+</div>
+      
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+      <div class="md-consent" data-md-component="consent" id="__consent" hidden>
+        <div class="md-consent__overlay"></div>
+        <aside class="md-consent__inner">
+          <form class="md-consent__form md-grid md-typeset" name="consent">
+            
+
+
+
+<h4>Cookie consent</h4>
+<p>We use cookies to recognize your repeated visits and preferences, as well as to measure the effectiveness of our documentation and whether users find what they're searching for. With your consent, you're helping us to make our documentation better. <a href="../../legal/cookie-policy/index.html">Learn more in our Cookie Policy</a>.</p>
+<input class="md-toggle" type="checkbox" id="__settings" >
+<div class="md-consent__settings">
+  <ul class="task-list">
+    
+    
+    
+      
+    
+    
+      
+        
+  
+  
+    
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="analytics" >
+      <span class="task-list-indicator"></span>
+      Help us improve our website by collecting anonymous usage data
+    </label>
+  </li>
+
+      
+    
+      
+        
+  
+  
+    
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="marketing" >
+      <span class="task-list-indicator"></span>
+      Allow us to personalize content and ads to improve your browsing experience
+    </label>
+  </li>
+
+      
+    
+      
+        
+  
+  
+    
+    
+      
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="necessary" checked>
+      <span class="task-list-indicator"></span>
+      Necessary Cookies - Enable core functionality - the website cannot function properly without these
+    </label>
+  </li>
+
+      
+    
+  </ul>
+</div>
+<div class="md-consent__controls">
+  
+    
+      <button class="md-button md-button--primary">Accept</button>
+    
+    
+    
+  
+    
+    
+      <button type="reset" class="md-button md-button--primary">Reject</button>
+    
+    
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
+    
+  
+</div>
+          </form>
+        </aside>
+      </div>
+      <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout((function(){document.querySelector("[data-md-component=consent]").hidden=!1}),250);var form=document.forms.consent;for(var action of["submit","reset"])form.addEventListener(action,(function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map((function(e){return[e,!0]})))),location.hash="",location.reload()}))</script>
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.prune", "navigation.instant", "navigation.instant.prefetch", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.top", "navigation.tracking", "search.share", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.copy", "content.code.select", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/js/annotations.js"></script>
+      
+        <script src="../../assets/js/custom.js"></script>
+      
+        <script src="../../assets/js/documentation-fix.js"></script>
+      
+        <script src="../../assets/js/svg-fix.js"></script>
+      
+        <script src="../../assets/js/image-path-fix.js"></script>
+      
+        <script src="../../assets/js/api-examples.js"></script>
+      
+        <script src="../../assets/js/banner-persistent.js"></script>
+      
+        <script src="../../assets/js/cookie-consent.js"></script>
+      
+        <script src="../../assets/js/version-edition-selector.js"></script>
+      
+    
+<script src="../../assets/js/custom.js"></script>
+<script>
+  // Banner close handler
+  function closeBanner() {
+    const banner = document.getElementById('announcement-banner');
+    const containers = document.querySelectorAll('.md-announce, .md-banner');
+    const header = document.querySelector('.md-header');
+    if (banner) {
+      banner.style.display = 'none';
+      localStorage.setItem('aletyx-banner-closed', 'true');
+    }
+    containers.forEach(function(el) {
+      el.style.display = 'none';
+      el.style.height = '0';
+      el.style.overflow = 'hidden';
+    });
+    // Move header to top when banner is closed
+    if (header) header.style.top = '0';
+  }
+
+  // Check and hide banner if previously closed
+  function checkBannerState() {
+    const header = document.querySelector('.md-header');
+    if (localStorage.getItem('aletyx-banner-closed') === 'true') {
+      const banner = document.getElementById('announcement-banner');
+      const containers = document.querySelectorAll('.md-announce, .md-banner');
+      if (banner) banner.style.display = 'none';
+      containers.forEach(function(el) {
+        el.style.display = 'none';
+        el.style.height = '0';
+        el.style.overflow = 'hidden';
+      });
+      // Move header to top when banner is hidden
+      if (header) header.style.top = '0';
+    } else {
+      // Banner visible - header below it
+      if (header) header.style.top = '';
+    }
+  }
+
+  // Run on initial load
+  document.addEventListener('DOMContentLoaded', checkBannerState);
+
+  // Also run immediately in case DOM is already loaded
+  checkBannerState();
+
+  // Handle Material theme instant navigation
+  if (typeof document$ !== 'undefined') {
+    document$.subscribe(function() {
+      checkBannerState();
+    });
+  }
+
+  // Also listen for location changes (fallback)
+  window.addEventListener('popstate', checkBannerState);
+
+  // Theme persistence
+  (function() {
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.attributeName === 'data-md-color-scheme') {
+          var scheme = document.body.getAttribute('data-md-color-scheme');
+          localStorage.setItem('theme', scheme);
+        }
+      });
+    });
+    observer.observe(document.body, { attributes: true });
+
+    var savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.body.setAttribute('data-md-color-scheme', savedTheme);
+    }
+  })();
+</script>
+
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": false, "draggable": false, "openEffect": "none", "closeEffect": "none", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"6d3101840d104089a766ae297ca50f4d","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+
+<!-- Mirrored from docs.aletyx.ai/guides/drools-7-eol/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 24 Jun 2026 11:23:24 GMT -->
+</html>

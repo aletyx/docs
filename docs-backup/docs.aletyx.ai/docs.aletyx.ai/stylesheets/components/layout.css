@@ -1,0 +1,115 @@
+/* Define variables for both light and dark modes */
+:root {
+	--hero-gradient-start: var(--aletyx-black, #000000);
+	--hero-gradient-end: #1a1a1a;
+	--whats-new-bg-color: var(--aletyx-black, #000000);
+}
+
+/* Dark mode variables */
+[data-md-color-scheme="slate"] {
+	--hero-gradient-start: var(--aletyx-black, #000000);
+	--hero-gradient-end: #1a1a1a;
+	--whats-new-bg-color: var(--aletyx-black, #000000);
+}
+
+/* Hero header section with centered content */
+.hero-header {
+	text-align: center;
+	padding: 60px 20px;
+	background: linear-gradient(135deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%);
+	color: white;
+	position: relative;
+	width: 100vw;
+	left: 50%;
+	right: 50%;
+	margin-left: -50vw;
+	margin-right: -50vw;
+	margin-bottom: 40px;
+	box-sizing: border-box;
+}
+
+/* Ensure dark mode uses the same styles without overrides */
+[data-md-color-scheme="slate"] .hero-header {
+	background: linear-gradient(135deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%);
+	color: white;
+}
+
+.hero-header h1 {
+	font-size: 1.875rem;
+	margin-bottom: 0.875rem;
+	color: white;
+}
+
+.hero-header p {
+	font-size: 1rem;
+	max-width: 700px;
+	margin: 0 auto 1.5rem;
+	color: rgba(255, 255, 255, 0.9);
+}
+
+/* Ensure text remains white in dark mode */
+[data-md-color-scheme="slate"] .hero-header h1,
+[data-md-color-scheme="slate"] .hero-header p {
+	color: white;
+}
+
+/* Create a variant with image background for future use */
+.hero-header--image {
+	background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(26, 26, 26, 0.8)),
+		url('../../assets/images/header-bg.jpg');
+	background-size: cover;
+	background-position: center;
+}
+
+/* Center align the button row */
+.md-button-row {
+	display: flex;
+	gap: 16px;
+	margin: 20px 0;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+/* Button styling for dark mode */
+[data-md-color-scheme="slate"] .hero-header .md-button--primary {
+	background-color: var(--aletyx-orange, #FC764C);
+	color: var(--aletyx-white, #FEFEFE);
+	border-color: var(--aletyx-orange, #FC764C);
+}
+
+[data-md-color-scheme="slate"] .hero-header .md-button:not(.md-button--primary) {
+	background-color: transparent;
+	color: white;
+	border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Full-width What's New section */
+.whats-new-section {
+	background-color: var(--whats-new-bg-color);
+	color: white;
+	padding: 5px 5px;
+	text-align: center;
+	margin: 10px 0;
+	width: 100vw;
+	position: relative;
+	left: 50%;
+	right: 50%;
+	margin-left: -50vw;
+	margin-right: -50vw;
+	box-sizing: border-box;
+}
+
+/* Media query for smaller screens */
+@media screen and (max-width: 768px) {
+	.hero-header {
+		padding: 40px 20px;
+	}
+
+	.hero-header h1 {
+		font-size: 2rem;
+	}
+
+	.hero-header p {
+		font-size: 1rem;
+	}
+}

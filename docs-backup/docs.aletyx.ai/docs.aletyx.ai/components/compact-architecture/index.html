@@ -1,0 +1,3456 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  
+<!-- Mirrored from docs.aletyx.ai/components/compact-architecture/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 24 Jun 2026 11:20:55 GMT -->
+<head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Comprehensive documentation for Aletyx Enterprise Build of Apache KIE - the leading enterprise supported platform for the open source projects brought by the Apache KIE (incubating) project for for Drools, jBPM, and Kogito">
+      
+      
+        <meta name="author" content="Aletyx, Inc.">
+      
+      
+        <link rel="canonical" href="index.html">
+      
+      
+        <link rel="prev" href="../kogito/index.html">
+      
+      
+        <link rel="next" href="scaling/index.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+    
+    
+      
+        <title>Adaptive Process Architecture: The Future of Stateful Workflows - Aletyx Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+  
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+  
+  <style>:root{--md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M1%207.775V2.75C1%201.784%201.784%201%202.75%201h5.025c.464%200%20.91.184%201.238.513l6.25%206.25a1.75%201.75%200%200%201%200%202.474l-5.026%205.026a1.75%201.75%200%200%201-2.474%200l-6.25-6.25A1.75%201.75%200%200%201%201%207.775m1.5%200c0%20.066.026.13.073.177l6.25%206.25a.25.25%200%200%200%20.354%200l5.025-5.025a.25.25%200%200%200%200-.354l-6.25-6.25a.25.25%200%200%200-.177-.073H2.75a.25.25%200%200%200-.25.25ZM6%205a1%201%200%201%201%200%202%201%201%200%200%201%200-2%22/%3E%3C/svg%3E');--md-admonition-icon--abstract:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2.5%201.75v11.5c0%20.138.112.25.25.25h3.17a.75.75%200%200%201%200%201.5H2.75A1.75%201.75%200%200%201%201%2013.25V1.75C1%20.784%201.784%200%202.75%200h8.5C12.216%200%2013%20.784%2013%201.75v7.736a.75.75%200%200%201-1.5%200V1.75a.25.25%200%200%200-.25-.25h-8.5a.25.25%200%200%200-.25.25m13.274%209.537zl-4.557%204.45a.75.75%200%200%201-1.055-.008l-1.943-1.95a.75.75%200%200%201%201.062-1.058l1.419%201.425%204.026-3.932a.75.75%200%201%201%201.048%201.074M4.75%204h4.5a.75.75%200%200%201%200%201.5h-4.5a.75.75%200%200%201%200-1.5M4%207.75A.75.75%200%200%201%204.75%207h2a.75.75%200%200%201%200%201.5h-2A.75.75%200%200%201%204%207.75%22/%3E%3C/svg%3E');--md-admonition-icon--info:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M0%208a8%208%200%201%201%2016%200A8%208%200%200%201%200%208m8-6.5a6.5%206.5%200%201%200%200%2013%206.5%206.5%200%200%200%200-13M6.5%207.75A.75.75%200%200%201%207.25%207h1a.75.75%200%200%201%20.75.75v2.75h.25a.75.75%200%200%201%200%201.5h-2a.75.75%200%200%201%200-1.5h.25v-2h-.25a.75.75%200%200%201-.75-.75M8%206a1%201%200%201%201%200-2%201%201%200%200%201%200%202%22/%3E%3C/svg%3E');--md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M3.499.75a.75.75%200%200%201%201.5%200v.996C5.9%202.903%206.793%203.65%207.662%204.376l.24.202c-.036-.694.055-1.422.426-2.163C9.1.873%2010.794-.045%2012.622.26%2014.408.558%2016%201.94%2016%204.25c0%201.278-.954%202.575-2.44%202.734l.146.508.065.22c.203.701.412%201.455.476%202.226.142%201.707-.4%203.03-1.487%203.898C11.714%2014.671%2010.27%2015%208.75%2015h-6a.75.75%200%200%201%200-1.5h1.376a4.5%204.5%200%200%201-.563-1.191%203.84%203.84%200%200%201-.05-2.063%204.65%204.65%200%200%201-2.025-.293.75.75%200%200%201%20.525-1.406c1.357.507%202.376-.006%202.698-.318l.009-.01a.747.747%200%200%201%201.06%200%20.75.75%200%200%201-.012%201.074c-.912.92-.992%201.835-.768%202.586.221.74.745%201.337%201.196%201.621H8.75c1.343%200%202.398-.296%203.074-.836.635-.507%201.036-1.31.928-2.602-.05-.603-.216-1.224-.422-1.93l-.064-.221c-.12-.407-.246-.84-.353-1.29a2.4%202.4%200%200%201-.507-.441%203.1%203.1%200%200%201-.633-1.248.75.75%200%200%201%201.455-.364c.046.185.144.436.31.627.146.168.353.305.712.305.738%200%201.25-.615%201.25-1.25%200-1.47-.95-2.315-2.123-2.51-1.172-.196-2.227.387-2.706%201.345-.46.92-.27%201.774.019%203.062l.042.19.01.05c.348.443.666.949.94%201.553a.75.75%200%201%201-1.365.62c-.553-1.217-1.32-1.94-2.3-2.768L6.7%205.527c-.814-.68-1.75-1.462-2.692-2.619a3.7%203.7%200%200%200-1.023.88c-.406.495-.663%201.036-.722%201.508.116.122.306.21.591.239.388.038.797-.06%201.032-.19a.75.75%200%200%201%20.728%201.31c-.515.287-1.23.439-1.906.373-.682-.067-1.473-.38-1.879-1.193L.75%205.677V5.5c0-.984.48-1.94%201.077-2.664.46-.559%201.05-1.055%201.673-1.353z%22/%3E%3C/svg%3E');--md-admonition-icon--success:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M13.78%204.22a.75.75%200%200%201%200%201.06l-7.25%207.25a.75.75%200%200%201-1.06%200L2.22%209.28a.75.75%200%200%201%20.018-1.042.75.75%200%200%201%201.042-.018L6%2010.94l6.72-6.72a.75.75%200%200%201%201.06%200%22/%3E%3C/svg%3E');--md-admonition-icon--question:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M0%208a8%208%200%201%201%2016%200A8%208%200%200%201%200%208m8-6.5a6.5%206.5%200%201%200%200%2013%206.5%206.5%200%200%200%200-13M6.92%206.085h.001a.749.749%200%201%201-1.342-.67c.169-.339.436-.701.849-.977C6.845%204.16%207.369%204%208%204a2.76%202.76%200%200%201%201.637.525c.503.377.863.965.863%201.725%200%20.448-.115.83-.329%201.15-.205.307-.47.513-.692.662-.109.072-.22.138-.313.195l-.006.004a6%206%200%200%200-.26.16%201%201%200%200%200-.276.245.75.75%200%200%201-1.248-.832c.184-.264.42-.489.692-.661q.154-.1.313-.195l.007-.004c.1-.061.182-.11.258-.161a1%201%200%200%200%20.277-.245C8.96%206.514%209%206.427%209%206.25a.61.61%200%200%200-.262-.525A1.27%201.27%200%200%200%208%205.5c-.369%200-.595.09-.74.187a1%201%200%200%200-.34.398M9%2011a1%201%200%201%201-2%200%201%201%200%200%201%202%200%22/%3E%3C/svg%3E');--md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M6.457%201.047c.659-1.234%202.427-1.234%203.086%200l6.082%2011.378A1.75%201.75%200%200%201%2014.082%2015H1.918a1.75%201.75%200%200%201-1.543-2.575Zm1.763.707a.25.25%200%200%200-.44%200L1.698%2013.132a.25.25%200%200%200%20.22.368h12.164a.25.25%200%200%200%20.22-.368Zm.53%203.996v2.5a.75.75%200%200%201-1.5%200v-2.5a.75.75%200%200%201%201.5%200M9%2011a1%201%200%201%201-2%200%201%201%200%200%201%202%200%22/%3E%3C/svg%3E');--md-admonition-icon--failure:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2.344%202.343za8%208%200%200%201%2011.314%2011.314A8.002%208.002%200%200%201%20.234%2010.089a8%208%200%200%201%202.11-7.746m1.06%2010.253a6.5%206.5%200%201%200%209.108-9.275%206.5%206.5%200%200%200-9.108%209.275M6.03%204.97%208%206.94l1.97-1.97a.749.749%200%200%201%201.275.326.75.75%200%200%201-.215.734L9.06%208l1.97%201.97a.749.749%200%200%201-.326%201.275.75.75%200%200%201-.734-.215L8%209.06l-1.97%201.97a.749.749%200%200%201-1.275-.326.75.75%200%200%201%20.215-.734L6.94%208%204.97%206.03a.75.75%200%200%201%20.018-1.042.75.75%200%200%201%201.042-.018%22/%3E%3C/svg%3E');--md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M9.504.43a1.516%201.516%200%200%201%202.437%201.713L10.415%205.5h2.123c1.57%200%202.346%201.909%201.22%203.004l-7.34%207.142a1.25%201.25%200%200%201-.871.354h-.302a1.25%201.25%200%200%201-1.157-1.723L5.633%2010.5H3.462c-1.57%200-2.346-1.909-1.22-3.004zm1.047%201.074L3.286%208.571A.25.25%200%200%200%203.462%209H6.75a.75.75%200%200%201%20.694%201.034l-1.713%204.188%206.982-6.793A.25.25%200%200%200%2012.538%207H9.25a.75.75%200%200%201-.683-1.06l2.008-4.418.003-.006-.004-.009-.006-.006-.008-.001q-.005%200-.009.004%22/%3E%3C/svg%3E');--md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M4.72.22a.75.75%200%200%201%201.06%200l1%20.999a3.5%203.5%200%200%201%202.441%200l.999-1a.748.748%200%200%201%201.265.332.75.75%200%200%201-.205.729l-.775.776c.616.63.995%201.493.995%202.444v.327q0%20.15-.025.292c.408.14.764.392%201.029.722l1.968-.787a.75.75%200%200%201%20.556%201.392L13%207.258V9h2.25a.75.75%200%200%201%200%201.5H13v.5q-.002.615-.141%201.186l2.17.868a.75.75%200%200%201-.557%201.392l-2.184-.873A5%205%200%200%201%208%2016a5%205%200%200%201-4.288-2.427l-2.183.873a.75.75%200%200%201-.558-1.392l2.17-.868A5%205%200%200%201%203%2011v-.5H.75a.75.75%200%200%201%200-1.5H3V7.258L.971%206.446a.75.75%200%200%201%20.558-1.392l1.967.787c.265-.33.62-.583%201.03-.722a1.7%201.7%200%200%201-.026-.292V4.5c0-.951.38-1.814.995-2.444L4.72%201.28a.75.75%200%200%201%200-1.06m.53%206.28a.75.75%200%200%200-.75.75V11a3.5%203.5%200%201%200%207%200V7.25a.75.75%200%200%200-.75-.75ZM6.173%205h3.654A.17.17%200%200%200%2010%204.827V4.5a2%202%200%201%200-4%200v.327c0%20.096.077.173.173.173%22/%3E%3C/svg%3E');--md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M5%205.782V2.5h-.25a.75.75%200%200%201%200-1.5h6.5a.75.75%200%200%201%200%201.5H11v3.282l3.666%205.76C15.619%2013.04%2014.543%2015%2012.767%2015H3.233c-1.776%200-2.852-1.96-1.899-3.458Zm-2.4%206.565a.75.75%200%200%200%20.633%201.153h9.534a.75.75%200%200%200%20.633-1.153L12.225%2010.5h-8.45ZM9.5%202.5h-3V6c0%20.143-.04.283-.117.403L4.73%209h6.54L9.617%206.403A.75.75%200%200%201%209.5%206Z%22/%3E%3C/svg%3E');--md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M1.75%202.5h10.5a.75.75%200%200%201%200%201.5H1.75a.75.75%200%200%201%200-1.5m4%205h8.5a.75.75%200%200%201%200%201.5h-8.5a.75.75%200%200%201%200-1.5m0%205h8.5a.75.75%200%200%201%200%201.5h-8.5a.75.75%200%200%201%200-1.5M2.5%207.75v6a.75.75%200%200%201-1.5%200v-6a.75.75%200%200%201%201.5%200%22/%3E%3C/svg%3E');}</style>
+
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aspekta:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Aspekta";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/fonts.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/base.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/aletyx.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/footer.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/extra.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/typography.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/images.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/buttons.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/cards.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/layout.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/header.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/code-annotations.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/getting-started.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/universal-annotations.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/cookie-consent.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/404.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/components/version-selector.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/override.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-EDZLDSFK6T"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-EDZLDSFK6T",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-EDZLDSFK6T",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>if("undefined"!=typeof __md_analytics){var consent=__md_get("__consent");consent&&consent.analytics&&__md_analytics()}</script>
+  
+
+    
+    
+
+
+   <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adaptive-process-architecture-the-future-of-stateful-workflows" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+<div class="top-banner" id="announcement-banner">
+  <span class="banner-badge-small">NEW</span>
+  <strong>Introducing Aletyx Decision Control</strong> — Enterprise decision management with governance and multi-environment deployment
+  <a href="../../decision-control/index.html" class="banner-link">Learn more &rarr;</a>
+  <button type="button" class="close-button" onclick="closeBanner()" aria-label="Close">&times;</button>
+</div>
+
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+
+    <!-- Logo -->
+    <a href="../../index.html"
+       title="Aletyx Documentation"
+       class="md-header__button md-logo"
+       aria-label="Aletyx Documentation"
+       data-md-component="logo">
+      
+  <img src="../../assets/images/A-aletyx-orange.svg" alt="logo">
+
+    </a>
+
+    <!-- Edition selector inserted by JS after logo -->
+
+    <!-- Navigation tabs inline -->
+    
+    <nav class="md-header__nav" aria-label="Tabs">
+      <ul class="md-header__nav-list">
+        
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../guides/getting-started/index.html" class="md-header__nav-link">
+                Getting Started
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../core/index.html" class="md-header__nav-link">
+                Architecture
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../guides/index.html" class="md-header__nav-link">
+                Guides
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../index.html" class="md-header__nav-link md-header__nav-link--active">
+                Platform
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../deployment/index.html" class="md-header__nav-link">
+                Deployment
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../reference/index.html" class="md-header__nav-link">
+                Reference
+              </a>
+            </li>
+          
+        
+      </ul>
+    </nav>
+    
+
+    <!-- Spacer -->
+    <div class="md-header__spacer"></div>
+
+    <!-- Search -->
+    
+    <label class="md-header__button md-icon" for="__search">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+    </label>
+    <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    <!-- Theme toggle -->
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+
+    <!-- Mobile menu -->
+    <label class="md-header__button md-icon md-header__hamburger" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+
+  </nav>
+</header>
+
+<!-- Hide default tabs since we render them in header -->
+<style>.md-tabs { display: none !important; }</style>
+
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="Aletyx Documentation" class="md-nav__button md-logo" aria-label="Aletyx Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/A-aletyx-orange.svg" alt="logo">
+
+    </a>
+    Aletyx Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../guides/getting-started/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../core/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../guides/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Platform
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../decision-control/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Control
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decision Control
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decision-control/architecture/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decision-control/setup-and-config/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup & Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decision-control/integration-and-apis/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integration & APIs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decision-control/usage-scenarios/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Scenarios
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decision-control/governance-workflow/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../decision-control/control-tower/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Control Tower
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../decision-control/aws/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AWS Deployment
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../decision-control/faq-troubleshooting/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ & Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../drools/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drools
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Drools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drools/drools-getting-started/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drools/drools-visual-guide/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drools/drools-engine/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rule Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drools/drools-ruleflow/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rule Flows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drools/troubleshooting/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../jbpm/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    jBPM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kogito/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kogito
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_6" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="index.html" class="md-nav__link md-nav__link--active">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adaptive Process Architecture
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_5_6" id="__nav_5_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Adaptive Process Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="scaling/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scaling & Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../playground/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Playground
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_7" id="__nav_5_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Playground
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../playground/components/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../playground/accelerators/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accelerators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../playground/advanced-accelerator/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Accelerators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../playground/dev-deployment/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dev Deployments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../playground/customizing/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Customization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../mcp/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Context Protocol
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_8" id="__nav_5_8_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Model Context Protocol
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp/first-interaction/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Interaction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deployment/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../reference/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction-to-adaptive-process-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction to Adaptive Process Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategic-advantages-of-adaptive-process-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategic Advantages of Adaptive Process Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-components-of-adaptive-process-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Components of Adaptive Process Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started-with-adaptive-process-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting Started with Adaptive Process Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices-for-adaptive-process-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices for Adaptive Process Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../index.html" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../index.html" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Platform
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="index.html" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Adaptive Process Architecture
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+
+
+
+                  
+
+
+
+<h1 id="adaptive-process-architecture-the-future-of-stateful-workflows">Adaptive Process Architecture: The Future of Stateful Workflows<a class="headerlink" href="#adaptive-process-architecture-the-future-of-stateful-workflows" title="Permanent link">&para;</a></h1>
+<h2 id="introduction-to-adaptive-process-architecture">Introduction to Adaptive Process Architecture<a class="headerlink" href="#introduction-to-adaptive-process-architecture" title="Permanent link">&para;</a></h2>
+<p>Adaptive Process Architecture represents a paradigm shift in business process automation design. Moving beyond traditional deployment models, this architecture delivers cloud-native orchestration capabilities while solving the fundamental challenges organizations face with modern process automation.</p>
+<p>Rather than forcing a choice between monolithic simplicity and microservice flexibility, Adaptive Process Architecture creates a third path forward. By strategically co-locating process components within unified deployments while maintaining clean service boundaries, this architecture delivers enterprise-grade reliability with dramatically reduced operational overhead.</p>
+<h2 id="strategic-advantages-of-adaptive-process-architecture">Strategic Advantages of Adaptive Process Architecture<a class="headerlink" href="#strategic-advantages-of-adaptive-process-architecture" title="Permanent link">&para;</a></h2>
+<h3 id="1-optimal-balance-of-scalability-and-operational-simplicity">1. Optimal Balance of Scalability and Operational Simplicity<a class="headerlink" href="#1-optimal-balance-of-scalability-and-operational-simplicity" title="Permanent link">&para;</a></h3>
+<p>While fully distributed architectures may offer theoretical maximum scalability, they introduce exponential complexity in deployment, monitoring, and troubleshooting. Adaptive Process Architecture strikes an optimal balance by intelligently co-locating related services while maintaining clean service boundaries. This approach delivers near-linear scalability with significantly reduced operational overhead.</p>
+<h3 id="2-drastically-reduced-operational-complexity">2. Drastically Reduced Operational Complexity<a class="headerlink" href="#2-drastically-reduced-operational-complexity" title="Permanent link">&para;</a></h3>
+<p>By carefully packaging contextually related services together, the operational overhead is drastically reduced. This makes sophisticated process orchestration accessible to organizations without requiring specialized microservice expertise, while still preserving the cloud-native benefits that modern enterprises demand.</p>
+<h3 id="3-perfect-alignment-with-domain-driven-design-ddd">3. Perfect Alignment with Domain-Driven Design (DDD)<a class="headerlink" href="#3-perfect-alignment-with-domain-driven-design-ddd" title="Permanent link">&para;</a></h3>
+<p>The architecture naturally supports bounded contexts where each business service encapsulates its complete functionality. This alignment with DDD principles ensures that your technical architecture mirrors your business domains, creating a unified language between technical and business stakeholders.</p>
+<h3 id="4-intelligent-context-management">4. Intelligent Context Management<a class="headerlink" href="#4-intelligent-context-management" title="Permanent link">&para;</a></h3>
+<p>Modern business processes require sophisticated context management across multiple components. Co-location dramatically reduces the challenges of distributed context coordination, allowing your processes to maintain rich contextual information without the complexity of distributed state synchronization.</p>
+<h3 id="5-optimized-performance-for-critical-paths">5. Optimized Performance for Critical Paths<a class="headerlink" href="#5-optimized-performance-for-critical-paths" title="Permanent link">&para;</a></h3>
+<p>Critical process operations execute through in-memory or local service calls rather than network calls, delivering significant performance improvements. This architecture ensures consistent response times at cloud speeds for critical operations while maintaining the flexibility of distributed communications where appropriate.</p>
+<h2 id="core-components-of-adaptive-process-architecture">Core Components of Adaptive Process Architecture<a class="headerlink" href="#core-components-of-adaptive-process-architecture" title="Permanent link">&para;</a></h2>
+<p>The following diagram illustrates the key components of Adaptive Process Architecture:</p>
+<p><a class="glightbox" href="images/compact-arch-overall.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img alt="The different components of Adaptive Process Architecture" class="center" src="images/compact-arch-overall.png" /></a></p>
+<p>The table below details the different components, indicating whether they are mandatory or optional:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Type</th>
+<th>Stateful (Adaptive Process Architecture)</th>
+<th>Stateless (Straight Through Processing)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Process models</td>
+<td>BPMN files (.bpmn)</td>
+<td>Mandatory</td>
+<td>Mandatory</td>
+</tr>
+<tr>
+<td>Process Engine</td>
+<td>System</td>
+<td>Mandatory</td>
+<td>Mandatory</td>
+</tr>
+<tr>
+<td>Runtime</td>
+<td>System</td>
+<td>Mandatory</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Data-Index</td>
+<td>Subsystem (add-on)</td>
+<td>Optional</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Data-Audit</td>
+<td>Subsystem (add-on)</td>
+<td>Optional</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Jobs Service</td>
+<td>Subsystem (add-on)</td>
+<td>Mandatory</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>User Tasks</td>
+<td>Subsystem (add-on)</td>
+<td>Mandatory</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Storage (Persistence)</td>
+<td>External system</td>
+<td>Mandatory</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<h3 id="process-definition-models">Process Definition Models<a class="headerlink" href="#process-definition-models" title="Permanent link">&para;</a></h3>
+<p>The Business Process Model and Notation (BPMN) artifacts serve as the digital blueprint of your business processes. These models transcend traditional software specifications by providing a visual representation that both business and technical stakeholders can understand and refine.</p>
+<p>During compilation, the Kogito build chain transforms these models into highly optimized executable code, generating specialized components tailored to your specific process requirements. This bridge between business design and technical implementation enables true collaborative development where domain experts and engineers work with a unified understanding.</p>
+<p>The resulting executable models capture business intent with exceptional fidelity while leveraging modern software engineering principles. This separation of concerns allows business experts to focus on process design while technical teams optimize deployment and integration aspects.</p>
+<h3 id="orchestration-engine">Orchestration Engine<a class="headerlink" href="#orchestration-engine" title="Permanent link">&para;</a></h3>
+<p>The intelligent core of your process applications, powered by the battle-tested jBPM engine reimagined for cloud-native environments. This sophisticated engine coordinates the flow of activities across your entire process landscape, making intelligent routing decisions and dynamically delegating specialized capabilities to purpose-built subsystems.</p>
+<p>The engine handles complex orchestration patterns including parallel execution paths, conditional branching logic, event-driven flow control, and compensation handling - all while maintaining transactional integrity across distributed components. Its modular architecture allows seamless interaction with other specialized subsystems like the Human Collaboration Framework for human-in-the-loop scenarios and the Temporal Event Coordinator for time-based orchestration.</p>
+<p>This next-generation engine combines the reliability of traditional BPM systems with the agility and scalability demands of modern cloud architectures, delivering a foundation that adapts to changing business requirements without sacrificing operational stability.</p>
+<h3 id="cloud-native-runtime">Cloud-Native Runtime<a class="headerlink" href="#cloud-native-runtime" title="Permanent link">&para;</a></h3>
+<p>The Kogito-powered foundation provides essential enterprise capabilities required for mission-critical deployments. This runtime layer elegantly handles cross-cutting concerns including transaction management, API exposure, resource pooling, security controls, and component lifecycle management.</p>
+<p>Starting with its original built on Quarkus platform, the runtime delivers exceptional startup performance and memory efficiency, whether deployed in containers, Kubernetes clusters, or serverless environments. The cloud-native design ensures your process applications can scale elastically to meet demand spikes while maintaining consistent performance characteristics.</p>
+<p>The runtime's modular design allows selective inclusion of capabilities based on your specific requirements, avoiding the bloat of traditional application servers while delivering enhanced resilience through simplified deployment topologies.</p>
+<h3 id="real-time-process-intelligence-data-index">Real-Time Process Intelligence (Data-Index)<a class="headerlink" href="#real-time-process-intelligence-data-index" title="Permanent link">&para;</a></h3>
+<p>The Real-Time Process Intelligence layer provides an always-current view of process execution across your enterprise. Through its event-driven architecture, this component captures incremental state changes from active processes and intelligently computes the current operational state through sophisticated aggregation algorithms.</p>
+<p>By exposing rich GraphQL interfaces, this layer enables both technical and business users to query process data through intuitive, domain-specific queries - unlocking real-time visibility without impacting performance. This capability powers executive dashboards, operational monitoring systems, and advanced analytics while maintaining complete separation from the core execution engine.</p>
+<p><a class="glightbox" href="images/data-index.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img alt="Graphical view of the Data-Index subsystem" class="center" src="images/data-index.png" /></a></p>
+<ol>
+<li>
+<p><strong>Intelligent Process Runtime:</strong></p>
+<ul>
+<li>Functions as the core execution environment within the Adaptive Process Architecture</li>
+<li>Can scale to multiple replicas to handle varying workloads</li>
+<li>Processes business workflows and generates workflow events</li>
+</ul>
+</li>
+<li>
+<p><strong>Workflow Event Flow:</strong></p>
+<ul>
+<li>When a workflow milestone is reached, the Intelligent Process Runtime generates workflow events</li>
+<li>These events carry contextual data about the workflow state and execution</li>
+<li>Events flow directly to the Data Index component for processing</li>
+</ul>
+</li>
+<li>
+<p><strong>Data Index:</strong></p>
+<ul>
+<li>Acts as the central event processing hub</li>
+<li>Captures and indexes all workflow events for efficient querying</li>
+<li>Provides real-time visibility into process execution</li>
+</ul>
+</li>
+<li>
+<p><strong>Data Store:</strong></p>
+<ul>
+<li>External persistent storage that maintains historical workflow data</li>
+<li>Receives synchronized data from the Data Index</li>
+<li>Enables advanced analytics and reporting on process performance</li>
+</ul>
+</li>
+</ol>
+<p>The architecture supports a scalable approach with a single Adaptive Process instance potentially containing many runtime replicas, all utilizing their own synchronization mechanism attached to the data store.</p>
+<h4 id="querying-with-data-index">Querying with Data-Index<a class="headerlink" href="#querying-with-data-index" title="Permanent link">&para;</a></h4>
+<p>Data-Index supports queries through GraphQL. For using the endpoint you just need to explore in your deployment the URI:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>http://localhost:8080/&lt;root-path&gt;/graphql-ui/
+</span></code></pre></div>
+<p>The Data Intelligence Layer can be added to your projects when adding the dependency for the <code>kogito-addons-quarkus-data-index-jpa</code>:</p>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-data-index-jpa<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></div>
+<h3 id="process-history-service-data-audit">Process History Service (Data-Audit)<a class="headerlink" href="#process-history-service-data-audit" title="Permanent link">&para;</a></h3>
+<p>A comprehensive temporal view of process execution that captures the complete evolution of process instances throughout their lifecycle. This component maintains an immutable record of every significant event, creating a trusted audit trail for compliance, analysis, and process improvement initiatives.</p>
+<p>The rich historical data enables authorized users to replay processes from any point in time, understand decision paths, and identify optimization opportunities. Through its flexible GraphQL interface, the Process History Service supports complex historical queries that can reveal insights for performance analysis and business intelligence.</p>
+<p><a class="glightbox" href="images/data-audit.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img alt="Graphical view of the Data-Audit subsystem" class="center" src="images/data-audit.png" /></a></p>
+<ul>
+<li><strong>Data-Audit Common</strong>: Provides the common framework to create implementations.</li>
+<li><strong>Data-Audit</strong>: Provides the wiring to use Data-Audit with Quarkus as colocated service in a deployment.</li>
+<li><strong>Data-Audit JPA Common</strong>: Provides the common extension that doesn't depend on the runtime.</li>
+<li><strong>Data-Audit JPA</strong>: Provides the wiring between the specific implementation and Quarkus System.</li>
+</ul>
+<h4 id="querying-with-data-audit">Querying with Data-Audit<a class="headerlink" href="#querying-with-data-audit" title="Permanent link">&para;</a></h4>
+<p>The way to retrieve information from the Data-Audit is using GraphQL. This way we can abstract how the information is retrieved and allow different needs depending on the user.</p>
+<p>The Path is <code>${HOST}/data-audit/q</code> for sending GraphQL queries.</p>
+<p><strong>Example 1</strong></p>
+<p>Execute a registered query, e.g. <code>GetAllProcessInstancesState</code> with a definition of data fields that should be returned:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Accept: application/json&quot;</span><span class="w"> </span>-s<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://<span class="si">${</span><span class="nv">HOST</span><span class="si">}</span>/data-audit/q/<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="s1">{</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s1">    &quot;query&quot;: &quot;{GetAllProcessInstancesState {eventId, processInstanceId, eventType, eventDate}}&quot;</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s1">}&#39;</span><span class="p">|</span>jq
+</span></code></pre></div>
+<p>To retrieve the GraphQL schema definition including a list of all registered queries, run a GET command to the <code>${HOST}/data-audit/r</code> endpoint. This endpoint can also be used to register new queries.</p>
+<p><strong>Example 2</strong></p>
+<p>Register a new query with a complex data type:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Accept: application/json&quot;</span><span class="w"> </span>-s<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://<span class="si">${</span><span class="nv">HOST</span><span class="si">}</span>/data-audit/r/<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="s1">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s1">    &quot;identifier&quot; : &quot;tests&quot;,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s1">    &quot;graphQLDefinition&quot; : &quot;type EventTest { jobId : String, processInstanceId: String} type Query { tests (pagination: Pagination) : [ EventTest ] } &quot;,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="s1">    &quot;query&quot; : &quot;SELECT o.job_id, o.process_instance_id FROM job_execution_log o&quot;</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="s1">}&#39;</span>
+</span></code></pre></div>
+<p>Once registered, the new query can be executed similar to the pre-registered ones using the <code>${HOST}/data-audit/q</code> endpoint:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Accept: application/json&quot;</span><span class="w"> </span>-s<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://<span class="si">${</span><span class="nv">HOST</span><span class="si">}</span>/data-audit/q/<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="s1">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="s1">    &quot;query&quot;: &quot;{tests {jobId, processInstanceId}}&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="s1">}&#39;</span><span class="p">|</span>jq
+</span></code></pre></div>
+<p>The Data-Audit subsystem provides several powerful capabilities:</p>
+<ul>
+<li>Runs as a colocated service within your Quarkus application</li>
+<li>Includes extension points for customization and integration</li>
+<li>Provides GraphQL querying capabilities for flexible data access</li>
+<li>Supports multiple storage implementations through extension points</li>
+</ul>
+<p>To add the Data-Audit capability to your projects, the following dependencies must be added to your project:</p>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-data-audit<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-data-audit-jpa<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></div>
+<h3 id="temporal-intelligence-coordinator-jobs-service">Temporal Intelligence Coordinator (Jobs Service)<a class="headerlink" href="#temporal-intelligence-coordinator-jobs-service" title="Permanent link">&para;</a></h3>
+<div class="admonition aletyx">
+<p class="admonition-title">Aletyx Enterprise Build of Kogito and Drools Exclusive!</p>
+<p>For Intelligent Process Orchestrations, Aletyx is the only offering focused on the Apache KIE ecosystem on the market capable of scaling multiple pods for your Intelligent Process Orchestrations, not just decisions!</p>
+</div>
+<p>The Temporal Intelligence Coordinator provides sophisticated time-aware orchestration capabilities that ensure reliable execution of scheduled activities across distributed environments. Unlike traditional schedulers, this component maintains execution guarantees even during infrastructure changes, deployment updates, or system restarts.</p>
+<p>Built with cloud-native principles, the coordinator intelligently manages various temporal patterns including interval-based timers, calendar expressions, deadline enforcement, SLA monitoring, and escalation paths. Its transactional integration with the process engine ensures that time-based events reliably trigger appropriate process actions without timing discrepancies or missed events.</p>
+<p><a class="glightbox" href="images/job_service.svg" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img alt="Graphical view of the Jobs Service flow" src="images/job_service.svg" /></a></p>
+<p>The component's architecture uses a specialized message flow that maximizes reliability while minimizing resource consumption:</p>
+<h4 id="definitions">Definitions<a class="headerlink" href="#definitions" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>transport</strong>: the medium used to transfer a message between client component and Temporal Intelligence Coordinator.</li>
+<li><strong>sink</strong>: is the callback endpoint that the client uses.</li>
+<li><strong>storage</strong>: is the persistence layer for the jobs being scheduled by the Temporal Intelligence Coordinator.</li>
+<li><strong>Temporal Intelligence Coordinator</strong>: the main component containing the logic for scheduling a job and storing that data.</li>
+</ul>
+<p>With the Temporal Event Coordinator, events are typically driven with the ISO-8601 standard to drive the events. This standard will handle things like time format, repeatability, and more.</p>
+<p>To enable this capability in your project:</p>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="cm">&lt;!-- Required for the Jobs Service add-on transport tier definition --&gt;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-jobs-management<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-jobs<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="cm">&lt;!-- Required for the Jobs Service add-on storage definition --&gt;</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>jobs-service-storage-jpa<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></div>
+<div class="admonition success">
+<p class="admonition-title">Easy to Incorporate Process Scalability Changes</p>
+<p>The benefit to how Aletyx Enterprise Build of Kogito and Drools is that through the use of Aletyx's Bill of Materials (BOM) is that using migrating to a scalable architecture is changing the BOM associated with your project and now you can enjoy process scalability in Kubernetes environments!</p>
+</div>
+<h3 id="human-collaboration-framework-user-tasks">Human Collaboration Framework (User Tasks)<a class="headerlink" href="#human-collaboration-framework-user-tasks" title="Permanent link">&para;</a></h3>
+<p>A sophisticated system for seamlessly integrating human judgment and expertise into automated processes. This framework implements a comprehensive lifecycle for tasks requiring human input, approval, or decision-making.</p>
+<p>The Human Collaboration Framework manages task assignment strategies, permission controls, and state transitions using a well-defined task lifecycle. It supports rich interaction patterns including attachments, comments, forms, and notifications - creating an intuitive collaboration experience that connects human expertise with automated process execution.</p>
+<p><a class="glightbox" href="wf-usertaks-lifecycle.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img alt="Default User Task life cycle" src="wf-usertaks-lifecycle.png" /></a></p>
+<p>When a process instance reaches a User Task, the framework creates a new task in the <strong>Created</strong> state, which then moves through various states including <strong>Ready</strong>, <strong>Reserved</strong>, and ultimately <strong>Completed</strong> (or alternative terminal states like <strong>Failed</strong> or <strong>Obsolete</strong>).</p>
+<p>With the Default life cycle, when a User Task is initiated in the User Task Subsystem it starts in a <strong>Created</strong> state. At that moment, it automatically passes through the <code>Activate</code> phase that will set the task in <strong>Ready</strong> state, making the task available to the users that are allowed to work with it.</p>
+<p>The task will then remain in <strong>Ready</strong> state until a user claims it, which will make the task pass through the <code>Claim</code> phase making the move into a <strong>Reserved</strong> state and the user will become the owner of the task.</p>
+<p>With the task <strong>Reserved</strong>, the owner will be able to complete the task (<code>Complete</code> phase) that will finally move the task to a <strong>Completed</strong> that will successfully finalize the task allowing the process instance to continue.</p>
+<p>By default, the User Tasks are persisted in memory, but this can be changed to persistent storage by incorporating the following dependency:</p>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.jbpm<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>jbpm-addons-quarkus-usertask-storage-jpa<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></div>
+<h3 id="persistent-context-store-storage">Persistent Context Store (Storage)<a class="headerlink" href="#persistent-context-store-storage" title="Permanent link">&para;</a></h3>
+<p>The resilient foundation that maintains process context across all components. This storage layer ensures process consistency and durability, protecting against data loss even during system failures or maintenance windows.</p>
+<p>Using a relational database, it maintains a consistent view of process state that can be accessed by all components within the architecture. This shared storage approach dramatically simplifies deployment while providing strong data consistency guarantees. The Temporal Event Coordinator and Data Intelligence layer work seamlessly with the Persistent Context Store to provide realtime process updates and interactions.</p>
+<p>The storage layer is optimized for both transactional integrity and query performance, supporting both operational needs and analytical workloads from a single data store. This unified approach eliminates the complexity of data synchronization while providing a single source of truth for all process-related information.</p>
+<h2 id="getting-started-with-adaptive-process-architecture">Getting Started with Adaptive Process Architecture<a class="headerlink" href="#getting-started-with-adaptive-process-architecture" title="Permanent link">&para;</a></h2>
+<p>Implementing this architecture has been streamlined to allow teams to quickly build sophisticated process applications. The following steps will get you started:</p>
+<h3 id="1-create-a-new-quarkus-project-with-the-required-dependencies">1. Create a new Quarkus project with the required dependencies<a class="headerlink" href="#1-create-a-new-quarkus-project-with-the-required-dependencies" title="Permanent link">&para;</a></h3>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="cm">&lt;!-- Core dependencies --&gt;</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>io.quarkus<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>quarkus-resteasy<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>io.quarkus<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>quarkus-resteasy-jackson<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>io.quarkus<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>quarkus-smallrye-openapi<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>io.quarkus<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>quarkus-smallrye-health<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="cm">&lt;!-- For intelligent process orchestration with Adaptive Process Architecture --&gt;</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="cm">&lt;!-- Process and Decisions  --&gt;</span>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.jbpm<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>jbpm-with-drools-quarkus<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>
+</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>kie-addons-quarkus-process-management<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="cm">&lt;!-- Process History Service --&gt;</span>
+</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-data-audit-jpa<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-36"><a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-37"><a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-38"><a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-data-audit<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-39"><a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-40"><a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a><span class="cm">&lt;!-- Temporal Event Coordinator --&gt;</span>
+</span><span id="__span-8-41"><a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-42"><a id="__codelineno-8-42" name="__codelineno-8-42" href="#__codelineno-8-42"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-43"><a id="__codelineno-8-43" name="__codelineno-8-43" href="#__codelineno-8-43"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-jobs-management<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-44"><a id="__codelineno-8-44" name="__codelineno-8-44" href="#__codelineno-8-44"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-45"><a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-46"><a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-47"><a id="__codelineno-8-47" name="__codelineno-8-47" href="#__codelineno-8-47"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-jobs<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-48"><a id="__codelineno-8-48" name="__codelineno-8-48" href="#__codelineno-8-48"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-49"><a id="__codelineno-8-49" name="__codelineno-8-49" href="#__codelineno-8-49"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-50"><a id="__codelineno-8-50" name="__codelineno-8-50" href="#__codelineno-8-50"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-51"><a id="__codelineno-8-51" name="__codelineno-8-51" href="#__codelineno-8-51"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>jobs-service-storage-jpa<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-52"><a id="__codelineno-8-52" name="__codelineno-8-52" href="#__codelineno-8-52"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-53"><a id="__codelineno-8-53" name="__codelineno-8-53" href="#__codelineno-8-53"></a>
+</span><span id="__span-8-54"><a id="__codelineno-8-54" name="__codelineno-8-54" href="#__codelineno-8-54"></a><span class="cm">&lt;!-- Human Collaboration Framework Persisted --&gt;</span>
+</span><span id="__span-8-55"><a id="__codelineno-8-55" name="__codelineno-8-55" href="#__codelineno-8-55"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-56"><a id="__codelineno-8-56" name="__codelineno-8-56" href="#__codelineno-8-56"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.jbpm<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-57"><a id="__codelineno-8-57" name="__codelineno-8-57" href="#__codelineno-8-57"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>jbpm-addons-quarkus-usertask-storage-jpa<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-58"><a id="__codelineno-8-58" name="__codelineno-8-58" href="#__codelineno-8-58"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-59"><a id="__codelineno-8-59" name="__codelineno-8-59" href="#__codelineno-8-59"></a>
+</span><span id="__span-8-60"><a id="__codelineno-8-60" name="__codelineno-8-60" href="#__codelineno-8-60"></a><span class="cm">&lt;!-- Data Intelligence Layer (Optional) --&gt;</span>
+</span><span id="__span-8-61"><a id="__codelineno-8-61" name="__codelineno-8-61" href="#__codelineno-8-61"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-62"><a id="__codelineno-8-62" name="__codelineno-8-62" href="#__codelineno-8-62"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-63"><a id="__codelineno-8-63" name="__codelineno-8-63" href="#__codelineno-8-63"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-data-index-jpa<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-64"><a id="__codelineno-8-64" name="__codelineno-8-64" href="#__codelineno-8-64"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-65"><a id="__codelineno-8-65" name="__codelineno-8-65" href="#__codelineno-8-65"></a>
+</span><span id="__span-8-66"><a id="__codelineno-8-66" name="__codelineno-8-66" href="#__codelineno-8-66"></a><span class="cm">&lt;!-- Database connectivity --&gt;</span>
+</span><span id="__span-8-67"><a id="__codelineno-8-67" name="__codelineno-8-67" href="#__codelineno-8-67"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-68"><a id="__codelineno-8-68" name="__codelineno-8-68" href="#__codelineno-8-68"></a><span class="w">  </span><span class="nt">&lt;groupId&gt;</span>io.quarkus<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-69"><a id="__codelineno-8-69" name="__codelineno-8-69" href="#__codelineno-8-69"></a><span class="w">  </span><span class="nt">&lt;artifactId&gt;</span>quarkus-jdbc-postgresql<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-70"><a id="__codelineno-8-70" name="__codelineno-8-70" href="#__codelineno-8-70"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-71"><a id="__codelineno-8-71" name="__codelineno-8-71" href="#__codelineno-8-71"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-72"><a id="__codelineno-8-72" name="__codelineno-8-72" href="#__codelineno-8-72"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>io.quarkus<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-73"><a id="__codelineno-8-73" name="__codelineno-8-73" href="#__codelineno-8-73"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>quarkus-agroal<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-74"><a id="__codelineno-8-74" name="__codelineno-8-74" href="#__codelineno-8-74"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-75"><a id="__codelineno-8-75" name="__codelineno-8-75" href="#__codelineno-8-75"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-76"><a id="__codelineno-8-76" name="__codelineno-8-76" href="#__codelineno-8-76"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-77"><a id="__codelineno-8-77" name="__codelineno-8-77" href="#__codelineno-8-77"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>kie-addons-quarkus-persistence-jdbc<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-78"><a id="__codelineno-8-78" name="__codelineno-8-78" href="#__codelineno-8-78"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-79"><a id="__codelineno-8-79" name="__codelineno-8-79" href="#__codelineno-8-79"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-80"><a id="__codelineno-8-80" name="__codelineno-8-80" href="#__codelineno-8-80"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-81"><a id="__codelineno-8-81" name="__codelineno-8-81" href="#__codelineno-8-81"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>kogito-addons-quarkus-data-index-persistence-postgresql<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-82"><a id="__codelineno-8-82" name="__codelineno-8-82" href="#__codelineno-8-82"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-83"><a id="__codelineno-8-83" name="__codelineno-8-83" href="#__codelineno-8-83"></a>
+</span><span id="__span-8-84"><a id="__codelineno-8-84" name="__codelineno-8-84" href="#__codelineno-8-84"></a><span class="cm">&lt;!-- Process Diagram SVGs used with Consoles --&gt;</span>
+</span><span id="__span-8-85"><a id="__codelineno-8-85" name="__codelineno-8-85" href="#__codelineno-8-85"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-86"><a id="__codelineno-8-86" name="__codelineno-8-86" href="#__codelineno-8-86"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-87"><a id="__codelineno-8-87" name="__codelineno-8-87" href="#__codelineno-8-87"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>kie-addons-quarkus-process-svg<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-88"><a id="__codelineno-8-88" name="__codelineno-8-88" href="#__codelineno-8-88"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-89"><a id="__codelineno-8-89" name="__codelineno-8-89" href="#__codelineno-8-89"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-90"><a id="__codelineno-8-90" name="__codelineno-8-90" href="#__codelineno-8-90"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-91"><a id="__codelineno-8-91" name="__codelineno-8-91" href="#__codelineno-8-91"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>kie-addons-quarkus-source-files<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-92"><a id="__codelineno-8-92" name="__codelineno-8-92" href="#__codelineno-8-92"></a><span class="nt">&lt;/dependency&gt;</span>
+</span><span id="__span-8-93"><a id="__codelineno-8-93" name="__codelineno-8-93" href="#__codelineno-8-93"></a>
+</span><span id="__span-8-94"><a id="__codelineno-8-94" name="__codelineno-8-94" href="#__codelineno-8-94"></a><span class="cm">&lt;!-- Container image creation --&gt;</span>
+</span><span id="__span-8-95"><a id="__codelineno-8-95" name="__codelineno-8-95" href="#__codelineno-8-95"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-8-96"><a id="__codelineno-8-96" name="__codelineno-8-96" href="#__codelineno-8-96"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>io.quarkus<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-8-97"><a id="__codelineno-8-97" name="__codelineno-8-97" href="#__codelineno-8-97"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>quarkus-container-image-jib<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-8-98"><a id="__codelineno-8-98" name="__codelineno-8-98" href="#__codelineno-8-98"></a><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></div>
+<h3 id="2-configure-your-application-in-applicationproperties">2. Configure your application in <code>application.properties</code><a class="headerlink" href="#2-configure-your-application-in-applicationproperties" title="Permanent link">&para;</a></h3>
+<div class="language-properties highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1"># Core HTTP Configuration</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="na">quarkus.http.port</span><span class="o">=</span><span class="s">8080</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="na">quarkus.http.root-path</span><span class="o">=</span><span class="s">/</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># CORS Configuration</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="na">quarkus.http.cors</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="na">quarkus.http.cors.origins</span><span class="o">=</span><span class="s">*</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="na">quarkus.http.cors.methods</span><span class="o">=</span><span class="s">GET,POST,PUT,DELETE,OPTIONS,PATCH</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="na">quarkus.http.cors.headers</span><span class="o">=</span><span class="s">accept,authorization,content-type,x-requested-with,x-forward-for,content-length,host,origin,referer,Access-Control-Request-Method,Access-Control-Request-Headers</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="na">quarkus.http.cors.exposed-headers</span><span class="o">=</span><span class="s">Content-Disposition,Content-Type</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="na">quarkus.http.cors.access-control-max-age</span><span class="o">=</span><span class="s">24H</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="na">quarkus.http.cors.access-control-allow-credentials</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="c1"># API Documentation</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="na">quarkus.smallrye-openapi.path</span><span class="o">=</span><span class="s">/docs/openapi.json</span>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="na">quarkus.swagger-ui.always-include</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>
+</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-23"><a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="c1"># Logging Configuration</span>
+</span><span id="__span-9-24"><a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-25"><a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a><span class="c1"># Minimize logging for all categories</span>
+</span><span id="__span-9-26"><a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a><span class="na">quarkus.log.level</span><span class="o">=</span><span class="s">WARN</span>
+</span><span id="__span-9-27"><a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a><span class="c1"># Enable more verbose logging for application specific messages</span>
+</span><span id="__span-9-28"><a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a><span class="na">quarkus.log.category.&quot;com.example&quot;.level</span><span class="o">=</span><span class="s">INFO</span>
+</span><span id="__span-9-29"><a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a><span class="c1"># Uncomment for troubleshooting</span>
+</span><span id="__span-9-30"><a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a><span class="c1">#quarkus.log.category.&quot;org.jbpm&quot;.level=DEBUG</span>
+</span><span id="__span-9-31"><a id="__codelineno-9-31" name="__codelineno-9-31" href="#__codelineno-9-31"></a><span class="c1">#quarkus.log.category.&quot;org.kie.kogito&quot;.level=DEBUG</span>
+</span><span id="__span-9-32"><a id="__codelineno-9-32" name="__codelineno-9-32" href="#__codelineno-9-32"></a>
+</span><span id="__span-9-33"><a id="__codelineno-9-33" name="__codelineno-9-33" href="#__codelineno-9-33"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-34"><a id="__codelineno-9-34" name="__codelineno-9-34" href="#__codelineno-9-34"></a><span class="c1"># Database Configuration</span>
+</span><span id="__span-9-35"><a id="__codelineno-9-35" name="__codelineno-9-35" href="#__codelineno-9-35"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-36"><a id="__codelineno-9-36" name="__codelineno-9-36" href="#__codelineno-9-36"></a><span class="c1"># Common database settings</span>
+</span><span id="__span-9-37"><a id="__codelineno-9-37" name="__codelineno-9-37" href="#__codelineno-9-37"></a><span class="na">quarkus.hibernate-orm.database.generation</span><span class="o">=</span><span class="s">update</span>
+</span><span id="__span-9-38"><a id="__codelineno-9-38" name="__codelineno-9-38" href="#__codelineno-9-38"></a><span class="na">quarkus.hibernate-orm.log.sql</span><span class="o">=</span><span class="s">false</span>
+</span><span id="__span-9-39"><a id="__codelineno-9-39" name="__codelineno-9-39" href="#__codelineno-9-39"></a>
+</span><span id="__span-9-40"><a id="__codelineno-9-40" name="__codelineno-9-40" href="#__codelineno-9-40"></a><span class="c1"># Production Database Configuration</span>
+</span><span id="__span-9-41"><a id="__codelineno-9-41" name="__codelineno-9-41" href="#__codelineno-9-41"></a><span class="na">%prod.quarkus.datasource.db-kind</span><span class="o">=</span><span class="s">postgresql</span>
+</span><span id="__span-9-42"><a id="__codelineno-9-42" name="__codelineno-9-42" href="#__codelineno-9-42"></a><span class="na">%prod.quarkus.datasource.username</span><span class="o">=</span><span class="s">${POSTGRESQL_USER:kogito}</span>
+</span><span id="__span-9-43"><a id="__codelineno-9-43" name="__codelineno-9-43" href="#__codelineno-9-43"></a><span class="na">%prod.quarkus.datasource.password</span><span class="o">=</span><span class="s">${POSTGRESQL_PASSWORD:kogito123}</span>
+</span><span id="__span-9-44"><a id="__codelineno-9-44" name="__codelineno-9-44" href="#__codelineno-9-44"></a><span class="na">%prod.quarkus.datasource.jdbc.url</span><span class="o">=</span><span class="s">jdbc:postgresql://${POSTGRESQL_SERVICE}:5432/${POSTGRESQL_DATABASE}</span>
+</span><span id="__span-9-45"><a id="__codelineno-9-45" name="__codelineno-9-45" href="#__codelineno-9-45"></a>
+</span><span id="__span-9-46"><a id="__codelineno-9-46" name="__codelineno-9-46" href="#__codelineno-9-46"></a><span class="c1"># Development Database Configuration</span>
+</span><span id="__span-9-47"><a id="__codelineno-9-47" name="__codelineno-9-47" href="#__codelineno-9-47"></a><span class="na">%dev.quarkus.datasource.db-kind</span><span class="o">=</span><span class="s">postgresql</span>
+</span><span id="__span-9-48"><a id="__codelineno-9-48" name="__codelineno-9-48" href="#__codelineno-9-48"></a><span class="na">%dev.quarkus.datasource.devservices.enabled</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-49"><a id="__codelineno-9-49" name="__codelineno-9-49" href="#__codelineno-9-49"></a><span class="na">%dev.quarkus.datasource.devservices.port</span><span class="o">=</span><span class="s">5432</span>
+</span><span id="__span-9-50"><a id="__codelineno-9-50" name="__codelineno-9-50" href="#__codelineno-9-50"></a>
+</span><span id="__span-9-51"><a id="__codelineno-9-51" name="__codelineno-9-51" href="#__codelineno-9-51"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-52"><a id="__codelineno-9-52" name="__codelineno-9-52" href="#__codelineno-9-52"></a><span class="c1"># Flyway Migration Settings</span>
+</span><span id="__span-9-53"><a id="__codelineno-9-53" name="__codelineno-9-53" href="#__codelineno-9-53"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-54"><a id="__codelineno-9-54" name="__codelineno-9-54" href="#__codelineno-9-54"></a><span class="c1"># Development Mode - Clean start for rapid iteration</span>
+</span><span id="__span-9-55"><a id="__codelineno-9-55" name="__codelineno-9-55" href="#__codelineno-9-55"></a><span class="na">%dev.quarkus.flyway.clean-at-start</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-56"><a id="__codelineno-9-56" name="__codelineno-9-56" href="#__codelineno-9-56"></a><span class="na">%dev.quarkus.flyway.migrate-at-start</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-57"><a id="__codelineno-9-57" name="__codelineno-9-57" href="#__codelineno-9-57"></a><span class="na">%dev.quarkus.flyway.baseline-on-migrate</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-58"><a id="__codelineno-9-58" name="__codelineno-9-58" href="#__codelineno-9-58"></a><span class="na">%dev.quarkus.flyway.out-of-order</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-59"><a id="__codelineno-9-59" name="__codelineno-9-59" href="#__codelineno-9-59"></a><span class="na">%dev.quarkus.flyway.baseline-version</span><span class="o">=</span><span class="s">0.0</span>
+</span><span id="__span-9-60"><a id="__codelineno-9-60" name="__codelineno-9-60" href="#__codelineno-9-60"></a><span class="na">%dev.quarkus.flyway.locations</span><span class="o">=</span><span class="s">classpath:/db/migration,classpath:/db/jobs-service,classpath:/db/data-audit/postgresql</span>
+</span><span id="__span-9-61"><a id="__codelineno-9-61" name="__codelineno-9-61" href="#__codelineno-9-61"></a><span class="na">%dev.quarkus.flyway.table</span><span class="o">=</span><span class="s">FLYWAY_RUNTIME_SERVICE</span>
+</span><span id="__span-9-62"><a id="__codelineno-9-62" name="__codelineno-9-62" href="#__codelineno-9-62"></a><span class="na">%dev.kie.flyway.enabled</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-63"><a id="__codelineno-9-63" name="__codelineno-9-63" href="#__codelineno-9-63"></a>
+</span><span id="__span-9-64"><a id="__codelineno-9-64" name="__codelineno-9-64" href="#__codelineno-9-64"></a><span class="c1"># Production Mode - Safe migration</span>
+</span><span id="__span-9-65"><a id="__codelineno-9-65" name="__codelineno-9-65" href="#__codelineno-9-65"></a><span class="na">%prod.kie.flyway.enabled</span><span class="o">=</span><span class="s">false</span>
+</span><span id="__span-9-66"><a id="__codelineno-9-66" name="__codelineno-9-66" href="#__codelineno-9-66"></a><span class="na">%prod.quarkus.flyway.migrate-at-start</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-67"><a id="__codelineno-9-67" name="__codelineno-9-67" href="#__codelineno-9-67"></a><span class="na">%prod.quarkus.flyway.baseline-on-migrate</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-68"><a id="__codelineno-9-68" name="__codelineno-9-68" href="#__codelineno-9-68"></a><span class="na">%prod.quarkus.flyway.out-of-order</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-69"><a id="__codelineno-9-69" name="__codelineno-9-69" href="#__codelineno-9-69"></a><span class="na">%prod.quarkus.flyway.baseline-version</span><span class="o">=</span><span class="s">0.0</span>
+</span><span id="__span-9-70"><a id="__codelineno-9-70" name="__codelineno-9-70" href="#__codelineno-9-70"></a><span class="na">%prod.quarkus.flyway.locations</span><span class="o">=</span><span class="s">classpath:/db/migration,classpath:/db/jobs-service,classpath:/db/data-audit/postgresql</span>
+</span><span id="__span-9-71"><a id="__codelineno-9-71" name="__codelineno-9-71" href="#__codelineno-9-71"></a><span class="na">%prod.quarkus.flyway.table</span><span class="o">=</span><span class="s">FLYWAY_RUNTIME_SERVICE</span>
+</span><span id="__span-9-72"><a id="__codelineno-9-72" name="__codelineno-9-72" href="#__codelineno-9-72"></a>
+</span><span id="__span-9-73"><a id="__codelineno-9-73" name="__codelineno-9-73" href="#__codelineno-9-73"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-74"><a id="__codelineno-9-74" name="__codelineno-9-74" href="#__codelineno-9-74"></a><span class="c1"># Process Automation Engine</span>
+</span><span id="__span-9-75"><a id="__codelineno-9-75" name="__codelineno-9-75" href="#__codelineno-9-75"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-76"><a id="__codelineno-9-76" name="__codelineno-9-76" href="#__codelineno-9-76"></a><span class="c1"># Enable transactions</span>
+</span><span id="__span-9-77"><a id="__codelineno-9-77" name="__codelineno-9-77" href="#__codelineno-9-77"></a><span class="na">kogito.transactionEnabled</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-78"><a id="__codelineno-9-78" name="__codelineno-9-78" href="#__codelineno-9-78"></a>
+</span><span id="__span-9-79"><a id="__codelineno-9-79" name="__codelineno-9-79" href="#__codelineno-9-79"></a><span class="c1"># Dev users for testing</span>
+</span><span id="__span-9-80"><a id="__codelineno-9-80" name="__codelineno-9-80" href="#__codelineno-9-80"></a><span class="na">%dev.jbpm.devui.users.jdoe.groups</span><span class="o">=</span><span class="s">admin,HR,IT</span>
+</span><span id="__span-9-81"><a id="__codelineno-9-81" name="__codelineno-9-81" href="#__codelineno-9-81"></a><span class="na">%dev.jbpm.devui.users.mscott.groups</span><span class="o">=</span><span class="s">admin,HR,IT</span>
+</span><span id="__span-9-82"><a id="__codelineno-9-82" name="__codelineno-9-82" href="#__codelineno-9-82"></a>
+</span><span id="__span-9-83"><a id="__codelineno-9-83" name="__codelineno-9-83" href="#__codelineno-9-83"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-84"><a id="__codelineno-9-84" name="__codelineno-9-84" href="#__codelineno-9-84"></a><span class="c1"># Jobs Service Configuration</span>
+</span><span id="__span-9-85"><a id="__codelineno-9-85" name="__codelineno-9-85" href="#__codelineno-9-85"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-86"><a id="__codelineno-9-86" name="__codelineno-9-86" href="#__codelineno-9-86"></a><span class="c1"># Run periodic job loading every minute</span>
+</span><span id="__span-9-87"><a id="__codelineno-9-87" name="__codelineno-9-87" href="#__codelineno-9-87"></a><span class="na">kogito.jobs-service.loadJobIntervalInMinutes</span><span class="o">=</span><span class="s">1</span>
+</span><span id="__span-9-88"><a id="__codelineno-9-88" name="__codelineno-9-88" href="#__codelineno-9-88"></a><span class="c1"># Load jobs into the InMemory scheduler that expire within the next 10 minutes</span>
+</span><span id="__span-9-89"><a id="__codelineno-9-89" name="__codelineno-9-89" href="#__codelineno-9-89"></a><span class="na">kogito.jobs-service.schedulerChunkInMinutes</span><span class="o">=</span><span class="s">10</span>
+</span><span id="__span-9-90"><a id="__codelineno-9-90" name="__codelineno-9-90" href="#__codelineno-9-90"></a><span class="c1"># Load jobs into the InMemory scheduler that have expired in the last 5 minutes</span>
+</span><span id="__span-9-91"><a id="__codelineno-9-91" name="__codelineno-9-91" href="#__codelineno-9-91"></a><span class="na">kogito.jobs-service.loadJobFromCurrentTimeIntervalInMinutes</span><span class="o">=</span><span class="s">5</span>
+</span><span id="__span-9-92"><a id="__codelineno-9-92" name="__codelineno-9-92" href="#__codelineno-9-92"></a>
+</span><span id="__span-9-93"><a id="__codelineno-9-93" name="__codelineno-9-93" href="#__codelineno-9-93"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-94"><a id="__codelineno-9-94" name="__codelineno-9-94" href="#__codelineno-9-94"></a><span class="c1"># Security Configuration</span>
+</span><span id="__span-9-95"><a id="__codelineno-9-95" name="__codelineno-9-95" href="#__codelineno-9-95"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-96"><a id="__codelineno-9-96" name="__codelineno-9-96" href="#__codelineno-9-96"></a><span class="c1"># Security disabled by default</span>
+</span><span id="__span-9-97"><a id="__codelineno-9-97" name="__codelineno-9-97" href="#__codelineno-9-97"></a><span class="na">quarkus.oidc.enabled</span><span class="o">=</span><span class="s">false</span>
+</span><span id="__span-9-98"><a id="__codelineno-9-98" name="__codelineno-9-98" href="#__codelineno-9-98"></a><span class="na">quarkus.kogito.security.auth.enabled</span><span class="o">=</span><span class="s">false</span>
+</span><span id="__span-9-99"><a id="__codelineno-9-99" name="__codelineno-9-99" href="#__codelineno-9-99"></a>
+</span><span id="__span-9-100"><a id="__codelineno-9-100" name="__codelineno-9-100" href="#__codelineno-9-100"></a><span class="c1"># OIDC Configuration (commented out, enable when needed)</span>
+</span><span id="__span-9-101"><a id="__codelineno-9-101" name="__codelineno-9-101" href="#__codelineno-9-101"></a><span class="c1">#quarkus.oidc.auth-server-url=https://keycloak.example.com/auth/realms/your-realm</span>
+</span><span id="__span-9-102"><a id="__codelineno-9-102" name="__codelineno-9-102" href="#__codelineno-9-102"></a><span class="c1">#quarkus.oidc.client-id=your-client-id</span>
+</span><span id="__span-9-103"><a id="__codelineno-9-103" name="__codelineno-9-103" href="#__codelineno-9-103"></a><span class="c1">#quarkus.oidc.credentials.secret=your-secret-here</span>
+</span><span id="__span-9-104"><a id="__codelineno-9-104" name="__codelineno-9-104" href="#__codelineno-9-104"></a><span class="c1">#quarkus.oidc.enabled=true</span>
+</span><span id="__span-9-105"><a id="__codelineno-9-105" name="__codelineno-9-105" href="#__codelineno-9-105"></a><span class="c1">#quarkus.oidc.tenant-enabled=true</span>
+</span><span id="__span-9-106"><a id="__codelineno-9-106" name="__codelineno-9-106" href="#__codelineno-9-106"></a><span class="c1">#quarkus.oidc.application-type=service</span>
+</span><span id="__span-9-107"><a id="__codelineno-9-107" name="__codelineno-9-107" href="#__codelineno-9-107"></a><span class="c1">#quarkus.http.auth.permission.authenticated.paths=/*</span>
+</span><span id="__span-9-108"><a id="__codelineno-9-108" name="__codelineno-9-108" href="#__codelineno-9-108"></a><span class="c1">#quarkus.http.auth.permission.authenticated.policy=authenticated</span>
+</span><span id="__span-9-109"><a id="__codelineno-9-109" name="__codelineno-9-109" href="#__codelineno-9-109"></a><span class="c1">#quarkus.http.auth.permission.public.paths=/q/*,/docs/*,/kogito/security/oidc/*</span>
+</span><span id="__span-9-110"><a id="__codelineno-9-110" name="__codelineno-9-110" href="#__codelineno-9-110"></a><span class="c1">#quarkus.http.auth.permission.public.policy=permit</span>
+</span><span id="__span-9-111"><a id="__codelineno-9-111" name="__codelineno-9-111" href="#__codelineno-9-111"></a><span class="c1">#kogito.security.auth.enabled=true</span>
+</span><span id="__span-9-112"><a id="__codelineno-9-112" name="__codelineno-9-112" href="#__codelineno-9-112"></a><span class="c1">#kogito.security.auth.impersonation.allowed-for-roles=managers</span>
+</span><span id="__span-9-113"><a id="__codelineno-9-113" name="__codelineno-9-113" href="#__codelineno-9-113"></a>
+</span><span id="__span-9-114"><a id="__codelineno-9-114" name="__codelineno-9-114" href="#__codelineno-9-114"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-115"><a id="__codelineno-9-115" name="__codelineno-9-115" href="#__codelineno-9-115"></a><span class="c1"># Environment URLs</span>
+</span><span id="__span-9-116"><a id="__codelineno-9-116" name="__codelineno-9-116" href="#__codelineno-9-116"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-117"><a id="__codelineno-9-117" name="__codelineno-9-117" href="#__codelineno-9-117"></a><span class="c1"># Development Environment</span>
+</span><span id="__span-9-118"><a id="__codelineno-9-118" name="__codelineno-9-118" href="#__codelineno-9-118"></a><span class="na">%dev.kogito.service.url</span><span class="o">=</span><span class="s">http://localhost:8080</span>
+</span><span id="__span-9-119"><a id="__codelineno-9-119" name="__codelineno-9-119" href="#__codelineno-9-119"></a><span class="na">%dev.quarkus.devservices.enabled</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-120"><a id="__codelineno-9-120" name="__codelineno-9-120" href="#__codelineno-9-120"></a><span class="na">%dev.quarkus.kogito.devservices.enabled</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-121"><a id="__codelineno-9-121" name="__codelineno-9-121" href="#__codelineno-9-121"></a>
+</span><span id="__span-9-122"><a id="__codelineno-9-122" name="__codelineno-9-122" href="#__codelineno-9-122"></a><span class="c1"># Production Environment</span>
+</span><span id="__span-9-123"><a id="__codelineno-9-123" name="__codelineno-9-123" href="#__codelineno-9-123"></a><span class="na">%prod.quarkus.devservices.enabled</span><span class="o">=</span><span class="s">false</span>
+</span><span id="__span-9-124"><a id="__codelineno-9-124" name="__codelineno-9-124" href="#__codelineno-9-124"></a><span class="na">%prod.quarkus.kogito.devservices.enabled</span><span class="o">=</span><span class="s">false</span>
+</span><span id="__span-9-125"><a id="__codelineno-9-125" name="__codelineno-9-125" href="#__codelineno-9-125"></a><span class="na">%prod.kogito.service.url</span><span class="o">=</span><span class="s">${KOGITO_SERVICE_URL:http://localhost:8080}</span>
+</span><span id="__span-9-126"><a id="__codelineno-9-126" name="__codelineno-9-126" href="#__codelineno-9-126"></a>
+</span><span id="__span-9-127"><a id="__codelineno-9-127" name="__codelineno-9-127" href="#__codelineno-9-127"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-128"><a id="__codelineno-9-128" name="__codelineno-9-128" href="#__codelineno-9-128"></a><span class="c1"># Container Image Configuration</span>
+</span><span id="__span-9-129"><a id="__codelineno-9-129" name="__codelineno-9-129" href="#__codelineno-9-129"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-130"><a id="__codelineno-9-130" name="__codelineno-9-130" href="#__codelineno-9-130"></a><span class="c1"># Kubernetes Deployment</span>
+</span><span id="__span-9-131"><a id="__codelineno-9-131" name="__codelineno-9-131" href="#__codelineno-9-131"></a><span class="na">%prod.quarkus.kubernetes.deploy</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-132"><a id="__codelineno-9-132" name="__codelineno-9-132" href="#__codelineno-9-132"></a><span class="na">%prod.quarkus.kubernetes.deployment-target</span><span class="o">=</span><span class="s">kubernetes</span>
+</span><span id="__span-9-133"><a id="__codelineno-9-133" name="__codelineno-9-133" href="#__codelineno-9-133"></a><span class="na">%prod.quarkus.kubernetes.ingress.expose</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-134"><a id="__codelineno-9-134" name="__codelineno-9-134" href="#__codelineno-9-134"></a><span class="na">%prod.quarkus.kubernetes.ingress.host</span><span class="o">=</span><span class="s">${SERVICE_HOST:example.com}</span>
+</span><span id="__span-9-135"><a id="__codelineno-9-135" name="__codelineno-9-135" href="#__codelineno-9-135"></a>
+</span><span id="__span-9-136"><a id="__codelineno-9-136" name="__codelineno-9-136" href="#__codelineno-9-136"></a><span class="c1"># Container Image Settings</span>
+</span><span id="__span-9-137"><a id="__codelineno-9-137" name="__codelineno-9-137" href="#__codelineno-9-137"></a><span class="na">%prod.quarkus.container-image.build</span><span class="o">=</span><span class="s">true</span>
+</span><span id="__span-9-138"><a id="__codelineno-9-138" name="__codelineno-9-138" href="#__codelineno-9-138"></a><span class="na">%prod.quarkus.container-image.registry</span><span class="o">=</span><span class="s">${CONTAINER_REGISTRY:docker.io}</span>
+</span><span id="__span-9-139"><a id="__codelineno-9-139" name="__codelineno-9-139" href="#__codelineno-9-139"></a><span class="na">%prod.quarkus.container-image.group</span><span class="o">=</span><span class="s">${user.name}</span>
+</span><span id="__span-9-140"><a id="__codelineno-9-140" name="__codelineno-9-140" href="#__codelineno-9-140"></a><span class="na">%prod.quarkus.container-image.name</span><span class="o">=</span><span class="s">process-orchestration</span>
+</span><span id="__span-9-141"><a id="__codelineno-9-141" name="__codelineno-9-141" href="#__codelineno-9-141"></a>
+</span><span id="__span-9-142"><a id="__codelineno-9-142" name="__codelineno-9-142" href="#__codelineno-9-142"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-143"><a id="__codelineno-9-143" name="__codelineno-9-143" href="#__codelineno-9-143"></a><span class="c1"># Event Configuration (Optional)</span>
+</span><span id="__span-9-144"><a id="__codelineno-9-144" name="__codelineno-9-144" href="#__codelineno-9-144"></a><span class="c1">#####################################</span>
+</span><span id="__span-9-145"><a id="__codelineno-9-145" name="__codelineno-9-145" href="#__codelineno-9-145"></a><span class="c1"># Uncomment to enable Kafka event publishing</span>
+</span><span id="__span-9-146"><a id="__codelineno-9-146" name="__codelineno-9-146" href="#__codelineno-9-146"></a><span class="c1"># kafka.bootstrap.servers=localhost:9092</span>
+</span><span id="__span-9-147"><a id="__codelineno-9-147" name="__codelineno-9-147" href="#__codelineno-9-147"></a><span class="c1"># kogito.events.usertasks.enabled=true</span>
+</span><span id="__span-9-148"><a id="__codelineno-9-148" name="__codelineno-9-148" href="#__codelineno-9-148"></a><span class="c1"># kogito.events.variables.enabled=true</span>
+</span><span id="__span-9-149"><a id="__codelineno-9-149" name="__codelineno-9-149" href="#__codelineno-9-149"></a><span class="c1"># kogito.events.processinstances.enabled=true</span>
+</span><span id="__span-9-150"><a id="__codelineno-9-150" name="__codelineno-9-150" href="#__codelineno-9-150"></a><span class="c1"># mp.messaging.outgoing.kogito-processinstances-events.connector=smallrye-kafka</span>
+</span><span id="__span-9-151"><a id="__codelineno-9-151" name="__codelineno-9-151" href="#__codelineno-9-151"></a><span class="c1"># mp.messaging.outgoing.kogito-processinstances-events.topic=kogito-processinstances-events</span>
+</span><span id="__span-9-152"><a id="__codelineno-9-152" name="__codelineno-9-152" href="#__codelineno-9-152"></a><span class="c1"># mp.messaging.outgoing.kogito-processinstances-events.value.serializer=org.apache.kafka.common.serialization.StringSerializer</span>
+</span><span id="__span-9-153"><a id="__codelineno-9-153" name="__codelineno-9-153" href="#__codelineno-9-153"></a><span class="c1"># mp.messaging.outgoing.kogito-usertaskinstances-events.connector=smallrye-kafka</span>
+</span><span id="__span-9-154"><a id="__codelineno-9-154" name="__codelineno-9-154" href="#__codelineno-9-154"></a><span class="c1"># mp.messaging.outgoing.kogito-usertaskinstances-events.topic=kogito-usertaskinstances-events</span>
+</span><span id="__span-9-155"><a id="__codelineno-9-155" name="__codelineno-9-155" href="#__codelineno-9-155"></a><span class="c1"># mp.messaging.outgoing.kogito-usertaskinstances-events.value.serializer=org.apache.kafka.common.serialization.StringSerializer</span>
+</span><span id="__span-9-156"><a id="__codelineno-9-156" name="__codelineno-9-156" href="#__codelineno-9-156"></a><span class="c1"># mp.messaging.outgoing.kogito-variables-events.connector=smallrye-kafka</span>
+</span><span id="__span-9-157"><a id="__codelineno-9-157" name="__codelineno-9-157" href="#__codelineno-9-157"></a><span class="c1"># mp.messaging.outgoing.kogito-variables-events.topic=kogito-variables-events</span>
+</span><span id="__span-9-158"><a id="__codelineno-9-158" name="__codelineno-9-158" href="#__codelineno-9-158"></a><span class="c1"># mp.messaging.outgoing.kogito-variables-events.value.serializer=org.apache.kafka.common.serialization.StringSerializer</span>
+</span></code></pre></div>
+<h3 id="3-create-your-bpmn-process-models">3. Create your BPMN process models<a class="headerlink" href="#3-create-your-bpmn-process-models" title="Permanent link">&para;</a></h3>
+<p>Create your BPMN process models in the <code>src/main/resources</code> directory. You can design these using our provided sandbox environment or import existing BPMN processes.</p>
+<h3 id="4-launch-your-application">4. Launch your application<a class="headerlink" href="#4-launch-your-application" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>mvn<span class="w"> </span>quarkus:dev
+</span></code></pre></div>
+<p>All components will be intelligently co-located within your service and share a consistent data store for seamless process execution.</p>
+<h2 id="best-practices-for-adaptive-process-architecture">Best Practices for Adaptive Process Architecture<a class="headerlink" href="#best-practices-for-adaptive-process-architecture" title="Permanent link">&para;</a></h2>
+<h3 id="database-management">Database Management<a class="headerlink" href="#database-management" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Use Database Migration Tools for Schema Evolution</strong></p>
+<ul>
+<li>Leverage Flyway as shown in the configuration for controlled schema upgrades</li>
+<li>Keep migration scripts in version control alongside application code</li>
+<li>Use separate migration scripts for different subsystems</li>
+</ul>
+</li>
+<li>
+<p><strong>Configure Proper Connection Pooling</strong></p>
+<ul>
+<li>Set appropriate maximum pool size based on expected workload</li>
+<li>Configure statement timeouts to prevent resource exhaustion</li>
+<li>Enable metrics collection to monitor pool utilization</li>
+</ul>
+</li>
+</ol>
+<h3 id="performance-optimization">Performance Optimization<a class="headerlink" href="#performance-optimization" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Implement Strategic Process Fragmentation</strong></p>
+</li>
+<li>
+<p>Design long-running processes as orchestrated fragments</p>
+</li>
+<li>Use compensation handlers for long-running transactions</li>
+<li>
+<p>Leverage asynchronous continuation for I/O-intensive steps</p>
+</li>
+<li>
+<p><strong>Configure Database Access Patterns</strong></p>
+</li>
+<li>
+<p>Use read-only transactions for query operations</p>
+</li>
+<li>Implement optimistic locking for high-concurrency scenarios</li>
+<li>
+<p>Consider database partitioning for high-volume process instances</p>
+</li>
+<li>
+<p><strong>Optimize Message Flow Patterns</strong></p>
+</li>
+<li>
+<p>Batch process events where appropriate</p>
+</li>
+<li>Implement idempotent message handlers</li>
+<li>Use correlation keys for related message sequences</li>
+</ol>
+<h3 id="testing-strategy">Testing Strategy<a class="headerlink" href="#testing-strategy" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Create Unit Tests for Process Fragments</strong></p>
+<ul>
+<li>Test individual subprocesses in isolation</li>
+<li>Mock external service interactions</li>
+<li>Validate process paths using test-specific process variable sets</li>
+</ul>
+</li>
+<li>
+<p><strong>Implement Integration Tests with Test Containers</strong></p>
+<ul>
+<li>Use testcontainers for database integration testing</li>
+<li>Test complete process flows with realistic data</li>
+<li>Verify transaction boundaries and rollback scenarios</li>
+</ul>
+</li>
+<li>
+<p><strong>Use Event Recording for Complex Process Testing</strong></p>
+<ul>
+<li>Capture process events for test verification</li>
+<li>Implement assertion helpers for common verification patterns</li>
+<li>Test timer-based scenarios with clock manipulation</li>
+</ul>
+</li>
+</ol>
+<h3 id="monitoring-and-observability">Monitoring and Observability<a class="headerlink" href="#monitoring-and-observability" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Use Data-Index for Process State Queries</strong></p>
+<ul>
+<li>Implement dashboard queries using GraphQL</li>
+<li>Create custom process state visualizations</li>
+<li>Set up alerts for stalled processes or SLA violations</li>
+</ul>
+</li>
+<li>
+<p><strong>Configure Proper Logging</strong></p>
+<ul>
+<li>Use structured logging format (JSON) in production</li>
+<li>Implement correlation IDs across process instances</li>
+<li>Set appropriate log levels for different environments</li>
+</ul>
+</li>
+<li>
+<p><strong>Set Up Metrics Collection</strong></p>
+<ul>
+<li>Monitor process throughput and completion times</li>
+<li>Track resource utilization across all subsystems</li>
+<li>Implement custom metrics for business KPIs</li>
+</ul>
+</li>
+</ol>
+<h3 id="scaling-considerations">Scaling Considerations<a class="headerlink" href="#scaling-considerations" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Plan for Horizontal Scaling</strong></p>
+<ul>
+<li>Implement stateless request handling where possible</li>
+<li>Use sticky sessions for active process instances</li>
+<li>Configure proper load balancing with health checks</li>
+</ul>
+</li>
+<li>
+<p><strong>Implement Process Affinity</strong></p>
+<ul>
+<li>Route related process operations to the same node</li>
+<li>Use consistent hashing for request distribution</li>
+<li>Implement backpressure mechanisms to prevent overload</li>
+</ul>
+</li>
+<li>
+<p><strong>Manage Database Connections Efficiently</strong></p>
+<ul>
+<li>Size connection pools appropriately for expected load</li>
+<li>Monitor database connection usage</li>
+<li>Implement circuit breakers for database interaction</li>
+</ul>
+</li>
+</ol>
+<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
+<p>Adaptive Process Architecture represents the future of process orchestration, bringing together the best elements of traditional business process management and modern cloud-native architectures. By intelligently co-locating related process components, it dramatically simplifies development, deployment, and operations while maintaining the benefits of a modular, scalable design.</p>
+<p>This architecture is uniquely suited for modern business processes that require sophisticated orchestration including human collaboration, temporal coordination, and long-running transactions. The unified approach delivers exceptional developer productivity without sacrificing operational flexibility, allowing your organization to rapidly adapt to changing business requirements.</p>
+<p>Our implementation provides true elastic scalability capable of driving the Temporal Event Coordinator and the Audit services at the scale required for enterprise deployments - something that simply cannot be matched.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+
+
+
+
+                
+
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+
+        <!-- Footer HTML Template for docs/overrides/partials/footer.html -->
+
+<!-- Previous/Next Navigation -->
+
+<nav class="md-footer__inner md-grid" aria-label="Footer">
+  
+  <a href="../kogito/index.html" class="md-footer__link md-footer__link--prev" rel="prev">
+    <div class="md-footer__button md-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/>
+      </svg>
+    </div>
+    <div class="md-footer__title">
+      <span class="md-footer__direction">Previous</span>
+      <span class="md-ellipsis">Kogito</span>
+    </div>
+  </a>
+  
+  
+  <a href="scaling/index.html" class="md-footer__link md-footer__link--next" rel="next">
+    <div class="md-footer__title">
+      <span class="md-footer__direction">Next</span>
+      <span class="md-ellipsis">Scaling & Performance</span>
+    </div>
+    <div class="md-footer__button md-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/>
+      </svg>
+    </div>
+  </a>
+  
+</nav>
+
+
+<div class="md-footer-meta">
+  <div class="aletyx-footer">
+    <div class="footer-column brand-column">
+      <a href="../../../www.aletyx.ai/index.html" class="footer-logo">
+        <img
+          src="../../assets/images/aletyx-logo-all-white.png"
+          alt="Aletyx Logo"
+          class="logo-light footer-logo-img"
+        />
+        <img
+          src="../../assets/images/aletyx-logo-all-white.png"
+          alt="Aletyx Logo"
+          class="logo-dark footer-logo-img"
+        />
+      </a>
+      <p class="footer-tagline">
+        Empowering businesses with AI-driven decision-making and intelligent
+        automation. Scalable solutions for Apache KIE, Drools, and Kogito.
+      </p>
+    </div>
+
+    <div class="footer-column">
+      <ul class="footer-links">
+        <li>
+          <a href="../../../aletyx.ai/build-of-drools/index.html"
+            >Enterprise build of Drools</a
+          >
+        </li>
+        <li>
+          <a href="../../../aletyx.ai/build-of-kogito/index.html"
+            >Enterprise build of Kogito</a
+          >
+        </li>
+        <li><a href="../../../www.aletyx.ai/pricing/index.html">Pricing</a></li>
+      </ul>
+      <h3 class="footer-heading">SERVICES</h3>
+      <ul class="footer-links">
+        <li><a href="../../../aletyx.ai/training-programs/index.html">Training</a></li>
+        <li>
+          <a href="../../../aletyx.ai/consulting-services/index.html">Consulting</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">RESOURCES</h3>
+      <ul class="footer-links">
+        <li>
+          <a href="../../../aletyx.ai/experience/index.html" target="_blank" rel="noopener"
+            >Aletyx Experience
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../index.html" target="_blank" rel="noopener"
+            >Documentation
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li><a href="../../../aletyx.ai/category/blog/index.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">DEVELOPER TOOLS</h3>
+      <ul class="footer-links">
+        <li>
+          <a href="../../../aletyx.ai/experience/index.html" target="_blank" rel="noopener"
+            >vs.code
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../start.aletyx.ai/index.html" target="_blank" rel="noopener"
+            >start.aletyx.ai
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../playground.aletyx.ai/index.html" target="_blank" rel="noopener"
+            >playground.aletyx.ai
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="https://maven-innovator.aletyx.services/" target="_blank" rel="noopener"
+            >maven-innovator.aletyx.services
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a
+            href="https://registry-innovator.aletyx.services/"
+            target="_blank"
+            rel="noopener"
+            >registry-innovator.aletyx.services
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">COMPANY</h3>
+      <ul class="footer-links">
+        <li><a href="../../../aletyx.ai/about-us/index.html">About Us</a></li>
+        <li><a href="../../../aletyx.ai/careers/index.html">Careers</a></li>
+        <li><a href="../../../aletyx.ai/contact-us/index.html">Contact Us</a></li>
+      </ul>
+
+      <div class="social-links">
+        <a
+          href="https://www.linkedin.com/company/aletyx"
+          target="_blank"
+          rel="noopener"
+          aria-label="LinkedIn"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://github.com/aletyx"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://www.youtube.com/@aletyxai"
+          target="_blank"
+          rel="noopener"
+          aria-label="YouTube"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://twitter.com/aletyxai"
+          target="_blank"
+          rel="noopener"
+          aria-label="Twitter"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+            />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="footer-legal">
+      <p>&copy; 2025 Aletyx, Inc. All rights reserved.</p>
+      <div class="legal-links">
+        <a href="../../../www.aletyx.ai/terms/index.html">Terms of Use</a>
+        <a href="../../../www.aletyx.ai/privacy/index.html">Privacy Policy</a>
+        <a href="../../../www.aletyx.ai/cookie-policy/index.html">Cookie Policy</a>
+        <a href="#__consent">Cookie Settings</a>
+      </div>
+    </div>
+  </div>
+</div>
+      
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+      <div class="md-consent" data-md-component="consent" id="__consent" hidden>
+        <div class="md-consent__overlay"></div>
+        <aside class="md-consent__inner">
+          <form class="md-consent__form md-grid md-typeset" name="consent">
+            
+
+
+
+<h4>Cookie consent</h4>
+<p>We use cookies to recognize your repeated visits and preferences, as well as to measure the effectiveness of our documentation and whether users find what they're searching for. With your consent, you're helping us to make our documentation better. <a href="../../legal/cookie-policy/index.html">Learn more in our Cookie Policy</a>.</p>
+<input class="md-toggle" type="checkbox" id="__settings" >
+<div class="md-consent__settings">
+  <ul class="task-list">
+    
+    
+    
+      
+    
+    
+      
+        
+  
+  
+    
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="analytics" >
+      <span class="task-list-indicator"></span>
+      Help us improve our website by collecting anonymous usage data
+    </label>
+  </li>
+
+      
+    
+      
+        
+  
+  
+    
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="marketing" >
+      <span class="task-list-indicator"></span>
+      Allow us to personalize content and ads to improve your browsing experience
+    </label>
+  </li>
+
+      
+    
+      
+        
+  
+  
+    
+    
+      
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="necessary" checked>
+      <span class="task-list-indicator"></span>
+      Necessary Cookies - Enable core functionality - the website cannot function properly without these
+    </label>
+  </li>
+
+      
+    
+  </ul>
+</div>
+<div class="md-consent__controls">
+  
+    
+      <button class="md-button md-button--primary">Accept</button>
+    
+    
+    
+  
+    
+    
+      <button type="reset" class="md-button md-button--primary">Reject</button>
+    
+    
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
+    
+  
+</div>
+          </form>
+        </aside>
+      </div>
+      <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout((function(){document.querySelector("[data-md-component=consent]").hidden=!1}),250);var form=document.forms.consent;for(var action of["submit","reset"])form.addEventListener(action,(function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map((function(e){return[e,!0]})))),location.hash="",location.reload()}))</script>
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.prune", "navigation.instant", "navigation.instant.prefetch", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.top", "navigation.tracking", "search.share", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.copy", "content.code.select", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/js/annotations.js"></script>
+      
+        <script src="../../assets/js/custom.js"></script>
+      
+        <script src="../../assets/js/documentation-fix.js"></script>
+      
+        <script src="../../assets/js/svg-fix.js"></script>
+      
+        <script src="../../assets/js/image-path-fix.js"></script>
+      
+        <script src="../../assets/js/api-examples.js"></script>
+      
+        <script src="../../assets/js/banner-persistent.js"></script>
+      
+        <script src="../../assets/js/cookie-consent.js"></script>
+      
+        <script src="../../assets/js/version-edition-selector.js"></script>
+      
+    
+<script src="../../assets/js/custom.js"></script>
+<script>
+  // Banner close handler
+  function closeBanner() {
+    const banner = document.getElementById('announcement-banner');
+    const containers = document.querySelectorAll('.md-announce, .md-banner');
+    const header = document.querySelector('.md-header');
+    if (banner) {
+      banner.style.display = 'none';
+      localStorage.setItem('aletyx-banner-closed', 'true');
+    }
+    containers.forEach(function(el) {
+      el.style.display = 'none';
+      el.style.height = '0';
+      el.style.overflow = 'hidden';
+    });
+    // Move header to top when banner is closed
+    if (header) header.style.top = '0';
+  }
+
+  // Check and hide banner if previously closed
+  function checkBannerState() {
+    const header = document.querySelector('.md-header');
+    if (localStorage.getItem('aletyx-banner-closed') === 'true') {
+      const banner = document.getElementById('announcement-banner');
+      const containers = document.querySelectorAll('.md-announce, .md-banner');
+      if (banner) banner.style.display = 'none';
+      containers.forEach(function(el) {
+        el.style.display = 'none';
+        el.style.height = '0';
+        el.style.overflow = 'hidden';
+      });
+      // Move header to top when banner is hidden
+      if (header) header.style.top = '0';
+    } else {
+      // Banner visible - header below it
+      if (header) header.style.top = '';
+    }
+  }
+
+  // Run on initial load
+  document.addEventListener('DOMContentLoaded', checkBannerState);
+
+  // Also run immediately in case DOM is already loaded
+  checkBannerState();
+
+  // Handle Material theme instant navigation
+  if (typeof document$ !== 'undefined') {
+    document$.subscribe(function() {
+      checkBannerState();
+    });
+  }
+
+  // Also listen for location changes (fallback)
+  window.addEventListener('popstate', checkBannerState);
+
+  // Theme persistence
+  (function() {
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.attributeName === 'data-md-color-scheme') {
+          var scheme = document.body.getAttribute('data-md-color-scheme');
+          localStorage.setItem('theme', scheme);
+        }
+      });
+    });
+    observer.observe(document.body, { attributes: true });
+
+    var savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.body.setAttribute('data-md-color-scheme', savedTheme);
+    }
+  })();
+</script>
+
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": false, "draggable": false, "openEffect": "none", "closeEffect": "none", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"6d3101840d104089a766ae297ca50f4d","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+
+<!-- Mirrored from docs.aletyx.ai/components/compact-architecture/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 24 Jun 2026 11:21:00 GMT -->
+</html>

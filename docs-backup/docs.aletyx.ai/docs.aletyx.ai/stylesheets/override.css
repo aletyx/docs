@@ -1,0 +1,306 @@
+
+/* ===========================================
+   UNIFIED HERO BANNER SYSTEM
+   Matches home page hero-banner pattern
+   =========================================== */
+
+/* Product Banner - extends hero-banner pattern */
+.product-banner {
+  background: linear-gradient(135deg, var(--aletyx-black, #000000) 0%, #1a1a1a 100%);
+  color: var(--aletyx-white, #FEFEFE);
+  padding: 2rem 2rem 1.5rem 2rem;
+  margin: 0 -1.6rem 2rem -1.6rem;
+  border-radius: 0;
+  text-align: center;
+  position: relative;
+  border-bottom: 3px solid var(--aletyx-orange, #FC764C);
+}
+
+/* Product Badge - pill style */
+.product-badge {
+  display: inline-block;
+  background: var(--aletyx-white, #FEFEFE);
+  color: var(--aletyx-orange, #FC764C);
+  padding: 0.3rem 0.875rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0 0.25rem 0.75rem 0.25rem;
+}
+
+/* AWS Badge variant */
+.product-badge.aws-badge {
+  background: linear-gradient(135deg, #FF9900 0%, #FF6600 100%);
+  color: white;
+}
+
+.product-banner h1 {
+  color: white !important;
+  font-size: 1.875rem;
+  margin: 0.5rem 0 0.625rem 0;
+  font-weight: 700;
+  letter-spacing: -0.25px;
+}
+
+.product-tagline {
+  font-size: 0.9375rem;
+  opacity: 0.9;
+  margin: 0 auto;
+  max-width: 650px;
+  font-weight: 400;
+  letter-spacing: 0.15px;
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] .product-banner {
+  background: linear-gradient(135deg, #1a1a1a 0%, var(--aletyx-black, #000000) 100%);
+  border-bottom-color: var(--aletyx-orange, #FC764C);
+}
+
+/* ===========================================
+   BUTTON STYLES FOR DARK HERO BACKGROUNDS
+   Buttons on dark backgrounds need special treatment
+   =========================================== */
+
+/* Banner CTA container - uses md-button-row pattern */
+.banner-cta,
+.md-button-row {
+  display: flex;
+  gap: 0.875rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+
+/* Primary button on dark background (hero-banner, product-banner) */
+.hero-banner .md-button--primary,
+.product-banner .md-button--primary {
+  background: var(--aletyx-white, #FEFEFE) !important;
+  color: var(--aletyx-black, #000000) !important;
+  border: 1px solid var(--aletyx-white, #FEFEFE) !important;
+}
+
+.hero-banner .md-button--primary:hover,
+.product-banner .md-button--primary:hover {
+  background: #f0f0f0 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+}
+
+/* Secondary button on dark background */
+.hero-banner .md-button:not(.md-button--primary),
+.product-banner .md-button:not(.md-button--primary) {
+  background: transparent !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+}
+
+.hero-banner .md-button:not(.md-button--primary):hover,
+.product-banner .md-button:not(.md-button--primary):hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: white !important;
+  transform: translateY(-2px);
+}
+
+/* Dark mode: Primary buttons become orange */
+[data-md-color-scheme="slate"] .hero-banner .md-button--primary,
+[data-md-color-scheme="slate"] .product-banner .md-button--primary {
+  background: var(--aletyx-orange, #FC764C) !important;
+  color: white !important;
+  border-color: var(--aletyx-orange, #FC764C) !important;
+}
+
+[data-md-color-scheme="slate"] .hero-banner .md-button--primary:hover,
+[data-md-color-scheme="slate"] .product-banner .md-button--primary:hover {
+  background: #e56a42 !important;
+  border-color: #e56a42 !important;
+  box-shadow: 0 4px 12px rgba(252, 118, 76, 0.4);
+}
+
+/* ===========================================
+   LEGACY CTA-BUTTON SUPPORT
+   Keep for backwards compatibility
+   =========================================== */
+
+.cta-button {
+  display: inline-block;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.cta-button.primary {
+  background: var(--aletyx-white, #FEFEFE);
+  color: var(--aletyx-black, #000000);
+  border-color: var(--aletyx-white, #FEFEFE);
+}
+
+.cta-button.primary:hover {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+}
+
+.cta-button.secondary {
+  background: transparent;
+  color: white;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.cta-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
+}
+
+/* Dark mode CTA buttons */
+[data-md-color-scheme="slate"] .cta-button.primary {
+  background: var(--aletyx-orange, #FC764C);
+  color: white;
+  border-color: var(--aletyx-orange, #FC764C);
+}
+
+[data-md-color-scheme="slate"] .cta-button.primary:hover {
+  background: #e56a42;
+  border-color: #e56a42;
+  box-shadow: 0 4px 12px rgba(252, 118, 76, 0.4);
+}
+
+/* ===========================================
+   RESPONSIVE ADJUSTMENTS
+   =========================================== */
+
+@media (max-width: 768px) {
+  .product-banner {
+    padding: 1.5rem 1rem 1.25rem 1rem;
+    margin: 0 -1rem 1.5rem -1rem;
+  }
+
+  .product-banner h1 {
+    font-size: 1.75rem;
+  }
+
+  .product-tagline {
+    font-size: 0.9rem;
+  }
+
+  .banner-cta,
+  .md-button-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .banner-cta .md-button,
+  .banner-cta .cta-button,
+  .product-banner .md-button {
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-banner h1 {
+    font-size: 1.5rem;
+  }
+
+  .product-badge {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.75rem;
+  }
+}
+
+/* ===========================================
+   PRINT STYLES
+   Optimized for print-site-plugin and browser print
+   =========================================== */
+
+@media print {
+  /* Hide navigation elements */
+  .md-sidebar,
+  .md-header,
+  .md-footer,
+  .md-tabs,
+  .md-search,
+  .md-top,
+  .headerlink,
+  .md-content__button,
+  .md-dialog,
+  .md-banner {
+    display: none !important;
+  }
+
+  /* Reset margins for print */
+  .md-main__inner {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .md-content {
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Page breaks */
+  h1, h2 {
+    page-break-after: avoid;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  pre, blockquote, table, figure {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure links are visible in print */
+  a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Don't show URL for internal links */
+  a[href^="#"]:after,
+  a[href^="/"]:after {
+    content: "";
+  }
+
+  /* Code blocks */
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+  }
+
+  /* Admonitions - ensure they print nicely */
+  .admonition {
+    border: 1px solid #ddd;
+    page-break-inside: avoid;
+  }
+
+  /* Hide interactive elements */
+  .tabbed-labels,
+  .md-clipboard,
+  .glightbox {
+    display: none !important;
+  }
+
+  /* Print page specific styles */
+  .print-site-banner {
+    display: none !important;
+  }
+
+  /* Ensure images fit on page */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}

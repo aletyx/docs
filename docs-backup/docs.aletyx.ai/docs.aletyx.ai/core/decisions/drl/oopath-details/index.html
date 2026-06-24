@@ -1,0 +1,3558 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  
+<!-- Mirrored from docs.aletyx.ai/core/decisions/drl/oopath-details/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 24 Jun 2026 11:28:49 GMT -->
+<head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Comprehensive documentation for Aletyx Enterprise Build of Apache KIE - the leading enterprise supported platform for the open source projects brought by the Apache KIE (incubating) project for for Drools, jBPM, and Kogito">
+      
+      
+        <meta name="author" content="Aletyx, Inc.">
+      
+      
+        <link rel="canonical" href="index.html">
+      
+      
+        <link rel="prev" href="../phreak/index.html">
+      
+      
+        <link rel="next" href="../drl-conditions/index.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+    
+    
+      
+        <title>OOPath - Aletyx Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+  
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+  
+  <style>:root{--md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M1%207.775V2.75C1%201.784%201.784%201%202.75%201h5.025c.464%200%20.91.184%201.238.513l6.25%206.25a1.75%201.75%200%200%201%200%202.474l-5.026%205.026a1.75%201.75%200%200%201-2.474%200l-6.25-6.25A1.75%201.75%200%200%201%201%207.775m1.5%200c0%20.066.026.13.073.177l6.25%206.25a.25.25%200%200%200%20.354%200l5.025-5.025a.25.25%200%200%200%200-.354l-6.25-6.25a.25.25%200%200%200-.177-.073H2.75a.25.25%200%200%200-.25.25ZM6%205a1%201%200%201%201%200%202%201%201%200%200%201%200-2%22/%3E%3C/svg%3E');--md-admonition-icon--abstract:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2.5%201.75v11.5c0%20.138.112.25.25.25h3.17a.75.75%200%200%201%200%201.5H2.75A1.75%201.75%200%200%201%201%2013.25V1.75C1%20.784%201.784%200%202.75%200h8.5C12.216%200%2013%20.784%2013%201.75v7.736a.75.75%200%200%201-1.5%200V1.75a.25.25%200%200%200-.25-.25h-8.5a.25.25%200%200%200-.25.25m13.274%209.537zl-4.557%204.45a.75.75%200%200%201-1.055-.008l-1.943-1.95a.75.75%200%200%201%201.062-1.058l1.419%201.425%204.026-3.932a.75.75%200%201%201%201.048%201.074M4.75%204h4.5a.75.75%200%200%201%200%201.5h-4.5a.75.75%200%200%201%200-1.5M4%207.75A.75.75%200%200%201%204.75%207h2a.75.75%200%200%201%200%201.5h-2A.75.75%200%200%201%204%207.75%22/%3E%3C/svg%3E');--md-admonition-icon--info:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M0%208a8%208%200%201%201%2016%200A8%208%200%200%201%200%208m8-6.5a6.5%206.5%200%201%200%200%2013%206.5%206.5%200%200%200%200-13M6.5%207.75A.75.75%200%200%201%207.25%207h1a.75.75%200%200%201%20.75.75v2.75h.25a.75.75%200%200%201%200%201.5h-2a.75.75%200%200%201%200-1.5h.25v-2h-.25a.75.75%200%200%201-.75-.75M8%206a1%201%200%201%201%200-2%201%201%200%200%201%200%202%22/%3E%3C/svg%3E');--md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M3.499.75a.75.75%200%200%201%201.5%200v.996C5.9%202.903%206.793%203.65%207.662%204.376l.24.202c-.036-.694.055-1.422.426-2.163C9.1.873%2010.794-.045%2012.622.26%2014.408.558%2016%201.94%2016%204.25c0%201.278-.954%202.575-2.44%202.734l.146.508.065.22c.203.701.412%201.455.476%202.226.142%201.707-.4%203.03-1.487%203.898C11.714%2014.671%2010.27%2015%208.75%2015h-6a.75.75%200%200%201%200-1.5h1.376a4.5%204.5%200%200%201-.563-1.191%203.84%203.84%200%200%201-.05-2.063%204.65%204.65%200%200%201-2.025-.293.75.75%200%200%201%20.525-1.406c1.357.507%202.376-.006%202.698-.318l.009-.01a.747.747%200%200%201%201.06%200%20.75.75%200%200%201-.012%201.074c-.912.92-.992%201.835-.768%202.586.221.74.745%201.337%201.196%201.621H8.75c1.343%200%202.398-.296%203.074-.836.635-.507%201.036-1.31.928-2.602-.05-.603-.216-1.224-.422-1.93l-.064-.221c-.12-.407-.246-.84-.353-1.29a2.4%202.4%200%200%201-.507-.441%203.1%203.1%200%200%201-.633-1.248.75.75%200%200%201%201.455-.364c.046.185.144.436.31.627.146.168.353.305.712.305.738%200%201.25-.615%201.25-1.25%200-1.47-.95-2.315-2.123-2.51-1.172-.196-2.227.387-2.706%201.345-.46.92-.27%201.774.019%203.062l.042.19.01.05c.348.443.666.949.94%201.553a.75.75%200%201%201-1.365.62c-.553-1.217-1.32-1.94-2.3-2.768L6.7%205.527c-.814-.68-1.75-1.462-2.692-2.619a3.7%203.7%200%200%200-1.023.88c-.406.495-.663%201.036-.722%201.508.116.122.306.21.591.239.388.038.797-.06%201.032-.19a.75.75%200%200%201%20.728%201.31c-.515.287-1.23.439-1.906.373-.682-.067-1.473-.38-1.879-1.193L.75%205.677V5.5c0-.984.48-1.94%201.077-2.664.46-.559%201.05-1.055%201.673-1.353z%22/%3E%3C/svg%3E');--md-admonition-icon--success:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M13.78%204.22a.75.75%200%200%201%200%201.06l-7.25%207.25a.75.75%200%200%201-1.06%200L2.22%209.28a.75.75%200%200%201%20.018-1.042.75.75%200%200%201%201.042-.018L6%2010.94l6.72-6.72a.75.75%200%200%201%201.06%200%22/%3E%3C/svg%3E');--md-admonition-icon--question:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M0%208a8%208%200%201%201%2016%200A8%208%200%200%201%200%208m8-6.5a6.5%206.5%200%201%200%200%2013%206.5%206.5%200%200%200%200-13M6.92%206.085h.001a.749.749%200%201%201-1.342-.67c.169-.339.436-.701.849-.977C6.845%204.16%207.369%204%208%204a2.76%202.76%200%200%201%201.637.525c.503.377.863.965.863%201.725%200%20.448-.115.83-.329%201.15-.205.307-.47.513-.692.662-.109.072-.22.138-.313.195l-.006.004a6%206%200%200%200-.26.16%201%201%200%200%200-.276.245.75.75%200%200%201-1.248-.832c.184-.264.42-.489.692-.661q.154-.1.313-.195l.007-.004c.1-.061.182-.11.258-.161a1%201%200%200%200%20.277-.245C8.96%206.514%209%206.427%209%206.25a.61.61%200%200%200-.262-.525A1.27%201.27%200%200%200%208%205.5c-.369%200-.595.09-.74.187a1%201%200%200%200-.34.398M9%2011a1%201%200%201%201-2%200%201%201%200%200%201%202%200%22/%3E%3C/svg%3E');--md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M6.457%201.047c.659-1.234%202.427-1.234%203.086%200l6.082%2011.378A1.75%201.75%200%200%201%2014.082%2015H1.918a1.75%201.75%200%200%201-1.543-2.575Zm1.763.707a.25.25%200%200%200-.44%200L1.698%2013.132a.25.25%200%200%200%20.22.368h12.164a.25.25%200%200%200%20.22-.368Zm.53%203.996v2.5a.75.75%200%200%201-1.5%200v-2.5a.75.75%200%200%201%201.5%200M9%2011a1%201%200%201%201-2%200%201%201%200%200%201%202%200%22/%3E%3C/svg%3E');--md-admonition-icon--failure:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2.344%202.343za8%208%200%200%201%2011.314%2011.314A8.002%208.002%200%200%201%20.234%2010.089a8%208%200%200%201%202.11-7.746m1.06%2010.253a6.5%206.5%200%201%200%209.108-9.275%206.5%206.5%200%200%200-9.108%209.275M6.03%204.97%208%206.94l1.97-1.97a.749.749%200%200%201%201.275.326.75.75%200%200%201-.215.734L9.06%208l1.97%201.97a.749.749%200%200%201-.326%201.275.75.75%200%200%201-.734-.215L8%209.06l-1.97%201.97a.749.749%200%200%201-1.275-.326.75.75%200%200%201%20.215-.734L6.94%208%204.97%206.03a.75.75%200%200%201%20.018-1.042.75.75%200%200%201%201.042-.018%22/%3E%3C/svg%3E');--md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M9.504.43a1.516%201.516%200%200%201%202.437%201.713L10.415%205.5h2.123c1.57%200%202.346%201.909%201.22%203.004l-7.34%207.142a1.25%201.25%200%200%201-.871.354h-.302a1.25%201.25%200%200%201-1.157-1.723L5.633%2010.5H3.462c-1.57%200-2.346-1.909-1.22-3.004zm1.047%201.074L3.286%208.571A.25.25%200%200%200%203.462%209H6.75a.75.75%200%200%201%20.694%201.034l-1.713%204.188%206.982-6.793A.25.25%200%200%200%2012.538%207H9.25a.75.75%200%200%201-.683-1.06l2.008-4.418.003-.006-.004-.009-.006-.006-.008-.001q-.005%200-.009.004%22/%3E%3C/svg%3E');--md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M4.72.22a.75.75%200%200%201%201.06%200l1%20.999a3.5%203.5%200%200%201%202.441%200l.999-1a.748.748%200%200%201%201.265.332.75.75%200%200%201-.205.729l-.775.776c.616.63.995%201.493.995%202.444v.327q0%20.15-.025.292c.408.14.764.392%201.029.722l1.968-.787a.75.75%200%200%201%20.556%201.392L13%207.258V9h2.25a.75.75%200%200%201%200%201.5H13v.5q-.002.615-.141%201.186l2.17.868a.75.75%200%200%201-.557%201.392l-2.184-.873A5%205%200%200%201%208%2016a5%205%200%200%201-4.288-2.427l-2.183.873a.75.75%200%200%201-.558-1.392l2.17-.868A5%205%200%200%201%203%2011v-.5H.75a.75.75%200%200%201%200-1.5H3V7.258L.971%206.446a.75.75%200%200%201%20.558-1.392l1.967.787c.265-.33.62-.583%201.03-.722a1.7%201.7%200%200%201-.026-.292V4.5c0-.951.38-1.814.995-2.444L4.72%201.28a.75.75%200%200%201%200-1.06m.53%206.28a.75.75%200%200%200-.75.75V11a3.5%203.5%200%201%200%207%200V7.25a.75.75%200%200%200-.75-.75ZM6.173%205h3.654A.17.17%200%200%200%2010%204.827V4.5a2%202%200%201%200-4%200v.327c0%20.096.077.173.173.173%22/%3E%3C/svg%3E');--md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M5%205.782V2.5h-.25a.75.75%200%200%201%200-1.5h6.5a.75.75%200%200%201%200%201.5H11v3.282l3.666%205.76C15.619%2013.04%2014.543%2015%2012.767%2015H3.233c-1.776%200-2.852-1.96-1.899-3.458Zm-2.4%206.565a.75.75%200%200%200%20.633%201.153h9.534a.75.75%200%200%200%20.633-1.153L12.225%2010.5h-8.45ZM9.5%202.5h-3V6c0%20.143-.04.283-.117.403L4.73%209h6.54L9.617%206.403A.75.75%200%200%201%209.5%206Z%22/%3E%3C/svg%3E');--md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M1.75%202.5h10.5a.75.75%200%200%201%200%201.5H1.75a.75.75%200%200%201%200-1.5m4%205h8.5a.75.75%200%200%201%200%201.5h-8.5a.75.75%200%200%201%200-1.5m0%205h8.5a.75.75%200%200%201%200%201.5h-8.5a.75.75%200%200%201%200-1.5M2.5%207.75v6a.75.75%200%200%201-1.5%200v-6a.75.75%200%200%201%201.5%200%22/%3E%3C/svg%3E');}</style>
+
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aspekta:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Aspekta";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../stylesheets/fonts.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/base.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/aletyx.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/footer.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/extra.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/typography.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/images.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/buttons.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/cards.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/layout.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/header.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/code-annotations.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/getting-started.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/universal-annotations.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/cookie-consent.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/404.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/components/version-selector.css">
+    
+      <link rel="stylesheet" href="../../../../stylesheets/override.css">
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-EDZLDSFK6T"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-EDZLDSFK6T",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-EDZLDSFK6T",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>if("undefined"!=typeof __md_analytics){var consent=__md_get("__consent");consent&&consent.analytics&&__md_analytics()}</script>
+  
+
+    
+    
+
+
+   <link href="../../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#oopath-in-drl-advanced-object-graph-navigation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+<div class="top-banner" id="announcement-banner">
+  <span class="banner-badge-small">NEW</span>
+  <strong>Introducing Aletyx Decision Control</strong> — Enterprise decision management with governance and multi-environment deployment
+  <a href="../../../../decision-control/index.html" class="banner-link">Learn more &rarr;</a>
+  <button type="button" class="close-button" onclick="closeBanner()" aria-label="Close">&times;</button>
+</div>
+
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+
+    <!-- Logo -->
+    <a href="../../../../index.html"
+       title="Aletyx Documentation"
+       class="md-header__button md-logo"
+       aria-label="Aletyx Documentation"
+       data-md-component="logo">
+      
+  <img src="../../../../assets/images/A-aletyx-orange.svg" alt="logo">
+
+    </a>
+
+    <!-- Edition selector inserted by JS after logo -->
+
+    <!-- Navigation tabs inline -->
+    
+    <nav class="md-header__nav" aria-label="Tabs">
+      <ul class="md-header__nav-list">
+        
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../../guides/getting-started/index.html" class="md-header__nav-link">
+                Getting Started
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../index.html" class="md-header__nav-link md-header__nav-link--active">
+                Architecture
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../../guides/index.html" class="md-header__nav-link">
+                Guides
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../../components/index.html" class="md-header__nav-link">
+                Platform
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../../deployment/index.html" class="md-header__nav-link">
+                Deployment
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../../reference/index.html" class="md-header__nav-link">
+                Reference
+              </a>
+            </li>
+          
+        
+      </ul>
+    </nav>
+    
+
+    <!-- Spacer -->
+    <div class="md-header__spacer"></div>
+
+    <!-- Search -->
+    
+    <label class="md-header__button md-icon" for="__search">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+    </label>
+    <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    <!-- Theme toggle -->
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+
+    <!-- Mobile menu -->
+    <label class="md-header__button md-icon md-header__hamburger" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+
+  </nav>
+</header>
+
+<!-- Hide default tabs since we render them in header -->
+<style>.md-tabs { display: none !important; }</style>
+
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../../index.html" title="Aletyx Documentation" class="md-nav__button md-logo" aria-label="Aletyx Documentation" data-md-component="logo">
+      
+  <img src="../../../../assets/images/A-aletyx-orange.svg" alt="logo">
+
+    </a>
+    Aletyx Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../../guides/getting-started/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Automation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2" id="__nav_3_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decision Automation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rule-language/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rule Language
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DRL
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_2_3" id="__nav_3_2_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    DRL
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../syntax-introduction/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Syntax Basics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drl-building-blocks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building Blocks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-stores/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Stores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rule-units/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rule Units
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../phreak/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phreak Algorithm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OOPath
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="index.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OOPath
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction-to-oopath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction to OOPath
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-oopath-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why OOPath Matters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-oopath-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic OOPath Syntax
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oopath-in-rule-units" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OOPath in Rule Units
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-oopath-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced OOPath Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oopath-vs-classic-drl-constructs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OOPath vs. Classic DRL Constructs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oopath-with-rule-units" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OOPath with Rule Units
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices-for-oopath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices for OOPath
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations-and-edge-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations and Edge Cases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-from-traditional-drl-to-oopath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration from Traditional DRL to OOPath
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-oopath-features-in-drools-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced OOPath Features in Drools 10+
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drl-conditions/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditions (LHS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drl-actions/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions (RHS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementing-decision-services/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Services
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../decision-tables/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision Tables
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../dmn/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DMN
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../processes/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Process Automation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Process Automation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../processes/architecture/compact-architecture/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../processes/data/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Components
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../processes/basic-bpmn/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BPMN Basics
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../processes/advanced-bpmn/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced BPMN
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../integration/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integration Patterns
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Integration Patterns
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration/decision-process/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decision & Process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration/event-driven/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Event-Driven
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../integration/service-orchestration/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Service Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../test-scenarios/index.html" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Testing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../test-scenarios/authoring-scesim/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test Scenarios
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../../guides/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../../components/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../../deployment/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../../reference/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction-to-oopath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction to OOPath
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-oopath-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why OOPath Matters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-oopath-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic OOPath Syntax
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oopath-in-rule-units" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OOPath in Rule Units
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-oopath-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced OOPath Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oopath-vs-classic-drl-constructs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OOPath vs. Classic DRL Constructs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#oopath-with-rule-units" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OOPath with Rule Units
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices-for-oopath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices for OOPath
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations-and-edge-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations and Edge Cases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-from-traditional-drl-to-oopath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration from Traditional DRL to OOPath
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-oopath-features-in-drools-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced OOPath Features in Drools 10+
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../../../index.html" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../../index.html" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../index.html" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Decision Automation
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../index.html" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    DRL
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+
+
+
+                  
+
+
+
+<h1 id="oopath-in-drl-advanced-object-graph-navigation">OOPath in DRL: Advanced Object Graph Navigation<a class="headerlink" href="#oopath-in-drl-advanced-object-graph-navigation" title="Permanent link">&para;</a></h1>
+<h2 id="introduction-to-oopath">Introduction to OOPath<a class="headerlink" href="#introduction-to-oopath" title="Permanent link">&para;</a></h2>
+<p>OOPath is a powerful object-oriented syntax extension to XPath that provides an elegant way to navigate through object graphs in Drools Rule Language (DRL) rule conditions. OOPath was first introduced in the Drools community code in version 7 and significantly enhanced in Drools 10, OOPath has become the preferred approach for traversing complex object relationships within rule conditions.</p>
+<p>The name "OOPath" represents "Object-Oriented Path" and reflects its purpose: to provide an intuitive, concise syntax for navigating through object-oriented structures in rule conditions.</p>
+<h2 id="why-oopath-matters">Why OOPath Matters<a class="headerlink" href="#why-oopath-matters" title="Permanent link">&para;</a></h2>
+<p>When working with complex domain models, you often need to navigate through nested object relationships. Before OOPath, this required verbose syntax using the <code>from</code> keyword and multiple pattern matching statements. OOPath dramatically simplifies this process with a more declarative, intuitive approach that:</p>
+<ol>
+<li>Reduces verbosity and boilerplate code</li>
+<li>Improves rule readability and maintainability</li>
+<li>Enhances performance through optimized compilation</li>
+<li>Provides more natural object graph navigation</li>
+<li>Enables powerful filtering at each navigation step</li>
+</ol>
+<h2 id="basic-oopath-syntax">Basic OOPath Syntax<a class="headerlink" href="#basic-oopath-syntax" title="Permanent link">&para;</a></h2>
+<p>The basic syntax for OOPath expressions follows this pattern:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="o">/</span><span class="n">collection</span><span class="o">[</span><span class="n">constraints</span><span class="o">]/</span><span class="n">property</span><span class="o">[</span><span class="n">constraints</span><span class="o">]</span>
+</span></code></pre></div>
+<p>Where:</p>
+<ul>
+<li>The leading <code>/</code> indicates the start of an OOPath expression</li>
+<li><code>collection</code> refers to a data source (in Rule Units) or a fact type</li>
+<li><code>[constraints]</code> are optional filtering conditions</li>
+<li>Additional path segments are added with another <code>/</code> followed by the property name</li>
+</ul>
+<h3 id="classic-approach-vs-oopath">Classic Approach vs. OOPath<a class="headerlink" href="#classic-approach-vs-oopath" title="Permanent link">&para;</a></h3>
+<p>Consider the following example of traversing a student's grades for a specific course:</p>
+<h4 id="classic-approach-using-from">Classic Approach (using <code>from</code>)<a class="headerlink" href="#classic-approach-using-from" title="Permanent link">&para;</a></h4>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find all grades for Big Data exam&quot;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">when</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="n">$student</span><span class="p">:</span><span class="w"> </span><span class="n">Student</span><span class="p">(</span><span class="w"> </span><span class="n">$plan</span><span class="p">:</span><span class="w"> </span><span class="n">plan</span><span class="w"> </span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="n">$exam</span><span class="p">:</span><span class="w"> </span><span class="n">Exam</span><span class="p">(</span><span class="w"> </span><span class="n">course</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Big Data&quot;</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">$plan</span><span class="p">.</span><span class="na">exams</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="n">$grade</span><span class="p">:</span><span class="w"> </span><span class="n">Grade</span><span class="p">()</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">$exam</span><span class="p">.</span><span class="na">grades</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">then</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="c1">// Actions</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">end</span>
+</span></code></pre></div>
+<h4 id="oopath-approach-used-in-aletyx-enterprise-build-of-drools-1010">OOPath Approach used in Aletyx Enterprise Build of Drools 10.1.0<a class="headerlink" href="#oopath-approach-used-in-aletyx-enterprise-build-of-drools-1010" title="Permanent link">&para;</a></h4>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find all grades for Big Data exam&quot;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">when</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">$student</span><span class="p">:</span><span class="w"> </span><span class="n">Student</span><span class="p">(</span><span class="w"> </span><span class="n">$grade</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">plan</span><span class="o">/</span><span class="n">exams</span><span class="o">[</span><span class="n">course</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Big Data&quot;</span><span class="o">]/</span><span class="n">grades</span><span class="w"> </span><span class="p">)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">then</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="c1">// Actions</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">end</span>
+</span></code></pre></div>
+<p>The OOPath version is not only more concise but also more readable, expressing the traversal path in a single, intuitive expression. By not requiring the usage of multiple <code>from</code> statements, the performance of the OOPath rule should be significantly higher than that of the Classic approach.</p>
+<h2 id="oopath-in-rule-units">OOPath in Rule Units<a class="headerlink" href="#oopath-in-rule-units" title="Permanent link">&para;</a></h2>
+<p>When using Rule Units (the recommended approach in modern Drools applications), OOPath expressions typically start with a data source:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find high-value customers with overdue invoices&quot;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">when</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="n">$customer</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span><span class="o">[</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;HIGH_VALUE&quot;</span><span class="o">]</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">$invoice</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">invoices</span><span class="o">[</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;OVERDUE&quot;</span><span class="o">]</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">then</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="c1">// Actions</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">end</span>
+</span></code></pre></div>
+<p>This approach cleanly separates the data sources from the object navigation, making rules even more maintainable.</p>
+<h2 id="advanced-oopath-features">Advanced OOPath Features<a class="headerlink" href="#advanced-oopath-features" title="Permanent link">&para;</a></h2>
+<h3 id="multi-level-navigation">Multi-level Navigation<a class="headerlink" href="#multi-level-navigation" title="Permanent link">&para;</a></h3>
+<p>OOPath excels at traversing multiple levels of object relationships:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find all comments on posts by premium users&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">when</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">$comment</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">users</span><span class="o">[</span><span class="n">accountType</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;PREMIUM&quot;</span><span class="o">]/</span><span class="n">posts</span><span class="o">/</span><span class="n">comments</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">then</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="c1">// Actions with $comment</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">end</span>
+</span></code></pre></div>
+<p>This single expression traverses from users to their posts, and then to the comments on those posts.</p>
+<h3 id="filtering-at-each-level">Filtering at Each Level<a class="headerlink" href="#filtering-at-each-level" title="Permanent link">&para;</a></h3>
+<p>You can apply constraints at each level of the path:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find high-rated comments on popular posts by premium users&quot;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">when</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="n">$comment</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">users</span><span class="o">[</span><span class="n">accountType</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;PREMIUM&quot;</span><span class="o">]/</span><span class="n">posts</span><span class="o">[</span><span class="n">likes</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">100</span><span class="o">]/</span><span class="n">comments</span><span class="o">[</span><span class="n">rating</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">4</span><span class="o">]</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">then</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="c1">// Actions with $comment</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">end</span>
+</span></code></pre></div>
+<h3 id="backward-references">Backward References<a class="headerlink" href="#backward-references" title="Permanent link">&para;</a></h3>
+<p>OOPath allows referring to variables bound in earlier parts of the path:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find users who commented on their own posts&quot;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">when</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="n">$user</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">users</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="n">$comment</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">users</span><span class="o">[</span><span class="k">this</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$user</span><span class="o">]/</span><span class="n">posts</span><span class="o">/</span><span class="n">comments</span><span class="o">[</span><span class="n">author</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$user</span><span class="o">]</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">then</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="c1">// $comment is a comment made by the user on their own post</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">end</span>
+</span></code></pre></div>
+<h3 id="working-with-collections">Working with Collections<a class="headerlink" href="#working-with-collections" title="Permanent link">&para;</a></h3>
+<p>OOPath provides a natural way to work with collections without explicit iteration:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find orders with high-value items&quot;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">when</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="n">$order</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="n">$item</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span><span class="o">[</span><span class="k">this</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$order</span><span class="o">]/</span><span class="n">items</span><span class="o">[</span><span class="n">price</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1000</span><span class="o">]</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">then</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="c1">// $item is a high-value item in the order</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">end</span>
+</span></code></pre></div>
+<h3 id="collection-projection">Collection Projection<a class="headerlink" href="#collection-projection" title="Permanent link">&para;</a></h3>
+<p>You can use OOPath to project collections into variables:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Process all items in an order&quot;</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">when</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="n">$order</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="n">$items</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span><span class="o">[</span><span class="k">this</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$order</span><span class="o">]/</span><span class="n">items</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">then</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="c1">// $items contains all items in the order</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="n">end</span>
+</span></code></pre></div>
+<h3 id="conditional-collection-navigation">Conditional Collection Navigation<a class="headerlink" href="#conditional-collection-navigation" title="Permanent link">&para;</a></h3>
+<p>OOPath handles collections seamlessly, filtering and traversing only elements that match your constraints:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find popular posts with negative comments&quot;</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">when</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="n">$post</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">posts</span><span class="o">[</span><span class="n">likes</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">100</span><span class="o">]/</span><span class="n">comments</span><span class="o">[</span><span class="n">sentiment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;NEGATIVE&quot;</span><span class="o">]</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">then</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="c1">// Actions with $post (a popular post with at least one negative comment)</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">end</span>
+</span></code></pre></div>
+<h2 id="oopath-vs-classic-drl-constructs">OOPath vs. Classic DRL Constructs<a class="headerlink" href="#oopath-vs-classic-drl-constructs" title="Permanent link">&para;</a></h2>
+<h3 id="oopath-vs-from">OOPath vs. <code>from</code><a class="headerlink" href="#oopath-vs-from" title="Permanent link">&para;</a></h3>
+<p>The <code>from</code> condition element was traditionally used to specify data sources for patterns and to navigate object relationships. While functional, it led to verbose and sometimes difficult-to-read rules, especially for deep object graphs.</p>
+<h3 id="why-oopath-replaces-from">Why OOPath replaces <code>from</code><a class="headerlink" href="#why-oopath-replaces-from" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>More concise</strong>: OOPath expressions are significantly shorter</li>
+<li><strong>More readable</strong>: The path structure is visually clear</li>
+<li><strong>More maintainable</strong>: Changes to the object graph require fewer modifications</li>
+<li><strong>Better performance</strong>: OOPath is optimized for object graph navigation</li>
+<li><strong>Chaining support</strong>: OOPath easily chains multiple navigation steps</li>
+</ul>
+<p>Consider the traditional approach to writing a DRL rule where you need to navigate multiple objects:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find all managers in IT department&quot;</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">when</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="n">$company</span><span class="p">:</span><span class="w"> </span><span class="n">Company</span><span class="p">()</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="n">$dept</span><span class="p">:</span><span class="w"> </span><span class="n">Department</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;IT&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">$company</span><span class="p">.</span><span class="na">departments</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="n">$manager</span><span class="p">:</span><span class="w"> </span><span class="n">Employee</span><span class="p">(</span><span class="n">position</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Manager&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">$dept</span><span class="p">.</span><span class="na">employees</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="n">then</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">    </span><span class="c1">// Actions</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="n">end</span>
+</span></code></pre></div>
+<p>With OOPath:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find all managers in IT department&quot;</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">when</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="n">$manager</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">company</span><span class="o">/</span><span class="n">departments</span><span class="o">[</span><span class="n">name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;IT&quot;</span><span class="o">]/</span><span class="n">employees</span><span class="o">[</span><span class="n">position</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;Manager&quot;</span><span class="o">]</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">then</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="c1">// Actions</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">end</span>
+</span></code></pre></div>
+<h3 id="oopath-vs-collect">OOPath vs. <code>collect</code><a class="headerlink" href="#oopath-vs-collect" title="Permanent link">&para;</a></h3>
+<p>The <code>collect</code> condition element was used to gather collections of objects matching certain criteria. This approach required additional syntax and created intermediate collections.</p>
+<h4 id="why-oopath-replaces-collect">Why OOPath replaces <code>collect</code><a class="headerlink" href="#why-oopath-replaces-collect" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>No intermediate collections</strong>: OOPath works directly on the object graph</li>
+<li><strong>Natural filtering</strong>: Constraints are applied directly at each level</li>
+<li><strong>Better memory usage</strong>: Avoids creating unnecessary collection objects</li>
+<li><strong>More intuitive</strong>: More closely matches how we think about object relationships</li>
+<li><strong>Cleaner integration with accumulate</strong>: Can be combined with accumulate for aggregations</li>
+</ul>
+<p>Traditional DRL approach with <code>collect</code>:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Count overdue invoices per customer&quot;</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">when</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="n">$customer</span><span class="p">:</span><span class="w"> </span><span class="n">Customer</span><span class="p">()</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="n">$overdueInvoices</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="p">()</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="nf">collect</span><span class="p">(</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">        </span><span class="n">Invoice</span><span class="p">(</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;OVERDUE&quot;</span><span class="p">)</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="n">eval</span><span class="p">(</span><span class="n">$overdueInvoices</span><span class="p">.</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="n">then</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">    </span><span class="c1">// Actions</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="n">end</span>
+</span></code></pre></div>
+<p>With OOPath and accumulate:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Count overdue invoices per customer&quot;</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">when</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="n">$customer</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="nf">accumulate</span><span class="p">(</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">        </span><span class="n">$invoice</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">invoices</span><span class="o">[</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;OVERDUE&quot;</span><span class="o">]</span><span class="p">;</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">        </span><span class="n">$count</span><span class="p">:</span><span class="w"> </span><span class="n">count</span><span class="p">(</span><span class="n">$invoice</span><span class="p">);</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">        </span><span class="n">$count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">3</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="n">then</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="c1">// Actions</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="n">end</span>
+</span></code></pre></div>
+<h2 id="oopath-with-rule-units">OOPath with Rule Units<a class="headerlink" href="#oopath-with-rule-units" title="Permanent link">&para;</a></h2>
+<p>Rule Units are the modern approach to organizing rules in Drools, and OOPath works seamlessly with them:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">package</span><span class="w"> </span><span class="nn">org.example</span><span class="p">;</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">unit</span><span class="w"> </span><span class="n">CustomerUnit</span><span class="p">;</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="kn">import</span><span class="w"> </span><span class="nn">org.example.Customer</span><span class="p">;</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="kn">import</span><span class="w"> </span><span class="nn">org.example.Invoice</span><span class="p">;</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="kn">import</span><span class="w"> </span><span class="nn">org.example.Payment</span><span class="p">;</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find customers with overdue invoices&quot;</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="n">when</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="w">    </span><span class="n">$customer</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span><span class="o">[</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;PREMIUM&quot;</span><span class="o">]</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">    </span><span class="n">$invoice</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">invoices</span><span class="o">[</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;OVERDUE&quot;</span><span class="o">]</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">    </span><span class="n">not</span><span class="w"> </span><span class="o">/</span><span class="n">payments</span><span class="o">[</span><span class="n">invoice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$invoice</span><span class="o">]</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="n">then</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="w">    </span><span class="n">notificationService</span><span class="p">.</span><span class="na">sendOverdueNotice</span><span class="p">(</span><span class="n">$customer</span><span class="p">,</span><span class="w"> </span><span class="n">$invoice</span><span class="p">);</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="n">end</span>
+</span></code></pre></div>
+<p>In this example, the OOPath expressions reference data sources defined in the Rule Unit, providing a clean separation of concerns.</p>
+<h2 id="advanced-examples">Advanced Examples<a class="headerlink" href="#advanced-examples" title="Permanent link">&para;</a></h2>
+<h3 id="example-1-insurance-risk-assessment">Example 1: Insurance Risk Assessment<a class="headerlink" href="#example-1-insurance-risk-assessment" title="Permanent link">&para;</a></h3>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;High Risk Policy With Claim History&quot;</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">when</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="n">$policy</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">policies</span><span class="o">[</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;AUTO&quot;</span><span class="o">]</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="n">$customer</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span><span class="o">[</span><span class="n">id</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$policy</span><span class="p">.</span><span class="na">customerId</span><span class="o">]</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="n">$claim</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">claims</span><span class="o">[</span><span class="n">policyNumber</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$policy</span><span class="p">.</span><span class="na">number</span><span class="p">,</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">5000</span><span class="o">]</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">    </span><span class="n">accumulate</span><span class="p">(</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">        </span><span class="n">$violation</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span><span class="o">[</span><span class="k">this</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="o">]/</span><span class="n">drivingRecord</span><span class="o">/</span><span class="n">violations</span><span class="o">[</span><span class="n">type</span><span class="w"> </span><span class="nf">in</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;SPEEDING&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;DUI&quot;</span><span class="p">)</span><span class="o">]</span><span class="p">;</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">        </span><span class="n">$count</span><span class="p">:</span><span class="w"> </span><span class="n">count</span><span class="p">(</span><span class="n">$violation</span><span class="p">);</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">        </span><span class="n">$count</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">2</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="n">then</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">    </span><span class="n">riskService</span><span class="p">.</span><span class="na">flagHighRisk</span><span class="p">(</span><span class="n">$policy</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Multiple violations with large claim&quot;</span><span class="p">);</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="n">end</span>
+</span></code></pre></div>
+<h3 id="example-2-e-commerce-product-recommendations">Example 2: E-commerce Product Recommendations<a class="headerlink" href="#example-2-e-commerce-product-recommendations" title="Permanent link">&para;</a></h3>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Recommend Accessories For Electronics&quot;</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">when</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="n">$customer</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="n">$order</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span><span class="o">[</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="o">]</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="n">$item</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span><span class="o">[</span><span class="k">this</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$order</span><span class="o">]/</span><span class="n">items</span><span class="o">/</span><span class="n">product</span><span class="o">[</span><span class="n">category</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;ELECTRONICS&quot;</span><span class="o">]</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span><span class="n">not</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span><span class="o">[</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="o">]/</span><span class="n">items</span><span class="o">/</span><span class="n">product</span><span class="o">[</span><span class="n">id</span><span class="w"> </span><span class="n">memberOf</span><span class="w"> </span><span class="n">accessoryService</span><span class="p">.</span><span class="na">getAccessoriesFor</span><span class="p">(</span><span class="n">$item</span><span class="p">.</span><span class="na">id</span><span class="p">)</span><span class="o">]</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">then</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">    </span><span class="n">recommendationService</span><span class="p">.</span><span class="na">suggestAccessories</span><span class="p">(</span><span class="n">$customer</span><span class="p">,</span><span class="w"> </span><span class="n">$item</span><span class="p">);</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="n">end</span>
+</span></code></pre></div>
+<h3 id="example-3-medical-diagnosis-support">Example 3: Medical Diagnosis Support<a class="headerlink" href="#example-3-medical-diagnosis-support" title="Permanent link">&para;</a></h3>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Potential Diabetes Warning&quot;</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">when</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">    </span><span class="n">$patient</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">patients</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="n">$reading</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">patients</span><span class="o">[</span><span class="k">this</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$patient</span><span class="o">]/</span><span class="n">bloodTests</span><span class="o">[</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">        </span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;GLUCOSE&quot;</span><span class="p">,</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">        </span><span class="n">value</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">126</span><span class="p">,</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">        </span><span class="n">date</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">DateHelper</span><span class="p">.</span><span class="na">monthsAgo</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">    </span><span class="o">]</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">    </span><span class="n">exists</span><span class="w"> </span><span class="o">/</span><span class="n">patients</span><span class="o">[</span><span class="k">this</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$patient</span><span class="o">]/</span><span class="n">medicalHistory</span><span class="o">/</span><span class="n">conditions</span><span class="o">[</span><span class="n">name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;OBESITY&quot;</span><span class="o">]</span>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="w">    </span><span class="n">not</span><span class="w"> </span><span class="o">/</span><span class="n">patients</span><span class="o">[</span><span class="k">this</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$patient</span><span class="o">]/</span><span class="n">diagnoses</span><span class="o">[</span><span class="n">condition</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;DIABETES&quot;</span><span class="o">]</span>
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="n">then</span>
+</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="w">    </span><span class="n">alertService</span><span class="p">.</span><span class="na">createDiabetesScreeningAlert</span><span class="p">(</span><span class="n">$patient</span><span class="p">,</span><span class="w"> </span><span class="n">$reading</span><span class="p">);</span>
+</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="n">end</span>
+</span></code></pre></div>
+<h2 id="best-practices-for-oopath">Best Practices for OOPath<a class="headerlink" href="#best-practices-for-oopath" title="Permanent link">&para;</a></h2>
+<h3 id="performance-optimization">Performance Optimization<a class="headerlink" href="#performance-optimization" title="Permanent link">&para;</a></h3>
+<h4 id="put-most-restrictive-conditions-first">Put most restrictive conditions first<a class="headerlink" href="#put-most-restrictive-conditions-first" title="Permanent link">&para;</a></h4>
+<p>By putting the most restrictive conditions first, you reduce  the number of objects that need to be evaluated.
+   <div class="language-java highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// Better performance</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="o">/</span><span class="n">customers</span><span class="o">[</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;PREMIUM&quot;</span><span class="o">]/</span><span class="n">orders</span><span class="o">[</span><span class="n">amount</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1000</span><span class="o">]</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1">// Less optimal</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="o">/</span><span class="n">customers</span><span class="o">/</span><span class="n">orders</span><span class="o">[</span><span class="n">amount</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1000</span><span class="o">]</span>
+</span></code></pre></div></p>
+<h4 id="avoid-deep-traversals-when-possible">Avoid deep traversals when possible<a class="headerlink" href="#avoid-deep-traversals-when-possible" title="Permanent link">&para;</a></h4>
+<p>When possible, try to break complex traversals into multiple patterns. This isn't just for readability, but is better for performance as well!
+   <div class="language-java highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1">// Avoid</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="o">/</span><span class="n">companies</span><span class="o">/</span><span class="n">departments</span><span class="o">/</span><span class="n">teams</span><span class="o">/</span><span class="n">employees</span><span class="o">[</span><span class="n">name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;John&quot;</span><span class="o">]</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1">// Better</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="nl">$employee</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">employees</span><span class="o">[</span><span class="n">name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;John&quot;</span><span class="o">]</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="o">/</span><span class="n">teams</span><span class="o">[</span><span class="n">members</span><span class="w"> </span><span class="n">contains</span><span class="w"> </span><span class="n">$employee</span><span class="o">]</span>
+</span></code></pre></div></p>
+<h4 id="use-binding-for-reused-objects">Use binding for reused objects<a class="headerlink" href="#use-binding-for-reused-objects" title="Permanent link">&para;</a></h4>
+<p>Bind objects you need to reference multiple times.</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nl">$customer</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span><span class="o">[</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;PREMIUM&quot;</span><span class="o">]</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="nl">$order</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span><span class="o">[</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="p">,</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1000</span><span class="o">]</span>
+</span></code></pre></div>
+<h3 id="readability">Readability<a class="headerlink" href="#readability" title="Permanent link">&para;</a></h3>
+<h4 id="use-meaningful-variable-names">Use meaningful variable names<a class="headerlink" href="#use-meaningful-variable-names" title="Permanent link">&para;</a></h4>
+<p>Clear naming makes rules easier to understand. Even though a lot of examples found in community might refer to <code>$c</code> or <code>$o</code>, when writing business rules, descriptive will always be better!</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1">// Avoid</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="nl">$c</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="nl">$o</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span><span class="o">[</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$c</span><span class="o">]</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="c1">// Better</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="nl">$customer</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="nl">$order</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">orders</span><span class="o">[</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="o">]</span>
+</span></code></pre></div>
+<h4 id="add-comments-for-complex-paths">Add comments for complex paths<a class="headerlink" href="#add-comments-for-complex-paths" title="Permanent link">&para;</a></h4>
+<p>Document complex navigation paths with comments to make them easier to understand what the rule is trying to accomplish!</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1">// Find active subscriptions for premium customers with payment issues</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nl">$subscription</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span><span class="o">[</span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;PREMIUM&quot;</span><span class="o">]/</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">               </span><span class="n">subscriptions</span><span class="o">[</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;ACTIVE&quot;</span><span class="o">]/</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">               </span><span class="n">payments</span><span class="o">[</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;FAILED&quot;</span><span class="o">]</span>
+</span></code></pre></div>
+<h4 id="break-complex-rules-into-multiple-smaller-rules">Break complex rules into multiple smaller rules<a class="headerlink" href="#break-complex-rules-into-multiple-smaller-rules" title="Permanent link">&para;</a></h4>
+<p>Having multiple smaller rules when coming from a large complex one makes maintainability better and can often improve overall performance of the particular decision.</p>
+<h3 id="debugging-oopath">Debugging OOPath<a class="headerlink" href="#debugging-oopath" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Start simple and build up</strong>: Begin with simpler paths and gradually add complexity.</li>
+<li><strong>Use logging to inspect matched objects</strong>: Add logging statements to verify matches.</li>
+<li><strong>Use the Drools debugger</strong>: Set breakpoints and inspect the rule activation process.</li>
+</ul>
+<h2 id="limitations-and-edge-cases">Limitations and Edge Cases<a class="headerlink" href="#limitations-and-edge-cases" title="Permanent link">&para;</a></h2>
+<p>While powerful, OOPath has some limitations to be aware of:</p>
+<ul>
+<li><strong>Performance with very deep paths</strong>: Extremely deep traversals can impact performance.</li>
+<li><strong>Complex aggregations</strong>: Some advanced aggregations may be more clearly expressed with explicit <code>accumulate</code>.</li>
+<li><strong>Backward compatibility</strong>: Rules using OOPath won't work with older Drools versions.</li>
+</ul>
+<h2 id="migration-from-traditional-drl-to-oopath">Migration from Traditional DRL to OOPath<a class="headerlink" href="#migration-from-traditional-drl-to-oopath" title="Permanent link">&para;</a></h2>
+<p>When migrating existing rules to use OOPath:</p>
+<ol>
+<li><strong>Identify object graph traversals</strong>: Look for patterns using <code>from</code> to navigate object relationships.</li>
+<li><strong>Convert each level of navigation</strong>: Transform each step into an OOPath segment.</li>
+<li><strong>Simplify variable bindings</strong>: Remove unnecessary variable bindings.</li>
+<li><strong>Test extensively</strong>: Verify the behavior matches the original rules.</li>
+</ol>
+<h3 id="migration-example">Migration Example<a class="headerlink" href="#migration-example" title="Permanent link">&para;</a></h3>
+<h4 id="original-rule">Original rule<a class="headerlink" href="#original-rule" title="Permanent link">&para;</a></h4>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find overdue payments&quot;</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">when</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">    </span><span class="n">$customer</span><span class="p">:</span><span class="w"> </span><span class="n">Customer</span><span class="p">(</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;ACTIVE&quot;</span><span class="p">)</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">    </span><span class="n">$account</span><span class="p">:</span><span class="w"> </span><span class="n">Account</span><span class="p">(</span><span class="n">customer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">$customer</span><span class="p">,</span><span class="w"> </span><span class="n">balance</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">$customer</span><span class="p">.</span><span class="na">accounts</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">    </span><span class="n">$payment</span><span class="p">:</span><span class="w"> </span><span class="n">Payment</span><span class="p">(</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;OVERDUE&quot;</span><span class="p">)</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">$account</span><span class="p">.</span><span class="na">payments</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="n">then</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="w">    </span><span class="c1">// Actions</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="n">end</span>
+</span></code></pre></div>
+<h4 id="migrated-rule">Migrated rule<a class="headerlink" href="#migrated-rule" title="Permanent link">&para;</a></h4>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find overdue payments&quot;</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">when</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">    </span><span class="n">$payment</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span><span class="o">[</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;ACTIVE&quot;</span><span class="o">]/</span><span class="n">accounts</span><span class="o">[</span><span class="n">balance</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="o">]/</span><span class="n">payments</span><span class="o">[</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;OVERDUE&quot;</span><span class="o">]</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">then</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="w">    </span><span class="c1">// Actions</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="n">end</span>
+</span></code></pre></div>
+<h2 id="advanced-oopath-features-in-drools-10">Advanced OOPath Features in Drools 10+<a class="headerlink" href="#advanced-oopath-features-in-drools-10" title="Permanent link">&para;</a></h2>
+<p>The latest versions of Drools introduce additional capabilities for OOPath:</p>
+<h3 id="navigating-map-collections">Navigating Map Collections<a class="headerlink" href="#navigating-map-collections" title="Permanent link">&para;</a></h3>
+<p>OOPath allows navigation through map entries:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find Configuration by Key&quot;</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="n">when</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">    </span><span class="n">$value</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">system</span><span class="o">/</span><span class="n">configurationMap</span><span class="o">[</span><span class="s">&quot;database.url&quot;</span><span class="o">]</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="n">then</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Database URL: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">$value</span><span class="p">);</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="n">end</span>
+</span></code></pre></div>
+<h3 id="improved-collection-filtering">Improved Collection Filtering<a class="headerlink" href="#improved-collection-filtering" title="Permanent link">&para;</a></h3>
+<p>More powerful filtering expressions for collections:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Find Products with Stock Issues&quot;</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="n">when</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span><span class="n">$product</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">products</span><span class="o">[</span><span class="n">stockLocations</span><span class="p">.</span><span class="o">?[</span><span class="n">quantity</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="o">]</span><span class="p">.</span><span class="na">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="o">]</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="n">then</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="w">    </span><span class="n">inventoryService</span><span class="p">.</span><span class="na">flagLowStock</span><span class="p">(</span><span class="n">$product</span><span class="p">);</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="n">end</span>
+</span></code></pre></div>
+<h3 id="flattening-collections">Flattening Collections<a class="headerlink" href="#flattening-collections" title="Permanent link">&para;</a></h3>
+<p>Flattening nested collections for easier processing:</p>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">rule</span><span class="w"> </span><span class="s">&quot;Process All Order Items&quot;</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="n">when</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">    </span><span class="n">$item</span><span class="p">:</span><span class="w"> </span><span class="o">/</span><span class="n">customers</span><span class="o">/</span><span class="n">orders</span><span class="o">/</span><span class="n">items</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="n">then</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="w">    </span><span class="n">processingService</span><span class="p">.</span><span class="na">handleItem</span><span class="p">(</span><span class="n">$item</span><span class="p">);</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="n">end</span>
+</span></code></pre></div>
+<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
+<p>OOPath represents a significant advancement in DRL syntax, making rules more concise, readable, and maintainable. By providing an intuitive way to navigate object graphs, OOPath helps rule authors focus on the business logic rather than on the mechanics of traversing object relationships.</p>
+<p>The older approaches using <code>from</code> and <code>collect</code> are now considered obsolete for most use cases, as OOPath provides a superior alternative that better aligns with modern object-oriented design principles. When writing new rules or refactoring existing ones, OOPath should be the preferred approach for navigating relationships between domain objects.</p>
+<p>This evolution in syntax is part of Drools' ongoing commitment to making rule authoring more accessible, intuitive, and powerful for both developers and business users.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+
+
+
+
+                
+
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+
+        <!-- Footer HTML Template for docs/overrides/partials/footer.html -->
+
+<!-- Previous/Next Navigation -->
+
+<nav class="md-footer__inner md-grid" aria-label="Footer">
+  
+  <a href="../phreak/index.html" class="md-footer__link md-footer__link--prev" rel="prev">
+    <div class="md-footer__button md-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/>
+      </svg>
+    </div>
+    <div class="md-footer__title">
+      <span class="md-footer__direction">Previous</span>
+      <span class="md-ellipsis">Phreak Algorithm</span>
+    </div>
+  </a>
+  
+  
+  <a href="../drl-conditions/index.html" class="md-footer__link md-footer__link--next" rel="next">
+    <div class="md-footer__title">
+      <span class="md-footer__direction">Next</span>
+      <span class="md-ellipsis">Conditions (LHS)</span>
+    </div>
+    <div class="md-footer__button md-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/>
+      </svg>
+    </div>
+  </a>
+  
+</nav>
+
+
+<div class="md-footer-meta">
+  <div class="aletyx-footer">
+    <div class="footer-column brand-column">
+      <a href="../../../../../www.aletyx.ai/index.html" class="footer-logo">
+        <img
+          src="../../../../assets/images/aletyx-logo-all-white.png"
+          alt="Aletyx Logo"
+          class="logo-light footer-logo-img"
+        />
+        <img
+          src="../../../../assets/images/aletyx-logo-all-white.png"
+          alt="Aletyx Logo"
+          class="logo-dark footer-logo-img"
+        />
+      </a>
+      <p class="footer-tagline">
+        Empowering businesses with AI-driven decision-making and intelligent
+        automation. Scalable solutions for Apache KIE, Drools, and Kogito.
+      </p>
+    </div>
+
+    <div class="footer-column">
+      <ul class="footer-links">
+        <li>
+          <a href="../../../../../aletyx.ai/build-of-drools/index.html"
+            >Enterprise build of Drools</a
+          >
+        </li>
+        <li>
+          <a href="../../../../../aletyx.ai/build-of-kogito/index.html"
+            >Enterprise build of Kogito</a
+          >
+        </li>
+        <li><a href="../../../../../www.aletyx.ai/pricing/index.html">Pricing</a></li>
+      </ul>
+      <h3 class="footer-heading">SERVICES</h3>
+      <ul class="footer-links">
+        <li><a href="../../../../../aletyx.ai/training-programs/index.html">Training</a></li>
+        <li>
+          <a href="../../../../../aletyx.ai/consulting-services/index.html">Consulting</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">RESOURCES</h3>
+      <ul class="footer-links">
+        <li>
+          <a href="../../../../../aletyx.ai/experience/index.html" target="_blank" rel="noopener"
+            >Aletyx Experience
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../../index.html" target="_blank" rel="noopener"
+            >Documentation
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li><a href="../../../../../aletyx.ai/category/blog/index.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">DEVELOPER TOOLS</h3>
+      <ul class="footer-links">
+        <li>
+          <a href="../../../../../aletyx.ai/experience/index.html" target="_blank" rel="noopener"
+            >vs.code
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../../../start.aletyx.ai/index.html" target="_blank" rel="noopener"
+            >start.aletyx.ai
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../../../playground.aletyx.ai/index.html" target="_blank" rel="noopener"
+            >playground.aletyx.ai
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="https://maven-innovator.aletyx.services/" target="_blank" rel="noopener"
+            >maven-innovator.aletyx.services
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a
+            href="https://registry-innovator.aletyx.services/"
+            target="_blank"
+            rel="noopener"
+            >registry-innovator.aletyx.services
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">COMPANY</h3>
+      <ul class="footer-links">
+        <li><a href="../../../../../aletyx.ai/about-us/index.html">About Us</a></li>
+        <li><a href="../../../../../aletyx.ai/careers/index.html">Careers</a></li>
+        <li><a href="../../../../../aletyx.ai/contact-us/index.html">Contact Us</a></li>
+      </ul>
+
+      <div class="social-links">
+        <a
+          href="https://www.linkedin.com/company/aletyx"
+          target="_blank"
+          rel="noopener"
+          aria-label="LinkedIn"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://github.com/aletyx"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://www.youtube.com/@aletyxai"
+          target="_blank"
+          rel="noopener"
+          aria-label="YouTube"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://twitter.com/aletyxai"
+          target="_blank"
+          rel="noopener"
+          aria-label="Twitter"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+            />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="footer-legal">
+      <p>&copy; 2025 Aletyx, Inc. All rights reserved.</p>
+      <div class="legal-links">
+        <a href="../../../../../www.aletyx.ai/terms/index.html">Terms of Use</a>
+        <a href="../../../../../www.aletyx.ai/privacy/index.html">Privacy Policy</a>
+        <a href="../../../../../www.aletyx.ai/cookie-policy/index.html">Cookie Policy</a>
+        <a href="#__consent">Cookie Settings</a>
+      </div>
+    </div>
+  </div>
+</div>
+      
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+      <div class="md-consent" data-md-component="consent" id="__consent" hidden>
+        <div class="md-consent__overlay"></div>
+        <aside class="md-consent__inner">
+          <form class="md-consent__form md-grid md-typeset" name="consent">
+            
+
+
+
+<h4>Cookie consent</h4>
+<p>We use cookies to recognize your repeated visits and preferences, as well as to measure the effectiveness of our documentation and whether users find what they're searching for. With your consent, you're helping us to make our documentation better. <a href="../../../../legal/cookie-policy/index.html">Learn more in our Cookie Policy</a>.</p>
+<input class="md-toggle" type="checkbox" id="__settings" >
+<div class="md-consent__settings">
+  <ul class="task-list">
+    
+    
+    
+      
+    
+    
+      
+        
+  
+  
+    
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="analytics" >
+      <span class="task-list-indicator"></span>
+      Help us improve our website by collecting anonymous usage data
+    </label>
+  </li>
+
+      
+    
+      
+        
+  
+  
+    
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="marketing" >
+      <span class="task-list-indicator"></span>
+      Allow us to personalize content and ads to improve your browsing experience
+    </label>
+  </li>
+
+      
+    
+      
+        
+  
+  
+    
+    
+      
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="necessary" checked>
+      <span class="task-list-indicator"></span>
+      Necessary Cookies - Enable core functionality - the website cannot function properly without these
+    </label>
+  </li>
+
+      
+    
+  </ul>
+</div>
+<div class="md-consent__controls">
+  
+    
+      <button class="md-button md-button--primary">Accept</button>
+    
+    
+    
+  
+    
+    
+      <button type="reset" class="md-button md-button--primary">Reject</button>
+    
+    
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
+    
+  
+</div>
+          </form>
+        </aside>
+      </div>
+      <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout((function(){document.querySelector("[data-md-component=consent]").hidden=!1}),250);var form=document.forms.consent;for(var action of["submit","reset"])form.addEventListener(action,(function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map((function(e){return[e,!0]})))),location.hash="",location.reload()}))</script>
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.prune", "navigation.instant", "navigation.instant.prefetch", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.top", "navigation.tracking", "search.share", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.copy", "content.code.select", "toc.follow"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+
+      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../../assets/js/annotations.js"></script>
+      
+        <script src="../../../../assets/js/custom.js"></script>
+      
+        <script src="../../../../assets/js/documentation-fix.js"></script>
+      
+        <script src="../../../../assets/js/svg-fix.js"></script>
+      
+        <script src="../../../../assets/js/image-path-fix.js"></script>
+      
+        <script src="../../../../assets/js/api-examples.js"></script>
+      
+        <script src="../../../../assets/js/banner-persistent.js"></script>
+      
+        <script src="../../../../assets/js/cookie-consent.js"></script>
+      
+        <script src="../../../../assets/js/version-edition-selector.js"></script>
+      
+    
+<script src="../../../../assets/js/custom.js"></script>
+<script>
+  // Banner close handler
+  function closeBanner() {
+    const banner = document.getElementById('announcement-banner');
+    const containers = document.querySelectorAll('.md-announce, .md-banner');
+    const header = document.querySelector('.md-header');
+    if (banner) {
+      banner.style.display = 'none';
+      localStorage.setItem('aletyx-banner-closed', 'true');
+    }
+    containers.forEach(function(el) {
+      el.style.display = 'none';
+      el.style.height = '0';
+      el.style.overflow = 'hidden';
+    });
+    // Move header to top when banner is closed
+    if (header) header.style.top = '0';
+  }
+
+  // Check and hide banner if previously closed
+  function checkBannerState() {
+    const header = document.querySelector('.md-header');
+    if (localStorage.getItem('aletyx-banner-closed') === 'true') {
+      const banner = document.getElementById('announcement-banner');
+      const containers = document.querySelectorAll('.md-announce, .md-banner');
+      if (banner) banner.style.display = 'none';
+      containers.forEach(function(el) {
+        el.style.display = 'none';
+        el.style.height = '0';
+        el.style.overflow = 'hidden';
+      });
+      // Move header to top when banner is hidden
+      if (header) header.style.top = '0';
+    } else {
+      // Banner visible - header below it
+      if (header) header.style.top = '';
+    }
+  }
+
+  // Run on initial load
+  document.addEventListener('DOMContentLoaded', checkBannerState);
+
+  // Also run immediately in case DOM is already loaded
+  checkBannerState();
+
+  // Handle Material theme instant navigation
+  if (typeof document$ !== 'undefined') {
+    document$.subscribe(function() {
+      checkBannerState();
+    });
+  }
+
+  // Also listen for location changes (fallback)
+  window.addEventListener('popstate', checkBannerState);
+
+  // Theme persistence
+  (function() {
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.attributeName === 'data-md-color-scheme') {
+          var scheme = document.body.getAttribute('data-md-color-scheme');
+          localStorage.setItem('theme', scheme);
+        }
+      });
+    });
+    observer.observe(document.body, { attributes: true });
+
+    var savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.body.setAttribute('data-md-color-scheme', savedTheme);
+    }
+  })();
+</script>
+
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": false, "draggable": false, "openEffect": "none", "closeEffect": "none", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"6d3101840d104089a766ae297ca50f4d","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+
+<!-- Mirrored from docs.aletyx.ai/core/decisions/drl/oopath-details/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 24 Jun 2026 11:28:49 GMT -->
+</html>

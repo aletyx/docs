@@ -1,0 +1,35 @@
+#accept-all-cookies-btn {
+	margin-right: 0.8rem;
+	font-weight: 500;
+	padding: 0.625em 2em;
+	color: var(--md-primary-bg-color);
+	background-color: var(--md-primary-fg-color);
+	border: none;
+	border-radius: 2px;
+	cursor: pointer;
+	display: inline-block;
+	font-size: 0.8rem;
+	text-align: center;
+}
+
+/* Ensure buttons have proper spacing */
+.md-consent__actions,
+.md-consent form>div:last-child,
+.md-consent__controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+/* Make sure our button stands out */
+#accept-all-cookies-btn:hover {
+	background-color: var(--md-primary-fg-color--dark);
+	text-decoration: none;
+}
+
+/* Match Material for MkDocs button styling */
+#accept-all-cookies-btn {
+	transition: color 125ms, background-color 125ms, border-color 125ms;
+}

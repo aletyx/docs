@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+	<!-- Styles -->
+	<defs>
+		<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+			<polygon points="0 0, 10 3.5, 0 7" fill="#16293F" />
+		</marker>
+		<filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+			<feDropShadow dx="3" dy="3" stdDeviation="2" flood-opacity="0.1" />
+		</filter>
+		<linearGradient id="clientGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+			<stop offset="0%" stop-color="#16293F" />
+			<stop offset="100%" stop-color="#1A3A5F" />
+		</linearGradient>
+	</defs>
+
+	<!-- Client Service Box -->
+	<rect x="50" y="120" width="180" height="70" rx="5" ry="5" fill="url(#clientGradient)" stroke="#16293F"
+		stroke-width="2" filter="url(#shadow)" />
+	<text x="140" y="165" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle"
+		fill="#FFFFFF">Client</text>
+
+	<!-- Job Service Box -->
+	<rect x="370" y="120" width="180" height="70" rx="5" ry="5" fill="url(#clientGradient)" stroke="#16293F"
+		stroke-width="2" filter="url(#shadow)" />
+	<text x="460" y="165" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle"
+		fill="#FFFFFF">Job Service</text>
+
+	<!-- Database Icon -->
+	<g transform="translate(680, 155)">
+		<!-- Cylinder body -->
+		<path d="M -35,-15
+             A 35,15 0 0,1 35,-15
+             L 35,15
+             A 35,15 0 0,1 -35,15
+             Z" fill="#FFFFFF" stroke="#16293F" stroke-width="2" filter="url(#shadow)" />
+		<!-- Top ellipse -->
+		<ellipse cx="0" cy="-15" rx="35" ry="15" fill="#FFFFFF" stroke="#16293F" stroke-width="2" />
+		<!-- Text -->
+		<text x="0" y="5" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle"
+			fill="#424242">Jobs Storage</text>
+	</g>
+
+	<!-- Schedule Arrow (Client to Job Service) -->
+	<line x1="230" y1="155" x2="370" y2="155" stroke="#16293F" stroke-width="2" marker-end="url(#arrowhead)" />
+	<text x="300" y="138" font-family="Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle"
+		fill="#16293F">Schedule</text>
+
+	<!-- Persistence Arrow (Job Service to Database) -->
+	<line x1="550" y1="155" x2="635" y2="155" stroke="#16293F" stroke-width="2" marker-end="url(#arrowhead)" />
+	<text x="595" y="138" font-family="Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle"
+		fill="#16293F">Persistence</text>
+
+	<!-- Callback/Sink Arrow (Job Service to Client) -->
+	<path d="M 460 190 C 460 230 300 230 140 190" stroke="#16293F" stroke-width="2" fill="none"
+		marker-end="url(#arrowhead)" />
+	<text x="300" y="235" font-family="Arial, sans-serif" font-size="16" font-weight="500" text-anchor="middle"
+		fill="#16293F">callback/sink</text>
+
+	<!-- Background - very light blue tint -->
+	<rect x="0" y="0" width="800" height="300" fill="#f8f9fa" fill-opacity="0.5" style="z-index:-1" />
+</svg>

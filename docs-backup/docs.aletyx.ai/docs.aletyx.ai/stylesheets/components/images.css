@@ -1,0 +1,95 @@
+/* Add a subtle border to all images */
+img {
+	border: 1px solid var(--md-primary-fg-color);
+	border-radius: 4px;
+	padding: 5px;
+  }
+
+  /* Optional: Add a hover effect */
+  img:hover {
+	box-shadow: 0 0 2px 1px rgba(252, 118, 76);
+  }
+
+  .img-with-caption {
+	display: block;
+	position: relative;
+	margin-bottom: 1.5em;
+  }
+
+  .img-with-caption::after {
+	content: attr(alt);
+	display: block;
+	position: relative;
+	background: #f5f5f5;
+	padding: 5px 10px;
+	font-style: italic;
+	font-size: 0.9em;
+	text-align: center;
+	border-bottom: 1px solid #ddd;
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+	border-radius: 0 0 4px 4px;
+  }
+
+  /* Figure and caption styles */
+  .figure-container {
+	display: inline-block;
+	margin: 1em 0;
+  }
+
+  .figure-caption {
+	text-align: center;
+	margin-top: 0.5em;
+	font-size: 0.9em;
+	font-style: italic;
+	color: #555;
+	max-width: 100%;
+  }
+
+  /* Base image styles - general appearance for all images */
+  .md-content img {
+  	border: 1px solid var(--md-primary-fg-color);
+  	border-radius: 4px;
+  	padding: 5px;
+  	box-sizing: border-box;
+  }
+
+  /* Regular markdown images (not in special containers) */
+  .md-content img:not(.annotated-image):not(.image-map) {
+  	max-width: 1000px;
+  	/* Maximum width for large images */
+  	width: auto;
+  	/* Keep aspect ratio */
+  	height: auto;
+  	/* Keep aspect ratio */
+  	display: block;
+  	margin-left: auto;
+  	margin-right: auto;
+  }
+
+  /* Prevent images from being larger than they need to be */
+  .md-content img:not(.annotated-image):not(.image-map) {
+  	max-width: min(100%, 1000px);
+  	/* Use the smaller of 100% or 800px */
+  }
+
+  /* Special handling for annotated image containers - see universal-annotations.css */
+  /* Note: Do not override width/position here - it breaks marker positioning */
+
+  /* Image map specific styles */
+  .image-map-container img.image-map {
+  	width: 100%;
+  	/* Full width within container */
+  	height: auto;
+  	max-width: 100%;
+  }
+
+  /* For mobile responsiveness */
+  @media (max-width: 768px) {
+
+  	.md-content img:not(.annotated-image):not(.image-map),
+  	.annotated-image-container,
+  	.image-map-container {
+  		max-width: 100%;
+  	}
+  }

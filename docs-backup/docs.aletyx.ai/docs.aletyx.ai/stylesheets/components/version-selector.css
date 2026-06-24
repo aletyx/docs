@@ -1,0 +1,240 @@
+/* Aletyx Edition Selector - Positioned Left of Search Bar */
+
+/* Edition selector container - positioned after search bar via JS insertion */
+.aletyx-edition-selector {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.5rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Selector button - matches navigation tab style */
+.edition-selector-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 0.7rem;
+  font-weight: 400;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+  opacity: 0.85;
+  text-transform: capitalize;
+}
+
+.edition-selector-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+
+.edition-selector-button:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.edition-label {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.edition-text {
+  font-family: 'Aspekta', sans-serif;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+
+.dropdown-icon {
+  opacity: 0.6;
+  transition: transform 0.2s ease;
+}
+
+.edition-selector-button:hover .dropdown-icon {
+  opacity: 0.9;
+}
+
+/* Dropdown menu */
+.edition-selector-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  min-width: 180px;
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dropdown-section {
+  padding: 0.75rem 0;
+}
+
+.dropdown-label {
+  padding: 0 1rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-default-fg-color--light);
+}
+
+.dropdown-options {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  color: var(--md-default-fg-color);
+  font-size: 0.8rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  width: 100%;
+}
+
+.dropdown-option:hover {
+  background: var(--md-default-fg-color--lightest);
+}
+
+.dropdown-option.selected {
+  color: var(--md-primary-fg-color);
+  font-weight: 500;
+}
+
+.dropdown-option .check {
+  font-size: 0.9rem;
+  color: var(--md-primary-fg-color);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--md-default-fg-color--lightest);
+  margin: 0;
+}
+
+/* Notification toast - minimal */
+.aletyx-notification {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 0.6rem 1.2rem;
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lighter);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 0.8rem;
+  color: var(--md-default-fg-color);
+  z-index: 10000;
+  opacity: 0;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.aletyx-notification.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] .edition-selector-button {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+[data-md-color-scheme="slate"] .edition-selector-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-md-color-scheme="slate"] .edition-selector-dropdown {
+  background: #2d333b;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-md-color-scheme="slate"] .dropdown-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-md-color-scheme="slate"] .aletyx-notification {
+  background: #2d333b;
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.87);
+}
+
+/* Make edition badges clickable */
+.edition-badge {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.edition-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0.9;
+}
+
+.edition-badge:active {
+  transform: scale(0.98);
+}
+
+/* Responsive design */
+@media (max-width: 960px) {
+  .aletyx-edition-selector {
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+  }
+
+  .edition-selector-button {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .edition-label {
+    display: none; /* Hide "Edition:" label on smaller screens */
+  }
+
+  .edition-selector-dropdown {
+    min-width: 140px;
+    right: 0; /* Align dropdown to right edge on small screens */
+  }
+}
+
+@media (max-width: 640px) {
+  .edition-selector-button {
+    font-size: 0.6rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .edition-text {
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Print styles - hide selector when printing */
+@media print {
+  .aletyx-edition-selector,
+  .aletyx-notification {
+    display: none !important;
+  }
+}

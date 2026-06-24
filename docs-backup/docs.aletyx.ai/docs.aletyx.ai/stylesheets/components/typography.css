@@ -1,0 +1,71 @@
+/* Add underlines to inline text links only in main content area */
+.md-content__inner p a:not(.md-button):not(.card-link),
+.md-content__inner li a:not(.md-button):not(.card-link),
+.md-main p a:not(.md-button):not(.card-link),
+.md-main li a:not(.md-button):not(.card-link) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+  color: var(--md-accent-fg-color);
+  transition: all 0.2s ease;
+}
+
+/* Hover effect */
+.md-content__inner p a:not(.md-button):not(.card-link):hover,
+.md-content__inner li a:not(.md-button):not(.card-link):hover,
+.md-main p a:not(.md-button):not(.card-link):hover,
+.md-main li a:not(.md-button):not(.card-link):hover {
+  color: #e56641;
+  text-decoration-thickness: 2px;
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] .md-content__inner p a:not(.md-button):not(.card-link),
+[data-md-color-scheme="slate"] .md-content__inner li a:not(.md-button):not(.card-link),
+[data-md-color-scheme="slate"] .md-main p a:not(.md-button):not(.card-link),
+[data-md-color-scheme="slate"] .md-main li a:not(.md-button):not(.card-link) {
+  color: #FC9D4C;
+}
+
+[data-md-color-scheme="slate"] .md-content__inner p a:not(.md-button):not(.card-link):hover,
+[data-md-color-scheme="slate"] .md-content__inner li a:not(.md-button):not(.card-link):hover,
+[data-md-color-scheme="slate"] .md-main p a:not(.md-button):not(.card-link):hover,
+[data-md-color-scheme="slate"] .md-main li a:not(.md-button):not(.card-link):hover {
+  color: #FCDA4C;
+}
+
+/* Time estimate bubbles */
+.time-estimate {
+  display: inline-block;
+  background-color: #e8f4fd;
+  color: #0077cc;
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+/* Explicitly prevent underline styling in specific areas */
+.md-footer a,
+.md-footer-meta a,
+.md-footer p a,
+.md-footer li a,
+footer a,
+[class*="footer"] a,
+[class*="documentation-ai"] a,
+.documentation-ai a {
+  text-decoration: none !important;
+  font-weight: normal !important;
+  color: inherit !important;
+}
+
+/* Make sure other navigation elements are not affected */
+.md-nav__link,
+.md-tabs__link,
+.md-header a,
+.feature-card a,
+a.md-button,
+.md-sidebar a {
+  text-decoration: none !important;
+}

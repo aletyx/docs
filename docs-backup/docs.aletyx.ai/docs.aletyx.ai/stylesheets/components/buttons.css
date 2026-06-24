@@ -1,0 +1,30 @@
+/* Button styling - Unified pill shape */
+:root {
+  --radius-pill: 51px;
+}
+
+.md-button {
+  color: white;
+  background-color: var(--md-accent-fg-color);
+  border-radius: var(--radius-pill);
+  padding: 0.875rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+
+.md-button:hover {
+  background-color: #e56641;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.md-button--primary {
+  background: linear-gradient(0deg, #EB4B04 -8.75%, #FF7700 100%);
+  box-shadow: inset 0px 4px 5.9px rgba(255, 255, 255, 0.25);
+}
+
+.md-button--primary:hover {
+  background: linear-gradient(0deg, #D44003 -8.75%, #E66A00 100%);
+  box-shadow: inset 0px 4px 5.9px rgba(255, 255, 255, 0.35), 0 8px 24px rgba(255, 119, 0, 0.35);
+}

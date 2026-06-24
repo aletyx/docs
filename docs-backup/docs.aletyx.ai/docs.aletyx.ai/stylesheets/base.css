@@ -1,0 +1,120 @@
+/* Aspekta font is loaded via fonts.css */
+
+:root {
+	/* Aletyx Brand Colors */
+	--aletyx-black: #000000;
+	--aletyx-orange: #FC764C;
+	--aletyx-white: #FEFEFE;
+	--aletyx-off-white: #F0F0F0;
+
+	/* Primary colors - mapped from brand */
+	--md-primary-fg-color: var(--aletyx-black);
+	--md-primary-fg-color--light: var(--aletyx-black);
+	--md-primary-fg-color--dark: var(--aletyx-black);
+	--md-accent-fg-color: var(--aletyx-orange);
+	--md-accent-fg-color--transparent: #FC764C33;
+	--md-accent-bg-color: var(--aletyx-white);
+	--md-accent-bg-color--light: var(--aletyx-white);
+	--card-bg-color-light: var(--aletyx-off-white);
+
+	/* Secondary colors */
+	--secondary-color-1: #FC9D4C;
+	--secondary-color-2: #FCDA4C;
+
+	/* Hero header gradient colors - using brand black */
+	--hero-gradient-start: var(--aletyx-black);
+	--hero-gradient-end: #1a1a1a;
+
+	/* What's new section background */
+	--whats-new-bg-color: var(--aletyx-black);
+
+	/* Font settings */
+	--md-text-font: "Aspekta", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+	--md-code-font: "Roboto Mono", SFMono-Regular, Consolas, Menlo, monospace;
+}
+
+/* Primary button - uses gradient like the logo */
+.md-button.md-button--primary {
+	background: linear-gradient(135deg, var(--aletyx-black, #000000) 0%, #1a1a1a 100%);
+	color: var(--aletyx-white, #FEFEFE);
+	border: 1px solid #D3D6E0;
+}
+/* Primary button hover state */
+.md-button.md-button--primary:hover {
+	background: linear-gradient(135deg, var(--aletyx-black, #000000) 0%, #1a1a1a 90%);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	border: 1px solid #D3D6E0;
+}
+
+/* Primary button active/pressed state */
+.md-button.md-button--primary:active {
+	background: var(--aletyx-black, #000000);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	transform: translateY(1px);
+}
+
+/* Secondary button (default) */
+.md-button:not(.md-button--primary) {
+	background-color: var(--aletyx-black, #000000);
+	/* Cloud color */
+	color: var(--aletyx-white, #FEFEFE);
+	/* Dark navy */
+	border: 1px solid #D3D6E0;
+	/* Smoke color */
+}
+
+/* Secondary button hover */
+.md-button:not(.md-button--primary):hover {
+	background-color: var(--aletyx-black, #000000);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+	transform: translateY(-1px);
+	border: 1px solid #D3D6E0;
+}
+
+/* Secondary button active/pressed */
+.md-button:not(.md-button--primary):active {
+	background-color: #BCBFCC;
+	/* Steel color */
+	box-shadow: 0 1px 2px rgba(26, 41, 62, 0.1);
+	transform: translateY(1px);
+}
+
+/* Focus states for accessibility */
+.md-button:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(105, 34, 217, 0.3);
+}
+
+/* Disabled state for all buttons */
+.md-button:disabled,
+.md-button--disabled {
+	background-color: #D3D6E0 !important;
+	/* Smoke color */
+	color: #9DA2B3 !important;
+	/* Space color */
+	cursor: not-allowed;
+	box-shadow: none !important;
+	transform: none !important;
+	border: 1px solid #BCBFCC !important;
+	/* Steel color */
+}
+
+/* Icon handling within buttons */
+.md-button .md-icon {
+	margin-right: 0.5rem;
+	vertical-align: middle;
+}
+
+/* Small variant if needed */
+.md-button--small {
+	padding: 0.4rem 0.8rem;
+	font-size: 0.875rem;
+}
+
+/* Large variant if needed */
+.md-button--large {
+	padding: 0.75rem 1.5rem;
+	font-size: 1.1rem;
+}

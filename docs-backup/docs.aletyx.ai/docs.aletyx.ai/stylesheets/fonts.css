@@ -1,0 +1,40 @@
+/* Aspekta Font Family */
+@font-face {
+	font-family: 'Aspekta';
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url('../assets/fonts/Aspekta-300.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Aspekta';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('../assets/fonts/Aspekta-400.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Aspekta';
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url('../assets/fonts/Aspekta-500.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Aspekta';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('../assets/fonts/Aspekta-600.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Aspekta';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('../assets/fonts/Aspekta-700.woff2') format('woff2');
+}

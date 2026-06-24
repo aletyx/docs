@@ -1,0 +1,467 @@
+/**
+* Universal Annotation Styling for Aletyx Documentation
+* This file provides consistent styling for all annotation types:
+* - Custom image annotations
+* - Code annotations
+* - Image maps
+*/
+
+/* ====================================
+  SHARED ANIMATION KEYFRAMES
+  ==================================== */
+
+@keyframes pulse {
+	0% {
+		box-shadow: 0 0 0 0 rgba(252, 118, 76, 0.4);
+	}
+
+	70% {
+		box-shadow: 0 0 0 10px rgba(252, 118, 76, 0);
+	}
+
+	100% {
+		box-shadow: 0 0 0 0 rgba(252, 118, 76, 0);
+	}
+}
+
+/* ====================================
+	 CUSTOM IMAGE ANNOTATIONS
+	 ==================================== */
+
+/* Container for annotated images - centered like other images */
+.annotated-image-container {
+	position: relative;
+	margin: 1.5em auto;
+	display: block;
+	width: fit-content;
+	max-width: 100%;
+}
+
+/* Image inside annotated container - must fill container for % positioning to work */
+.annotated-image {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+/* Annotation markers */
+.annotation-marker {
+	position: absolute;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background-color: var(--aletyx-black, #000000);
+	color: var(--aletyx-white, #FEFEFE);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	font-weight: bold;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	z-index: 5;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	transform: translate(-50%, -50%);
+	animation: pulse 2s infinite;
+}
+
+.annotation-marker:hover {
+	transform: translate(-50%, -50%) scale(1.1);
+	background-color: rgba(252, 118, 76, 0.9);
+	animation: none;
+}
+
+.annotation-marker.active {
+	background-color: var(--aletyx-orange, #FC764C);
+	transform: translate(-50%, -50%) scale(1.1);
+	animation: none;
+}
+
+/* Special marker styles */
+.annotation-marker.plus::after {
+	content: "+";
+}
+
+.annotation-marker.x::before,
+.annotation-marker.x::after {
+	content: '';
+	position: absolute;
+	width: 14px;
+	height: 2px;
+	background-color: white;
+	transition: transform 0.3s ease;
+}
+
+.annotation-marker.x::before {
+	transform: rotate(45deg);
+}
+
+.annotation-marker.x::after {
+	transform: rotate(-45deg);
+}
+
+/* Rotate X to plus when active */
+.annotation-marker.x.rotate-plus::before {
+	transform: rotate(0deg);
+}
+
+.annotation-marker.x.rotate-plus::after {
+	transform: rotate(90deg);
+}
+
+/* Annotation tooltips */
+.annotation-tooltip {
+	position: absolute;
+	background-color: white;
+	border-left: 4px solid #FC764C;
+	padding: 12px 15px;
+	border-radius: 4px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+	min-width: 250px;
+	max-width: 300px;
+	z-index: 1000; /* Above everything */
+	display: none;
+	font-size: 14px;
+	pointer-events: auto;
+	word-break: break-word;
+	box-sizing: border-box;
+	overflow-wrap: break-word;
+	transition: opacity 0.2s ease;
+	/* Let JavaScript handle positioning - don't force anything */
+}
+
+.annotation-tooltip.visible {
+	display: block;
+}
+
+.annotation-tooltip-title {
+	font-weight: bold;
+	margin-bottom: 5px;
+	color: var(--aletyx-black, #000000);
+}
+
+.annotation-tooltip-content {
+	margin: 0;
+	color: #444;
+}
+
+/* Dark mode support */
+[data-md-color-scheme="slate"] .annotation-tooltip {
+	background-color: #2e303e;
+	border-left: 4px solid var(--aletyx-orange, #FC764C);
+}
+
+[data-md-color-scheme="slate"] .annotation-tooltip-title {
+	color: white;
+}
+
+[data-md-color-scheme="slate"] .annotation-tooltip-content {
+	color: #ddd;
+}
+
+/* Tooltip positioning - handled by JavaScript */
+@media (min-width: 1220px) {
+	/* On larger screens with sidebar visible */
+	.annotation-tooltip {
+		/* Keep tooltips at reasonable width */
+		max-width: 300px;
+	}
+}
+
+/* Mobile-Friendly Tooltip Adjustments */
+@media (max-width: 768px) {
+	.annotation-tooltip {
+		font-size: 0.85rem;
+		padding: 0.75rem 1rem;
+		max-width: 90vw;
+		/* Force tooltips to hide on mobile by default */
+		display: none !important;
+	}
+
+	.annotation-tooltip.visible {
+		display: block !important;
+	}
+
+	.annotated-image-container {
+		/* Ensure container doesn't allow overflow */
+		position: relative;
+		overflow: hidden;
+	}
+
+	/* Hide annotation markers on very small screens */
+	.annotation-marker {
+		width: 20px;
+		height: 20px;
+		font-size: 12px;
+	}
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+	.annotation-tooltip {
+		max-width: 70vw;
+		font-size: 0.9rem;
+		/* Ensure tooltips don't overflow */
+		left: auto !important;
+		right: 10px !important;
+	}
+}
+
+/* ====================================
+	 CODE ANNOTATIONS
+	 Minimal styling - let MkDocs Material handle positioning
+	 ==================================== */
+
+/* Visual styling for annotation marker */
+.md-annotation__index {
+	background-color: rgba(252, 118, 76, 0.8) !important;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+	border-radius: 50% !important;
+	animation: pulse 2s infinite;
+}
+
+/* Hover state - just color change */
+.md-annotation:hover .md-annotation__index,
+.md-annotation:focus-within .md-annotation__index {
+	background-color: #FC764C !important;
+	animation: none;
+}
+
+/* Active state */
+.md-annotation--active .md-annotation__index {
+	background-color: #FC764C !important;
+	animation: none;
+}
+
+/* Tooltip styling - visual only, no positioning */
+.md-tooltip {
+	background-color: white !important;
+	border-left: 4px solid #FC764C !important;
+	border-radius: 4px !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+	color: #333 !important;
+}
+
+/* Dark mode tooltip */
+[data-md-color-scheme="slate"] .md-tooltip {
+	background-color: #2e303e !important;
+	color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.md-tooltip__inner {
+	color: inherit !important;
+}
+
+/* Fix tooltip cutoff issues */
+.md-grid {
+	overflow: visible;
+}
+
+.md-content__inner {
+	overflow: visible;
+}
+
+/* ====================================
+	 IMAGE MAP ANNOTATIONS
+	 ==================================== */
+
+/* Image map container */
+.image-map-container {
+	position: relative;
+	display: inline-block;
+	max-width: 100%;
+	margin: 1.5rem 0;
+}
+
+.image-map {
+	max-width: 100%;
+	height: auto;
+	display: block;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+/* Area highlights */
+.area-highlight {
+	position: absolute;
+	border: 2px solid;
+	border-radius: 3px;
+	transition: all 0.25s ease-in-out;
+	pointer-events: none;
+	z-index: 5;
+	opacity: 0.3;
+	background-color: rgba(255, 255, 255, 0.1);
+	display: block !important;
+	visibility: visible !important;
+}
+
+.area-highlight.area-active {
+	opacity: 0.7 !important;
+	background-color: rgba(255, 255, 255, 0.3) !important;
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+	z-index: 10 !important;
+}
+
+/* Make area highlights more visible in dark mode */
+[data-md-color-scheme="slate"] .area-highlight {
+	opacity: 0.4;
+	background-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-md-color-scheme="slate"] .area-highlight.area-active {
+	opacity: 0.8 !important;
+	background-color: rgba(255, 255, 255, 0.35) !important;
+	box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+/* Image map tooltip */
+.image-map-tooltip {
+	position: absolute;
+	background-color: rgba(0, 0, 0, 0.8);
+	color: white;
+	padding: 8px 12px;
+	border-radius: 4px;
+	font-size: 14px;
+	max-width: 250px;
+	pointer-events: none;
+	z-index: 10;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+	display: none;
+}
+
+[data-md-color-scheme="slate"] .image-map-tooltip {
+	background-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Text section highlighting */
+.section-creation,
+.section-import,
+.section-toolbar,
+.section-projects,
+[class^="section-"] {
+	padding-left: 10px;
+	transition: all 0.25s ease;
+	position: relative;
+}
+
+[class^="section-"]:before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 3px;
+	background-color: transparent;
+	transition: background-color 0.25s ease;
+}
+
+.section-creation {
+	border-left-color: #e63946;
+}
+
+.section-creation.section-active:before {
+	background-color: #e63946;
+}
+
+.section-import {
+	border-left-color: #457b9d;
+}
+
+.section-import.section-active:before {
+	background-color: #457b9d;
+}
+
+.section-toolbar {
+	border-left-color: #2a9d8f;
+}
+
+.section-toolbar.section-active:before {
+	background-color: #2a9d8f;
+}
+
+.section-projects {
+	border-left-color: #8338ec;
+}
+
+.section-projects.section-active:before {
+	background-color: #8338ec;
+}
+
+/* Section highlighting */
+[class^="section-"].section-active {
+	background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-md-color-scheme="slate"] [class^="section-"].section-active {
+	background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Mobile/touch device specific adjustments */
+@media (hover: none), (pointer: coarse) {
+
+	/* Make areas more touchable */
+	area {
+		cursor: pointer !important;
+	}
+
+	/* More prominent highlighting for touch devices */
+	.area-highlight.area-active {
+		opacity: 0.8 !important;
+		background-color: rgba(255, 255, 255, 0.4) !important;
+		border-width: 3px !important;
+	}
+
+	/* Allow touch on section highlighting */
+	[class^="section-"] {
+		cursor: pointer;
+	}
+
+	/* Make tooltips larger and more readable on mobile */
+	.image-map-tooltip {
+		font-size: 16px !important;
+		padding: 10px 15px !important;
+		max-width: 80vw !important;
+		/* Prevent tooltip from going off-screen */
+		left: 50% !important;
+		transform: translateX(-50%) !important;
+	}
+
+	/* Ensure sections are more visible when tapped */
+	[class^="section-"].section-active {
+		background-color: rgba(0, 0, 0, 0.1);
+	}
+
+	[data-md-color-scheme="slate"] [class^="section-"].section-active {
+		background-color: rgba(255, 255, 255, 0.1);
+	}
+
+	/* Make sure the highlight bar is more visible */
+	[class^="section-"].section-active:before {
+		width: 5px !important;
+	}
+}
+
+/* Additional mobile constraints */
+@media (max-width: 768px) {
+	/* Constrain image map container */
+	.playground-container {
+		flex-direction: column;
+	}
+
+	.image-container {
+		width: 100%;
+		margin-bottom: 2rem;
+	}
+
+	.descriptions-container {
+		width: 100%;
+	}
+
+	/* Ensure tooltips stay within viewport */
+	.image-map-tooltip {
+		max-width: calc(100vw - 40px) !important;
+		left: 20px !important;
+		right: 20px !important;
+		transform: none !important;
+	}
+}

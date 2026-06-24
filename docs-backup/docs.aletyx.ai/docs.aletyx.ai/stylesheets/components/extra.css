@@ -1,0 +1,439 @@
+/*
+ * Custom styles for aletyx documentation
+ */
+
+:root {
+	/* Primary theme color */
+	--md-primary-fg-color: var(--aletyx-black, #000000);
+	--md-primary-fg-color--light: var(--md-primary-fg-color);
+	--md-primary-fg-color--dark: var(--aletyx-black, #000000);
+
+	/* Accent colors */
+	--md-accent-fg-color: var(--md-primary-fg-color);
+	--md-accent-fg-color--transparent: rgba(252, 118, 76, 0.1);
+
+	/* Navigation colors */
+	--md-tabs-bg-color: var(--aletyx-black, #000000);
+	--md-tabs-active-color: var(--md-primary-fg-color);
+}
+
+/* Navigation tab styling */
+.md-tabs__link {
+	opacity: 0.9;
+	font-weight: 500;
+}
+
+.md-tabs__link--active,
+.md-tabs__link:hover {
+	color: var(--md-accent-fg-color);
+	opacity: 1;
+}
+
+/* Navigation styling moved to aletyx.css sidebar section */
+
+/* Header styling */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: 'Aspekta', sans-serif;
+	font-weight: 600;
+	color: var(--aletyx-black, #000000);
+}
+
+/* Adjustments for dark mode */
+[data-md-color-scheme="slate"] {
+	--md-default-bg-color: #1e1e1e;
+	--md-default-fg-color: rgba(255, 255, 255, 0.87);
+	--md-default-fg-color--light: rgba(255, 255, 255, 0.87);
+	--md-default-fg-color--lighter: rgba(255, 255, 255, 0.32);
+	--md-default-fg-color--lightest: rgba(255, 255, 255, 0.12);
+	--md-typeset-color: rgba(255, 255, 255, 0.87);
+	--md-typeset-a-color: var(--md-primary-fg-color);
+}
+
+[data-md-color-scheme="slate"] .md-typeset h1,
+[data-md-color-scheme="slate"] .md-typeset h2,
+[data-md-color-scheme="slate"] .md-typeset h3,
+[data-md-color-scheme="slate"] .md-typeset h4,
+[data-md-color-scheme="slate"] .md-typeset h5,
+[data-md-color-scheme="slate"] .md-typeset h6 {
+	color: rgba(255, 255, 255, 0.87);
+}
+
+/* Style for navigation tabs */
+.md-tabs__link {
+	opacity: 1;
+	transition: 0.2s ease-in-out;
+}
+
+/* Dropdown container */
+.md-tabs__item {
+	position: relative;
+}
+
+/* Dropdown content */
+.md-tabs__item:hover .md-nav__list {
+	display: block;
+	position: absolute;
+	background: var(--md-primary-fg-color);
+	padding: 0.5rem 0;
+	border-radius: 4px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	z-index: 999;
+	min-width: 200px;
+}
+
+/* Hide dropdown by default */
+.md-tabs__item .md-nav__list {
+	display: none;
+}
+
+/* Dropdown items */
+.md-tabs__item .md-nav__item {
+	padding: 0.25rem 1rem;
+}
+
+.md-tabs__item .md-nav__link {
+	margin: 0;
+	padding: 0.25rem 1rem;
+	color: var(--md-primary-bg-color);
+}
+
+.md-tabs__item .md-nav__link:hover {
+	color: var(--md-accent-fg-color);
+	background: rgba(0, 0, 0, 0.1);
+}
+
+/* Footer styling - Previous/Next Navigation */
+.md-footer__inner {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin: 0 auto;
+	max-width: 61rem;
+	padding: 1rem 1rem;
+	background: var(--md-default-bg-color);
+	border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-footer__link {
+	display: flex;
+	align-items: center;
+	padding: 1rem;
+	color: var(--md-default-fg-color--light);
+	font-weight: 500;
+	transition: color .25s, transform .25s;
+	text-decoration: none;
+	max-width: 50%;
+}
+
+/* Prevent text truncation in footer nav */
+.md-footer__link .md-ellipsis {
+	overflow: visible;
+	text-overflow: unset;
+	white-space: normal;
+	max-width: none;
+}
+
+.md-footer__link:hover {
+	color: var(--aletyx-orange, #FC764C);
+}
+
+.md-footer__link:hover .md-ellipsis,
+.md-footer__link:hover .md-footer__direction {
+	color: var(--aletyx-orange, #FC764C);
+}
+
+.md-footer__link:hover svg {
+	fill: var(--aletyx-orange, #FC764C);
+}
+
+.md-footer__link--prev:hover {
+	transform: translateX(-4px);
+}
+
+.md-footer__link--next:hover {
+	transform: translateX(4px);
+}
+
+.md-footer__link--next {
+	margin-left: auto;
+	text-align: right;
+}
+
+.md-footer__title {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.md-footer__direction {
+	font-size: 0.7rem;
+	text-transform: uppercase;
+	color: var(--md-default-fg-color--lighter);
+	font-weight: 600;
+}
+
+.md-footer__button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.4rem;
+	height: 2.4rem;
+	color: currentColor;
+}
+
+.md-footer__button svg {
+	width: 1.2rem;
+	height: 1.2rem;
+	fill: currentColor;
+}
+
+.md-footer__link--prev .md-footer__button {
+	margin-right: 0.5rem;
+}
+
+.md-footer__link--next .md-footer__button {
+	margin-left: 0.5rem;
+}
+
+/* Legacy footer nav classes */
+.md-footer-nav__link {
+	display: flex;
+	padding: 1rem;
+	color: var(--md-default-fg-color--light);
+	font-weight: 700;
+	transition: color .25s;
+}
+
+.md-footer-nav__link:hover {
+	color: var(--md-accent-fg-color);
+}
+
+.md-footer-nav__button {
+	margin: 0 .5rem;
+}
+
+/* Link styling */
+.md-typeset a {
+	color: var(--md-accent-fg-color);
+	text-decoration: underline;
+}
+
+.md-typeset a:hover {
+	color: var(--md-accent-fg-color--transparent);
+}
+
+[data-md-color-scheme="slate"] .md-typeset a {
+	color: var(--md-accent-fg-color);
+	text-decoration: underline;
+}
+
+/* Image standardization */
+.md-typeset img {
+	max-width: 800px;
+	width: auto;
+	height: auto;
+	display: block;
+	margin: 1rem auto;
+}
+
+/* GIF controls */
+.md-typeset img[src$=".gif"] {
+	cursor: pointer;
+}
+
+.md-typeset img[src$=".gif"].paused {
+	opacity: 0.7;
+	animation: none !important;
+	-webkit-animation: none !important;
+}
+
+/* Edition and Feature Badges */
+.badge {
+	display: inline-block;
+	padding: 0.25em 0.7em;
+	font-size: 0.65em;
+	font-weight: 600;
+	line-height: 1.4;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: middle;
+	border-radius: 0.3rem;
+	margin: 0 0.25rem;
+	letter-spacing: 0.2px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+	transition: all 0.2s ease;
+}
+
+.badge:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Better spacing when multiple badges are together */
+.badge + .badge {
+	margin-left: 0.2rem;
+}
+
+/* Badges in headings */
+h1 .badge,
+h2 .badge,
+h3 .badge {
+	vertical-align: middle;
+	position: relative;
+	top: -0.08em;
+	font-size: 0.48em;
+	margin-left: 0.6rem;
+}
+
+h1 .badge {
+	font-size: 0.42em;
+	padding: 0.3em 0.85em;
+}
+
+h2 .badge {
+	font-size: 0.48em;
+	padding: 0.28em 0.75em;
+}
+
+h3 .badge {
+	font-size: 0.52em;
+	padding: 0.26em 0.7em;
+}
+
+/* Edition badges */
+.badge-pioneer {
+	background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+	color: #fff;
+	border: 1px solid rgba(90, 98, 104, 0.3);
+}
+
+.badge-innovator {
+	background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+	color: #fff;
+	border: 1px solid rgba(10, 88, 202, 0.3);
+}
+
+.badge-horizon {
+	background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
+	color: #fff;
+	border: 1px solid rgba(232, 89, 12, 0.3);
+}
+
+.badge-keystone {
+	background: linear-gradient(135deg, #6f42c1 0%, #59359a 100%);
+	color: #fff;
+	border: 1px solid rgba(89, 53, 154, 0.3);
+}
+
+/* Feature status badges */
+.badge-new {
+	background-color: #198754;
+	color: #fff;
+}
+
+.badge-beta {
+	background-color: #ffc107;
+	color: #000;
+}
+
+.badge-deprecated {
+	background-color: #dc3545;
+	color: #fff;
+}
+
+.badge-enterprise {
+	background-color: var(--aletyx-black, #000000);
+	color: var(--aletyx-white, #FEFEFE);
+}
+
+.badge-preview {
+	background-color: #FC9D4C;
+	color: #000;
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] .badge-beta,
+[data-md-color-scheme="slate"] .badge-preview {
+	color: #1e1e1e;
+}
+
+/* D2 Diagram Styling */
+.md-typeset img[src$=".svg"] {
+	max-width: 100%;
+	width: 100%;
+	height: auto;
+	display: block;
+	margin: 2rem auto;
+}
+
+/* Dark mode SVG diagram inversion - makes black lines white */
+[data-md-color-scheme="slate"] .md-typeset img[src$=".svg"]:not(.no-invert) {
+	filter: invert(1) hue-rotate(180deg);
+}
+
+/* Allow opting out of inversion for SVGs that already have dark mode colors */
+.md-typeset img[src$=".svg"].no-invert {
+	filter: none;
+}
+
+/* Dark mode inline SVG handling for diagram content */
+/* Use .diagram-svg class on SVGs that should be inverted in dark mode */
+[data-md-color-scheme="slate"] .md-typeset svg.diagram-svg,
+[data-md-color-scheme="slate"] .md-typeset .bpmn-diagram svg,
+[data-md-color-scheme="slate"] .md-typeset .diagram-container svg {
+	filter: invert(1) hue-rotate(180deg);
+}
+
+[data-md-color-scheme="slate"] .md-typeset svg.no-invert {
+	filter: none;
+}
+
+/* Make non-lightbox diagrams larger */
+.md-typeset img.no-lightbox {
+	max-width: 900px;
+	width: 100%;
+	cursor: default;
+}
+
+/* Disable glightbox pointer on no-lightbox images */
+.md-typeset .no-lightbox {
+	pointer-events: none;
+}
+
+/* Glightbox - Make SVG diagrams larger in lightbox (for images that use it) */
+.glightbox-clean .gslide-image img {
+	max-width: 90vw !important;
+	max-height: 90vh !important;
+	width: auto !important;
+	height: auto !important;
+	object-fit: contain !important;
+}
+
+/* Back to top button - make it prominent when visible */
+.md-top {
+	z-index: 9999 !important;
+	background-color: var(--aletyx-orange, #FC764C) !important;
+	color: white !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+	border-radius: 25px !important;
+	padding: 0.5rem 1rem !important;
+}
+
+.md-top:hover {
+	background-color: #e8633d !important;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.md-top svg {
+	fill: white !important;
+}
+
+[data-md-color-scheme="slate"] .md-top {
+	background-color: var(--aletyx-orange, #FC764C) !important;
+	color: white !important;
+}

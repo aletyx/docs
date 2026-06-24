@@ -1,0 +1,2996 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  
+<!-- Mirrored from docs.aletyx.ai/guides/getting-started/getting-started-playground-bpmn/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 24 Jun 2026 11:22:32 GMT -->
+<head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Comprehensive documentation for Aletyx Enterprise Build of Apache KIE - the leading enterprise supported platform for the open source projects brought by the Apache KIE (incubating) project for for Drools, jBPM, and Kogito">
+      
+      
+        <meta name="author" content="Aletyx, Inc.">
+      
+      
+        <link rel="canonical" href="index.html">
+      
+      
+        <link rel="prev" href="../getting-started-playground-dmn/index.html">
+      
+      
+        <link rel="next" href="../getting-started-start-aletyx/index.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+    
+    
+      
+        <title>BPMN in Playground - Aletyx Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+  
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+  
+  <style>:root{--md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M1%207.775V2.75C1%201.784%201.784%201%202.75%201h5.025c.464%200%20.91.184%201.238.513l6.25%206.25a1.75%201.75%200%200%201%200%202.474l-5.026%205.026a1.75%201.75%200%200%201-2.474%200l-6.25-6.25A1.75%201.75%200%200%201%201%207.775m1.5%200c0%20.066.026.13.073.177l6.25%206.25a.25.25%200%200%200%20.354%200l5.025-5.025a.25.25%200%200%200%200-.354l-6.25-6.25a.25.25%200%200%200-.177-.073H2.75a.25.25%200%200%200-.25.25ZM6%205a1%201%200%201%201%200%202%201%201%200%200%201%200-2%22/%3E%3C/svg%3E');--md-admonition-icon--abstract:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2.5%201.75v11.5c0%20.138.112.25.25.25h3.17a.75.75%200%200%201%200%201.5H2.75A1.75%201.75%200%200%201%201%2013.25V1.75C1%20.784%201.784%200%202.75%200h8.5C12.216%200%2013%20.784%2013%201.75v7.736a.75.75%200%200%201-1.5%200V1.75a.25.25%200%200%200-.25-.25h-8.5a.25.25%200%200%200-.25.25m13.274%209.537zl-4.557%204.45a.75.75%200%200%201-1.055-.008l-1.943-1.95a.75.75%200%200%201%201.062-1.058l1.419%201.425%204.026-3.932a.75.75%200%201%201%201.048%201.074M4.75%204h4.5a.75.75%200%200%201%200%201.5h-4.5a.75.75%200%200%201%200-1.5M4%207.75A.75.75%200%200%201%204.75%207h2a.75.75%200%200%201%200%201.5h-2A.75.75%200%200%201%204%207.75%22/%3E%3C/svg%3E');--md-admonition-icon--info:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M0%208a8%208%200%201%201%2016%200A8%208%200%200%201%200%208m8-6.5a6.5%206.5%200%201%200%200%2013%206.5%206.5%200%200%200%200-13M6.5%207.75A.75.75%200%200%201%207.25%207h1a.75.75%200%200%201%20.75.75v2.75h.25a.75.75%200%200%201%200%201.5h-2a.75.75%200%200%201%200-1.5h.25v-2h-.25a.75.75%200%200%201-.75-.75M8%206a1%201%200%201%201%200-2%201%201%200%200%201%200%202%22/%3E%3C/svg%3E');--md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M3.499.75a.75.75%200%200%201%201.5%200v.996C5.9%202.903%206.793%203.65%207.662%204.376l.24.202c-.036-.694.055-1.422.426-2.163C9.1.873%2010.794-.045%2012.622.26%2014.408.558%2016%201.94%2016%204.25c0%201.278-.954%202.575-2.44%202.734l.146.508.065.22c.203.701.412%201.455.476%202.226.142%201.707-.4%203.03-1.487%203.898C11.714%2014.671%2010.27%2015%208.75%2015h-6a.75.75%200%200%201%200-1.5h1.376a4.5%204.5%200%200%201-.563-1.191%203.84%203.84%200%200%201-.05-2.063%204.65%204.65%200%200%201-2.025-.293.75.75%200%200%201%20.525-1.406c1.357.507%202.376-.006%202.698-.318l.009-.01a.747.747%200%200%201%201.06%200%20.75.75%200%200%201-.012%201.074c-.912.92-.992%201.835-.768%202.586.221.74.745%201.337%201.196%201.621H8.75c1.343%200%202.398-.296%203.074-.836.635-.507%201.036-1.31.928-2.602-.05-.603-.216-1.224-.422-1.93l-.064-.221c-.12-.407-.246-.84-.353-1.29a2.4%202.4%200%200%201-.507-.441%203.1%203.1%200%200%201-.633-1.248.75.75%200%200%201%201.455-.364c.046.185.144.436.31.627.146.168.353.305.712.305.738%200%201.25-.615%201.25-1.25%200-1.47-.95-2.315-2.123-2.51-1.172-.196-2.227.387-2.706%201.345-.46.92-.27%201.774.019%203.062l.042.19.01.05c.348.443.666.949.94%201.553a.75.75%200%201%201-1.365.62c-.553-1.217-1.32-1.94-2.3-2.768L6.7%205.527c-.814-.68-1.75-1.462-2.692-2.619a3.7%203.7%200%200%200-1.023.88c-.406.495-.663%201.036-.722%201.508.116.122.306.21.591.239.388.038.797-.06%201.032-.19a.75.75%200%200%201%20.728%201.31c-.515.287-1.23.439-1.906.373-.682-.067-1.473-.38-1.879-1.193L.75%205.677V5.5c0-.984.48-1.94%201.077-2.664.46-.559%201.05-1.055%201.673-1.353z%22/%3E%3C/svg%3E');--md-admonition-icon--success:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M13.78%204.22a.75.75%200%200%201%200%201.06l-7.25%207.25a.75.75%200%200%201-1.06%200L2.22%209.28a.75.75%200%200%201%20.018-1.042.75.75%200%200%201%201.042-.018L6%2010.94l6.72-6.72a.75.75%200%200%201%201.06%200%22/%3E%3C/svg%3E');--md-admonition-icon--question:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M0%208a8%208%200%201%201%2016%200A8%208%200%200%201%200%208m8-6.5a6.5%206.5%200%201%200%200%2013%206.5%206.5%200%200%200%200-13M6.92%206.085h.001a.749.749%200%201%201-1.342-.67c.169-.339.436-.701.849-.977C6.845%204.16%207.369%204%208%204a2.76%202.76%200%200%201%201.637.525c.503.377.863.965.863%201.725%200%20.448-.115.83-.329%201.15-.205.307-.47.513-.692.662-.109.072-.22.138-.313.195l-.006.004a6%206%200%200%200-.26.16%201%201%200%200%200-.276.245.75.75%200%200%201-1.248-.832c.184-.264.42-.489.692-.661q.154-.1.313-.195l.007-.004c.1-.061.182-.11.258-.161a1%201%200%200%200%20.277-.245C8.96%206.514%209%206.427%209%206.25a.61.61%200%200%200-.262-.525A1.27%201.27%200%200%200%208%205.5c-.369%200-.595.09-.74.187a1%201%200%200%200-.34.398M9%2011a1%201%200%201%201-2%200%201%201%200%200%201%202%200%22/%3E%3C/svg%3E');--md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M6.457%201.047c.659-1.234%202.427-1.234%203.086%200l6.082%2011.378A1.75%201.75%200%200%201%2014.082%2015H1.918a1.75%201.75%200%200%201-1.543-2.575Zm1.763.707a.25.25%200%200%200-.44%200L1.698%2013.132a.25.25%200%200%200%20.22.368h12.164a.25.25%200%200%200%20.22-.368Zm.53%203.996v2.5a.75.75%200%200%201-1.5%200v-2.5a.75.75%200%200%201%201.5%200M9%2011a1%201%200%201%201-2%200%201%201%200%200%201%202%200%22/%3E%3C/svg%3E');--md-admonition-icon--failure:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2.344%202.343za8%208%200%200%201%2011.314%2011.314A8.002%208.002%200%200%201%20.234%2010.089a8%208%200%200%201%202.11-7.746m1.06%2010.253a6.5%206.5%200%201%200%209.108-9.275%206.5%206.5%200%200%200-9.108%209.275M6.03%204.97%208%206.94l1.97-1.97a.749.749%200%200%201%201.275.326.75.75%200%200%201-.215.734L9.06%208l1.97%201.97a.749.749%200%200%201-.326%201.275.75.75%200%200%201-.734-.215L8%209.06l-1.97%201.97a.749.749%200%200%201-1.275-.326.75.75%200%200%201%20.215-.734L6.94%208%204.97%206.03a.75.75%200%200%201%20.018-1.042.75.75%200%200%201%201.042-.018%22/%3E%3C/svg%3E');--md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M9.504.43a1.516%201.516%200%200%201%202.437%201.713L10.415%205.5h2.123c1.57%200%202.346%201.909%201.22%203.004l-7.34%207.142a1.25%201.25%200%200%201-.871.354h-.302a1.25%201.25%200%200%201-1.157-1.723L5.633%2010.5H3.462c-1.57%200-2.346-1.909-1.22-3.004zm1.047%201.074L3.286%208.571A.25.25%200%200%200%203.462%209H6.75a.75.75%200%200%201%20.694%201.034l-1.713%204.188%206.982-6.793A.25.25%200%200%200%2012.538%207H9.25a.75.75%200%200%201-.683-1.06l2.008-4.418.003-.006-.004-.009-.006-.006-.008-.001q-.005%200-.009.004%22/%3E%3C/svg%3E');--md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M4.72.22a.75.75%200%200%201%201.06%200l1%20.999a3.5%203.5%200%200%201%202.441%200l.999-1a.748.748%200%200%201%201.265.332.75.75%200%200%201-.205.729l-.775.776c.616.63.995%201.493.995%202.444v.327q0%20.15-.025.292c.408.14.764.392%201.029.722l1.968-.787a.75.75%200%200%201%20.556%201.392L13%207.258V9h2.25a.75.75%200%200%201%200%201.5H13v.5q-.002.615-.141%201.186l2.17.868a.75.75%200%200%201-.557%201.392l-2.184-.873A5%205%200%200%201%208%2016a5%205%200%200%201-4.288-2.427l-2.183.873a.75.75%200%200%201-.558-1.392l2.17-.868A5%205%200%200%201%203%2011v-.5H.75a.75.75%200%200%201%200-1.5H3V7.258L.971%206.446a.75.75%200%200%201%20.558-1.392l1.967.787c.265-.33.62-.583%201.03-.722a1.7%201.7%200%200%201-.026-.292V4.5c0-.951.38-1.814.995-2.444L4.72%201.28a.75.75%200%200%201%200-1.06m.53%206.28a.75.75%200%200%200-.75.75V11a3.5%203.5%200%201%200%207%200V7.25a.75.75%200%200%200-.75-.75ZM6.173%205h3.654A.17.17%200%200%200%2010%204.827V4.5a2%202%200%201%200-4%200v.327c0%20.096.077.173.173.173%22/%3E%3C/svg%3E');--md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M5%205.782V2.5h-.25a.75.75%200%200%201%200-1.5h6.5a.75.75%200%200%201%200%201.5H11v3.282l3.666%205.76C15.619%2013.04%2014.543%2015%2012.767%2015H3.233c-1.776%200-2.852-1.96-1.899-3.458Zm-2.4%206.565a.75.75%200%200%200%20.633%201.153h9.534a.75.75%200%200%200%20.633-1.153L12.225%2010.5h-8.45ZM9.5%202.5h-3V6c0%20.143-.04.283-.117.403L4.73%209h6.54L9.617%206.403A.75.75%200%200%201%209.5%206Z%22/%3E%3C/svg%3E');--md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M1.75%202.5h10.5a.75.75%200%200%201%200%201.5H1.75a.75.75%200%200%201%200-1.5m4%205h8.5a.75.75%200%200%201%200%201.5h-8.5a.75.75%200%200%201%200-1.5m0%205h8.5a.75.75%200%200%201%200%201.5h-8.5a.75.75%200%200%201%200-1.5M2.5%207.75v6a.75.75%200%200%201-1.5%200v-6a.75.75%200%200%201%201.5%200%22/%3E%3C/svg%3E');}</style>
+
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aspekta:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Aspekta";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/fonts.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/base.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/aletyx.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/footer.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/extra.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/typography.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/images.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/buttons.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/cards.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/layout.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/header.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/code-annotations.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/getting-started.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/universal-annotations.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/cookie-consent.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/404.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/components/version-selector.css">
+    
+      <link rel="stylesheet" href="../../../stylesheets/override.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-EDZLDSFK6T"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-EDZLDSFK6T",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-EDZLDSFK6T",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>if("undefined"!=typeof __md_analytics){var consent=__md_get("__consent");consent&&consent.analytics&&__md_analytics()}</script>
+  
+
+    
+    
+
+
+   <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../../assets/javascripts/glightbox.min.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#from-models-to-execution-bpmn-in-aletyx-playground" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+            
+<div class="top-banner" id="announcement-banner">
+  <span class="banner-badge-small">NEW</span>
+  <strong>Introducing Aletyx Decision Control</strong> — Enterprise decision management with governance and multi-environment deployment
+  <a href="../../../decision-control/index.html" class="banner-link">Learn more &rarr;</a>
+  <button type="button" class="close-button" onclick="closeBanner()" aria-label="Close">&times;</button>
+</div>
+
+          </div>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+
+    <!-- Logo -->
+    <a href="../../../index.html"
+       title="Aletyx Documentation"
+       class="md-header__button md-logo"
+       aria-label="Aletyx Documentation"
+       data-md-component="logo">
+      
+  <img src="../../../assets/images/A-aletyx-orange.svg" alt="logo">
+
+    </a>
+
+    <!-- Edition selector inserted by JS after logo -->
+
+    <!-- Navigation tabs inline -->
+    
+    <nav class="md-header__nav" aria-label="Tabs">
+      <ul class="md-header__nav-list">
+        
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../index.html" class="md-header__nav-link md-header__nav-link--active">
+                Getting Started
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../core/index.html" class="md-header__nav-link">
+                Architecture
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../index.html" class="md-header__nav-link">
+                Guides
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../components/index.html" class="md-header__nav-link">
+                Platform
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../deployment/index.html" class="md-header__nav-link">
+                Deployment
+              </a>
+            </li>
+          
+        
+          
+            
+            <li class="md-header__nav-item">
+              <a href="../../../reference/index.html" class="md-header__nav-link">
+                Reference
+              </a>
+            </li>
+          
+        
+      </ul>
+    </nav>
+    
+
+    <!-- Spacer -->
+    <div class="md-header__spacer"></div>
+
+    <!-- Search -->
+    
+    <label class="md-header__button md-icon" for="__search">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+    </label>
+    <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    <!-- Theme toggle -->
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+
+    <!-- Mobile menu -->
+    <label class="md-header__button md-icon md-header__hamburger" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+
+  </nav>
+</header>
+
+<!-- Hide default tabs since we render them in header -->
+<style>.md-tabs { display: none !important; }</style>
+
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../index.html" title="Aletyx Documentation" class="md-nav__button md-logo" aria-label="Aletyx Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/images/A-aletyx-orange.svg" alt="logo">
+
+    </a>
+    Aletyx Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Choose Your Path
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Playground Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Playground Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started-playground/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started-playground-dmn/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DMN in Playground
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BPMN in Playground
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="index.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BPMN in Playground
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-aletyx-playground" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessing Aletyx Playground
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-aletyx-playground-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Aletyx Playground Interface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exploring-the-sample-hiring-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exploring the Sample Hiring Process
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-with-the-bpmn-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working with the BPMN Editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modifying-the-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifying the Process
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#process-variables-and-data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Process Variables and Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#process-execution-and-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Process Execution and Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deployment Options
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integrating-bpmn-with-dmn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrating BPMN with DMN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#java-application-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Java Application Integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started-start-aletyx/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Starter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Setup
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Environment Setup
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/environment-setup/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/java-setup/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Java & Quarkus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/maven/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maven Access
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/container-tools/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Container Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/git-configuration/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/cloud-tools/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/vscode/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/ubuntu/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ubuntu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../core/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../components/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../deployment/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../../reference/index.html" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-aletyx-playground" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessing Aletyx Playground
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-aletyx-playground-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Aletyx Playground Interface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exploring-the-sample-hiring-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exploring the Sample Hiring Process
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-with-the-bpmn-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working with the BPMN Editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modifying-the-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifying the Process
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#process-variables-and-data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Process Variables and Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#process-execution-and-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Process Execution and Testing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deployment Options
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integrating-bpmn-with-dmn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrating BPMN with DMN
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#java-application-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Java Application Integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../../index.html" class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../index.html" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../getting-started-playground/index.html" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Playground Tutorials
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+
+
+
+                  
+
+
+
+<h1 id="from-models-to-execution-bpmn-in-aletyx-playground">From Models to Execution: BPMN in Aletyx Playground<a class="headerlink" href="#from-models-to-execution-bpmn-in-aletyx-playground" title="Permanent link">&para;</a></h1>
+<h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
+<p>Business Process Model and Notation (BPMN) is a standardized graphical notation for business process modeling. Aletyx Playground provides a powerful environment for creating, editing, and executing BPMN models. This getting started guide will walk you through exploring and understanding a sample hiring process, identifying key BPMN components, and deploying your process to different environments.</p>
+<h2 id="accessing-aletyx-playground">Accessing Aletyx Playground<a class="headerlink" href="#accessing-aletyx-playground" title="Permanent link">&para;</a></h2>
+<p>Aletyx Playground is available in two formats:</p>
+<p><strong>A Free to use Cloud Option:</strong>
+- Navigate to <a href="../../../../playground.aletyx.ai/index.html">playground.aletyx.ai</a>
+- No installation required, just start playing immediately!</p>
+<p><strong>Your Own Containerized Option:</strong></p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">macOS</label><label for="__tabbed_1_2">Linux</label><label for="__tabbed_1_3">Microsoft Windows</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-sL<span class="w"> </span>https://raw.githubusercontent.com/aletyx-labs/kie-10.0.0-sandbox/refs/heads/main/docker-compose.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span>up
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-sL<span class="w"> </span>https://raw.githubusercontent.com/aletyx-labs/kie-10.0.0-sandbox/refs/heads/main/docker-compose.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>docker-compose<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span>up
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-sL<span class="w"> </span>https://raw.githubusercontent.com/aletyx-labs/kie-10.0.0-sandbox/refs/heads/main/docker-compose.yaml<span class="w"> </span><span class="p">|</span><span class="w"> </span>docker-compose<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span>up
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p>Then access Aletyx Playground at <a href="http://localhost:9090/">http://localhost:9090</a></p>
+<h2 id="the-aletyx-playground-interface">The Aletyx Playground Interface<a class="headerlink" href="#the-aletyx-playground-interface" title="Permanent link">&para;</a></h2>
+<p>When you access Aletyx Playground, you'll see a welcome screen with several key areas:</p>
+<!-- Main layout container -->
+<div class="playground-container">
+  <!-- Image map container on the left -->
+  <div class="image-container">
+    <div class="image-map-container" data-areas='[
+      {
+        "id": "creation",
+        "alt": "Creation Area",
+        "tooltip": "Where you create new workflows, decision models, and scorecards",
+        "coords": {"left": 1.1, "top": 10, "right": 49.1, "bottom": 55.7},
+        "color": "#e63946"
+      },
+      {
+        "id": "import",
+        "alt": "Import Area",
+        "tooltip": "Options to import from URLs or upload from your system",
+        "coords": {"left": 51, "top": 10, "right": 99, "bottom": 55.7},
+        "color": "#457b9d"
+      },
+      {
+        "id": "toolbar",
+        "alt": "Toolbar",
+        "tooltip": "Access to deployments, settings, and profile options",
+        "coords": {"left": 0, "top": 1, "right": 100, "bottom": 7},
+        "color": "#2a9d8f"
+      },
+      {
+        "id": "projects",
+        "alt": "Projects Area",
+        "tooltip": "View your recent models and imported projects",
+        "coords": {"left": 1, "top": 60, "right": 99.3, "bottom": 99.5},
+        "color": "#8338ec"
+      }
+    ]'>
+      <a class="glightbox" href="../images/playground_welcome.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img src="../images/playground_welcome.png" usemap="#custom-map" class="image-map" alt="Alteryx Playground Welcome Screen"></a>
+      <map name="custom-map"></map>
+    </div>
+  </div>
+
+  <!-- Descriptions on the right -->
+<div class="descriptions-container">
+  <div id="section-creation" class="description-section section-creation">
+    <h3>1. Creation Area</h3>
+    <p>The top tiles allow you to create new projects or import existing ones.</p>
+  </div>
+  <div id="section-import" class="description-section section-import">
+    <h3>2. Import Area</h3>
+    <p>Import existing projects or DMN/BPMN files either from various Git providers or through direct file uploads.</p>
+  </div>
+  <div id="section-projects" class="description-section section-projects">
+    <h3>3. Projects Area</h3>
+    <p>The lower section displays your locally imported projects and models.</p>
+  </div>
+  <div id="section-toolbar" class="description-section section-toolbar">
+    <h3>4. Toolbar</h3>
+    <p>The top bar provides access to:</p>
+    <ul>
+      <li><strong>Dev Deployments</strong>: Test deployments to connected Kubernetes or OpenShift clusters</li>
+      <li><strong>Extended Services</strong>: Connection to the DMN execution service for testing</li>
+      <li><strong>Settings</strong> (⚙️): Configure your Playground instance, including DMN version settings</li>
+      <li><strong>Profile</strong> (👤): Configure connections to Git providers and Kubernetes environments</li>
+    </ul>
+  </div>
+</div>
+</div>
+<h2 id="exploring-the-sample-hiring-process">Exploring the Sample Hiring Process<a class="headerlink" href="#exploring-the-sample-hiring-process" title="Permanent link">&para;</a></h2>
+<p>Let's examine a sample hiring process BPMN model that demonstrates various workflow patterns to get a basis for understanding what the Aletyx Enterprise Build of Kogito and Drools offers for process design and later process management:</p>
+<ol>
+<li>
+<p>From the welcome screen, click <strong>Try Sample</strong> under the Process section of the Aletyx Playground <em>Create</em> area to start seeing the basics of a BPMN workflow.</p>
+<p><a class="glightbox" href="../images/bpmn-try-sample.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img alt="BPMN - Try Sample" src="../images/bpmn-try-sample.png" /></a></p>
+</li>
+<li>
+<p>The hiring process BPMN model will open in the editor:</p>
+<p><a class="glightbox" href="../images/hiring-process.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img alt="Sample BPMN Process" src="../images/hiring-process.png" /></a></p>
+</li>
+<li>
+<p>If you click the name <strong>Sample</strong> on the top of the editor, you can change the name. From a best practices point of view, this is typically best to match the process identification that is behind the processID for the BPMN model. For this change, we will shift it from <strong>Sample</strong> to <strong>hiring</strong>.</p>
+<p><a class="glightbox" href="../images/name_change.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img alt="Change BPMN Name" src="../images/name_change.png" /></a></p>
+</li>
+</ol>
+<details class="info">
+<summary>The properties of the diagram will be explored in more detail later, but to understand the process ID and name, you can get a preview of the panel here</summary>
+<p><a class="glightbox" href="../images/hiring-properties.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img alt="Hiring Properties panel" src="../images/hiring-properties.png" /></a></p>
+</details>
+<h3 id="understanding-the-hiring-process-flow">Understanding the Hiring Process Flow<a class="headerlink" href="#understanding-the-hiring-process-flow" title="Permanent link">&para;</a></h3>
+<p>This hiring process demonstrates a complete hiring workflow with multiple branches:</p>
+<ol>
+<li><strong>Start:</strong> The process begins with a "New Hiring" event that initializes the candidate evaluation.</li>
+<li><strong>Decision Gateway:</strong> Evaluates if the candidate meets minimum requirements.</li>
+<li><strong>Offer Creation:</strong> If qualified, an offer is created with salary and bonus calculations.</li>
+<li><strong>Parallel Interviews:</strong> HR and IT interviews proceed in parallel.</li>
+<li><strong>Interview Timeouts:</strong> Both interviews have timer events (180-second timeouts).</li>
+<li><strong>Hiring Decision Gateway:</strong> Based on approvals from both departments.</li>
+<li><strong>Final Steps:</strong> Either sending an offer or application denial.</li>
+</ol>
+<p>Let's explore each piece in the diagram!</p>
+<div class="annotated-image-container">
+<a class="glightbox" href="../images/hiring-process-full.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img src="../images/hiring-process-full.png" class="annotated-image" alt="BPMN Editor with Sample Hiring Process"></a>
+<!-- Top Bar -->
+<div class="annotation-marker x" style="top: 10%; left: 10%;" data-marker-id=File_Name></div>
+<div class="annotation-marker x" style="top: 10%; left: 17%;" data-marker-id=File_Location></div>
+<div class="annotation-marker x" style="top: 10%; left: 72%;" data-marker-id="Apply_Accelerator"></div>
+<div class="annotation-marker x" style="top: 10%; left: 81%;" data-marker-id="New_File"></div>
+<div class="annotation-marker x" style="top: 10%; left: 88%;" data-marker-id="Deploy_Button"></div>
+<div class="annotation-marker x" style="top: 10%; left: 94%;" data-marker-id="Share_Button"></div>
+<!-- Process Specific -->
+<div class="annotation-marker x" style="top: 30%; left: 6%;" data-marker-id="Start_Node"></div>
+<div class="annotation-marker x" style="top: 24%; left: 43%;" data-marker-id="Human_Task"></div>
+<div class="annotation-marker x" style="top: 20%; left: 99%;" data-marker-id="Properties_Panel"></div>
+<div class="annotation-marker x" style="top: 29.5%; left: 86.5%;" data-marker-id="End_Node"></div>
+<div class="annotation-marker x" style="top: 60%; left: 24%;" data-marker-id="Gateway_Branch"></div>
+<div class="annotation-marker x" style="top: 37%; left: 60%;" data-marker-id="Catch_Event_Timer"></div>
+
+<div class="annotation-marker x" style="top: 35%; left: 19%;" data-marker-id="New_Hiring"></div>
+<div class="annotation-marker x" style="top: 32%; left: 24%;" data-marker-id="Gateway_Node_Split"></div>
+<!-- <div class="annotation-marker x" style="top: 35%; left: 38%;" data-marker-id="Create_Offer"></div> -->
+
+<div class="annotation-marker x" style="top: 56%; left: 52.5%;" data-marker-id="Gateway_Node_Converging"></div>
+<!-- Side Panel Palette Icons -->
+
+<div class="annotation-marker x" style="top: 19%; left: 3%;" data-marker-id="Start_Nodes"></div>
+<div class="annotation-marker x" style="top: 26%; left: 3%;" data-marker-id="Catch_Throw_Node"></div>
+<div class="annotation-marker x" style="top: 31%; left: 3%;" data-marker-id="End_Node_Event"></div>
+<div class="annotation-marker x" style="top: 37%; left: 3%;" data-marker-id="BPMN_Activities"></div>
+<div class="annotation-marker x" style="top: 42%; left: 3%;" data-marker-id="Subprocesses"></div>
+<div class="annotation-marker x" style="top: 48%; left: 3%;" data-marker-id="Gateway_Palette"></div>
+<div class="annotation-marker x" style="top: 53%; left: 3%;" data-marker-id="Containers"></div>
+<div class="annotation-marker x" style="top: 60%; left: 3%;" data-marker-id="Artifacts"></div>
+<div class="annotation-marker x" style="top: 66%; left: 3%;" data-marker-id="Custom_Tasks"></div>
+
+<!-- Tooltips -->
+<div class="annotation-tooltip" data-marker-id=File_Location>
+<div class="annotation-tooltip-title">File Location and Local Status</div>
+<div class="annotation-tooltip-content">Within Aletyx Playground you can see the status of a file and where it is located. If the file is saved in the local storage you will have confirmation hovering this icon. Just remember, Aletyx Playground operates in a way that when the memory storage is freed, this will go away.</div>
+</div>
+<!-- core/processes/basic-bpmn/start-events/ -->
+<div class="annotation-tooltip" data-marker-id="Start_Node">
+<div class="annotation-tooltip-title">Start Node</div>
+<div class="annotation-tooltip-content">The BPMN End Node signifies the start of a process drawn in BPMN for the particular instance. This is the entry point for the process. These can be a generic start as seen here or triggered from timers, signals or event (like a Kafka event). See <b> <a href=../../../core/processes/basic-bpmn/start-events/index.html>Start Events Reference</a></b> for more details.</div>
+</div>
+
+<div class="annotation-tooltip" data-marker-id="Catch_Event_Timer">
+<div class="annotation-tooltip-title">Boundary Event Timer</div>
+<div class="annotation-tooltip-content">For Tasks (and other services) within BPMN you can set boundary events with timers to escalate, cancel or create new pathways for processes to take. More information on <b><a href=../../../core/processes/basic-bpmn/intermediate-events/index.html>Intermediate Events can be found in our documentation</a></b> These utilize ISO-8601 time standard, which is covered in <b><a href=../../../core/processes/advanced-bpmn/iso-8601-guide/index.html>8601 Reference</a></b>.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Human_Task">
+<div class="annotation-tooltip-title">BPMN Human Task</div>
+<div class="annotation-tooltip-content">The Human task allows ou to configure a task that can be delegated to a human to do work on. In this case we will assign someone to perform work on the HR Interview task. For more information on human tasks refer to <b> <a href=../../../core/processes/basic-bpmn/activities/index.html#user-task>Human Task Reference</a></b>.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="New_Hiring">
+<div class="annotation-tooltip-title">New Hiring Script Task</div>
+<div class="annotation-tooltip-content">This node shows a BPMN node that does a script task associated with the basis of initializing the process. When you open the properties of this node, you will see things like: <br> <b>kcontext.setVariable( "hr_approval", false)</b> which is used to initialize the process variables associated with the process.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Gateway_Node_Split">
+<div class="annotation-tooltip-title">BPMN Gateway Node - Split</div>
+<div class="annotation-tooltip-content">A BPMN Gateway Node can creates a point in which the process can go one to many ways depending on the type of Gateway used. In this case, it is an exclusive gateway signifying if the candidate meets the requirements, the process can move foward, otherwise the application is denied and approaches the end node.. For more information refer to <b> <a href=../../../core/processes/basic-bpmn/gateways/index.html>Gateway Reference</a></b></div>
+</div>
+
+<div class="annotation-tooltip" data-marker-id="Gateway_Node_Converging">
+<div class="annotation-tooltip-title">BPMN Gateway Node - Join</div>
+<div class="annotation-tooltip-content">A BPMN Gateway Node can creates a point in which the process can bring multiple parts of a process back together. For more information refer to <b> <a href=../../../core/processes/basic-bpmn/gateways/index.html>Gateway Reference</a></b></div>
+</div>
+<!-- Removed for now
+<div class="annotation-tooltip" data-marker-id="Create_Offer">
+<div class="annotation-tooltip-title">Create Offer Script Task</div>
+<div class="annotation-tooltip-content">This node shows a BPMN node that does a script task associated with the basis of creating a base offer based on the details from the application so that our interviewers can review the details of what would be offered.</div>
+</div>
+-->
+
+
+
+<div class="annotation-tooltip" data-marker-id="End_Node">
+<div class="annotation-tooltip-title">End Node</div>
+<div class="annotation-tooltip-content">The BPMN End Node signifies the end of a process drawn in BPMN for the particular instance. When the process reaches this point it concludes. See <b> <a href=../../../core/processes/basic-bpmn/end-events/index.html>End Events Reference.</a></b>.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Apply_Accelerator">
+<div class="annotation-tooltip-title">Apply Accelerator</div>
+<div class="annotation-tooltip-content">The accelerators provide a means of easily creating a pre-scaffolded project based on standards attached to referenced projects. This allows you to utilized pre-created templates for building your projects from model to deployment very efficiently. For more information see <b> <a href=../../../components/playground/accelerators/index.html>Accelerators Reference</a></b></div>
+</div>
+<div class="annotation-tooltip" data-marker-id="New_File">
+<div class="annotation-tooltip-title">New File Button</div>
+<div class="annotation-tooltip-content">Within the same project folder that you are working in, you can create new Workflow (.bpmn), Decision (.dmn) or (.pmml) files or upload other files from your workstation. This will build it within the project, if you apply an accelerator it will incorporate all of the files associated with the workspace.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Deploy_Button">
+<div class="annotation-tooltip-title">Deploy - Using Dev Deployment</div>
+<div class="annotation-tooltip-content">From Aletyx Playground you have the capability to trigger a Dev Deployment that can be used for trying out a service. This is not meant to replace a full deployment, but is an excellent quick testing tool! For reference to Dev Deployments, refer to <b> <a href=../../../components/playground/dev-deployment/index.html>Dev Deployment Reference</a></b> for more details.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Share_Button">
+<div class="annotation-tooltip-title">Share - To Sync with Git or Download Files</div>
+<div class="annotation-tooltip-content">With the Share button, you are able to synchronize your project with a Git provider utilizing your Git credentials. This also allows you to download the respective file (BPMN or DMN) in the XML format to be utilized elsewhere. For reference to Git connections, refer to <b> <a href=../../../getting-started/git-configuration/index.html>Git Configuration</a></b> for more details.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Custom_Tasks">
+<div class="annotation-tooltip-title">Custom Tasks</div>
+<div class="annotation-tooltip-content">This portion of the BPMN palette allows for the use of custom tasks within the editor. These are typically tied to custom work item handlers.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Artifacts">
+<div class="annotation-tooltip-title">BPMN Artifacts</div>
+<div class="annotation-tooltip-content">BPMN Artifacts are annotations that allow you to describe/group your model, but they have no executable impact.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Start_Nodes">
+<div class="annotation-tooltip-title">BPMN Start Nodes Palette</div>
+<div class="annotation-tooltip-content">The BPMN End Node signifies the start of a process drawn in BPMN for the particular instance. This is the entry point for the process. These can be a generic start as seen here or triggered from timers, signals or event (like a Kafka event). See <b> <a href=../../../core/processes/basic-bpmn/start-events/index.html>Start Events Reference</a></b> for more details.</div>
+</div>
+
+<div class="annotation-tooltip" data-marker-id="Catch_Throw_Node">
+<div class="annotation-tooltip-title">Catching and Throwing Nodes Palette</div>
+<div class="annotation-tooltip-content">Used to create catching and throwing errors for a process. These can be compensation events, messages, signals, etc.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="End_Node_Event">
+<div class="annotation-tooltip-title">BPMN End Node Palette</div>
+<div class="annotation-tooltip-content">The BPMN End Node signifies the end of a process drawn in BPMN for the particular instance. This is the palette item used for various end nodes. To learn more about these see <b> <a href=../../../core/processes/basic-bpmn/end-events/index.html>End Events Reference</div></b></a>
+</div>
+<div class="annotation-tooltip" data-marker-id="BPMN_Activities">
+<div class="annotation-tooltip-title">BPMN Activities Palette</div>
+<div class="annotation-tooltip-content">The BPMN Activities nodes are used to create activities that occur in the BPMN process. Activities include: User tasks, Business Rules tasks, Script tasks, and Service tasks. To learn more about these see <b> <a href=../../../core/processes/basic-bpmn/activities/index.html>BPMN Activities Reference</div></b></a>
+</div>
+<div class="annotation-tooltip" data-marker-id="Subprocesses">
+<div class="annotation-tooltip-title">BPMN Subprocesses Palette</div>
+<div class="annotation-tooltip-content">The BPMN palette option for the various types of subprocesses they can be used within the process. For reference, refer to <b> <a href=../../../core/processes/advanced-bpmn/subprocesses/index.html>Subprocesses Reference</a></b>.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Containers">
+<div class="annotation-tooltip-title">BPMN Containers</div>
+<div class="annotation-tooltip-content">Containers to help group tasks associated with a user/group by swimlane.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Gateway_Palette">
+<div class="annotation-tooltip-title">Gateway Palette</div>
+<div class="annotation-tooltip-content">The BPMN element for different gateways that a process can utilize. For more on gateways, see <b> <a href=../../../core/processes/basic-bpmn/gateways/index.html>Gateway Reference.</a></b> </div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Decision_Service">
+<div class="annotation-tooltip-title">Decision Service</div>
+<div class="annotation-tooltip-content">A Decision Service allows for decisions to be captured and exposed (or hidden) from execution.</div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Gateway_Branch">
+<div class="annotation-tooltip-title">Gate Way Branch</div>
+<div class="annotation-tooltip-content">A gateway branch provides a conditional that the BPMN process can follow. These conditions are typically of a DRL syntax (MVEL or Java). For more on gateways, see <b> <a href=../../../core/processes/basic-bpmn/gateways/index.html>Gateway Reference.</a></b></div>
+</div>
+<div class="annotation-tooltip" data-marker-id="Properties_Panel">
+<div class="annotation-tooltip-title">Properties of Selected item</div>
+<div class="annotation-tooltip-content">Clicking the pen and paper icon opens the selected node's properties to be opened.</div>
+</div>
+  <!-- Add more tooltips for other markers -->
+</div>
+<details>
+  <summary>View Sample DMN Model</summary>
+  <a class="glightbox" href="../images/dmn-sample-view.png" data-type="image" data-width="100%" data-height="auto" data-desc-position="bottom"><img src="../images/dmn-sample-view.png" alt="Sample DMN Model"></a>
+</details>
+
+<h3 id="key-bpmn-components">Key BPMN Components<a class="headerlink" href="#key-bpmn-components" title="Permanent link">&para;</a></h3>
+<h4 id="1-events">1. Events<a class="headerlink" href="#1-events" title="Permanent link">&para;</a></h4>
+<p>Events represent significant occurrences in a process. In our hiring process, we have:</p>
+<ul>
+<li><strong>Start Event:</strong> Marks the beginning of the process</li>
+<li><strong>End Events:</strong> Marks process completion</li>
+<li><strong>Boundary Timer Events:</strong> The clock symbols attached to interview tasks that trigger after 180 seconds</li>
+</ul>
+<h4 id="2-activities">2. Activities<a class="headerlink" href="#2-activities" title="Permanent link">&para;</a></h4>
+<p>Activities represent work performed in the process:</p>
+<ul>
+<li><strong>Script Tasks:</strong> "New Hiring", "Create Offer", "Send notification HR Interview avoided", etc.</li>
+<li><strong>User Tasks:</strong> "HR Interview" and "IT Interview" requiring human interaction</li>
+<li><strong>Service Tasks:</strong> Automated tasks that execute system services (not in this example)</li>
+</ul>
+<h4 id="3-gateways">3. Gateways<a class="headerlink" href="#3-gateways" title="Permanent link">&para;</a></h4>
+<p>Gateways control the flow of the process:</p>
+<ul>
+<li><strong>Exclusive Gateways (Diamond with X):</strong> Decision points like "Candidate meets requirements?"</li>
+<li><strong>Parallel Gateways:</strong> Points where the process splits into parallel paths (not explicitly shown but parallel flow exists)</li>
+<li><strong>Inclusive Gateways:</strong> Points where some paths are taken based on conditions (not in this example)</li>
+</ul>
+<h4 id="4-sequence-flows">4. Sequence Flows<a class="headerlink" href="#4-sequence-flows" title="Permanent link">&para;</a></h4>
+<p>The arrows connecting the elements represent the sequence of execution:</p>
+<ul>
+<li><strong>Normal Flow:</strong> Standard progression path</li>
+<li><strong>Conditional Flow:</strong> Follows specific conditions (e.g., "Candidate doesn't meet requirements")</li>
+<li><strong>Default Flow:</strong> Followed when no other conditions are met</li>
+</ul>
+<h4 id="5-data-objects">5. Data Objects<a class="headerlink" href="#5-data-objects" title="Permanent link">&para;</a></h4>
+<p>Data that flows through the process:</p>
+<ul>
+<li><strong>Process Variables:</strong> <code>candidate</code>, <code>experience</code>, <code>skills</code>, <code>category</code>, <code>salary</code></li>
+<li><strong>Input/Output Mappings:</strong> Data passed between tasks</li>
+</ul>
+<h2 id="working-with-the-bpmn-editor">Working with the BPMN Editor<a class="headerlink" href="#working-with-the-bpmn-editor" title="Permanent link">&para;</a></h2>
+<h3 id="understanding-the-editor-interface">Understanding the Editor Interface<a class="headerlink" href="#understanding-the-editor-interface" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Left Palette:</strong> Contains BPMN elements you can drag onto the modeller</li>
+<li><strong>Modeller:</strong> The main editing area where you build your process</li>
+<li><strong>Properties Panel:</strong> Right-side panel for configuring selected elements</li>
+<li><strong>Top Menu:</strong> Tools for saving, deploying, and validating your model</li>
+</ol>
+<h3 id="exploring-element-properties">Exploring Element Properties<a class="headerlink" href="#exploring-element-properties" title="Permanent link">&para;</a></h3>
+<p>Let's examine the properties of key elements:</p>
+<ol>
+<li><strong>HR Interview Task Properties:</strong></li>
+<li>Click on the "HR Interview" task to select it</li>
+<li>Open the properties panel (right side)</li>
+<li>
+<p>Observe:</p>
+<ul>
+<li>General: Name, ID, Documentation</li>
+<li>Implementation: User task details</li>
+<li>Data Assignments: Input/Output mappings</li>
+<li>Actors: Who can perform this task ("jdoe")</li>
+</ul>
+</li>
+<li>
+<p><strong>Gateway Properties:</strong></p>
+</li>
+<li>Click on the gateway after "Create Offer"</li>
+<li>
+<p>The properties panel shows:</p>
+<ul>
+<li>Gateway type</li>
+<li>Default flow</li>
+<li>Outgoing conditions</li>
+</ul>
+</li>
+<li>
+<p><strong>Script Task Properties:</strong></p>
+</li>
+<li>Click on the "Create Offer" script task</li>
+<li>Examine the script content calculating salary and bonus</li>
+</ol>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Example script from &quot;Create Offer&quot; task</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">if</span><span class="p">(</span><span class="n">experience</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="n">salary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30000</span><span class="p">;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Software Engineer&quot;</span><span class="p">;</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">experience</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="n">salary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">40000</span><span class="p">;</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="n">category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Senior Software Engineer&quot;</span><span class="p">;</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="n">salary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">50000</span><span class="p">;</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="n">category</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Software Architect&quot;</span><span class="p">;</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">}</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="n">bonus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">skills</span><span class="p">.</span><span class="na">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">).</span><span class="na">length</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">150</span><span class="p">;</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="n">kcontext</span><span class="p">.</span><span class="na">setVariable</span><span class="p">(</span><span class="s">&quot;category&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">category</span><span class="p">);</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="n">kcontext</span><span class="p">.</span><span class="na">setVariable</span><span class="p">(</span><span class="s">&quot;salary&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">salary</span><span class="p">);</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="n">kcontext</span><span class="p">.</span><span class="na">setVariable</span><span class="p">(</span><span class="s">&quot;bonus&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">bonus</span><span class="p">);</span>
+</span></code></pre></div>
+<h2 id="modifying-the-process">Modifying the Process<a class="headerlink" href="#modifying-the-process" title="Permanent link">&para;</a></h2>
+<p>Let's make some modifications to understand the editor better:</p>
+<h3 id="adding-a-new-task">Adding a New Task<a class="headerlink" href="#adding-a-new-task" title="Permanent link">&para;</a></h3>
+<ol>
+<li>From the left palette, drag a "User Task" onto the modeller after "Create Offer"</li>
+<li>Connect it to the flow:</li>
+<li>Click on the sequence flow between "Create Offer" and "HR Interview"</li>
+<li>Delete it by pressing Delete/Backspace</li>
+<li>Use the arrow tool to connect "Create Offer" to your new task</li>
+<li>Connect your new task to "HR Interview"</li>
+<li>Configure the task:</li>
+<li>Name it "Manager Approval"</li>
+<li>Set the actor to "manager"</li>
+<li>Add data inputs/outputs as needed</li>
+</ol>
+<h3 id="adding-a-condition-to-a-gateway">Adding a Condition to a Gateway<a class="headerlink" href="#adding-a-condition-to-a-gateway" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Click on the exclusive gateway after "New Hiring"</li>
+<li>In the properties panel, select a sequence flow to edit</li>
+<li>Add a condition like: <code>return experience &gt;= 2;</code></li>
+</ol>
+<h3 id="adding-a-service-task">Adding a Service Task<a class="headerlink" href="#adding-a-service-task" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Drag a "Service Task" from the palette to the modeller</li>
+<li>Configure it with:</li>
+<li>Name: "Background Check"</li>
+<li>Implementation: Select "Java" implementation type</li>
+<li>Class name: <code>org.acme.hiring.BackgroundCheckService</code></li>
+<li>Method: <code>performCheck</code></li>
+</ol>
+<h2 id="process-variables-and-data-flow">Process Variables and Data Flow<a class="headerlink" href="#process-variables-and-data-flow" title="Permanent link">&para;</a></h2>
+<p>The hiring process uses several variables:</p>
+<ol>
+<li><strong>Input Variables:</strong></li>
+<li><code>candidate</code> (String): Candidate's name</li>
+<li><code>experience</code> (Integer): Years of experience</li>
+<li>
+<p><code>skills</code> (String): Comma-separated list of skills</p>
+</li>
+<li>
+<p><strong>Process Variables:</strong></p>
+</li>
+<li><code>hr_approval</code> (Boolean): HR interview approval</li>
+<li>
+<p><code>it_approval</code> (Boolean): IT interview approval</p>
+</li>
+<li>
+<p><strong>Output Variables:</strong></p>
+</li>
+<li><code>category</code> (String): Job category based on experience</li>
+<li><code>salary</code> (Integer): Base salary calculation</li>
+<li><code>bonus</code> (Integer): Bonus calculation based on skills</li>
+</ol>
+<h3 id="data-mapping-example">Data Mapping Example<a class="headerlink" href="#data-mapping-example" title="Permanent link">&para;</a></h3>
+<p>Let's examine how data is passed between tasks:</p>
+<ol>
+<li><strong>HR Interview Task:</strong></li>
+<li><strong>Inputs:</strong><ul>
+<li><code>candidate</code>: Candidate name</li>
+<li><code>approve</code>: Current approval status (hr_approval)</li>
+<li><code>category</code>: Job category</li>
+<li><code>baseSalary</code>: Salary amount</li>
+<li><code>bonus</code>: Bonus amount</li>
+</ul>
+</li>
+<li><strong>Outputs:</strong><ul>
+<li><code>approve</code>: Updated approval status (hr_approval)</li>
+<li><code>category</code>: Potentially modified category</li>
+<li><code>baseSalary</code>: Potentially modified salary</li>
+<li><code>bonus</code>: Potentially modified bonus</li>
+</ul>
+</li>
+</ol>
+<h2 id="process-execution-and-testing">Process Execution and Testing<a class="headerlink" href="#process-execution-and-testing" title="Permanent link">&para;</a></h2>
+<h3 id="testing-your-bpmn-process">Testing Your BPMN Process<a class="headerlink" href="#testing-your-bpmn-process" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Click the "Deploy" button in the top-right corner</li>
+<li>Select "Deploy to Dev" option</li>
+<li>Once deployed, click "Start Process"</li>
+<li>Enter test data:</li>
+<li>Candidate: "John Doe"</li>
+<li>Experience: 8</li>
+<li>Skills: "Java,Spring,Drools"</li>
+<li>Click "Start" to begin the process instance</li>
+<li>Navigate to the "Instances" tab to see the running process</li>
+<li>Complete user tasks as they appear in the "Tasks" tab</li>
+</ol>
+<h3 id="monitoring-process-execution">Monitoring Process Execution<a class="headerlink" href="#monitoring-process-execution" title="Permanent link">&para;</a></h3>
+<ol>
+<li>In the "Instances" tab, click on a running instance</li>
+<li>View the process diagram with highlighted current state</li>
+<li>Examine the "Variables" tab to see current values</li>
+<li>Check the "Logs" tab for execution history</li>
+</ol>
+<h2 id="deployment-options">Deployment Options<a class="headerlink" href="#deployment-options" title="Permanent link">&para;</a></h2>
+<h3 id="local-deployment">Local Deployment<a class="headerlink" href="#local-deployment" title="Permanent link">&para;</a></h3>
+<p>For local testing with the Dev Deployment option:</p>
+<ol>
+<li>Click "Deploy" in the top menu</li>
+<li>Select "Deploy to Dev"</li>
+<li>Access runtime at <a href="http://localhost:9090/management">http://localhost:9090/management</a></li>
+</ol>
+<h3 id="kubernetes-deployment">Kubernetes Deployment<a class="headerlink" href="#kubernetes-deployment" title="Permanent link">&para;</a></h3>
+<p>For deploying to Kubernetes:</p>
+<ol>
+<li>Set up Kubernetes configuration:</li>
+<li>Click on the Profile icon (👤)</li>
+<li>Select "Kubernetes" tab and add your cluster</li>
+<li>Deploy to Kubernetes:</li>
+<li>Click "Deploy" in the top menu</li>
+<li>Select your Kubernetes environment</li>
+<li>Configure deployment options (replicas, resources)</li>
+<li>Click "Deploy"</li>
+</ol>
+<h2 id="integrating-bpmn-with-dmn">Integrating BPMN with DMN<a class="headerlink" href="#integrating-bpmn-with-dmn" title="Permanent link">&para;</a></h2>
+<p>The hiring process could be enhanced with decision models:</p>
+<ol>
+<li>Create a DMN model for determining eligibility:</li>
+<li>Click "New File" &gt; "Decision"</li>
+<li>Name it "CandidateEligibility"</li>
+<li>Create decision table with inputs for experience and skills</li>
+<li>
+<p>Connect it to your BPMN model</p>
+</li>
+<li>
+<p>Integrate the DMN with your BPMN:</p>
+</li>
+<li>Replace the exclusive gateway condition with a business rule task</li>
+<li>Configure the task to call your DMN model</li>
+<li>Map process variables to DMN inputs/outputs</li>
+</ol>
+<h2 id="java-application-integration">Java Application Integration<a class="headerlink" href="#java-application-integration" title="Permanent link">&para;</a></h2>
+<h3 id="setting-up-a-java-project">Setting Up a Java Project<a class="headerlink" href="#setting-up-a-java-project" title="Permanent link">&para;</a></h3>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="cm">&lt;!-- Maven dependency for KIE API --&gt;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">&lt;dependency&gt;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.kie<span class="nt">&lt;/groupId&gt;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>kie-api<span class="nt">&lt;/artifactId&gt;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">&lt;version&gt;</span>10.0.0<span class="nt">&lt;/version&gt;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nt">&lt;/dependency&gt;</span>
+</span></code></pre></div>
+<h3 id="invoking-the-process-from-java">Invoking the Process from Java<a class="headerlink" href="#invoking-the-process-from-java" title="Permanent link">&para;</a></h3>
+<div class="language-java highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">org.kie.kogito.process.Process</span><span class="p">;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">org.kie.kogito.process.ProcessInstance</span><span class="p">;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nd">@Inject</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">Process</span><span class="o">&lt;</span><span class="n">HiringModel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">hiringProcess</span><span class="p">;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">startHiringProcess</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">candidate</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">experience</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">skills</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="n">HiringModel</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">HiringModel</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">        </span><span class="p">.</span><span class="na">candidate</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="p">.</span><span class="na">experience</span><span class="p">(</span><span class="n">experience</span><span class="p">)</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="p">.</span><span class="na">skills</span><span class="p">(</span><span class="n">skills</span><span class="p">)</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="p">.</span><span class="na">build</span><span class="p">();</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="n">ProcessInstance</span><span class="o">&lt;</span><span class="n">HiringModel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hiringProcess</span><span class="p">.</span><span class="na">createInstance</span><span class="p">(</span><span class="n">model</span><span class="p">);</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span><span class="n">instance</span><span class="p">.</span><span class="na">start</span><span class="p">();</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<p>Now that you're familiar with BPMN in Aletyx Playground, here are some recommended next steps:</p>
+<ul>
+<li><strong>Create Custom Service Tasks:</strong> Develop Java components for integration</li>
+<li><strong>Use Process Variables:</strong> Define complex data structures</li>
+<li><strong>Add Error Handling:</strong> Implement boundary error events and compensation</li>
+<li><strong>Create Multi-Instance Tasks:</strong> Handle collections of data in parallel</li>
+<li><strong>Build End-to-End Applications:</strong> Combine BPMN with DMN and Java services</li>
+</ul>
+<h2 id="additional-resources">Additional Resources<a class="headerlink" href="#additional-resources" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://www.omg.org/spec/BPMN/2.0/">BPMN 2.0 Specification</a></li>
+<li><a href="../../../index.html">aletyx Documentation</a></li>
+<li><a href="https://kie.apache.org/">KIE Apache Projects</a></li>
+<li><a href="https://www.drools.org/learn/documentation.html">Drools Documentation</a></li>
+<li><a href="https://www.jbpm.org/learn/documentation.html">jBPM Documentation</a></li>
+</ul>
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+
+
+
+
+                
+
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+
+        <!-- Footer HTML Template for docs/overrides/partials/footer.html -->
+
+<!-- Previous/Next Navigation -->
+
+<nav class="md-footer__inner md-grid" aria-label="Footer">
+  
+  <a href="../getting-started-playground-dmn/index.html" class="md-footer__link md-footer__link--prev" rel="prev">
+    <div class="md-footer__button md-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/>
+      </svg>
+    </div>
+    <div class="md-footer__title">
+      <span class="md-footer__direction">Previous</span>
+      <span class="md-ellipsis">DMN in Playground</span>
+    </div>
+  </a>
+  
+  
+  <a href="../getting-started-start-aletyx/index.html" class="md-footer__link md-footer__link--next" rel="next">
+    <div class="md-footer__title">
+      <span class="md-footer__direction">Next</span>
+      <span class="md-ellipsis">Project Starter</span>
+    </div>
+    <div class="md-footer__button md-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/>
+      </svg>
+    </div>
+  </a>
+  
+</nav>
+
+
+<div class="md-footer-meta">
+  <div class="aletyx-footer">
+    <div class="footer-column brand-column">
+      <a href="../../../../www.aletyx.ai/index.html" class="footer-logo">
+        <img
+          src="../../../assets/images/aletyx-logo-all-white.png"
+          alt="Aletyx Logo"
+          class="logo-light footer-logo-img"
+        />
+        <img
+          src="../../../assets/images/aletyx-logo-all-white.png"
+          alt="Aletyx Logo"
+          class="logo-dark footer-logo-img"
+        />
+      </a>
+      <p class="footer-tagline">
+        Empowering businesses with AI-driven decision-making and intelligent
+        automation. Scalable solutions for Apache KIE, Drools, and Kogito.
+      </p>
+    </div>
+
+    <div class="footer-column">
+      <ul class="footer-links">
+        <li>
+          <a href="../../../../aletyx.ai/build-of-drools/index.html"
+            >Enterprise build of Drools</a
+          >
+        </li>
+        <li>
+          <a href="../../../../aletyx.ai/build-of-kogito/index.html"
+            >Enterprise build of Kogito</a
+          >
+        </li>
+        <li><a href="../../../../www.aletyx.ai/pricing/index.html">Pricing</a></li>
+      </ul>
+      <h3 class="footer-heading">SERVICES</h3>
+      <ul class="footer-links">
+        <li><a href="../../../../aletyx.ai/training-programs/index.html">Training</a></li>
+        <li>
+          <a href="../../../../aletyx.ai/consulting-services/index.html">Consulting</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">RESOURCES</h3>
+      <ul class="footer-links">
+        <li>
+          <a href="../../../../aletyx.ai/experience/index.html" target="_blank" rel="noopener"
+            >Aletyx Experience
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../index.html" target="_blank" rel="noopener"
+            >Documentation
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li><a href="../../../../aletyx.ai/category/blog/index.html">Blog</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">DEVELOPER TOOLS</h3>
+      <ul class="footer-links">
+        <li>
+          <a href="../../../../aletyx.ai/experience/index.html" target="_blank" rel="noopener"
+            >vs.code
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../../start.aletyx.ai/index.html" target="_blank" rel="noopener"
+            >start.aletyx.ai
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="../../../../playground.aletyx.ai/index.html" target="_blank" rel="noopener"
+            >playground.aletyx.ai
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a href="https://maven-innovator.aletyx.services/" target="_blank" rel="noopener"
+            >maven-innovator.aletyx.services
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+        <li>
+          <a
+            href="https://registry-innovator.aletyx.services/"
+            target="_blank"
+            rel="noopener"
+            >registry-innovator.aletyx.services
+            <svg
+              class="external-link-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+              ></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line></svg
+          ></a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h3 class="footer-heading">COMPANY</h3>
+      <ul class="footer-links">
+        <li><a href="../../../../aletyx.ai/about-us/index.html">About Us</a></li>
+        <li><a href="../../../../aletyx.ai/careers/index.html">Careers</a></li>
+        <li><a href="../../../../aletyx.ai/contact-us/index.html">Contact Us</a></li>
+      </ul>
+
+      <div class="social-links">
+        <a
+          href="https://www.linkedin.com/company/aletyx"
+          target="_blank"
+          rel="noopener"
+          aria-label="LinkedIn"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://github.com/aletyx"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://www.youtube.com/@aletyxai"
+          target="_blank"
+          rel="noopener"
+          aria-label="YouTube"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"
+            />
+          </svg>
+        </a>
+        <a
+          href="https://twitter.com/aletyxai"
+          target="_blank"
+          rel="noopener"
+          aria-label="Twitter"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+            />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="footer-legal">
+      <p>&copy; 2025 Aletyx, Inc. All rights reserved.</p>
+      <div class="legal-links">
+        <a href="../../../../www.aletyx.ai/terms/index.html">Terms of Use</a>
+        <a href="../../../../www.aletyx.ai/privacy/index.html">Privacy Policy</a>
+        <a href="../../../../www.aletyx.ai/cookie-policy/index.html">Cookie Policy</a>
+        <a href="#__consent">Cookie Settings</a>
+      </div>
+    </div>
+  </div>
+</div>
+      
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+      <div class="md-consent" data-md-component="consent" id="__consent" hidden>
+        <div class="md-consent__overlay"></div>
+        <aside class="md-consent__inner">
+          <form class="md-consent__form md-grid md-typeset" name="consent">
+            
+
+
+
+<h4>Cookie consent</h4>
+<p>We use cookies to recognize your repeated visits and preferences, as well as to measure the effectiveness of our documentation and whether users find what they're searching for. With your consent, you're helping us to make our documentation better. <a href="../../../legal/cookie-policy/index.html">Learn more in our Cookie Policy</a>.</p>
+<input class="md-toggle" type="checkbox" id="__settings" >
+<div class="md-consent__settings">
+  <ul class="task-list">
+    
+    
+    
+      
+    
+    
+      
+        
+  
+  
+    
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="analytics" >
+      <span class="task-list-indicator"></span>
+      Help us improve our website by collecting anonymous usage data
+    </label>
+  </li>
+
+      
+    
+      
+        
+  
+  
+    
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="marketing" >
+      <span class="task-list-indicator"></span>
+      Allow us to personalize content and ads to improve your browsing experience
+    </label>
+  </li>
+
+      
+    
+      
+        
+  
+  
+    
+    
+      
+    
+  
+  <li class="task-list-item">
+    <label class="task-list-control">
+      <input type="checkbox" name="necessary" checked>
+      <span class="task-list-indicator"></span>
+      Necessary Cookies - Enable core functionality - the website cannot function properly without these
+    </label>
+  </li>
+
+      
+    
+  </ul>
+</div>
+<div class="md-consent__controls">
+  
+    
+      <button class="md-button md-button--primary">Accept</button>
+    
+    
+    
+  
+    
+    
+      <button type="reset" class="md-button md-button--primary">Reject</button>
+    
+    
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
+    
+  
+</div>
+          </form>
+        </aside>
+      </div>
+      <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout((function(){document.querySelector("[data-md-component=consent]").hidden=!1}),250);var form=document.forms.consent;for(var action of["submit","reset"])form.addEventListener(action,(function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map((function(e){return[e,!0]})))),location.hash="",location.reload()}))</script>
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.prune", "navigation.instant", "navigation.instant.prefetch", "navigation.sections", "navigation.indexes", "navigation.path", "navigation.top", "navigation.tracking", "search.share", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.copy", "content.code.select", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../assets/js/annotations.js"></script>
+      
+        <script src="../../../assets/js/custom.js"></script>
+      
+        <script src="../../../assets/js/documentation-fix.js"></script>
+      
+        <script src="../../../assets/js/svg-fix.js"></script>
+      
+        <script src="../../../assets/js/image-path-fix.js"></script>
+      
+        <script src="../../../assets/js/api-examples.js"></script>
+      
+        <script src="../../../assets/js/banner-persistent.js"></script>
+      
+        <script src="../../../assets/js/cookie-consent.js"></script>
+      
+        <script src="../../../assets/js/version-edition-selector.js"></script>
+      
+    
+<script src="../../../assets/js/custom.js"></script>
+<script>
+  // Banner close handler
+  function closeBanner() {
+    const banner = document.getElementById('announcement-banner');
+    const containers = document.querySelectorAll('.md-announce, .md-banner');
+    const header = document.querySelector('.md-header');
+    if (banner) {
+      banner.style.display = 'none';
+      localStorage.setItem('aletyx-banner-closed', 'true');
+    }
+    containers.forEach(function(el) {
+      el.style.display = 'none';
+      el.style.height = '0';
+      el.style.overflow = 'hidden';
+    });
+    // Move header to top when banner is closed
+    if (header) header.style.top = '0';
+  }
+
+  // Check and hide banner if previously closed
+  function checkBannerState() {
+    const header = document.querySelector('.md-header');
+    if (localStorage.getItem('aletyx-banner-closed') === 'true') {
+      const banner = document.getElementById('announcement-banner');
+      const containers = document.querySelectorAll('.md-announce, .md-banner');
+      if (banner) banner.style.display = 'none';
+      containers.forEach(function(el) {
+        el.style.display = 'none';
+        el.style.height = '0';
+        el.style.overflow = 'hidden';
+      });
+      // Move header to top when banner is hidden
+      if (header) header.style.top = '0';
+    } else {
+      // Banner visible - header below it
+      if (header) header.style.top = '';
+    }
+  }
+
+  // Run on initial load
+  document.addEventListener('DOMContentLoaded', checkBannerState);
+
+  // Also run immediately in case DOM is already loaded
+  checkBannerState();
+
+  // Handle Material theme instant navigation
+  if (typeof document$ !== 'undefined') {
+    document$.subscribe(function() {
+      checkBannerState();
+    });
+  }
+
+  // Also listen for location changes (fallback)
+  window.addEventListener('popstate', checkBannerState);
+
+  // Theme persistence
+  (function() {
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.attributeName === 'data-md-color-scheme') {
+          var scheme = document.body.getAttribute('data-md-color-scheme');
+          localStorage.setItem('theme', scheme);
+        }
+      });
+    });
+    observer.observe(document.body, { attributes: true });
+
+    var savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.body.setAttribute('data-md-color-scheme', savedTheme);
+    }
+  })();
+</script>
+
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": false, "draggable": false, "openEffect": "none", "closeEffect": "none", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"6d3101840d104089a766ae297ca50f4d","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+
+<!-- Mirrored from docs.aletyx.ai/guides/getting-started/getting-started-playground-bpmn/ by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 24 Jun 2026 11:22:47 GMT -->
+</html>
