@@ -1,0 +1,140 @@
+---
+title: "Deployment"
+description: "30 min"
+source: "https://docs.aletyx.ai/deployment/"
+---
+
+30 min
+
+Learn how to deploy Aletyx applications in various environments based on your product and use case.
+
+---
+
+## Cloud-Native Deployment
+
+Deploy Kogito and Aletyx Enterprise Build of Apache KIE applications in cloud-native environments using containers and orchestration platforms.
+
+### Kubernetes
+
+Deploy Aletyx applications in Kubernetes clusters with complete control and scalability
+
+[Learn More](/deployment/kubernetes)
+
+### Docker
+
+Containerize and deploy Aletyx applications using Docker for development and testing
+
+[Learn More](https://docs.aletyx.ai/deployment/docker/)
+
+### Red Hat OpenShift®
+
+Enterprise Kubernetes platform with built-in security and developer tools
+
+[Learn More](/deployment/openshift)
+
+### Aletyx Playground
+
+Deploy Aletyx Playground locally or in the cloud for visual development
+
+[Learn More](/deployment/playground)
+
+---
+
+## Decision Control Deployment
+
+Deploy Aletyx Decision Control for enterprise decision management with governance, testing, and lifecycle management.
+
+### Quick Start - Docker
+
+Get Decision Control running locally in under 2 minutes with Docker
+
+[Start Now](https://docs.aletyx.ai/decision-control/setup-and-config/#docker-deployment#docker-deployment)
+
+### AWS Marketplace Sandbox
+
+Quick AWS deployment for testing and evaluation with H2 database
+
+[Deploy Sandbox](/deployment/aws-marketplace/sandbox)
+
+### Kubernetes Multi-Environment
+
+Complete governance workflow with Dev, Test, and Production environments
+
+[Production Setup](https://docs.aletyx.ai/decision-control/setup-and-config/#kubernetes-deployment#kubernetes-deployment)
+
+---
+
+## Getting Started with Deployment
+
+For a quick deployment experience with Aletyx applications, follow these steps:
+
+### 1. Build Your Application
+
+```bash
+mvn clean package
+```
+
+### 2. Create a Docker Image
+
+```bash
+docker build -t my-aletyx-app .
+```
+
+### 3. Run Your Container
+
+```bash
+docker run -p 8080:8080 my-aletyx-app
+```
+
+---
+
+## Continuous Integration and Deployment
+
+For production environments, we recommend setting up CI/CD pipelines:
+
+- **Git-Based Workflows**: Version control for all decision models and applications
+- **Automated Testing**: Unit tests, integration tests, and decision validation
+- **Kubernetes Operators**: Automated deployment and scaling
+- **Monitoring**: CloudWatch, Prometheus, and Grafana for observability
+
+---
+
+## Scaling and High Availability
+
+Aletyx applications can be scaled horizontally for high availability:
+
+- **Kubernetes StatefulSets**: For stateful services requiring persistent storage
+- **Persistence Strategies**: PostgreSQL, RDS, or external databases
+- **Load Balancing**: nginx, AWS ALB, or Kubernetes Ingress
+- **Auto-Scaling**: Horizontal Pod Autoscaling (HPA) based on CPU/memory metrics
+- **Multi-AZ Deployment**: Database replication and failover for production workloads
+
+---
+
+## Deployment Comparison
+
+Choose the right deployment method for your needs:
+
+| Method | Best For | Setup Time | Complexity | Production Ready |
+| --- | --- | --- | --- | --- |
+| **Docker (Local)** | Development, Testing, Quick evaluation | 2 minutes | Low | No (H2 database) |
+| **Docker Compose** | Development with PostgreSQL | 5 minutes | Low | For small workloads |
+| **AWS Marketplace Sandbox** | Quick AWS deployment, Evaluation | 10 minutes | Low | For testing only |
+| **Kubernetes** | Multi-environment governance | 1-2 hours | High | Yes |
+
+---
+
+## Next Steps
+
+Choose your deployment path:
+
+**For Quick Evaluation**:
+- Try [Decision Control with Docker](https://docs.aletyx.ai/decision-control/setup-and-config/#docker-deployment#docker-deployment) (2 minutes)
+- Or use [AWS Marketplace Sandbox](/deployment/aws-marketplace/sandbox) (10 minutes)
+
+**For Production Deployment**:
+- Set up [Kubernetes with Complete Governance](https://docs.aletyx.ai/decision-control/setup-and-config/#kubernetes-deployment#kubernetes-deployment)
+
+**For Cloud-Native Applications**:
+- Start with [Kubernetes Deployment](/deployment/kubernetes)
+- Or explore [OpenShift Deployment](/deployment/openshift)

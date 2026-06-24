@@ -16,7 +16,9 @@
         "groups": [
           {
             "group": "Home",
-            "pages": ["index"]
+            "pages": [
+              "index"
+            ]
           },
           {
             "group": "Get started",
@@ -30,6 +32,7 @@
             "group": "Architecture",
             "pages": [
               "architecture/overview",
+              "core-concepts",
               {
                 "group": "Decision Automation",
                 "pages": [
@@ -190,11 +193,74 @@
           {
             "group": "Platform",
             "pages": [
-              "core-concepts",
+              "components/overview",
               "tech-stack",
               "decision-control",
+              {
+                "group": "Drools",
+                "pages": [
+                  "components/drools/overview",
+                  "components/drools/drools-getting-started",
+                  "components/drools/drools-visual-guide",
+                  "components/drools/drools-engine",
+                  "components/drools/drools-ruleflow",
+                  "components/drools/troubleshooting"
+                ]
+              },
+              "components/jbpm",
+              "components/kogito",
+              {
+                "group": "Adaptive Process Architecture",
+                "pages": [
+                  "components/compact-architecture/overview",
+                  "components/compact-architecture/scaling"
+                ]
+              },
+              {
+                "group": "Playground",
+                "pages": [
+                  "components/playground/overview",
+                  "components/playground/components",
+                  "components/playground/accelerators",
+                  "components/playground/advanced-accelerator",
+                  "components/playground/dev-deployment",
+                  "components/playground/customizing"
+                ]
+              },
               "decisions-genai",
-              "deployment"
+              {
+                "group": "Model Context Protocol",
+                "pages": [
+                  "components/mcp/overview",
+                  "components/mcp/first-interaction"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/overview",
+              {
+                "group": "AWS Marketplace",
+                "pages": [
+                  "deployment/aws-marketplace/overview",
+                  "deployment/aws-marketplace/sandbox",
+                  "deployment/aws-marketplace/ssl-https",
+                  "deployment/aws-marketplace/security",
+                  "deployment/aws-marketplace/troubleshooting"
+                ]
+              },
+              {
+                "group": "Cloud-Native",
+                "pages": [
+                  "deployment/cloud-native/overview",
+                  "deployment/cloud-native/jvm-vs-native",
+                  "deployment/kubernetes",
+                  "deployment/openshift"
+                ]
+              },
+              "deployment/playground"
             ]
           },
           {
@@ -262,7 +328,9 @@
           },
           {
             "group": "References",
-            "pages": ["references"]
+            "pages": [
+              "references"
+            ]
           }
         ]
       },
@@ -271,7 +339,9 @@
         "groups": [
           {
             "group": "API reference",
-            "pages": ["api-reference/introduction"]
+            "pages": [
+              "api-reference/introduction"
+            ]
           }
         ]
       }
