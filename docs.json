@@ -327,9 +327,18 @@
             ]
           },
           {
-            "group": "References",
+            "group": "Reference",
             "pages": [
-              "references"
+              "reference/overview",
+              {
+                "group": "DMN Reference",
+                "pages": [
+                  "reference/dmn/overview",
+                  "reference/dmn/reserved-words",
+                  "reference/dmn/select-reference"
+                ]
+              },
+              "reference/release-notes"
             ]
           }
         ]
