@@ -264,6 +264,21 @@
             ]
           },
           {
+            "group": "Reference",
+            "pages": [
+              "reference/overview",
+              {
+                "group": "DMN Reference",
+                "pages": [
+                  "reference/dmn/overview",
+                  "reference/dmn/reserved-words",
+                  "reference/dmn/select-reference"
+                ]
+              },
+              "reference/release-notes"
+            ]
+          },
+          {
             "group": "FAQ",
             "pages": [
               "faq",
@@ -324,21 +339,6 @@
                   "faq/deployment-pricing-support/performance"
                 ]
               }
-            ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              "reference/overview",
-              {
-                "group": "DMN Reference",
-                "pages": [
-                  "reference/dmn/overview",
-                  "reference/dmn/reserved-words",
-                  "reference/dmn/select-reference"
-                ]
-              },
-              "reference/release-notes"
             ]
           }
         ]
