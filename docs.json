@@ -44,6 +44,7 @@
           {
             "group": "Get started",
             "pages": [
+              "quickstart",
               "quickstart/decision-analysts",
               "quickstart/developers",
               "quickstart/tech-leads"
@@ -296,6 +297,7 @@
                   "reference/dmn/select-reference"
                 ]
               },
+              "references",
               "reference/release-notes"
             ]
           },
@@ -360,17 +362,6 @@
                   "faq/deployment-pricing-support/performance"
                 ]
               }
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API reference",
-            "pages": [
-              "api-reference/introduction"
             ]
           }
         ]
