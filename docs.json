@@ -9,6 +9,27 @@
     "dark": "#e85a2c"
   },
   "favicon": "/favicon.svg",
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "og:site_name": "Aletyx Documentation",
+      "og:type": "website",
+      "og:image": "/images/og-preview.png",
+      "twitter:image": "/images/og-preview.png",
+      "twitter:card": "summary_large_image"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "claude",
+      "chatgpt",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
   "navigation": {
     "tabs": [
       {
