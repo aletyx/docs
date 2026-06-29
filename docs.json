@@ -23,8 +23,34 @@
     "options": [
       "copy",
       "view",
-      "claude",
-      "chatgpt",
+      {
+        "title": "Open in Claude",
+        "description": "Ask questions about this page",
+        "icon": "robot",
+        "href": {
+          "base": "https://claude.ai/new",
+          "query": [
+            {
+              "key": "q",
+              "value": "Read the following Aletyx documentation page so I can ask questions about it:\n\n$page"
+            }
+          ]
+        }
+      },
+      {
+        "title": "Open in ChatGPT",
+        "description": "Ask questions about this page",
+        "icon": "comments",
+        "href": {
+          "base": "https://chatgpt.com/",
+          "query": [
+            {
+              "key": "q",
+              "value": "Read the following Aletyx documentation page so I can ask questions about it:\n\n$page"
+            }
+          ]
+        }
+      },
       "mcp",
       "cursor",
       "vscode"
