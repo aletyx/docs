@@ -32,7 +32,7 @@
           "query": [
             {
               "key": "q",
-              "value": "Read the following Aletyx documentation page so I can ask questions about it:\n\n$page"
+              "value": "https://aletyx.ai/docs\n\n$page\n\nRead the Aletyx documentation above so I can ask questions about it."
             }
           ]
         }
@@ -46,7 +46,7 @@
           "query": [
             {
               "key": "q",
-              "value": "Read the following Aletyx documentation page so I can ask questions about it:\n\n$page"
+              "value": "https://aletyx.ai/docs\n\n$page\n\nRead the Aletyx documentation above so I can ask questions about it."
             }
           ]
         }
