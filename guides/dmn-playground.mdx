@@ -103,22 +103,28 @@ Let's begin by exploring a sample Decision Model and Notation (DMN) model.
     </Frame>
 
     <Accordion title="What each part of the DMN editor does">
-      - **Decision Editor** — This section of the DMN editor is currently activated and showing the DMN model or a selection.
-      - **Decision Connectors** — From a given decision, you can connect with the various lines to their appropriate types or connect another decision or knowledge source.
-      - **Decision Output Type** — The pulldown allows you to map your decision's datatype to a particular part of your model and/or structures.
-      - **Data Types Editor** — This section of the DMN editor allows you to view, create, or edit data types associated with the model.
-      - **Included Models** — This section allows you to reference other models for your DMN model. An included model allows decision/model/data object reuse easily.
-      - **Credit Score Rating Decision Node** — The rectangle on the DMN editor represents a Decision Node. In this case it represents the Credit Score Rating based on an input of Credit Score.
-      - **Credit Score Input Node** — The oval on the DMN editor represents an Input Data Node used for the applicant's credit score. This is data that would be required to execute the decision.
-      - **DRG Node Selector** — This section allows you to easily navigate the different Decision Requirement Diagram's nodes.
-      - **Annotations** — Annotations allow you to put various annotations on your DMN model; they have no executable impact, but are great for further explaining a model.
-      - **Decision Input** — In DMN, an oval represents the input for a DMN model. These can be mapped to specific data structures or types.
-      - **Decision Node** — Used to place a decision on the DMN requirement diagram. A Decision node with no inputs will execute on DMN invocation; if there is a requirement node (e.g. another Decision Node or Input Node) preceding it, it will require that to be completed before its requirement is met and the decision executes.
-      - **Decision BKM** — A BKM allows use of Friendly Enough Expression Language (FEEL), Java or PMML models to be used to further supplement decision execution.
-      - **Knowledge Source** — Documents, committees, regulations, policies or people that define how a decision should be made. They are not executable.
-      - **Decision Service** — A Decision Service allows for decisions to be captured and exposed (or hidden) from execution.
-      - **Edit Decision** — Clicking the edit below a decision's node allows you to edit the logic of the selected decision node.
-      - **Properties of Selected item** — Clicking the *i* icon opens the selected node's properties. This can also be done by pressing the "i" key on your keyboard.
+      **Tabs and top controls**
+
+      - **Editor tab** — The active view, showing the Decision Requirements Diagram (DRG/DRD) or your current selection.
+      - **Data Types tab** — View, create, or edit the data types associated with the model.
+      - **Included Models tab** — Reference other models so decisions, data types, and logic can be reused.
+      - **DRG/DRD selector** (dropdown at the top-left of the canvas) — Navigate between the diagram's nodes.
+      - **Decision Output Type** (dropdown above a selected node) — Map the decision's data type to a particular part of your model or structures.
+      - **Properties panel** (the *i* button, top-right — or press `i` with a node selected) — Open the selected node's properties.
+
+      **Diagram nodes**
+
+      - **Decision node** (rectangle, e.g. "Credit Score Rating") — Places a decision on the diagram. A decision with no inputs executes on invocation; if it has an incoming requirement (another decision or an input node), that must complete first before the decision executes.
+      - **Input Data node** (oval, e.g. "Credit Score") — Data required to execute a decision. Can be mapped to specific data structures or types.
+      - **Business Knowledge Model (BKM)** — Reusable decision logic written in Friendly Enough Expression Language (FEEL), Java, or PMML.
+      - **Knowledge Source** — Documents, committees, regulations, policies, or people that define how a decision should be made. Not executable.
+      - **Decision Service** — Captures decisions and exposes (or hides) them from execution.
+      - **Annotation** — Free-text notes on the model; no executable impact, but great for explaining a model.
+
+      **Connectors and per-node actions**
+
+      - **Connectors** — Drag from a node to connect it to the appropriate target — another decision, an input, or a knowledge source.
+      - **Edit** (below a selected node) — Open the node's decision logic.
     </Accordion>
 
     <Accordion title="View Sample DMN Model">
@@ -150,15 +156,23 @@ Let's begin by exploring a sample Decision Model and Notation (DMN) model.
     </Frame>
 
     <Accordion title="What each part of the decision table does">
-      - **Decision Output — Credit Score Rating** — This column sets the value of the output. Here the Credit Score Rating, which maps to the Data Type of `Credit_Score_Rating`, is set for all values in this column if the conditions match.
-      - **Decision Input — Condition of FICO Credit Score** — This column sets the condition on the FICO Score. The dot notation allows the table to take the `FICO` property from the data, which is a number. The rows of rules below use the score given to determine the credit score.
-      - **FEEL Condition for Associated Decision Condition** — Comparative functions are commonly used. Using brackets `[]` (inclusive) or parentheses `()` (not inclusive), you can write detailed ranges with `..`. Keep in mind that the Unique (U) hit policy requires a single rule being able to execute within the entirety of the table.
-      - **FEEL Output for Associated Decision Output** — If the requirements of the decision are met, the output value is set. For strings, you use quotes as seen here, but this could just as easily be a number or FEEL function.
-      - **Decision Annotation (Optional)** — This column allows you to set notes about the decision; this content is not used in evaluation by the engine.
-      - **Decision Connectors** — Connect lines to their appropriate types, or connect another decision or knowledge source.
-      - **Decision Output Type** — Map your decision's datatype to a particular part of your model and/or structures.
-      - **Annotations Decision** — Set an annotation; the value here is ignored by the decision engine.
-      - **Hit Policy** — Hit policies determine how to reach an outcome when multiple rules match: Unique (U), Any (A), Priority (P), First (F), and Collect (C) variants — Collect/Sum (C+), Collect/Min (C&lt;), Collect/Max (C&gt;), Collect/Count (C#).
+      **Columns**
+
+      - **Input column / condition** (e.g. "Credit Score.FICO (number)") — Sets the condition on the FICO score. The dot notation takes the `FICO` property from the input data. The rule rows below use the supplied score to determine the rating.
+      - **Output column** (e.g. "Credit Score Rating (Credit_Score_Rating)") — Sets the decision's output value when a row's conditions match. Here it maps to the `Credit_Score_Rating` data type.
+      - **Annotations column** (optional) — Notes about each rule; ignored by the engine during evaluation.
+
+      **Cell expressions**
+
+      - **FEEL condition** — Comparison expressions are common. Use brackets `[]` (inclusive) or parentheses `()` (exclusive) with `..` to write ranges. Note the Unique (U) hit policy requires that only a single rule can fire across the table.
+      - **FEEL output** — The value set when the rule's conditions are met. Strings use quotes (as shown), but this could just as easily be a number or a FEEL expression.
+
+      **Hit policy**
+
+      - **Hit Policy** (the letter in the top-left cell) — Determines how an outcome is reached when multiple rules match: Unique (U), Any (A), Priority (P), First (F), and Collect (C) variants — Collect/Sum (C+), Collect/Min (C&lt;), Collect/Max (C&gt;), Collect/Count (C#).
+
+      **The rules**
+
       - **Rule 1 — Credit Score ≥ 750** — When the FICO score is 750 or greater, the Credit Score Rating is set to Excellent.
       - **Rule 2 — Credit Score 700 to &lt; 750** — When the FICO score is inclusive of 700 to less than 750, the Credit Score Rating is set to Good.
       - **Rule 3 — Credit Score 650 to &lt; 700** — When the FICO score is inclusive of 650 to less than 700, the Credit Score Rating is Fair.
