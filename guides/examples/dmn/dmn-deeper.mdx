@@ -4,6 +4,42 @@ description: "Advanced DMN modeling with Business Knowledge Models (BKMs), custo
 source: "https://aletyx-docs-preview.aletyx.workers.dev/guides/examples/dmn/dmn-deeper/"
 ---
 
+export const AnnotatedImage = ({ src, alt, markers = [] }) => (
+  <div style={{ position: "relative", width: "100%", margin: "1rem 0", lineHeight: 0 }}>
+    <img src={src} alt={alt} style={{ width: "100%", display: "block", borderRadius: "0.5rem", border: "1px solid rgba(0,0,0,0.1)" }} />
+    {markers.map((m, i) => (
+      <span
+        key={i}
+        title={m.label}
+        style={{
+          position: "absolute",
+          top: `${m.top}%`,
+          left: `${m.left}%`,
+          transform: "translate(-50%, -50%)",
+          width: "1.4rem",
+          height: "1.4rem",
+          borderRadius: "9999px",
+          background: "#ea580c",
+          color: "#ffffff",
+          fontSize: "0.78rem",
+          fontWeight: 700,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "2px solid #ffffff",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
+          cursor: "help",
+          lineHeight: 1,
+          userSelect: "none",
+          zIndex: 2,
+        }}
+      >
+        {i + 1}
+      </span>
+    ))}
+  </div>
+)
+
 ## Overview
 
 After mastering the basics of DMN, you're ready to explore more advanced modeling techniques. This guide builds on your foundation to help you create sophisticated decision models that can handle complex business scenarios.
@@ -259,16 +295,20 @@ Once this function is created, we need to edit our Decision for the Destination 
 1. First when editing the **Destination Risk Factor**, for the *Select expression* menu, select **Context**
 2. Edit *ContextEntry-1* to being **Highest Risk** with a type string by clicking the first box.
 
-  [![Context Expression for Risk Assessment](/images/guides/guides/examples/dmn/images/highest-risk-context.png)](/images/guides/guides/examples/dmn/images/highest-risk-context.png)
+<AnnotatedImage
+  src="/images/guides/guides/examples/dmn/images/highest-risk-context.png"
+  alt="Context expression for risk assessment with numbered callouts"
+  markers={[
+    { top: 30, left: 15, label: "1. Context Variable — define a named variable (e.g. 'Highest Risk')" },
+    { top: 65, left: 45, label: "2. Context Variable Definition — names the variable holding the returned value" },
+    { top: 80, left: 45, label: "3. Data Type Dropdown — pick the variable's data type" },
+    { top: 75, left: 80, label: "4. Type Management — the Manage button: create, edit, or import custom types" },
+  ]}
+/>
 
-  Context Variable
-  In a Context expression, you first define named variables that can be used within the calculation. "Highest Risk" is defined here as a string variable. This is the value that can be used in the next parts of your decision. By clicking this box, you will open the definition window for the particular Context variable you are selected to.
-
-  Context Variable Definition
-  In a Context expression, you first define named variables that can be used within the calculation. "Highest Risk" is defined here as a string variable. This is the value that can be used in the next parts of your decision. What you name in this box will define the context variable for the returned value for the rest of this Context Decision particular Context variable you are selected to.
-
-  Data Type Dropdown
-  DMN requires explicit typing of all variables. This dropdown allows selection from built-in types (string, number, boolean, date) or custom-defined complex types.
-
-  Type Management
-  The "Manage" button provides access to create, edit or import custom data types for use in your decision model.
+<Accordion title="What each numbered part of the context expression is">
+  1. **Context Variable** — In a Context expression you first define named variables usable within the calculation. "Highest Risk" is defined here as a string variable, available to the later parts of the decision. Click this box to open the definition window for that context variable.
+  2. **Context Variable Definition** — What you name in this box defines the context variable that holds the returned value for the rest of this Context decision.
+  3. **Data Type Dropdown** — DMN requires explicit typing of all variables. This dropdown selects from built-in types (string, number, boolean, date) or custom complex types.
+  4. **Type Management** — The **Manage** button lets you create, edit, or import custom data types for use in your decision model.
+</Accordion>
