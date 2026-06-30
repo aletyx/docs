@@ -3,6 +3,42 @@ title: "Executable Processes Models: BPMN in Aletyx Playground"
 description: "A hands-on walkthrough of exploring, modeling, testing, and deploying BPMN process models in the browser-based Aletyx Playground."
 ---
 
+export const AnnotatedImage = ({ src, alt, markers = [] }) => (
+  <div style={{ position: "relative", width: "100%", margin: "1rem 0", lineHeight: 0 }}>
+    <img src={src} alt={alt} style={{ width: "100%", display: "block", borderRadius: "0.5rem", border: "1px solid rgba(0,0,0,0.1)" }} />
+    {markers.map((m, i) => (
+      <span
+        key={i}
+        title={m.label}
+        style={{
+          position: "absolute",
+          top: `${m.top}%`,
+          left: `${m.left}%`,
+          transform: "translate(-50%, -50%)",
+          width: "1.4rem",
+          height: "1.4rem",
+          borderRadius: "9999px",
+          background: "#ea580c",
+          color: "#ffffff",
+          fontSize: "0.78rem",
+          fontWeight: 700,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "2px solid #ffffff",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
+          cursor: "help",
+          lineHeight: 1,
+          userSelect: "none",
+          zIndex: 2,
+        }}
+      >
+        {i + 1}
+      </span>
+    ))}
+  </div>
+)
+
 Business Process Model and Notation (BPMN) is a standardized graphical notation for
 business process modeling. Aletyx Playground provides a powerful environment for
 creating, editing, and executing BPMN models. This getting started guide will walk
@@ -131,45 +167,72 @@ This hiring process demonstrates a complete hiring workflow with multiple branch
 
 Let's explore each piece in the diagram!
 
-<Frame>
-  <img src="/images/bpmn-pg-hiring-process-full.png" alt="BPMN Editor with Sample Hiring Process" />
-</Frame>
+Hover over each numbered marker on the screenshot to see what that part does, or
+expand the list below.
+
+<AnnotatedImage
+  src="/images/bpmn-pg-hiring-process-full.png"
+  alt="BPMN editor with numbered callouts for each part"
+  markers={[
+    { top: 10,   left: 72, label: "1. Apply Accelerator — scaffold a project from referenced templates/standards" },
+    { top: 10,   left: 81, label: "2. New File — create .bpmn, .dmn, or .pmml files, or upload files" },
+    { top: 10,   left: 88, label: "3. Deploy (Dev Deployment) — quickly try out a service" },
+    { top: 10,   left: 94, label: "4. Share — sync with Git or download the file as XML" },
+    { top: 20,   left: 99, label: "5. Properties — click the pen-and-paper icon to open the node's properties" },
+    { top: 30,   left: 6,  label: "6. Start node — the entry point of the process" },
+    { top: 35,   left: 19, label: "7. New Hiring script task — initializes process variables" },
+    { top: 32,   left: 24, label: "8. Gateway (split) — branches the flow; here an exclusive gateway" },
+    { top: 60,   left: 24, label: "9. Gateway branch — the condition a branch follows (DRL/MVEL/Java)" },
+    { top: 35,   left: 38, label: "10. Create Offer script task — builds a base offer from the application" },
+    { top: 24,   left: 43, label: "11. Human task — a task delegated to a person (HR Interview)" },
+    { top: 37,   left: 60, label: "12. Boundary timer event — escalate, cancel, or branch on a timer (ISO-8601)" },
+    { top: 56,   left: 52.5, label: "13. Gateway (join) — brings multiple branches back together" },
+    { top: 29.5, left: 86.5, label: "14. End node — where the process concludes" },
+    { top: 19,   left: 3,  label: "15. Palette: Start nodes" },
+    { top: 26,   left: 3,  label: "16. Palette: Catching and throwing nodes" },
+    { top: 31,   left: 3,  label: "17. Palette: End nodes" },
+    { top: 37,   left: 3,  label: "18. Palette: Activities (User, Business Rule, Script, Service tasks)" },
+    { top: 42,   left: 3,  label: "19. Palette: Subprocesses" },
+    { top: 48,   left: 3,  label: "20. Palette: Gateways" },
+    { top: 53,   left: 3,  label: "21. Palette: Containers (swimlanes)" },
+    { top: 60,   left: 3,  label: "22. Palette: Artifacts (annotations; no executable impact)" },
+    { top: 66,   left: 3,  label: "23. Palette: Custom tasks" },
+  ]}
+/>
 
 <AccordionGroup>
-  <Accordion title="What each part of the BPMN editor does">
+  <Accordion title="What each numbered part of the BPMN editor does">
     **Top bar and controls**
 
-    - **File location and local status** (folder/status icon, top-left) — Shows where a file lives and its save status. Hovering confirms when the file is saved in local storage. Remember that Aletyx Playground stores work in browser memory, so it goes away when that storage is freed.
-    - **Apply Accelerator** — Creates a pre-scaffolded project from standards attached to referenced projects, so you can build from model to deployment efficiently using templates. See the [Accelerators Reference](https://docs.aletyx.ai/components/playground/accelerators).
-    - **New File button** — Create new Workflow (.bpmn), Decision (.dmn), or (.pmml) files within the current project folder, or upload other files from your workstation. Applying an accelerator brings in all the files associated with the workspace.
-    - **Deploy** (Dev Deployment) — Trigger a Dev Deployment to try out a service. It's not a replacement for a full deployment, but an excellent quick testing tool. See the [Dev Deployment Reference](https://docs.aletyx.ai/components/playground/dev-deployment).
-    - **Share** — Synchronize your project with a Git provider using your credentials, or download the BPMN/DMN file in XML format to use elsewhere. See [Git Configuration](https://docs.aletyx.ai/getting-started/git-configuration).
-    - **Properties panel** (pen-and-paper icon, top-right) — Opens the selected node's properties.
+    1. **Apply Accelerator** — Creates a pre-scaffolded project from standards attached to referenced projects, so you can build from model to deployment efficiently using templates. See the [Accelerators Reference](https://docs.aletyx.ai/components/playground/accelerators).
+    2. **New File button** — Create new Workflow (.bpmn), Decision (.dmn), or (.pmml) files within the current project folder, or upload other files from your workstation. Applying an accelerator brings in all the files associated with the workspace.
+    3. **Deploy** (Dev Deployment) — Trigger a Dev Deployment to try out a service. It's not a replacement for a full deployment, but an excellent quick testing tool. See the [Dev Deployment Reference](https://docs.aletyx.ai/components/playground/dev-deployment).
+    4. **Share** — Synchronize your project with a Git provider using your credentials, or download the BPMN/DMN file in XML format to use elsewhere. See [Git Configuration](https://docs.aletyx.ai/getting-started/git-configuration).
+    5. **Properties of selected item** (pen-and-paper icon, top-right) — Opens the selected node's properties.
 
     **Diagram nodes and connectors**
 
-    - **Start node** (green circle) — The entry point of the process. Can be a generic start (as shown here) or triggered from timers, signals, or events (like a Kafka event). See the [Start Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/start-events).
-    - **End node** (red circle) — Where the process concludes when it reaches this point. See the [End Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/end-events).
-    - **Script task** (e.g. "New Hiring") — Runs a script; here it initializes process variables. Opening its properties shows things like `kcontext.setVariable("hr_approval", false)`.
-    - **Script task** (e.g. "Create Offer") — Another script task, here building a base offer from the application details so interviewers can review what would be offered.
-    - **Human task** (e.g. "HR Interview") — A task delegated to a person to work on. See the [Human Task Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/activities/#user-task).
-    - **Boundary timer event** (clock attached to a task) — Set on tasks (and other services) to escalate, cancel, or create new pathways. Uses the ISO-8601 time standard. See [Intermediate Events](https://docs.aletyx.ai/core/processes/basic-bpmn/intermediate-events) and the [ISO-8601 Reference](https://docs.aletyx.ai/core/processes/advanced-bpmn/iso-8601-guide).
-    - **Gateway — split** (diamond with ✕) — A point where the process can branch. Here it's an exclusive gateway: if the candidate meets the requirements the process moves forward, otherwise the application is denied. See the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
-    - **Gateway — join** (diamond with ✕) — A point where multiple branches of a process come back together. See the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
-    - **Gateway branch** (the conditional label on a flow, e.g. "Candidate doesn't meet requirements") — The condition a branch follows, typically in DRL syntax (MVEL or Java). See the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
+    6. **Start node** (green circle) — The entry point of the process. Can be a generic start (as shown here) or triggered from timers, signals, or events (like a Kafka event). See the [Start Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/start-events).
+    7. **New Hiring script task** — Runs a script; here it initializes process variables. Opening its properties shows things like `kcontext.setVariable("hr_approval", false)`.
+    8. **Gateway — split** (diamond with ✕) — A point where the process can branch. Here it's an exclusive gateway: if the candidate meets the requirements the process moves forward, otherwise the application is denied. See the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
+    9. **Gateway branch** (the conditional label on a flow, e.g. "Candidate doesn't meet requirements") — The condition a branch follows, typically in DRL syntax (MVEL or Java). See the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
+    10. **Create Offer script task** — Another script task, here building a base offer from the application details so interviewers can review what would be offered.
+    11. **Human task** (e.g. "HR Interview") — A task delegated to a person to work on. See the [Human Task Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/activities/#user-task).
+    12. **Boundary timer event** (clock attached to a task) — Set on tasks (and other services) to escalate, cancel, or create new pathways. Uses the ISO-8601 time standard. See [Intermediate Events](https://docs.aletyx.ai/core/processes/basic-bpmn/intermediate-events) and the [ISO-8601 Reference](https://docs.aletyx.ai/core/processes/advanced-bpmn/iso-8601-guide).
+    13. **Gateway — join** (diamond with ✕) — A point where multiple branches of a process come back together. See the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
+    14. **End node** (red circle) — Where the process concludes when it reaches this point. See the [End Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/end-events).
 
     **Left palette** (drag elements onto the canvas)
 
-    - **Start nodes** — Palette items for the various start nodes: generic, or triggered from timers, signals, or events. See the [Start Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/start-events).
-    - **Catching and throwing nodes** — Create catching and throwing events: compensation events, messages, signals, etc.
-    - **End nodes** — Palette items for the various end nodes. See the [End Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/end-events).
-    - **Activities** — Create the activities in the process: User tasks, Business Rules tasks, Script tasks, and Service tasks. See the [BPMN Activities Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/activities).
-    - **Subprocesses** — The various types of subprocesses you can use within a process. See the [Subprocesses Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/subprocesses).
-    - **Gateways** — The different gateways a process can use. See the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
-    - **Containers** — Group tasks belonging to a user/group by swimlane.
-    - **Custom tasks** — Use custom tasks within the editor, typically tied to custom work item handlers.
-    - **Artifacts** — Annotations that describe or group your model; they have no executable impact.
-    - **Decision Service** — Captures decisions and exposes (or hides) them from execution.
+    15. **Start nodes** — Palette items for the various start nodes: generic, or triggered from timers, signals, or events. See the [Start Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/start-events).
+    16. **Catching and throwing nodes** — Create catching and throwing events: compensation events, messages, signals, etc.
+    17. **End nodes** — Palette items for the various end nodes. See the [End Events Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/end-events).
+    18. **Activities** — Create the activities in the process: User tasks, Business Rules tasks, Script tasks, and Service tasks. See the [BPMN Activities Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/activities).
+    19. **Subprocesses** — The various types of subprocesses you can use within a process. See the [Subprocesses Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/subprocesses).
+    20. **Gateways** — The different gateways a process can use. See the [Gateway Reference](https://docs.aletyx.ai/core/processes/basic-bpmn/gateways).
+    21. **Containers** — Group tasks belonging to a user/group by swimlane.
+    22. **Artifacts** — Annotations that describe or group your model; they have no executable impact.
+    23. **Custom tasks** — Use custom tasks within the editor, typically tied to custom work item handlers.
   </Accordion>
   <Accordion title="View Sample DMN Model">
     <Frame>
