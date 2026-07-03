@@ -409,5 +409,11 @@
     "socials": {
       "website": "https://aletyx.com"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/core/decisions/dmn",
+      "destination": "/architecture/decisions/dmn/overview"
+    }
+  ]
 }
