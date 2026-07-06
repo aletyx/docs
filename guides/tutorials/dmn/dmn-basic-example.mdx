@@ -1,0 +1,124 @@
+---
+title: "Basic Examples"
+description: "Step-by-step tutorial building a DMN model in Aletyx Playground that calculates employee vacation days from age and years of service using decision tables and FEEL."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/guides/examples/dmn/dmn-basic-example/"
+---
+
+export const AnnotatedImage = ({ src, alt, markers = [] }) => (
+  <div style={{ position: "relative", width: "100%", margin: "1rem 0", lineHeight: 0 }}>
+    <img src={src} alt={alt} style={{ width: "100%", display: "block", borderRadius: "0.5rem", border: "1px solid rgba(0,0,0,0.1)" }} />
+    {markers.map((m, i) => (
+      <span
+        key={i}
+        title={m.label}
+        style={{
+          position: "absolute",
+          top: `${m.top}%`,
+          left: `${m.left}%`,
+          transform: "translate(-50%, -50%)",
+          width: "1.4rem",
+          height: "1.4rem",
+          borderRadius: "9999px",
+          background: "#ea580c",
+          color: "#ffffff",
+          fontSize: "0.78rem",
+          fontWeight: 700,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "2px solid #ffffff",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.45)",
+          cursor: "help",
+          lineHeight: 1,
+          userSelect: "none",
+          zIndex: 2,
+        }}
+      >
+        {i + 1}
+      </span>
+    ))}
+  </div>
+)
+
+This tutorial will guide you through creating a complete DMN model for calculating employee vacation days. We'll start from scratch and build a decision model that considers an employee's age and years of service to determine their vacation entitlement.
+
+## Understanding the Business Requirements
+
+Before modeling, let's understand what we're trying to achieve. Our vacation days calculation follows these business rules:
+
+- All employees receive a base allocation of 22 vacation days for their [Base Vacation Days](#creating-the-base-vacation-days-decision)
+- Three additional day categories exist:
+- [**Extra Days Case 1**](#extra-days-case-1):
+  - Employees younger than 18 or older than 60 get 5 extra days
+  - Employees with more than 30 years of service get 7 extra days
+- [**Extra Days Case 2**](#extra-days-case-2):
+  - Employees older than 60 get 3 extra days
+  - Employees with more than 30 years of service get 4 extra days
+- [**Extra Days Case 3**](#extra-days-case-3):
+  - Employees with 15-30 years of service get 3 extra days
+  - Employees aged 45 or older get 2 extra days
+- [**Total vacation days**](#creating-the-total-vacation-days-decision) are calculated as:
+  - Base days + maximum of (Case 1, Case 3) + Case 2
+
+## Setting Up Aletyx Playground
+
+1. Navigate to [Aletyx Playground](https://playground.aletyx.ai) in your browser
+2. From the landing page, click **New Decision** to create a new DMN model
+3. You'll be presented with an empty DMN model editor. This is where we'll design our decision model
+4. First, change the name of the model from "Untitled" to "vacation-days"
+
+## Creating Input Nodes
+
+Our decision model relies on two inputs: the employee's age and their years of service.
+
+1. Drag an **Input Data** node (oval shape) from the left palette onto the model editor
+2. Double-click the node and rename it to "Age"
+3. With the node selected, open the properties panel by clicking the "i" icon in the top right or pressing the "i" key
+4. Change the **Data Type** to "number"
+5. Repeat steps 1-4 to create another Input Data node named "Years of Service" with the data type "number"
+
+{/* TODO: missing image — "Input nodes on DRD" (images/dmn-inputs.png); source returns 404, re-add when the asset is available */}
+
+## Creating the Base Vacation Days Decision
+
+First, let's define the base vacation entitlement that all employees receive:
+
+1. Drag a **Decision** node (rectangle shape) onto the model editor
+2. Name the node "Base Vacation Days"
+3. Set its **Data Type** to "number"
+4. Click on the node and select **Edit** to define the decision logic
+5. In the expression editor, select **Literal expression** as the expression type. For reference on the different expressions see the below image with annotations or refer to the [Select Expression Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#expression-types)
+
+<AnnotatedImage
+  src="/images/guides/guides/tutorials/dmn/images/context-select-expression.png"
+  alt="DMN expression types menu with numbered callouts"
+  markers={[
+    { top: 4,  left: 15, label: "1. Literal Expression — direct values, math, or simple FEEL" },
+    { top: 10, left: 15, label: "2. Relation — structured data in columns/rows (no logic)" },
+    { top: 18, left: 15, label: "3. Context — named key-value pairs for multi-step calculations" },
+    { top: 26, left: 15, label: "4. Decision Table — conditions and outputs with a hit policy" },
+    { top: 30, left: 15, label: "5. List — an ordered collection of values or expressions" },
+    { top: 38, left: 15, label: "6. Invocation — call a BKM or function with parameters" },
+    { top: 45, left: 15, label: "7. Function — define a reusable function with parameters" },
+    { top: 52, left: 15, label: "8. Conditional (If/Then/Else) — branching logic" },
+    { top: 60, left: 15, label: "9. For Loop — iterate over a list or collection" },
+    { top: 65, left: 15, label: "10. Some — true if at least one item matches" },
+    { top: 75, left: 15, label: "11. Every — true if every item matches" },
+    { top: 80, left: 15, label: "12. Filter — filter a collection by a condition" },
+  ]}
+/>
+
+<Accordion title="What each numbered expression type is">
+  1. **Literal Expression** — The simplest expression type. Used for direct values, mathematical operations, or simple FEEL expressions. Example: `Base Premium * Risk Factor`
+  2. **Relation** — Creates a table structure for organizing data. Unlike a decision table, relations don't contain logic but represent structured data with columns and rows. See the [Relation Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#relation).
+  3. **Context** — Defines a set of key-value pairs (named variables) that can be referenced within the context. Useful for multi-step calculations that build on previous values. See the [Context Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#context).
+  4. **Decision Table** — The most widely used DMN expression. Organizes conditions (inputs) and conclusions (outputs) in a tabular format with hit policies determining how rules are applied. See the [Decision Table Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#decision-table).
+  5. **List** — Creates an ordered collection of values or expressions. Each list item can be a different type of expression, allowing for complex collections. See the [List Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#list).
+  6. **Invocation** — Calls a Business Knowledge Model (BKM) or function defined elsewhere in the model. Parameters can be passed to the function being called. See the [Invocation Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#invocation).
+  7. **Function** — Defines a reusable function with parameters. Can contain any FEEL expression type and be used within other expressions through Invocation. See the [Function Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#function).
+  8. **Conditional (If/Then/Else)** — Creates branching logic with if, then, else statements. Allows for different results based on specific conditions being met. See the [Conditional Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#conditional).
+  9. **For Loop** — Iterates over items in a list or collection, applying an expression to each item. Useful for transforming collections or aggregating values. See the [For Loop Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#for-loop).
+  10. **Some** — Tests when a condition is true for at least one item. See the [Some Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#some).
+  11. **Every** — Tests if a condition is true for every item in a collection. Returns a boolean result based on whether all items satisfy the condition. See the [Every Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#every).
+  12. **Filter** — Filters a collection based on a given condition. See the [Filter Reference](https://docs.aletyx.ai/reference/dmn/select-reference/#filter).
+</Accordion>
