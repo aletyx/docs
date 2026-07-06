@@ -130,9 +130,15 @@ The Aletyx Enterprise Build of Kogito and Drools extends Drools with:
 - **Enhanced performance for high-throughput scenarios**
 - **Advanced explanation capabilities**
 
+## Updating Drools
+
+Drools 7 and its enterprise ecosystem (JBoss EAP 7, Business Central, KIE Server, and KieScanner) have reached end-of-life or extended support only, leaving production systems without security patches. Updating is not straightforward: community Drools 10 is not a drop-in replacement. It preserves DRL syntax but fundamentally changes the execution and deployment model — session-per-task isolation replaces shared working memory, `startProcess()` is gone, and KIE Server, Business Central, and runtime KJAR deployment no longer exist. Migration complexity ranges from low for rule-only services to high for orchestration-heavy systems, which may require architectural redesign.
+
+Read the full analysis, component-by-component EOL status, and migration paths in [Drools 7 EOL — What you need to know](/drools/drools-7-migration).
+
 ## Next Steps
 
 - [Get started with your first rule](/drools/getting-started)
 - [Explore DMN modeling](/architecture/decisions/dmn/overview)
 - [Learn about decision tables](/drools/decision-tables/overview)
-- [Understand the decision engine architecture](https://docs.aletyx.ai/core/decisions/index.md)
+- [Understand the decision engine architecture](/architecture/decisions/overview)
