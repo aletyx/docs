@@ -34,11 +34,11 @@ rule "Approve Low-Value Loan Application"
 end
 ```
 
-DRL offers sophisticated pattern matching capabilities, allowing you to detect complex scenarios in your data and respond accordingly. Learn more in the [DRL Building Blocks](/architecture/decisions/drl/building-blocks) section.
+DRL offers sophisticated pattern matching capabilities, allowing you to detect complex scenarios in your data and respond accordingly. Learn more in the [DRL Building Blocks](/drools/drl/building-blocks) section.
 
 ### Rule Units
 
-[Rule Units](/architecture/decisions/drl/rule-units) represent a modern approach to organizing related rules and their data sources. They provide better encapsulation, improved testing capabilities, and are well-suited for cloud-native architectures.
+[Rule Units](/drools/drl/rule-units) represent a modern approach to organizing related rules and their data sources. They provide better encapsulation, improved testing capabilities, and are well-suited for cloud-native architectures.
 
 Rule Units offer:
 - **Clear boundaries** for rule scope and data access
@@ -56,36 +56,36 @@ With DMN, you can:
 - **Test and validate** your decisions with real data
 - Deploy your decisions as **executable services**
 
-Learn how to create your first DMN model in our [DMN Basic Example](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-basic-example.md) guide.
+Learn how to create your first DMN model in our [DMN Basic Example](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-basic-example.md) guide.
 
 ## Getting Started
 
 If you're new to Drools, we recommend following these steps:
 
 1. **Understand the basics**: Start with our [Introduction to DRL](https://docs.aletyx.ai/core/decisions/drl/introduction/) and [Introduction to DMN](/architecture/decisions/dmn/overview)
-2. **Create your first rules**: Follow the guide to [create your first DRL rule](/architecture/decisions/rule-language) or [first DMN model](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-basic-example.md)
-3. **Integrate with your application**: Learn about [implementing decision services](/architecture/decisions/drl/decision-services)
-4. **Deploy to production**: Explore [basic deployment options](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-basic-deployment.md) and [advanced deployment patterns](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-advanced-deployment.md)
+2. **Create your first rules**: Follow the guide to [create your first DRL rule](/architecture/decisions/rule-language) or [first DMN model](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-basic-example.md)
+3. **Integrate with your application**: Learn about [implementing decision services](/drools/drl/decision-services)
+4. **Deploy to production**: Explore [basic deployment options](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-basic-deployment.md) and [advanced deployment patterns](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-advanced-deployment.md)
 
 ## Key Features
 
 ### Pattern Matching and Inference
 
-Drools excels at identifying patterns in your data and making inferences based on rules. The [Conditions (LHS)](/architecture/decisions/drl/conditions) guide explains how to write effective patterns that accurately match your business scenarios.
+Drools excels at identifying patterns in your data and making inferences based on rules. The [Conditions (LHS)](/drools/drl/conditions) guide explains how to write effective patterns that accurately match your business scenarios.
 
 ### Rule Execution Control
 
-Control how and when your rules execute with [Rule Actions (RHS)](/architecture/decisions/drl/actions) and advanced features like salience, agenda groups, and rule flow groups.
+Control how and when your rules execute with [Rule Actions (RHS)](/drools/drl/actions) and advanced features like salience, agenda groups, and rule flow groups.
 
 ### Decision Tables
 
-[Decision Tables](/architecture/decisions/decision-tables/overview) provide a spreadsheet-like format for defining business rules, making them accessible to business users. Learn how to [create your first table](/architecture/decisions/decision-tables/first-table) and [run decision tables](/architecture/decisions/decision-tables/running).
+[Decision Tables](/drools/decision-tables/overview) provide a spreadsheet-like format for defining business rules, making them accessible to business users. Learn how to [create your first table](/drools/decision-tables/first-table) and [run decision tables](/drools/decision-tables/running).
 
 ## Advanced Topics
 
 ### OOPath Expressions
 
-[OOPath](/architecture/decisions/drl/oopath) is an object-oriented path expression language for navigating object graphs in DRL, providing a concise way to access nested properties.
+[OOPath](/drools/drl/oopath) is an object-oriented path expression language for navigating object graphs in DRL, providing a concise way to access nested properties.
 
 ### FEEL Expressions
 
@@ -97,7 +97,7 @@ The [FEEL Handbook](/architecture/decisions/dmn/feel-handbook) provides comprehe
 
 ### Cloud-Native Deployment
 
-Learn how to deploy your decision services in cloud environments with our guides on [basic deployment](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-basic-deployment.md) and [advanced deployment options](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-advanced-deployment.md).
+Learn how to deploy your decision services in cloud environments with our guides on [basic deployment](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-basic-deployment.md) and [advanced deployment options](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-advanced-deployment.md).
 
 ## Development Tools
 
@@ -112,22 +112,22 @@ Learn how to deploy your decision services in cloud environments with our guides
 - **Deployment options** for development environments
 - **Accelerators** to transform models into complete applications
 
-Get started with [creating your first DMN model](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-intro-lab.md) in Aletyx Playground.
+Get started with [creating your first DMN model](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-intro-lab.md) in Aletyx Playground.
 
 ## Examples and Tutorials
 
 Practice your skills with our comprehensive examples:
 
-- [Vacation Days Calculation](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-basic-example.md): Introduction to DMN building
-- [Travel Insurance Pricing](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-deeper.md): A deeper dive into DMN building a decison to calculate travel insurance based on various risk factors
-- [Decision Services Implementation](/architecture/decisions/drl/decision-services): Build complete decision services
+- [Vacation Days Calculation](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-basic-example.md): Introduction to DMN building
+- [Travel Insurance Pricing](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-deeper.md): A deeper dive into DMN building a decison to calculate travel insurance based on various risk factors
+- [Decision Services Implementation](/drools/drl/decision-services): Build complete decision services
 
 ## Next Steps
 
 Ready to dive deeper? Explore these resources:
 
-- [Advanced DMN Modeling Techniques](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-advanced-modeling.md)
-- [DMN Accelerators](https://docs.aletyx.ai/core/decisions/guides/examples/dmn/dmn-accelerators.md)
+- [Advanced DMN Modeling Techniques](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-advanced-modeling.md)
+- [DMN Accelerators](https://docs.aletyx.ai/core/decisions/guides/tutorials/dmn/dmn-accelerators.md)
 - [Best Practices for Rule Development](https://docs.aletyx.ai/core/decisions/drl/rule-language.md)
 
 Drools provides a powerful foundation for creating flexible, maintainable business rule systems that can adapt to changing business requirements while maintaining high performance and scalability.

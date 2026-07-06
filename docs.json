@@ -92,29 +92,6 @@
                   "architecture/decisions/overview",
                   "architecture/decisions/rule-language",
                   {
-                    "group": "DRL",
-                    "pages": [
-                      "architecture/decisions/drl/overview",
-                      "architecture/decisions/drl/syntax-basics",
-                      "architecture/decisions/drl/building-blocks",
-                      "architecture/decisions/drl/data-stores",
-                      "architecture/decisions/drl/rule-units",
-                      "architecture/decisions/drl/phreak",
-                      "architecture/decisions/drl/oopath",
-                      "architecture/decisions/drl/conditions",
-                      "architecture/decisions/drl/actions",
-                      "architecture/decisions/drl/decision-services"
-                    ]
-                  },
-                  {
-                    "group": "Decision Tables",
-                    "pages": [
-                      "architecture/decisions/decision-tables/overview",
-                      "architecture/decisions/decision-tables/first-table",
-                      "architecture/decisions/decision-tables/running"
-                    ]
-                  },
-                  {
                     "group": "DMN",
                     "pages": [
                       "architecture/decisions/dmn/overview",
@@ -131,7 +108,7 @@
                 "pages": [
                   "architecture/processes/overview",
                   {
-                    "group": "Architecture",
+                    "group": "Runtime Architecture",
                     "pages": [
                       "architecture/processes/architecture/adaptive-process-architecture",
                       "architecture/processes/architecture/engine",
@@ -205,12 +182,46 @@
             ]
           },
           {
+            "group": "Drools",
+            "pages": [
+              "drools/overview",
+              "drools/getting-started",
+              "drools/visual-guide",
+              "drools/engine",
+              "drools/ruleflow",
+              {
+                "group": "DRL",
+                "pages": [
+                  "drools/drl/overview",
+                  "drools/drl/syntax-basics",
+                  "drools/drl/building-blocks",
+                  "drools/drl/data-stores",
+                  "drools/drl/rule-units",
+                  "drools/drl/phreak",
+                  "drools/drl/oopath",
+                  "drools/drl/conditions",
+                  "drools/drl/actions",
+                  "drools/drl/decision-services"
+                ]
+              },
+              {
+                "group": "Decision Tables",
+                "pages": [
+                  "drools/decision-tables/overview",
+                  "drools/decision-tables/first-table",
+                  "drools/decision-tables/running"
+                ]
+              },
+              "drools/tutorials/drl-example",
+              "drools/drools-7-migration",
+              "drools/troubleshooting"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "guides/decisions",
               "guides/processes",
-              "guides/dmn-playground",
-              "guides/bpmn-playground",
               {
                 "group": "Real-World Use Cases",
                 "pages": [
@@ -220,24 +231,22 @@
                   "guides/use-cases/compliance"
                 ]
               },
-              "guides/drools-7-eol",
               {
-                "group": "Decision Modeling",
+                "group": "DMN Tutorials",
                 "pages": [
-                  "guides/examples/dmn/overview",
-                  "guides/examples/dmn/dmn-intro",
-                  "guides/examples/dmn/dmn-basic-example",
-                  "guides/examples/dmn/dmn-accelerators",
-                  "guides/examples/dmn/dmn-basic-deployment",
-                  "guides/examples/dmn/dmn-deeper",
-                  "guides/examples/dmn/dmn-advanced-deployment",
-                  "guides/examples/drl-example"
+                  "guides/tutorials/dmn/overview",
+                  "guides/tutorials/dmn/dmn-intro",
+                  "guides/tutorials/dmn/dmn-basic-example",
+                  "guides/tutorials/dmn/dmn-accelerators",
+                  "guides/tutorials/dmn/dmn-basic-deployment",
+                  "guides/tutorials/dmn/dmn-deeper",
+                  "guides/tutorials/dmn/dmn-advanced-deployment"
                 ]
               },
               {
-                "group": "Process Development",
+                "group": "BPMN Tutorials",
                 "pages": [
-                  "guides/examples/bpmn-example"
+                  "guides/tutorials/bpmn-example"
                 ]
               },
               "guides/best-practices"
@@ -249,17 +258,6 @@
               "components/overview",
               "tech-stack",
               "decision-control",
-              {
-                "group": "Drools",
-                "pages": [
-                  "components/drools/overview",
-                  "components/drools/drools-getting-started",
-                  "components/drools/drools-visual-guide",
-                  "components/drools/drools-engine",
-                  "components/drools/drools-ruleflow",
-                  "components/drools/troubleshooting"
-                ]
-              },
               "components/jbpm",
               "components/kogito",
               {
@@ -277,7 +275,10 @@
                   "components/playground/accelerators",
                   "components/playground/advanced-accelerator",
                   "components/playground/dev-deployment",
-                  "components/playground/customizing"
+                  "components/playground/customizing",
+                  "components/playground/dmn-tutorial",
+                  "components/playground/bpmn-tutorial",
+                  "components/playground/self-hosting"
                 ]
               },
               "decisions-genai",
@@ -312,8 +313,7 @@
                   "deployment/kubernetes",
                   "deployment/openshift"
                 ]
-              },
-              "deployment/playground"
+              }
             ]
           },
           {
@@ -328,7 +328,7 @@
                   "reference/dmn/select-reference"
                 ]
               },
-              "references",
+              "reference/further-reading",
               "reference/release-notes"
             ]
           },
@@ -419,6 +419,74 @@
     {
       "source": "/core/decisions/dmn",
       "destination": "/architecture/decisions/dmn/overview"
+    },
+    {
+      "source": "/components/drools",
+      "destination": "/drools/overview"
+    },
+    {
+      "source": "/components/drools/overview",
+      "destination": "/drools/overview"
+    },
+    {
+      "source": "/components/drools/drools-getting-started",
+      "destination": "/drools/getting-started"
+    },
+    {
+      "source": "/components/drools/drools-visual-guide",
+      "destination": "/drools/visual-guide"
+    },
+    {
+      "source": "/components/drools/drools-engine",
+      "destination": "/drools/engine"
+    },
+    {
+      "source": "/components/drools/drools-ruleflow",
+      "destination": "/drools/ruleflow"
+    },
+    {
+      "source": "/components/drools/troubleshooting",
+      "destination": "/drools/troubleshooting"
+    },
+    {
+      "source": "/architecture/decisions/drl/:slug*",
+      "destination": "/drools/drl/:slug*"
+    },
+    {
+      "source": "/architecture/decisions/decision-tables/:slug*",
+      "destination": "/drools/decision-tables/:slug*"
+    },
+    {
+      "source": "/guides/drools-7-eol",
+      "destination": "/drools/drools-7-migration"
+    },
+    {
+      "source": "/guides/examples/drl-example",
+      "destination": "/drools/tutorials/drl-example"
+    },
+    {
+      "source": "/guides/examples/:slug*",
+      "destination": "/guides/tutorials/:slug*"
+    },
+    {
+      "source": "/guides/dmn-playground",
+      "destination": "/components/playground/dmn-tutorial"
+    },
+    {
+      "source": "/guides/bpmn-playground",
+      "destination": "/components/playground/bpmn-tutorial"
+    },
+    {
+      "source": "/deployment/playground",
+      "destination": "/components/playground/self-hosting"
+    },
+    {
+      "source": "/deployment",
+      "destination": "/deployment/overview"
+    },
+    {
+      "source": "/references",
+      "destination": "/reference/further-reading"
     }
   ]
 }
