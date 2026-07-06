@@ -328,7 +328,6 @@
                   "reference/dmn/select-reference"
                 ]
               },
-              "reference/further-reading",
               "reference/release-notes"
             ]
           },
@@ -486,7 +485,11 @@
     },
     {
       "source": "/references",
-      "destination": "/reference/further-reading"
+      "destination": "/reference/overview"
+    },
+    {
+      "source": "/reference/further-reading",
+      "destination": "/reference/overview"
     }
   ]
 }
