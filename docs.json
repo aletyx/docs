@@ -82,10 +82,10 @@
             ]
           },
           {
-            "group": "Architecture",
+            "group": "Core Concepts",
             "pages": [
-              "architecture/overview",
               "core-concepts",
+              "architecture/overview",
               {
                 "group": "Decision Automation",
                 "pages": [
