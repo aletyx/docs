@@ -78,7 +78,28 @@
               "quickstart",
               "quickstart/decision-analysts",
               "quickstart/developers",
-              "quickstart/tech-leads"
+              "quickstart/tech-leads",
+              "guides/getting-started/ai-assistant",
+              {
+                "group": "Playground Tutorials",
+                "pages": [
+                  "guides/getting-started/getting-started-playground",
+                  "guides/getting-started/getting-started-start-aletyx"
+                ]
+              },
+              {
+                "group": "Environment Setup",
+                "pages": [
+                  "getting-started/environment-setup",
+                  "getting-started/java-setup",
+                  "getting-started/maven",
+                  "getting-started/container-tools",
+                  "getting-started/git-configuration",
+                  "getting-started/cloud-tools",
+                  "getting-started/vscode",
+                  "getting-started/ubuntu"
+                ]
+              }
             ]
           },
           {
@@ -182,6 +203,102 @@
             ]
           },
           {
+            "group": "Decision Control",
+            "pages": [
+              "decision-control/overview",
+              "decision-control/architecture",
+              {
+                "group": "Deployment Guide",
+                "pages": [
+                  "decision-control/deployment/overview",
+                  "decision-control/deployment/identity-access-management",
+                  "decision-control/deployment/database-configuration",
+                  "decision-control/deployment/container-configuration",
+                  "decision-control/deployment/kubernetes-openshift-deployment",
+                  "decision-control/deployment/supported-operating-environments"
+                ]
+              },
+              "decision-control/integration-and-apis",
+              "decision-control/usage-scenarios",
+              {
+                "group": "How-To Guides",
+                "pages": [
+                  "decision-control/how-to/overview",
+                  "decision-control/how-to/home-and-global",
+                  "decision-control/how-to/authoring-models",
+                  "decision-control/how-to/authoring-testing",
+                  "decision-control/how-to/authoring-ai",
+                  "decision-control/how-to/management-models",
+                  "decision-control/how-to/management-execute",
+                  "decision-control/how-to/monitoring",
+                  "decision-control/how-to/prompting"
+                ]
+              },
+              {
+                "group": "AWS Deployment",
+                "pages": [
+                  "decision-control/aws/overview",
+                  "decision-control/aws/sandbox"
+                ]
+              },
+              "decision-control/faq-troubleshooting"
+            ]
+          },
+          {
+            "group": "Decision Control Tower",
+            "pages": [
+              "decision-control-tower/overview",
+              "decision-control-tower/architecture",
+              {
+                "group": "Tower Deployment",
+                "pages": [
+                  "decision-control-tower/deployment/overview",
+                  "decision-control-tower/deployment/identity-access-management",
+                  "decision-control-tower/deployment/database-configuration",
+                  "decision-control-tower/deployment/container-configuration",
+                  "decision-control-tower/deployment/kubernetes-openshift-deployment",
+                  "decision-control-tower/deployment/supported-operating-environments"
+                ]
+              },
+              "decision-control-tower/dashboard",
+              "decision-control-tower/environments",
+              "decision-control-tower/tasks",
+              {
+                "group": "Tower How-To Guides",
+                "pages": [
+                  "decision-control-tower/how-to/overview",
+                  "decision-control-tower/how-to/sign-in-and-global",
+                  "decision-control-tower/how-to/environments",
+                  "decision-control-tower/how-to/promotions",
+                  "decision-control-tower/how-to/governance-tasks",
+                  "decision-control-tower/how-to/audit-trail"
+                ]
+              },
+              {
+                "group": "Sidecar",
+                "pages": [
+                  "decision-control-tower-sidecar/overview",
+                  "decision-control-tower-sidecar/architecture",
+                  {
+                    "group": "Sidecar Deployment",
+                    "pages": [
+                      "decision-control-tower-sidecar/deployment/overview",
+                      "decision-control-tower-sidecar/deployment/configuration"
+                    ]
+                  },
+                  {
+                    "group": "Sidecar How-To Guides",
+                    "pages": [
+                      "decision-control-tower-sidecar/how-to/overview",
+                      "decision-control-tower-sidecar/how-to/customize-workflow",
+                      "decision-control-tower-sidecar/how-to/git-model-versioning"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "group": "Drools",
             "pages": [
               "drools/overview",
@@ -201,7 +318,8 @@
                   "drools/drl/oopath",
                   "drools/drl/conditions",
                   "drools/drl/actions",
-                  "drools/drl/decision-services"
+                  "drools/drl/decision-services",
+                  "drools/drl/queries"
                 ]
               },
               {
@@ -212,7 +330,15 @@
                   "drools/decision-tables/running"
                 ]
               },
-              "drools/tutorials/drl-example",
+              {
+                "group": "Tutorials",
+                "pages": [
+                  "drools/tutorials/overview",
+                  "drools/tutorials/first-rule",
+                  "drools/tutorials/decision-tables",
+                  "drools/tutorials/drl-example"
+                ]
+              },
               "drools/drools-7-migration",
               "drools/troubleshooting"
             ]
@@ -220,19 +346,11 @@
           {
             "group": "Guides",
             "pages": [
+              "guides/overview",
               "guides/decisions",
               "guides/processes",
               {
-                "group": "Real-World Use Cases",
-                "pages": [
-                  "guides/use-cases/lending",
-                  "guides/use-cases/insurance",
-                  "guides/use-cases/onboarding",
-                  "guides/use-cases/compliance"
-                ]
-              },
-              {
-                "group": "DMN Tutorials",
+                "group": "Decision Modeling",
                 "pages": [
                   "guides/tutorials/dmn/overview",
                   "guides/tutorials/dmn/dmn-intro",
@@ -244,9 +362,28 @@
                 ]
               },
               {
-                "group": "BPMN Tutorials",
+                "group": "Process Development",
                 "pages": [
-                  "guides/tutorials/bpmn-example"
+                  "guides/tutorials/lab-rules-orchestration",
+                  "guides/tutorials/lab-saga",
+                  "guides/tutorials/lab-eda",
+                  "guides/tutorials/bpmn-example",
+                  "guides/tutorials/sub-adhoc"
+                ]
+              },
+              {
+                "group": "Industry Use Cases",
+                "pages": [
+                  "guides/use-cases/overview",
+                  "guides/use-cases/compliance",
+                  "guides/use-cases/finance",
+                  "guides/use-cases/healthcare",
+                  "guides/use-cases/human-resources",
+                  "guides/use-cases/insurance",
+                  "guides/use-cases/lending",
+                  "guides/use-cases/manufacturing",
+                  "guides/use-cases/onboarding",
+                  "guides/use-cases/retail"
                 ]
               },
               "guides/best-practices"
@@ -257,7 +394,6 @@
             "pages": [
               "components/overview",
               "tech-stack",
-              "decision-control",
               "components/jbpm",
               "components/kogito",
               {
@@ -311,7 +447,9 @@
                   "deployment/cloud-native/overview",
                   "deployment/cloud-native/jvm-vs-native",
                   "deployment/kubernetes",
-                  "deployment/openshift"
+                  "deployment/openshift",
+                  "deployment/cloud-native/ecs",
+                  "components/compact-architecture/securing-the-architecture"
                 ]
               }
             ]
@@ -327,7 +465,9 @@
                   "reference/dmn/reserved-words",
                   "reference/dmn/select-reference"
                 ]
-              }
+              },
+              "product/overview",
+              "legal/cookie-policy"
             ]
           },
           {
@@ -415,6 +555,10 @@
   },
   "redirects": [
     {
+      "source": "/decision-control",
+      "destination": "/decision-control/overview"
+    },
+    {
       "source": "/core/decisions/dmn",
       "destination": "/architecture/decisions/dmn/overview"
     },
@@ -489,6 +633,78 @@
     {
       "source": "/reference/further-reading",
       "destination": "/reference/overview"
+    },
+    {
+      "source": "/decision-control-tower",
+      "destination": "/decision-control-tower/overview"
+    },
+    {
+      "source": "/decision-control-tower/deployment",
+      "destination": "/decision-control-tower/deployment/overview"
+    },
+    {
+      "source": "/decision-control-tower/how-to",
+      "destination": "/decision-control-tower/how-to/overview"
+    },
+    {
+      "source": "/decision-control-tower-sidecar",
+      "destination": "/decision-control-tower-sidecar/overview"
+    },
+    {
+      "source": "/decision-control-tower-sidecar/deployment",
+      "destination": "/decision-control-tower-sidecar/deployment/overview"
+    },
+    {
+      "source": "/decision-control-tower-sidecar/how-to",
+      "destination": "/decision-control-tower-sidecar/how-to/overview"
+    },
+    {
+      "source": "/guides",
+      "destination": "/guides/overview"
+    },
+    {
+      "source": "/guides/getting-started/use-cases",
+      "destination": "/guides/use-cases/overview"
+    },
+    {
+      "source": "/guides/getting-started/use-cases/:slug*",
+      "destination": "/guides/use-cases/:slug*"
+    },
+    {
+      "source": "/core/tutorials",
+      "destination": "/drools/tutorials/overview"
+    },
+    {
+      "source": "/core/tutorials/first-rule",
+      "destination": "/drools/tutorials/first-rule"
+    },
+    {
+      "source": "/core/tutorials/decision-tables",
+      "destination": "/drools/tutorials/decision-tables"
+    },
+    {
+      "source": "/core/decisions/drl/intro-queries",
+      "destination": "/drools/drl/queries"
+    },
+    {
+      "source": "/core/processes/basic-bpmn/lab-rules-orchestration",
+      "destination": "/guides/tutorials/lab-rules-orchestration"
+    },
+    {
+      "source": "/core/processes/basic-bpmn/lab-saga",
+      "destination": "/guides/tutorials/lab-saga"
+    },
+    {
+      "source": "/core/processes/advanced-bpmn/lab-eda",
+      "destination": "/guides/tutorials/lab-eda"
+    },
+    {
+      "source": "/core/processes/advanced-bpmn/sub-adhoc",
+      "destination": "/guides/tutorials/sub-adhoc"
+    },
+    {
+      "source": "/product",
+      "destination": "/product/overview"
     }
   ]
 }

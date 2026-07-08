@@ -1,0 +1,225 @@
+---
+title: "Identity & Access Management (OIDC)"
+description: "Configure Microsoft Entra ID or Keycloak OIDC authentication and RBAC for Decision Control."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/deployment/identity-access-management/"
+---
+
+Decision Control delegates user authentication to an OpenID Connect (OIDC) provider via the shared `aletyx-oidc-spring-boot-starter`. Authorization is driven by **app roles** carried in the JWT issued by the provider. Two providers are supported out of the box:
+
+- **Microsoft Entra ID** (formerly Azure AD)
+- **Keycloak**
+
+Provider selection is controlled by `ALETYX_OIDC_PROVIDER`; defaults to `entra`. Setting it to `none` disables authentication entirely and is intended for local diagnostics only — never run a production deployment with `none`.
+
+## Required claims, scopes, and roles
+
+Regardless of provider, Decision Control expects the following from the issued ID/access token:
+
+### Scopes
+
+| Scope     | Purpose                                              |
+| --------- | ---------------------------------------------------- |
+| `openid`  | Mandatory for OIDC                                   |
+| `profile` | User name / display attributes                       |
+| `email`   | Email address (used in audit logs)                   |
+
+Configurable via `ALETYX_OIDC_SCOPES` as a comma-separated list. The default `openid,profile,email` meets the minimum required set.
+
+### Role claim
+
+Decision Control reads roles from a single configurable claim path. The default path is `roles` (top-level claim). Override with `ALETYX_OIDC_ROLE_CLAIM_PATH` if your provider emits roles under a different path (e.g. `realm_access.roles` for Keycloak realm roles).
+
+You define your own role values at the provider and map them to Decision Control capabilities through the **URL-level RBAC** allow-lists (see [URL-level RBAC](#url-level-rbac) below). Decision Control does not hard-code role names — the values you assign are entirely up to you.
+
+### Tenant claim
+
+| Variable                        | Default     | Description                                                                                              |
+| ------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------- |
+| `ALETYX_OIDC_TENANT_CLAIM_NAME` | `tenant_id` | JWT claim carrying the tenant. **Set to `tid` for Entra** (Entra emits the tenant in `tid`).             |
+| `ALETYX_OIDC_TENANT_DEFAULT_ID` | `aletyx`    | Tenant ID used when the token has no tenant claim (single-tenant deployments). Set to your tenant slug.  |
+
+## Microsoft Entra ID
+
+### Prerequisites
+
+- An Entra tenant with permissions to create app registrations
+- A user account allowed to grant tenant-wide admin consent
+
+### App registration steps
+
+1. **Register the application**
+
+   - Azure Portal → **Microsoft Entra ID** → **App registrations** → **New registration**
+   - **Name**: e.g. `Decision Control — <env>`
+   - **Supported account types**: _Accounts in this organizational directory only_ (single tenant)
+   - **Redirect URI**: select **Web** and enter `https://<dc-host>/auth/callback`
+   - Click **Register**
+
+2. **Record the identifiers**
+
+   - From the Overview page, note the **Application (client) ID** and **Directory (tenant) ID**. These map to `ALETYX_OIDC_CLIENT_ID` and `ALETYX_OIDC_ENTRA_TENANT_ID` respectively.
+
+3. **Configure additional redirect URIs (optional)**
+
+   - **Authentication** → **Web** → **Add URI**: include any additional environments (`http://localhost:8080/auth/callback` for local dev, additional cluster hostnames, etc.)
+
+4. **Generate a client secret**
+
+   - **Certificates & secrets** → **Client secrets** → **New client secret**
+   - Provide a description and expiry (24 months is a common default)
+   - **Copy the `Value` immediately** — Azure displays it only once
+   - It maps to `ALETYX_OIDC_ENTRA_CLIENT_SECRET`
+
+5. **Grant API permissions**
+
+   - **API permissions** → **Add a permission** → **Microsoft Graph** → **Delegated permissions**
+   - Add: `openid`, `profile`, `email`, `User.Read`
+   - Click **Grant admin consent for `<tenant>`**
+
+6. **Define app roles**
+
+   - **App roles** → **Create app role** for each role your organization needs (e.g. a viewer role, an author role, an admin role). The role **Value** is what appears in the token and what you list in the RBAC allow-lists.
+
+7. **Assign users to roles**
+
+   - **Enterprise applications** → select the application → **Users and groups** → **Add user/group**
+   - Group-based assignment requires Microsoft Entra ID **P1** or higher; Free tenants must assign individual users.
+
+### Required configuration variables — Entra
+
+| Variable                        | Required | Example                                        |
+| ------------------------------- | -------- | ---------------------------------------------- |
+| `ALETYX_OIDC_PROVIDER`          | yes      | `entra`                                        |
+| `ALETYX_OIDC_CLIENT_ID`         | yes      | `<your-entra-application-client-id>`           |
+| `ALETYX_OIDC_ENTRA_TENANT_ID`   | yes      | `<your-entra-directory-tenant-id>`             |
+| `ALETYX_OIDC_ENTRA_CLIENT_SECRET` | yes    | `<from-step-4>`                                |
+| `ALETYX_OIDC_ENTRA_AUDIENCE`    | yes      | usually equal to the client ID for v2.0 tokens |
+| `ALETYX_OIDC_TENANT_CLAIM_NAME` | no       | set to `tid` for Entra                         |
+| `ALETYX_OIDC_SCOPES`            | no       | defaults to `openid,profile,email`             |
+| `ALETYX_OIDC_ROLE_CLAIM_PATH`   | no       | defaults to `roles`                            |
+
+### Example — environment file
+
+```sh
+ALETYX_OIDC_PROVIDER=entra
+ALETYX_OIDC_CLIENT_ID=<your-entra-application-client-id>
+ALETYX_OIDC_ENTRA_TENANT_ID=<your-entra-directory-tenant-id>
+ALETYX_OIDC_ENTRA_AUDIENCE=<your-entra-application-client-id>
+ALETYX_OIDC_ENTRA_CLIENT_SECRET=<paste-from-azure>
+ALETYX_OIDC_TENANT_CLAIM_NAME=tid
+ALETYX_OIDC_SCOPES=openid,profile,email
+ALETYX_OIDC_ROLE_CLAIM_PATH=roles
+```
+
+## Keycloak
+
+### Realm and client setup
+
+1. **Create or select a realm** in the Keycloak admin console.
+
+2. **Create the client**
+
+   - **Clients** → **Create client** → **Client type**: OpenID Connect → **Client ID**: e.g. `decision-control`
+   - **Client authentication**: ON (confidential client) · **Standard flow**: ON · **Direct access grants**: OFF
+   - **Valid redirect URIs**: `https://<dc-host>/auth/callback` (add `http://localhost:8080/auth/callback` for local dev)
+   - **Web origins**: `https://<dc-host>`
+
+3. **Capture the client secret**
+
+   - **Credentials** tab → copy the **Client Secret**. The client ID maps to `ALETYX_OIDC_KEYCLOAK_CLIENT_ID` and the secret to its own dedicated variable `ALETYX_OIDC_KEYCLOAK_CLIENT_SECRET`.
+
+4. **Define and map roles**
+
+   - Create client or realm roles, then add a role mapper so the roles land in the token under the claim path you set in `ALETYX_OIDC_ROLE_CLAIM_PATH` (`roles` top-level, or `realm_access.roles` for realm roles).
+
+### Required configuration variables — Keycloak
+
+| Variable                             | Required | Example                                                                    |
+| ------------------------------------ | -------- | -------------------------------------------------------------------------- |
+| `ALETYX_OIDC_PROVIDER`               | yes      | `keycloak`                                                                 |
+| `ALETYX_OIDC_KEYCLOAK_ISSUER_URI`    | yes      | `https://keycloak.example.com/realms/aletyx`                               |
+| `ALETYX_OIDC_KEYCLOAK_JWK_SET_URI`   | yes      | `https://keycloak.example.com/realms/aletyx/protocol/openid-connect/certs` |
+| `ALETYX_OIDC_KEYCLOAK_CLIENT_ID`     | yes      | `decision-control`                                                         |
+| `ALETYX_OIDC_KEYCLOAK_CLIENT_SECRET` | yes      | `<from-credentials-tab>` (omit only for a public client)                   |
+| `ALETYX_OIDC_SCOPES`                 | no       | defaults to `openid,profile,email`                                         |
+| `ALETYX_OIDC_ROLE_CLAIM_PATH`        | no       | defaults to `roles`; set to `realm_access.roles` for realm roles           |
+
+### Example — environment file
+
+```sh
+ALETYX_OIDC_PROVIDER=keycloak
+ALETYX_OIDC_KEYCLOAK_ISSUER_URI=https://keycloak.example.com/realms/aletyx
+ALETYX_OIDC_KEYCLOAK_JWK_SET_URI=https://keycloak.example.com/realms/aletyx/protocol/openid-connect/certs
+ALETYX_OIDC_KEYCLOAK_CLIENT_ID=decision-control
+ALETYX_OIDC_KEYCLOAK_CLIENT_SECRET=<paste-from-credentials-tab>
+ALETYX_OIDC_SCOPES=openid,profile,email
+ALETYX_OIDC_ROLE_CLAIM_PATH=realm_access.roles
+```
+
+## URL-level RBAC
+
+Decision Control can gate access to specific UI areas and runtime endpoints by role. RBAC is **disabled by default**; when enabled, each request must carry a role from the relevant per-action allow-list. An **empty list locks everyone out** of that action, so populate all the lists you intend to use when you turn RBAC on.
+
+| Variable                                       | Default | Gates                                          |
+| ---------------------------------------------- | ------- | ---------------------------------------------- |
+| `ALETYX_OIDC_RBAC_ENABLED`                     | `false` | Master toggle for URL-level RBAC.              |
+| `ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS`        | (empty) | Access the application at all.                 |
+| `ALETYX_OIDC_RBAC_ROLES_ALLOWED_PUBLISH`       | (empty) | Publish new model versions.                    |
+| `ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_AUTHOR` | (empty) | Authoring UI.                                  |
+| `ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_MANAGE` | (empty) | Management UI.                                 |
+| `ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_MONITOR`| (empty) | Monitoring UI.                                 |
+| `ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_PROMPT` | (empty) | Prompt / chat UI.                              |
+| `ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_RUN`    | (empty) | Runtime endpoints.                             |
+
+Each allow-list is a comma-separated set of role values (the same values you assigned at the provider). A user is permitted an action if any of their token roles appears in that action's list.
+
+Example (RBAC on, three roles `dc-user`, `dc-author`, `dc-admin`):
+
+```sh
+ALETYX_OIDC_RBAC_ENABLED=true
+ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS=dc-user,dc-author,dc-admin
+ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_AUTHOR=dc-author,dc-admin
+ALETYX_OIDC_RBAC_ROLES_ALLOWED_PUBLISH=dc-author,dc-admin
+ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_MANAGE=dc-admin
+ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_MONITOR=dc-admin
+ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_RUN=dc-user,dc-author,dc-admin
+ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_PROMPT=dc-user,dc-author,dc-admin
+```
+
+## Server-to-server secret
+
+| Variable                      | Required                  | Description                                                                                       |
+| ----------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------- |
+| `ALETYX_OIDC_INTERNAL_SECRET` | yes (if integrated w/ Tower) | Shared secret for Decision Control Tower → Decision Control server-to-server calls. Must be identical on both sides. Leave unset for standalone deployments. |
+
+## Dev identity (`provider=none`)
+
+Only used when `ALETYX_OIDC_PROVIDER=none`. The shared starter installs a synthetic authenticated principal from these values so local/dev runs behave like a real OIDC session (audit trail, RBAC checks, tenant resolution all see a real user). Ignored in `entra` / `keycloak` mode, where the identity comes from the JWT. Intended for local diagnostics only; never use in production.
+
+| Variable                        | Default                       | Description                                                                                                |
+| ------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `ALETYX_OIDC_NONE_USER_ID`      | `your-user@example.com`       | Principal name / user id stamped on audit records and returned by `/me` when `provider=none`. The image ships with a placeholder default; override to a value meaningful for your organization.              |
+| `ALETYX_OIDC_NONE_DISPLAY_NAME` | `Manager`                     | Display name returned to the UI for the synthetic dev user.                                                |
+| `ALETYX_OIDC_NONE_ROLES`        | `tower-approvers`             | Comma-separated roles granted to the synthetic dev user. Used by the URL-level RBAC allow-lists above.     |
+
+## Verifying the configuration
+
+After deploying, the Tower/DC auth bootstrap endpoint returns the public client metadata expected by the SPA:
+
+```
+GET https://<dc-host>/auth/config
+```
+
+A successful response confirms the backend loaded its OIDC configuration. For end-to-end verification, sign in via the browser; Decision Control redirects to the provider, you authenticate, and the provider redirects back to `/auth/callback`.
+
+## Common pitfalls
+
+- **Redirect URI mismatch (`AADSTS50011` for Entra, `Invalid redirect URI` for Keycloak)**: the redirect URI must exactly match a URI registered at the provider, including the trailing `/auth/callback`. Common cause: changing the application hostname without updating the registration.
+
+- **`401` on every request after enabling Entra**: the UI reads `ALETYX_OIDC_PROVIDER` from `/env.json`, which the backend caches at startup. After changing the provider, restart the pod so the cached `/env.json` is regenerated. If a CDN sits in front, ensure `/env.json` is not cached as a static asset (it contains `.json`, which can match `*.js` cache rules).
+
+- **RBAC locks everyone out**: enabling `ALETYX_OIDC_RBAC_ENABLED=true` with empty allow-lists denies all access. Populate every list you intend to use.
+
+- **Roles missing from the token**: confirm the user has the role assignment, that the role is mapped into the token, and that `ALETYX_OIDC_ROLE_CLAIM_PATH` matches the path in the token.
+
+- **Disabling authentication for diagnostics**: `ALETYX_OIDC_PROVIDER=none` bypasses authentication. Intended for local diagnostics only; never use in production.

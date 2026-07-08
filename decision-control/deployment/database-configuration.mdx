@@ -1,0 +1,151 @@
+---
+title: "Database Configuration"
+description: "PostgreSQL provisioning, schema management, and connection settings for Decision Control."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/deployment/database-configuration/"
+---
+
+Decision Control persists its state (models, decisions, published versions) in a relational database. **PostgreSQL is the supported engine** — every deployment described in this guide uses it.
+
+## Supported versions
+
+| Engine     | Versions | Notes                                  |
+| ---------- | -------- | -------------------------------------- |
+| PostgreSQL | 14–18    | 16+ recommended for new deployments    |
+
+## Connection settings
+
+Decision Control reads the standard Spring datasource environment variables (Spring relaxed binding maps them to `spring.datasource.*`):
+
+| Variable                     | Required | Example                                            |
+| ---------------------------- | -------- | -------------------------------------------------- |
+| `SPRING_DATASOURCE_URL`      | yes      | `jdbc:postgresql://postgres.example.com:5432/dc`   |
+| `SPRING_DATASOURCE_USERNAME` | yes      | `dc_app`                                           |
+| `SPRING_DATASOURCE_PASSWORD` | yes      | `<from secret store>`                              |
+
+A production deployment must point these at a managed PostgreSQL instance reachable from the application. In Kubernetes, the URL typically uses the in-cluster service DNS (e.g. `jdbc:postgresql://postgres.infra.svc.cluster.local:5432/dc`).
+
+## Schema management
+
+The schema is created and migrated automatically on startup, controlled by `HIBERNATE_DDL_AUTO`:
+
+| Value      | Behavior                                                                 | When to use                          |
+| ---------- | ------------------------------------------------------------------------ | ------------------------------------ |
+| `validate` | Verify the schema matches the entity model; fail fast on mismatch. No DDL.| **Production** (schema already exists)|
+| `update`   | Apply additive schema changes on startup.                                | Development / first bootstrap         |
+| `create`   | Drop and recreate the schema on every startup. **Destroys data.**        | Ephemeral test environments only      |
+
+For production, provision an empty database, run a first boot with `update` to create the schema (or apply the schema out-of-band), then switch to `validate` for subsequent deployments so an unexpected entity change can never silently alter the production schema.
+
+## Provisioning
+
+Create a dedicated database and least-privilege application role:
+
+```sql
+-- As a Postgres superuser / admin
+CREATE ROLE dc_app WITH LOGIN PASSWORD '<choose-a-strong-password>';
+CREATE DATABASE dc OWNER dc_app;
+
+-- Restrict the role to its own database
+REVOKE ALL ON DATABASE dc FROM PUBLIC;
+GRANT CONNECT ON DATABASE dc TO dc_app;
+```
+
+The application role needs `CONNECT`, `CREATE` (for first-boot schema creation under `update`), and full DML on its own schema. Once the schema is created and you switch to `validate`, you may drop `CREATE` from the role.
+
+### Optional read-only role
+
+For monitoring or BI access without write privileges:
+
+```sql
+CREATE ROLE dc_readonly WITH LOGIN PASSWORD '<password>';
+GRANT CONNECT ON DATABASE dc TO dc_readonly;
+\c dc
+GRANT USAGE ON SCHEMA public TO dc_readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO dc_readonly;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO dc_readonly;
+```
+
+## Upgrade considerations
+
+- Schema changes ship with the application image. Deploy a new image with `HIBERNATE_DDL_AUTO=update` for the first rollout that introduces a schema change, then return to `validate`.
+- Take a database backup before any upgrade that changes the schema.
+- Schema changes are additive within a major line; a downgrade after a schema change is not supported without restoring from backup.
+
+## TLS to the database
+
+Append SSL parameters to the JDBC URL when the database requires encrypted connections:
+
+```
+jdbc:postgresql://postgres.example.com:5432/dc?ssl=true&sslmode=verify-full&sslrootcert=/etc/ssl/certs/db-ca.crt
+```
+
+Mount the CA certificate into the container and reference it with `sslrootcert`. Use `verify-full` in production so the driver validates the server hostname against the certificate.
+
+## Verifying
+
+After deploying, confirm the application reaches the `Started AletyxDcApplication` log line and that `/actuator/health` returns `200 OK` before allowing traffic. A datasource problem surfaces as a Hibernate / HikariCP connection error in the logs and a `DOWN` health status.
+
+## Backup and recovery
+
+Treat the Decision Control database the same as any other application Postgres: nightly logical backups plus point-in-time recovery for production. The application is **stateless** apart from this database — restoring it is the only step needed to recover the deployment state (models, decisions, versions, audit trail).
+
+### Scheduled `pg_dump` (Kubernetes example)
+
+A simple `CronJob` running the `postgres` image is enough for the application database. The example below assumes the database hostname is `<your-db-host>`, the connection credentials live in a Secret named `dc-db-secret`, and the persistent backup volume is `dc-backup-pvc`:
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dc-postgres-backup
+  namespace: <your-namespace>
+spec:
+  schedule: "0 2 * * *"  # daily at 02:00
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: postgres:15-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  pg_dump -h <your-db-host> \
+                    -U "$POSTGRES_USER" \
+                    -d <your-database> \
+                    -F c -f /backup/dc-$(date +%Y%m%d).dump
+              env:
+                - name: POSTGRES_USER
+                  valueFrom: { secretKeyRef: { name: dc-db-secret, key: POSTGRES_USER } }
+                - name: PGPASSWORD
+                  valueFrom: { secretKeyRef: { name: dc-db-secret, key: POSTGRES_PASSWORD } }
+              volumeMounts:
+                - { name: backup-storage, mountPath: /backup }
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: dc-backup-pvc
+          restartPolicy: OnFailure
+```
+
+The `-F c` (custom format) output is required by `pg_restore`. Keep at least 7 daily backups plus one weekly retained for 30 days; the volume sizing is dominated by version history rather than active model count.
+
+### Restore
+
+```sh
+# Copy the dump into a pod that can reach the database (the postgres image is fine).
+kubectl cp dc-20260101.dump <namespace>/<helper-pod>:/tmp/
+
+kubectl exec -it <helper-pod> -n <namespace> -- /bin/sh
+
+# Inside the pod — `-c` drops conflicting objects before restoring.
+pg_restore -h <your-db-host> -U <your-user> -d <your-database> -c /tmp/dc-20260101.dump
+```
+
+Restoring into a database that already has data (an upgrade rehearsal, for example) is supported with the `--clean` flag shown above; the schema and rows are dropped before being recreated. Restoring into an empty database produces the same final state.
+
+### Managed PostgreSQL services
+
+For Cloud SQL / RDS / Azure Database, prefer the platform's own snapshot and point-in-time recovery rather than running `pg_dump` from inside the cluster. The result is faster and integrates with your platform's RBAC and audit. Use logical dumps for cross-environment migrations only (dev → staging refresh, etc.).

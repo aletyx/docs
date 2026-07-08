@@ -1,0 +1,69 @@
+---
+title: "Promotion History"
+description: "Every promotion keeps a permanent record of who requested what, who approved it, when each step happened, and the final outcome."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/how-to/audit-trail/"
+---
+
+Every promotion keeps a permanent record of who requested what, who approved it, when each step happened, and the final outcome. Use it as evidence or to investigate what went wrong.
+
+
+![Promotion detail - Timeline tab](/images/decision-control-tower/promotion-timeline.png)
+
+Any signed-in Tower user who can open the promotion can see its timeline. **Opening a task's full detail** may need **approval access**, depending on how your deployment is set up.
+
+## How to view a promotion's timeline
+
+See the lifecycle of a single promotion at a glance.
+
+**Prerequisites:** On a [promotion detail page](/decision-control-tower/how-to/promotions#how-to-open-a-promotion-requests-detail).
+
+**Steps:**
+
+1. Open the **Timeline** tab.
+2. Read the per-task lifecycle (Started / Completed / Pending) for each step of the workflow.
+
+**Verify:** The timeline lists each task in order with its status.
+
+## How to open a promotion's full history
+
+Drill into the complete task-by-task record for a promotion.
+
+**Prerequisites:** On a promotion detail page.
+
+**Steps:**
+
+1. On the **Timeline** tab, click **View full history** (opens `/promotions/{id}/history`).
+2. Read the **Promotion history** table: **Started at**, **Unit**, **Version**, **Requester**, **Actual Owner**, **Status**, **Completed**.
+3. Sort or paginate as needed.
+
+**Verify:** All recorded tasks for the promotion are listed (or *"No tasks have been recorded for this promotion."*).
+
+![Promotion history](/images/decision-control-tower/promotion-history.png)
+
+## How to open a task's detail
+
+Expand one task into its own tab for full inspection.
+
+**Prerequisites:** On a promotion history page with at least one task.
+
+**Steps:**
+
+1. In the history table, click **View details** on a row.
+2. Review the **timeline** (Started / Completed / Pending) and the details grid: **Actual Owner**, **Requester**, **Approver outcome**, **Approver comment**, **Justification**, etc.
+3. Close the tab when done.
+
+**Verify:** A new **Task `{n}`** tab opens and becomes active.
+
+## How to inspect a task's metadata
+
+Retrieve the identifiers needed for support or cross-system tracing.
+
+**Prerequisites:** A task detail tab open.
+
+**Steps:**
+
+1. Click the metadata icon (**View metadata**).
+2. In the **Metadata** dialog, read **Promotion ID**, **Process Instance ID**, and **Task ID**.
+3. Use the **copy** button next to any value.
+
+**Verify:** The dialog shows the IDs; clicking copy shows a *"Copied!"* tooltip.

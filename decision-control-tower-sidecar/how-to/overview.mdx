@@ -1,0 +1,12 @@
+---
+title: "How-To Guides"
+description: "Guides for tailoring the Aletyx Decision Control Tower Sidecar starter — customize its workflows and actions while the Tower contract stays fixed."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower-sidecar/how-to/"
+---
+
+Guides for tailoring the Aletyx Decision Control Tower Sidecar starter. The Sidecar has no end-user interface — you customize its **workflows and actions** and configure behavior through environment variables, then verify the result in Tower and the target systems. Throughout, the **Tower integration and request/response contracts stay fixed** (see [Architecture](/decision-control-tower-sidecar/architecture#core-vs-customizable)).
+
+- [Customize the Promotion Workflow](/decision-control-tower-sidecar/how-to/customize-workflow) — adapt the approval policy: review stages, assignment, branching, and which actions run.
+- [Git Model Versioning](/decision-control-tower-sidecar/how-to/git-model-versioning) — the Git example action: commit the promoted model's files to a repository on approval.
+
+More example actions (messaging, REST callouts) follow the same enable-and-verify pattern; see [Configuration](/decision-control-tower-sidecar/deployment/configuration) for the full variable reference.

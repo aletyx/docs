@@ -1,0 +1,20 @@
+vars: {
+  d2-config: {
+    sketch: true
+  }
+}
+
+shape: sequence_diagram
+
+approver: "Approver\n(tower-approvers)"
+tower: "Tower\n(Spring Boot API)"
+sidecar: "Tower Sidecar\n(workflow runtime)"
+dc: "Decision Control\n(target environment)"
+
+approver -> tower: "Open task & click Approve"
+tower -> sidecar: "Complete task transition\n(APPROVED)"
+sidecar -> tower: "Promotion → APPROVED → DEPLOYING (callback)"
+tower -> dc: "Deploy model"
+dc -> tower: "Deployment success"
+tower -> sidecar: "Promotion → DEPLOYED (callback)"
+tower -> approver: "Audit trail updated\nIn-app toast"

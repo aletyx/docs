@@ -1,0 +1,196 @@
+---
+title: "Database Configuration"
+description: "PostgreSQL provisioning, Flyway migrations, and connection settings for Decision Control Tower."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/deployment/database-configuration/"
+---
+
+Decision Control Tower stores its own state — registered environments, promotion requests, audit log — in a relational database. Schema management is automated via Flyway: when the application starts it inspects the database, creates the baseline if needed and applies any outstanding migrations before serving traffic.
+
+## Supported engines and versions
+
+| Engine         | Versions           | Notes                                                            |
+| -------------- | ------------------ | ---------------------------------------------------------------- |
+| **PostgreSQL** | 14, 15, 16, 17, 18 | Supported engine. All deployments documented here use PostgreSQL. |
+
+The reference is **PostgreSQL 18**; the CI matrix exercises 14 and 18 to cover the supported range.
+
+The Tower Sidecar component (see chapter 4) requires its own dedicated PostgreSQL database — do not share schemas between Tower and Sidecar.
+
+## Schema requirements
+
+| Item                  | Value                                  |
+| --------------------- | -------------------------------------- |
+| Default database name | `decision_tower_db`                    |
+| Default schema        | `public`                               |
+| Default username      | `tower`                                |
+| Encoding              | `UTF8`                                 |
+| Collation / LC_CTYPE  | any (the schema is collation-agnostic) |
+| Required extensions   | none                                   |
+
+The application user only needs read/write/DDL on its own schema:
+
+- `CONNECT` on the database
+- `USAGE` and `CREATE` on the `public` schema
+- The user is expected to be the **owner** of the database. Flyway requires DDL to create the migration history table on first startup.
+
+If your security policy forbids dynamic DDL by application users, apply the schema manually before first startup using the SQL files under `dc-tower-core/src/main/resources/db/migration/` and switch Flyway off via `spring.flyway.enabled=false`. Note that this requires careful coordination on every release that ships a new migration.
+
+## Provisioning steps
+
+The following SQL provisions a fresh database compatible with Tower's defaults. Run as a PostgreSQL superuser:
+
+```sql
+-- 1. Create the application role with login
+CREATE ROLE tower WITH LOGIN PASSWORD '<choose-a-strong-password>';
+
+-- 2. Create the database owned by the application role
+CREATE DATABASE decision_tower_db OWNER tower;
+
+-- 3. Grant connect privilege explicitly (idempotent — owner already has it)
+GRANT ALL PRIVILEGES ON DATABASE decision_tower_db TO tower;
+```
+
+Optionally, grant a separate read-only role for monitoring or BI tools (see "Operational access patterns" below).
+
+For deployments that must use a non-default database name, override `ALETYX_DC_TOWER_DB_URL`:
+
+```
+jdbc:postgresql://<host>:<port>/<database-name>
+```
+
+The application uses `spring.jpa.hibernate.ddl-auto=validate`, which means Hibernate verifies that the runtime entity model matches the schema produced by Flyway. If validation fails, the application fails to start with a clear error in the logs — do not ignore these.
+
+## Migration and upgrade considerations
+
+### Flyway history table
+
+The first time Tower starts against the database, Flyway creates the table `flyway_schema_history` in the `public` schema. Each migration is recorded with its checksum, so subsequent startups apply only newly added migrations.
+
+### Migration files shipped with the application
+
+The current image carries the following migrations under `db/migration/`:
+
+| File                                          | Purpose                                                                                                                                                                          |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `V1__baseline.sql`                            | Initial schema: `environments`, `environment_tags`, `promotion_requests`, `promotion_audit_log`                                                                                  |
+| `V2__add_unit_version_ids.sql`                | Adds `unit_id` / `version_id` columns to `promotion_requests`                                                                                                                    |
+| `V3__audit_trail_restructure.sql`             | Replaces the individual promotion columns with `original_details` / `deploy_result` JSONB snapshots and **drops** `promotion_audit_log` (audit trail moves to Kogito Data Index) |
+| `V4__notifications_and_submitted_by_name.sql` | Creates the `email_templates` table and adds `submitted_by_name` to `promotion_requests`                                                                                         |
+
+The number of files grows over time — consult the image you are deploying for the current set.
+
+### Upgrade procedure
+
+1. **Back up the database before any upgrade.** Tower migrations are forward-only; rollback in production requires restoring from backup.
+2. Stop the running Tower instance, or scale the Deployment to zero replicas (Kubernetes).
+3. Verify there are no long-running transactions against `decision_tower_db` from external tools.
+4. Start the new image. Tower applies pending migrations on startup; the application logs each migration as it runs and records it in `flyway_schema_history`.
+5. Confirm the application reaches the `Started AletyxTowerCoreApplication` log line and that `/actuator/health` returns `200 OK` before allowing traffic.
+
+If a migration fails partway, Tower fails fast and exits. The schema is left in the partially-migrated state recorded in `flyway_schema_history` (the failed migration is marked with `success = false`). Restore from backup, fix the underlying issue (often a schema drift introduced by manual `ALTER TABLE` outside Flyway), and retry.
+
+### Skipping migrations / repairing state
+
+Two operational situations may require a Flyway repair:
+
+- A migration was edited in place after being applied (checksum mismatch). The fix is to revert the migration to its applied form, or run `flyway repair` against the database.
+- A migration file was renamed or deleted between releases. Coordinate with Aletyx support before applying — this almost always indicates an unintended downgrade.
+
+## Connection pooling
+
+Tower uses HikariCP (Spring Boot default). Pool sizing is automatic but can be tuned via standard Spring properties if needed:
+
+```
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=2
+spring.datasource.hikari.connection-timeout=30000
+```
+
+For most installations the defaults are appropriate. Significant query latency or connection-acquisition warnings in the logs indicate either an undersized pool or a database resource issue (CPU, IO, or `pg_stat_activity` showing long-running transactions).
+
+## Operational access patterns
+
+Two access patterns are expected in addition to the application user:
+
+- **Read-only access** for diagnostic tools or BI dashboards. Create a dedicated role and grant minimal privileges:
+
+  ```sql
+  CREATE ROLE tower_reader WITH LOGIN PASSWORD '<password>';
+  GRANT CONNECT ON DATABASE decision_tower_db TO tower_reader;
+  \c decision_tower_db
+  GRANT USAGE ON SCHEMA public TO tower_reader;
+  ALTER DEFAULT PRIVILEGES FOR ROLE tower IN SCHEMA public
+    GRANT SELECT ON TABLES TO tower_reader;
+  ALTER DEFAULT PRIVILEGES FOR ROLE tower IN SCHEMA public
+    GRANT USAGE, SELECT ON SEQUENCES TO tower_reader;
+  ```
+
+  The `ALTER DEFAULT PRIVILEGES FOR ROLE tower` ensures that tables created by future Flyway migrations are visible to `tower_reader` automatically. Without it, each new migration would require a manual `GRANT`.
+
+- **Backups** via `pg_dump`. Tower's data is fully relational (no large objects, no binary columns), so a logical dump is safe and round-trips cleanly:
+
+  ```sh
+  pg_dump --format=custom --file=tower.dump decision_tower_db
+  pg_restore --create --dbname=postgres tower.dump   # restore on the target
+  ```
+
+  Frequency depends on your retention policy; at minimum, a daily snapshot is recommended for any environment that holds production approval workflows.
+
+## Network connectivity
+
+Tower expects to reach the database over TCP/IP on port 5432 (or whatever port the JDBC URL specifies). For deployments where database and application live in the same Kubernetes cluster, prefer in-cluster DNS (`<service>.<namespace>.svc.cluster.local`) over external addresses to keep traffic on the cluster's pod network.
+
+TLS to the database is not enabled by default. If your security posture requires it, append the standard PostgreSQL JDBC parameters to the URL:
+
+```
+jdbc:postgresql://<host>:5432/decision_tower_db?ssl=true&sslmode=require
+```
+
+The application image's truststore includes the publicly-trusted certificate authorities. For self-signed CAs, you will need to extend the truststore at image build time or via the standard `JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=...`.
+
+## Configuration variables
+
+| Variable                      | Required         | Default                                              | Description                                                    |
+| ----------------------------- | ---------------- | ---------------------------------------------------- | -------------------------------------------------------------- |
+| `ALETYX_DC_TOWER_DB_URL`      | yes (production) | `jdbc:postgresql://localhost:5434/decision_tower_db` | JDBC connection URL                                            |
+| `ALETYX_DC_TOWER_DB_USERNAME` | yes (production) | `tower`                                              | Database username                                              |
+| `ALETYX_DC_TOWER_DB_PASSWORD` | yes (production) | `tower`                                              | Database password (provide via secret manager — see chapter 3) |
+
+## Example: docker-compose for a self-hosted PostgreSQL alongside Tower
+
+```yaml
+services:
+  tower-database:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: decision_tower_db
+      POSTGRES_USER: tower
+      POSTGRES_PASSWORD: <strong-password>
+    volumes:
+      - tower-db-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tower -d decision_tower_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  decision-control-tower:
+    image: <your-registry>/aletyx/decision-control-tower:latest
+    depends_on:
+      tower-database:
+        condition: service_healthy
+    environment:
+      ALETYX_DC_TOWER_DB_URL: jdbc:postgresql://tower-database:5432/decision_tower_db
+      ALETYX_DC_TOWER_DB_USERNAME: tower
+      ALETYX_DC_TOWER_DB_PASSWORD: <strong-password>
+      # plus OIDC variables, see chapter 1
+    ports:
+      - "8080:8080"
+
+volumes:
+  tower-db-data:
+```
+
+This is suitable for evaluation and small single-host deployments. For production the database should run on a managed service or a dedicated PostgreSQL host, separate from the Tower application host.

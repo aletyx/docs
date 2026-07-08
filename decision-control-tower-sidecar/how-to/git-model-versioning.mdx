@@ -1,0 +1,77 @@
+---
+title: "Git Model Versioning"
+description: "Commit the promoted model's files to a Git repository on each approved promotion — a diffable history of governed models alongside the Tower audit trail."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower-sidecar/how-to/git-model-versioning/"
+---
+
+When enabled, the Sidecar commits the promoted model's files to a Git repository on each approved promotion — giving you a human-readable, diffable history of governed models alongside the Tower audit trail. It is **disabled by default** and opted into per deployment.
+
+<Info>
+**Optional and best-effort**
+
+Git versioning is an extension of the promotion flow, not a gate. When it is disabled or the Git host is unreachable, the step logs and no-ops — the approved promotion still completes. Governance never depends on the Git push succeeding.
+</Info>
+
+## How it works
+
+On approval, the integration:
+
+1. Requests the promoted unit's files from Tower Core through an authenticated callback (the Sidecar holds no model files itself; retrieval is scoped to the workflow's own promotion).
+2. Commits those files to the configured repository under a folder named after the **unit**, mirroring the package contents (for example, `MyUnit/loan_pre_qualification.dmn`).
+3. Makes the unit folder reflect exactly the promoted package — files removed from the model are removed from the folder, while the rest of the repository is left untouched.
+4. Returns the commit reference, which is included in the promotion-completion message.
+
+The unit folder is the unit of history: each promotion overwrites it, and the version-to-version history lives in the Git log.
+
+## How to enable Git versioning
+
+Turn on the integration for a deployment.
+
+**Prerequisites:**
+
+- A Git repository to receive the commits, in `owner/repo` form.
+- An access token with **Contents: read and write** on that repository.
+
+<Warning>
+**Provide the token through a secret, never in an image**
+
+Supply `…GITHUB_TOKEN` only through your secret manager / environment. A token committed to a repository will be detected and revoked by the Git host.
+</Warning>
+
+**Steps:**
+
+1. Set the Git variables on the Sidecar (see [Configuration](/decision-control-tower-sidecar/deployment/configuration)):
+    - `ALETYX_DC_TOWER_SIDECAR_GITHUB_ENABLED=true`
+    - `ALETYX_DC_TOWER_SIDECAR_GITHUB_TOKEN=<token>`
+    - `ALETYX_DC_TOWER_SIDECAR_GITHUB_REPO=<owner/repo>`
+    - `ALETYX_DC_TOWER_SIDECAR_GITHUB_BRANCH=<branch>` (defaults to `main`)
+    - Optionally `…GITHUB_COMMITTER_NAME` / `…GITHUB_COMMITTER_EMAIL`.
+2. Restart the Sidecar so it picks up the new configuration.
+
+**Verify:** Approve a test promotion, then confirm a new commit appears on the target branch with the unit's files under the unit folder, and that the promotion-completion message includes the commit reference.
+
+## How to disable Git versioning
+
+Stop committing without removing the rest of the configuration.
+
+**Steps:**
+
+1. Set `ALETYX_DC_TOWER_SIDECAR_GITHUB_ENABLED=false` (or leave it unset).
+2. Restart the Sidecar.
+
+**Verify:** Approved promotions complete normally, the completion message reports no commit, and no calls are made to the Git host.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| Completion message shows no commit | `…GITHUB_ENABLED` is `false`, or the token/repo is unset. |
+| Commit step logs an authorization error | Token lacks **Contents: read and write** on the target repository, or was revoked. |
+| Files land in the wrong place | The unit name resolves to an unexpected folder; confirm the promotion's unit. |
+| Nothing committed for a unit | The promoted package contained no files; check the source environment's version. |
+
+<Note>
+**Credentials hygiene**
+
+Rotate the access token periodically and whenever it may have been exposed. Because the integration is per-deployment, different environments can use separate tokens scoped to different repositories.
+</Note>

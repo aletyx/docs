@@ -1,0 +1,344 @@
+---
+title: "Container Configuration"
+description: "Runtime requirements, environment variables, secrets, and example run commands for the Tower container."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/deployment/container-configuration/"
+---
+
+Decision Control Tower ships as a single OCI-compatible container image that bundles the Spring Boot backend and the static frontend bundle. The same image is used across all deployment targets — local Container, Kubernetes, OpenShift — and is configured exclusively through environment variables. This chapter documents the runtime requirements, the full configuration surface, and how to operate the container in each common scenario.
+
+## Image
+
+| Property     | Value                                         |
+| ------------ | --------------------------------------------- |
+| Base         | `eclipse-temurin:17-alpine3.23` (DHI variant) |
+| Architecture | `linux/amd64`                                 |
+| Default port | `8080` (HTTP)                                 |
+| User         | `nonroot` (UID/GID set by base image)         |
+| Entrypoint   | `java -server -jar /app/tower-core.jar`       |
+
+Default tag scheme: `<registry>/aletyx/decision-control-tower:<version>`. Customers receiving this image through Aletyx distribution will be issued the registry endpoint and pull credentials separately.
+
+The image is signed using cosign. Validate the signature before promoting an image into a production registry; the signing key is published alongside each release.
+
+## Runtime requirements
+
+| Resource          | Minimum                                | Recommended                                        |
+| ----------------- | -------------------------------------- | -------------------------------------------------- |
+| Container runtime | Docker 20.10+ or Podman 4.x            | latest stable                                      |
+| OCI compatibility | image manifest schema v2               | —                                                  |
+| CPU               | 0.5 cores                              | 1–2 cores per replica                              |
+| Memory            | 2.5 GiB                                | 3 GiB                                              |
+| Filesystem        | read-only root supported               | read-only root + writable `/tmp` and `/app/config` |
+| Outbound network  | reach OIDC provider, database, sidecar | same                                               |
+
+The image's `JAVA_TOOL_OPTIONS` is set to use **`-Xms2g -Xmx2g -XX:MaxMetaspaceSize=256m`**. The container must be allocated enough memory for the heap, metaspace, code cache, native overhead and Tomcat threads. Allocating less than 2.5 GiB of memory will cause `OOMKilled` events under any GC pressure.
+
+If you need a smaller footprint (for example, an evaluation deployment on a constrained host), override `JAVA_TOOL_OPTIONS` to set a smaller heap:
+
+```sh
+JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -Xms768m -Xmx1024m -XX:MaxMetaspaceSize=256m"
+```
+
+## Networking and ports
+
+| Direction | Port / target                                | Purpose                                                 |
+| --------- | -------------------------------------------- | ------------------------------------------------------- |
+| Inbound   | `8080/tcp` (configurable via `BACKEND_PORT`) | HTTP traffic from the reverse proxy / ingress / browser |
+| Outbound  | `5432/tcp` to PostgreSQL                     | Tower's own database                                    |
+| Outbound  | sidecar HTTP port (default `8080/tcp`)       | Tower → Sidecar API                                     |
+| Outbound  | OIDC provider HTTPS                          | Discovery, token endpoint, JWK keys                     |
+| Outbound  | each registered Decision Control instance    | Health probe loop                                       |
+
+Tower binds to `0.0.0.0` on `BACKEND_PORT` by default. There is no internal admin port — `/actuator/health` is exposed on the same port and is the only Actuator endpoint reachable without authentication.
+
+## Filesystem
+
+| Path                  | Purpose                                                                | Writable?               |
+| --------------------- | ---------------------------------------------------------------------- | ----------------------- |
+| `/app/tower-core.jar` | Application JAR                                                        | no                      |
+| `/app/config/`        | Mount point for static configuration files (e.g., `environments.json`) | no (mount as read-only) |
+| `/tmp`                | Spring Boot temporary upload buffers, Tomcat work directory            | yes                     |
+
+A read-only root filesystem is supported provided `/tmp` is mounted as a writable `tmpfs` or `emptyDir` (Kubernetes). In OpenShift, the default `restricted-v2` SCC permits this configuration without modification.
+
+## Configuration surface (environment variables)
+
+Variables are grouped by concern. All variables are optional unless marked **required**; defaults are shown for reference.
+
+### Server
+
+| Variable       | Default                 | Description                                                                                                                                                                                   |
+| -------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_HOST`     | `http://localhost:8080` | Public URL of the application. Used by the frontend to build OIDC redirect URIs and by the backend for absolute links in emails / notifications. **Must match the externally-reachable hostname.** |
+| `APP_PORT`     | `8080`                  | Exposed container port (informational only).                                                                                                                                                  |
+| `BACKEND_PORT` | `8080`                  | Spring Boot bind port. Must match `APP_PORT` and the port mapping.                                                                                                                            |
+
+### Database
+
+See [chapter 2](/decision-control-tower/deployment/database-configuration) for full details.
+
+| Variable                      | Required | Default                                              | Description                                    |
+| ----------------------------- | -------- | ---------------------------------------------------- | ---------------------------------------------- |
+| `ALETYX_DC_TOWER_DB_URL`      | yes      | `jdbc:postgresql://localhost:5434/decision_tower_db` | JDBC URL                                       |
+| `ALETYX_DC_TOWER_DB_USERNAME` | yes      | `tower`                                              | Database username                              |
+| `ALETYX_DC_TOWER_DB_PASSWORD` | yes      | `tower`                                              | Database password (provide via secret manager) |
+
+### OIDC / Security
+
+See [chapter 1](/decision-control-tower/deployment/identity-access-management) for provider-specific details.
+
+| Variable                               | Default                | Description                             |
+| -------------------------------------- | ---------------------- | --------------------------------------- |
+| `ALETYX_OIDC_PROVIDER`        | `entra`                | `entra` or `keycloak`                   |
+| `ALETYX_OIDC_CLIENT_ID`       | `decision-tower`       | OAuth2 client ID                        |
+| `ALETYX_OIDC_SCOPES`          | `openid,profile,email` | Comma-separated scopes                  |
+| `ALETYX_OIDC_ROLE_CLAIM_PATH` | `roles`                | JSON path to the roles claim in the JWT |
+| `ALETYX_OIDC_ENTRA_TENANT_ID`      | (empty)                | Microsoft Entra tenant ID               |
+| `ALETYX_OIDC_ENTRA_AUDIENCE`       | `api://decision-tower` | Token audience expected by Tower        |
+| `ALETYX_OIDC_ENTRA_CLIENT_SECRET`  | (empty)                | Confidential client secret              |
+| `ALETYX_OIDC_KEYCLOAK_ISSUER_URI`  | (empty)                | Keycloak realm issuer URI               |
+| `ALETYX_OIDC_KEYCLOAK_JWK_SET_URI` | (empty)                | Keycloak JWK set URI                    |
+| `ALETYX_OIDC_KEYCLOAK_CLIENT_ID`   | (empty)                | Keycloak client ID                      |
+| `ALETYX_OIDC_KEYCLOAK_CLIENT_SECRET` | (empty)              | Keycloak confidential client secret     |
+| `ALETYX_OIDC_TENANT_CLAIM_NAME`    | `tenant_id`            | JWT tenant claim; set to `tid` for Entra |
+| `ALETYX_OIDC_TENANT_DEFAULT_ID`    | `0`                    | Tenant ID when the token has no tenant claim (e.g. `aletyx`) |
+| `ALETYX_OIDC_CALLBACK_SECRET`      | (empty)                | Shared secret for Sidecar → Tower callbacks |
+| `ALETYX_OIDC_INTERNAL_SECRET`      | (empty)                | Shared secret for Tower → DC server-to-server calls (must match DC) |
+| `ALETYX_OIDC_TOKENCLIENT_CONNECT_TIMEOUT` | `5s`            | OIDC token-client TCP connect timeout (Duration) |
+| `ALETYX_OIDC_TOKENCLIENT_READ_TIMEOUT`    | `10s`           | OIDC token-client read timeout (Duration) |
+| `ALETYX_OIDC_RBAC_ENABLED`         | `false`                | Master toggle for URL-level RBAC        |
+| `ALETYX_OIDC_RBAC_ROLES_ALLOWED_*` | (empty)                | Per-action role allow-lists — see [Identity & Access Management](/decision-control-tower/deployment/identity-access-management#url-level-rbac-optional) |
+
+### Resilience (Feign / circuit breaker / retry)
+
+Tunes the outbound HTTP client (Feign) and the resilience4j circuit breaker and retry policy applied to all Tower → Sidecar / Data Index / Decision Control calls. The defaults below are sensible for most deployments — adjust only when an upstream service has known latency characteristics.
+
+| Variable                                    | Default  | Description                                                                                                                  |
+| ------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `ALETYX_DC_TOWER_FEIGN_CONNECT_TIMEOUT`     | `5000`   | TCP connect timeout (milliseconds) for outbound Feign calls.                                                                 |
+| `ALETYX_DC_TOWER_FEIGN_READ_TIMEOUT`        | `15000`  | Socket read timeout (milliseconds) for outbound Feign calls.                                                                 |
+| `ALETYX_DC_TOWER_CB_WINDOW`                 | `10`     | Circuit breaker sliding window size (number of recent calls evaluated).                                                      |
+| `ALETYX_DC_TOWER_CB_MIN_CALLS`              | `5`      | Minimum number of calls in the window before the failure/slow rates are evaluated.                                           |
+| `ALETYX_DC_TOWER_CB_FAILURE_RATE`           | `50`     | Failure rate threshold (percentage). When the failure rate is at or above this value, the circuit opens.                      |
+| `ALETYX_DC_TOWER_CB_WAIT`                   | `30s`    | Time the circuit stays open before transitioning to half-open (Duration).                                                    |
+| `ALETYX_DC_TOWER_CB_SLOW_THRESHOLD`         | `5s`     | Call duration considered "slow" for the slow-call rate (Duration).                                                            |
+| `ALETYX_DC_TOWER_CB_SLOW_RATE`              | `80`     | Slow-call rate threshold (percentage). When the slow-call rate is at or above this value, the circuit opens.                  |
+| `ALETYX_DC_TOWER_RETRY_ATTEMPTS`            | `2`      | Maximum retry attempts on transient failures (connection timeout, retryable Feign exceptions).                                |
+| `ALETYX_DC_TOWER_RETRY_WAIT`                | `500ms`  | Base wait between retries (Duration); exponential backoff (×2) is applied on each subsequent attempt.                         |
+
+### Sidecar and Data Index
+
+| Variable                                  | Default                 | Description                                                                                    |
+| ----------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------- |
+| `ALETYX_DC_TOWER_SIDECAR_URL`             | `http://localhost:8080` | Tower → Sidecar HTTP base URL                                                                  |
+| `ALETYX_DC_TOWER_DATA_INDEX_URL`          | `http://localhost:8080` | Tower → Data Index HTTP base URL (typically the same host as sidecar)                          |
+| `ALETYX_OIDC_CALLBACK_SECRET`             | (empty)                 | Shared secret used to authenticate Sidecar → Tower callbacks. Must match the value on the Sidecar.                                                                                              |
+
+When deploying both Tower and Sidecar in the same Kubernetes cluster, set these to the in-cluster Service hostname (e.g. `http://decision-control-tower-sidecar.<namespace>.svc.cluster.local`) — never the public Cloudflare / load-balancer hostname.
+
+### Environments seed
+
+| Variable                            | Default                                         | Description                                                                       |
+| ----------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- |
+| `ALETYX_DC_TOWER_ENVIRONMENTS_FILE` | `/app/config/environments.json`                 | Path to the JSON file used to seed and upsert the `environments` table on startup |
+| `ALETYX_DC_TOWER_SEED_TENANT_ID`    | falls back to `ALETYX_OIDC_ENTRA_TENANT_ID` | Tenant ID stamped on rows seeded by the file                                      |
+
+The file format and behavior are documented in chapter 4 (sidecar / static-config section).
+
+### Email Notification
+
+| Variable                              | Default                            | Description                                                                                                                |
+| ------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `ALETYX_DC_TOWER_EMAIL_ENABLED`       | `true`                             | Master switch. When `false`, no notification email is sent regardless of the other SMTP settings.                          |
+| `ALETYX_DC_TOWER_EMAIL_FROM`          | `notifier@example.com`             | Address used in the `From:` header of every notification email. The image ships with a placeholder default; override to your organization's notification sender.                                                            |
+| `ALETYX_DC_TOWER_SMTP_HOST`           | `smtp.example.com`                 | SMTP server hostname. The image ships with a placeholder default; override to your organization's SMTP relay.                                                                                                      |
+| `ALETYX_DC_TOWER_SMTP_PORT`           | `587`                              | SMTP server port (`587` for STARTTLS, `465` for SMTPS).                                                                    |
+| `ALETYX_DC_TOWER_SMTP_USERNAME`       | `notifier@example.com`             | Username used to authenticate against the SMTP server. The image ships with a placeholder default; override to match your SMTP credentials.                                                                                                     |
+| `ALETYX_DC_TOWER_SMTP_PASSWORD`       | _(empty)_                          | Password used to authenticate against the SMTP server. Provide via a Kubernetes Secret (or equivalent) — never a ConfigMap. |
+| `ALETYX_DC_TOWER_GROUPS_CONFIG_PATH`  | `./config/notification-groups.json` | Path (inside the container) to the JSON file mapping notification groups to recipient email addresses. Must be mounted.    |
+| `ALETYX_DC_TOWER_EMAIL_TEMPLATES_FILE`| `./config/email-template.json`     | Path (inside the container) to the JSON file with email subject/body templates. Must be mounted.                           |
+
+
+### Frontend
+
+| Variable                               | Default                                 | Description                                                                                                                                       |
+| -------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ALETYX_OIDC_PROVIDER`        | `entra`                | `entra` or `keycloak`                   |
+| `ALETYX_DC_TOWER_USE_MOCKS`            | `true`                                  | Set to `false` for any deployment that should hit the real backend; the default is `true` to support the in-image quick-start without a database. |
+| `ALETYX_DC_TOWER_APP_NAME`             | `Decision Control Tower`                | Application title displayed in the UI                                                                                                             |
+| `ALETYX_DC_TOWER_CORS_ALLOWED_ORIGINS` | `http://localhost:*,http://127.0.0.1:*` | Comma-separated list of origins allowed for CORS pre-flight                                                                                       |
+| `ALETYX_DC_TOWER_TASKS_REFETCH_INTERVAL_MS` | `10000`                              | Polling interval (milliseconds) used by the UI to refetch the task list/count. Set to `0` to disable background polling.                          |
+
+### Health probe loop (Tower → Decision Control instances)
+
+| Variable                             | Default | Description                          |
+| ------------------------------------ | ------- | ------------------------------------ |
+| `ALETYX_DC_TOWER_HEALTH_INTERVAL_MS` | `30000` | Probe interval in milliseconds       |
+| `ALETYX_DC_TOWER_HEALTH_TIMEOUT`     | `5`     | Probe timeout in seconds             |
+| `ALETYX_DC_TOWER_HEALTH_POOL_SIZE`   | `4`     | Thread pool used for outbound probes |
+
+### Task list
+
+| Variable                                   | Default | Description                                                                           |
+| ------------------------------------------ | ------- | ------------------------------------------------------------------------------------- |
+| `ALETYX_DC_TOWER_TASKS_PAGE_SIZE`          | `200`   | Default page size for task list endpoints                                             |
+| `ALETYX_DC_TOWER_TASKS_FUTURE_TIMEOUT`     | `8`     | Future-completion timeout in seconds                                                  |
+| `ALETYX_DC_TOWER_TASKS_EXECUTOR_POOL_SIZE` | `0`     | `0` selects the framework default executor; override only with measured workload data |
+
+### Logging
+
+| Variable                         | Default | Description                                                     |
+| -------------------------------- | ------- | --------------------------------------------------------------- |
+| `ALETYX_DC_TOWER_LOG_LEVEL_ROOT` | `INFO`  | Root logger level                                               |
+| `ALETYX_DC_TOWER_LOG_LEVEL_APP`  | `INFO`  | `ai.aletyx.towercore.*` package level                           |
+| `ALETYX_DC_TOWER_LOG_LEVEL_WEB`  | `ERROR` | Spring Web / DispatcherServlet level                            |
+| `ALETYX_DC_TOWER_LOG_LEVEL_HTTP` | `ERROR` | HTTP client level                                               |
+| `ALETYX_DC_TOWER_LOG_LEVEL_SQL`  | `ERROR` | Hibernate SQL level (set to `DEBUG` only briefly for diagnosis) |
+
+## Secrets and credential management
+
+The image accepts secret values via plain environment variables. **Never embed secrets in the container image, in command-line arguments visible to other processes, or in version-controlled configuration.** Use the secret-management primitive of your platform:
+
+- **Container / Podman**: pass secrets via `--env-file <file>` where the file is restricted (`chmod 600`) and stored under a directory not backed up to version control. For longer-running deployments use Container secrets or Podman's `--secret` flag.
+- **Kubernetes**: use a `Secret` and reference it via `envFrom` or per-key `valueFrom.secretKeyRef`. Secret encryption at rest must be enabled on the cluster (`--encryption-provider-config`). If your platform integrates an external secret store (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault), surface the values as environment variables — Tower itself only consumes environment variables.
+- **OpenShift**: use a `Secret` with `restrictedVolume` or the OpenShift Vault integration. Inherit the tenant's encryption-at-rest policy.
+
+Secrets that must be provided in production:
+
+| Secret                                    | Source                                     | Rotation                                                        |
+| ----------------------------------------- | ------------------------------------------ | --------------------------------------------------------------- |
+| `ALETYX_DC_TOWER_DB_PASSWORD`             | Database team / secret manager             | Rotate at most every 90 days                                    |
+| `ALETYX_OIDC_ENTRA_CLIENT_SECRET`     | Entra app registration                     | Rotate before the secret's expiry; default 24 months            |
+| `ALETYX_OIDC_CALLBACK_SECRET` | Operator-generated random string ≥32 chars | Rotate alongside sidecar; both sides must update simultaneously |
+
+## Worked examples
+
+### Production-shaped: PostgreSQL + Entra + sidecar
+
+```sh
+docker run --rm -d --name decision-control-tower \
+  -p 8080:8080 \
+  --env-file /etc/tower/tower.env \
+  --restart unless-stopped \
+  <your-registry>/aletyx/decision-control-tower:latest
+```
+
+Where `/etc/tower/tower.env` (mode `0600`, owned by the deployment user) contains:
+
+```sh
+# Server
+APP_HOST=https://dc-tower.example.com
+
+# Database
+ALETYX_DC_TOWER_DB_URL=jdbc:postgresql://db.internal:5432/decision_tower_db
+ALETYX_DC_TOWER_DB_USERNAME=tower
+ALETYX_DC_TOWER_DB_PASSWORD=<from-secret-manager>
+
+# OIDC
+ALETYX_DC_TOWER_USE_MOCKS=false
+ALETYX_OIDC_PROVIDER=entra
+ALETYX_OIDC_CLIENT_ID=<client-id>
+ALETYX_OIDC_ENTRA_TENANT_ID=<tenant-id>
+ALETYX_OIDC_ENTRA_AUDIENCE=<client-id>
+ALETYX_OIDC_ENTRA_CLIENT_SECRET=<from-secret-manager>
+
+# Sidecar
+ALETYX_DC_TOWER_SIDECAR_URL=http://sidecar.internal:8080
+ALETYX_DC_TOWER_DATA_INDEX_URL=http://sidecar.internal:8080
+ALETYX_OIDC_CALLBACK_SECRET=<shared-secret>
+
+# CORS
+ALETYX_DC_TOWER_CORS_ALLOWED_ORIGINS=https://dc-tower.example.com
+```
+
+### Custom port
+
+If `8080` conflicts with another service on the host, remap consistently:
+
+```sh
+docker run --rm -p 9090:9090 \
+  -e APP_HOST=http://localhost:9090 \
+  -e APP_PORT=9090 \
+  -e BACKEND_PORT=9090 \
+  --env-file /etc/tower/tower.env \
+  <your-registry>/aletyx/decision-control-tower:latest
+```
+
+### Sidecar (required companion container)
+
+The Sidecar is a **separate container image** (`decision-control-tower-sidecar`) that Tower calls for process state, data index queries, jobs, and the SVG audit-trail rendering. A Tower deployment without a matching Sidecar will start and accept logins, but workflow-driven endpoints will silently no-op — deploy both together.
+
+The Sidecar needs its own PostgreSQL database (distinct from Tower's), the URL of the Tower instance it should call back into, and the shared callback secret that matches Tower's `ALETYX_OIDC_CALLBACK_SECRET`:
+
+```sh
+docker run --rm -d --name decision-control-tower-sidecar \
+  -p 8181:8080 \
+  --env-file /etc/tower/sidecar.env \
+  --restart unless-stopped \
+  <your-registry>/aletyx/decision-control-tower-sidecar:<tag>
+```
+
+Where `/etc/tower/sidecar.env` (mode `0600`) contains:
+
+```sh
+# Server
+APP_HOST=0.0.0.0
+BACKEND_PORT=8080
+SPRING_PROFILES_ACTIVE=prod
+
+# Database — canonical names read by the Sidecar's application.properties
+# (spring.datasource.url=${ALETYX_DC_TOWER_SIDECAR_DB_URL}, etc.).
+ALETYX_DC_TOWER_SIDECAR_DB_URL=jdbc:postgresql://db.internal:5432/decision_tower_sidecar_db
+ALETYX_DC_TOWER_SIDECAR_DB_USERNAME=sidecar
+ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD=<from-secret-manager>
+
+# How the Sidecar reaches Tower for callbacks.
+ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL=http://decision-control-tower.internal:8080
+
+# Shared callback secret — must equal Tower's ALETYX_OIDC_CALLBACK_SECRET.
+ALETYX_OIDC_CALLBACK_SECRET=<shared-secret>
+```
+
+In the Tower `tower.env` shown earlier, point `ALETYX_DC_TOWER_SIDECAR_URL` and `ALETYX_DC_TOWER_DATA_INDEX_URL` at this Sidecar — `http://sidecar.internal:8181` for the host-port mapping above, or the in-cluster Service hostname on Kubernetes (see chapter 4 under "Sidecar component (required)").
+
+## Health and verification
+
+The container exposes a single unauthenticated health endpoint. Both Kubernetes liveness and readiness probes target it:
+
+```
+GET /actuator/health
+```
+
+A healthy response is HTTP `200` with body:
+
+```json
+{
+  "status": "UP",
+  "groups": ["liveness", "readiness"]
+}
+```
+
+If the backend cannot reach the database, the overall status becomes `DOWN` and the endpoint returns a non-`200` status. Diagnose by checking the logs for a Hibernate / Hikari connection error.
+
+The OIDC bootstrap endpoint:
+
+```
+GET /auth/config
+```
+
+returns the frontend's expected OIDC client configuration. Useful for verifying that the OIDC environment variables were read correctly without needing to exercise a full login flow.
+
+## Operational considerations
+
+- The image runs as a **non-root** user. Volume mounts must be readable by the user defined in the base image.
+- **`imagePullPolicy`** (Kubernetes / OpenShift): use `IfNotPresent` for tagged immutable releases (e.g. a specific version such as `1.0.0`) and `Always` only for floating tags (`:latest`, `:main`, `:stage`, `:dev`).
+- **Image pinning by digest** is recommended for production:
+  ```
+  <your-registry>/aletyx/decision-control-tower@sha256:<digest>
+  ```
+  Extract the digest of a running pod with:
+  ```sh
+  kubectl get pod <pod-name> -o jsonpath='{.status.containerStatuses[0].imageID}'
+  ```
+- **Graceful shutdown**: Tower honors `SIGTERM` and finishes in-flight requests before exiting. Default Tomcat shutdown timeout is 30 seconds; allow at least that on container stop policies.
+- **Cold-start time**: 6–10 seconds on a 2-core / 2 GiB allocation. The first authenticated request after startup may take longer because the JVM lazily warms up the OIDC HTTP client and the database connection pool. This is expected; subsequent requests return promptly.

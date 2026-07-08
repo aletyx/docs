@@ -1,0 +1,180 @@
+---
+title: "Environment Management"
+sidebarTitle: "Environments"
+description: "Centralized access to all Decision Control environments with environment-specific configuration and governance."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/environments/"
+---
+
+Aletyx Decision Control Tower provides centralized access to all Decision Control environments with environment-specific configuration and governance.
+
+## Environment Overview
+
+Standard enterprise deployment includes three environments:
+
+| Environment | Purpose | Access Level | Features |
+|-------------|---------|--------------|----------|
+| **Development** | Model authoring and testing | Business Analysts | Full authoring UI |
+| **Test/UAT** | Stakeholder validation | BA + Risk Managers | Authoring + Governance |
+| **Production** | Live decision execution | Operations + Compliance | Execution only |
+
+## Environment Configuration
+
+Environments are persisted rows in Aletyx Decision Control Tower's database and are seeded at startup from an `environments.json` file mounted into the container. The file uses a kebab-case schema — `id` (slug), `display-name`, `description`, `dc-internal-url`, `dc-external-url`, `display-order` — and is upserted on each restart, so editing the file and restarting Tower is the supported way to add or update entries.
+
+For the full schema reference, mount points, and a worked example, see [Kubernetes & OpenShift Deployment → Static configuration](/decision-control-tower/deployment/kubernetes-openshift-deployment#static-configuration).
+
+## Environment Isolation
+
+Each environment runs as an independent Decision Control instance:
+
+### Separate Databases
+
+Each environment has its own PostgreSQL database:
+
+- `decision_control_dev`
+- `decision_control_test`
+- `decision_control_prod`
+
+This ensures:
+
+- No cross-environment data contamination
+- Independent scaling
+- Separate backup and recovery
+
+### Separate Deployments
+
+Each environment is a distinct Kubernetes deployment:
+
+```yaml
+# decision-control-dev
+replicas: 1
+resources:
+  requests:
+    cpu: 2000m
+    memory: 2Gi
+
+# decision-control-prod
+replicas: 3  # Higher availability
+resources:
+  requests:
+    cpu: 4000m
+    memory: 4Gi
+```
+
+## Accessing Environments
+
+### From Aletyx Decision Control Tower
+
+Click "Launch" on any environment card to open it in a new tab. Your authentication is shared via SSO.
+
+### Direct Access
+
+Access environments directly via their URLs:
+
+- Dev: `https://decision-control-dev.your-domain.com`
+- Test: `https://decision-control-test.your-domain.com`
+- Prod: `https://decision-control-prod.your-domain.com`
+
+## Environment Health Monitoring
+
+Aletyx Decision Control Tower monitors environment health via the `/actuator/health` endpoint:
+
+### Health Status
+
+- **Healthy**: All components operational
+- **Degraded**: Some components with issues
+- **Unhealthy**: Environment unavailable
+
+### Monitored Components
+
+- Application status
+- Database connectivity
+- Memory usage
+- Response time
+
+## Model Promotion
+
+Models are promoted between environments through governance workflows:
+
+![Flowchart of model promotion across environments: Development, then Submit for Review to Test/UAT, then Approve for Production to Production](/images/decision-control-tower/diagrams/environments/flowchart-lr-1.svg)
+
+### Promotion Process
+
+Every promotion runs through the **`standard_promotion`** workflow — a single review step with a request-changes loop. There is no built-in multi-stage chain of risk / UAT / compliance reviews inside one workflow instance.
+
+1. **Publish & submit**: the requester publishes a model version in the source environment and submits the promotion through the Tower **Promotions** view.
+2. **Review**: the workflow opens an **Approve** task assigned to the `tower-approvers` group. A reviewer claims it and chooses one of three outcomes:
+    - **Approve** → the workflow runs the **Promote** service task, copying the version into the target environment.
+    - **Reject** → the workflow ends; nothing is copied.
+    - **Request changes** → the workflow opens a **ChangeRequest** task assigned back to the original requester.
+3. **Resubmit or cancel** (only after Request changes): the requester picks a corrected version and **Resubmits** (looping back to the **Approve** task) or **Cancels** the promotion (workflow ends).
+
+Multi-environment paths (e.g. DEV → TEST → PROD) are achieved by running **one promotion per hop**, not by chaining stages inside a single workflow instance.
+
+### Version Tracking
+
+Aletyx Decision Control Tower tracks which versions are deployed where:
+
+| Unit | Model | DEV | TEST | PROD |
+|------|-------|-----|------|------|
+| acme/loan-approval | credit-decision | 2.0.0 | 1.5.0 | 1.0.0 |
+| Sample.dmn | risk-assessment | 3.1.0 | 3.0.0 | 2.5.0 |
+
+## Environment metadata
+
+Each environment is stored as a row in the `environments` table with the following fields:
+
+| Field          | Purpose                                                                                                  |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `slug`         | URL-safe identifier used in cross-environment links.                                                      |
+| `name`         | Display name shown in the UI.                                                                            |
+| `internal_url`  | In-cluster URL Tower uses for server-side calls (`http://<service>.<ns>.svc.cluster.local`).             |
+| `public_url`    | User-facing URL Tower exposes to the browser (typically the ingress / load-balancer hostname).            |
+| `description`   | Free text shown in the dashboard.                                                                        |
+| `display_order` | Ordering of the cards in the dashboard.                                                                  |
+| `enabled`      | Boolean. Disabled environments are skipped by Tower's health probe and hidden from promotion targeting.   |
+| `tags`         | Free-form labels (e.g. `production`, `pci-scope`) for filtering and categorisation.                       |
+
+The dev / test / prod distinction is **operational** — it shows up in the URL, the database, and the OIDC roles assigned to users for that environment — but there is no per-environment feature flag inside the Decision Control image. Every Decision Control instance ships the same UI; what differs is who can promote into it and what backing database it points at.
+
+## Adding New Environments
+
+To add a new environment:
+
+1. Deploy the Decision Control instance with its own PostgreSQL database.
+2. Append an entry to the mounted `environments.json` using the kebab-case schema — for example:
+
+    ```json
+    {
+      "id": "staging",
+      "display-name": "Staging",
+      "description": "Pre-production validation",
+      "dc-internal-url": "http://decision-control.staging.svc.cluster.local",
+      "dc-external-url": "https://decision-control-staging.your-domain.com",
+      "display-order": 2
+    }
+    ```
+
+3. Restart Aletyx Decision Control Tower so the seed file is re-applied (rows are upserted by `id`).
+
+## Troubleshooting
+
+### Environment Not Accessible
+
+1. Check environment health in Aletyx Decision Control Tower
+2. Verify Kubernetes pods are running
+3. Check ingress configuration
+4. Verify TLS certificates
+
+### Model Not Appearing
+
+1. Ensure model is published (not draft)
+2. Check correct environment selected
+3. Verify API connectivity
+4. Clear browser cache
+
+## Next Steps
+
+- [Task Management](/decision-control-tower/tasks): Manage approval workflows
+- [Portal Tour](/decision-control-tower/dashboard): Tour of the Aletyx Decision Control Tower interface
+- [Deployment](/decision-control-tower/deployment/overview): Deploy new environments

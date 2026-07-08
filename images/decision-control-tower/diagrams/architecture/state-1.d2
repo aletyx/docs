@@ -1,0 +1,47 @@
+direction: right
+
+vars: {
+  d2-config: {
+    sketch: true
+    theme-id: 200
+  }
+}
+
+classes: {
+  task: {
+    shape: rectangle
+    style: { fill: "#E0F2F1"; font-color: "#000000"; font-size: 34; bold: true }
+  }
+  terminal: {
+    shape: rectangle
+    style: { fill: "#FFF3E0"; font-color: "#000000"; font-size: 34; bold: true }
+  }
+}
+
+start: {
+  shape: circle
+  label: ""
+  style: { fill: "#E0F2F1" }
+}
+
+approve: "Approve\n(tower-approvers)" { class: task }
+change: "ChangeRequest\n(requester)" { class: terminal }
+promote: "Promote" { class: task }
+rejected: Rejected { class: terminal }
+cancelled: Cancelled { class: terminal }
+
+done: {
+  shape: circle
+  label: ""
+  style: { fill: "#E0F2F1"; double-border: true }
+}
+
+start -> approve { style.animated: true }
+approve -> promote { style.animated: true }
+approve -> rejected { style.animated: true }
+approve -> change { style.animated: true }
+change -> approve { style.animated: true }
+change -> cancelled { style.animated: true }
+promote -> done { style.animated: true }
+rejected -> done { style.animated: true }
+cancelled -> done { style.animated: true }

@@ -1,0 +1,437 @@
+---
+title: "Amazon ECS (Fargate / EC2)"
+description: "Deploy Aletyx Enterprise Build of Kogito and Drools workloads on Amazon ECS — Fargate or EC2 launch type, with full task-definition and service examples."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/deployment/cloud-native/ecs/"
+---
+
+Amazon Elastic Container Service runs the same OCI container images that you would push to Kubernetes or OpenShift, but with the AWS control plane managing the scheduler, load-balancing, and service discovery. For Aletyx Enterprise Build of Kogito and Drools workloads (Decision Control, Decision Control Tower, the Tower Sidecar, the Playground), ECS is a low-friction target when your organisation already operates in AWS — you skip the Kubernetes operational footprint and inherit IAM, Secrets Manager, CloudWatch, and ALB-integrated TLS termination.
+
+This guide covers the production-shaped path: a single-region service backed by an Application Load Balancer, an external RDS PostgreSQL, and Secrets Manager for sensitive values. Both launch types (Fargate and EC2) are covered side-by-side.
+
+## When to choose ECS
+
+ECS is a strong fit when:
+
+- Your operations team already runs other workloads on AWS and you don't have a Kubernetes platform in the same region.
+- You want the smallest possible operational footprint — Fargate eliminates the node-management burden entirely.
+- You need tight IAM and VPC integration without bridging EKS IRSA, AWS Load Balancer Controller, or external-secrets.io.
+- TLS termination at the load balancer is acceptable (ACM-issued certs on the ALB).
+
+ECS is **not** a good fit when:
+
+- You need workload portability across clouds (use Kubernetes or OpenShift instead).
+- You require custom scheduler behaviour, CRDs, or operators (use EKS or OpenShift).
+- Your release pipeline is already Helm-/Kustomize-based and you don't want to rewrite it for `aws ecs update-service`.
+
+## Fargate vs. EC2 launch type
+
+| Concern               | Fargate                                                                       | EC2                                                                              |
+| --------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Compute model         | Per-task vCPU/memory; AWS manages the host                                    | You run the container instances (EC2 + ECS agent) and bin-pack tasks onto them   |
+| Capacity reservation  | None — pay only while tasks run                                               | EC2 ASG reserves capacity even when idle                                          |
+| Scaling latency       | Seconds (new ENI + task)                                                      | Faster if a host has spare capacity; slower if the ASG needs to add an instance   |
+| Storage               | Ephemeral, sized per task (`ephemeralStorage` ≥ 20 GiB)                       | Ephemeral + ability to attach EBS volumes for in-task persistent storage          |
+| Cost profile          | Higher per-vCPU-hour; no idle cost                                            | Lower per-vCPU-hour at high utilisation; you pay for idle EC2                      |
+| Networking            | `awsvpc` mode only — one ENI per task                                         | `awsvpc`, `bridge`, or `host` mode supported                                       |
+| Privileged containers | Not supported                                                                 | Supported (rarely needed for Aletyx Enterprise Build of Kogito and Drools workloads)                         |
+| Recommended default   | **Fargate** for most Aletyx Enterprise Build of Kogito and Drools deployments                            | EC2 when you have steady high-utilisation workloads or specialised hardware needs |
+
+Images run unprivileged with a read-only root filesystem and writable `/tmp`. Both launch types satisfy those requirements without modification.
+
+## Prerequisites
+
+- **AWS account** with permissions to create ECS clusters, IAM roles, ALBs, target groups, and (optionally) RDS instances.
+- **VPC** with at least two private subnets in distinct Availability Zones for the tasks, and two public subnets for the ALB. The default VPC works for evaluation; production deployments should use a dedicated VPC.
+- **Route 53 hosted zone** (or another DNS provider) for the public hostname that points to the ALB.
+- **ACM certificate** in the same region as the ALB, covering the public hostname.
+- **Container registry credentials** — your private container registry requires an API token; create a Secret in AWS Secrets Manager with the docker-config JSON (see below) and reference it from the task execution role.
+- **RDS PostgreSQL** instance in the same VPC (Single-AZ for evaluation; Multi-AZ for production). Encryption at rest enabled; auto-minor-version upgrade enabled.
+- **AWS CLI** v2 with credentials that can call `ecs`, `iam`, `logs`, `secretsmanager`, and `elbv2`.
+
+The examples below assume placeholders that you'll substitute:
+
+| Placeholder                  | Example value                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------------- |
+| `<your-region>`              | `us-east-1`                                                                      |
+| `<your-account-id>`          | `123456789012`                                                                   |
+| `<your-cluster-name>`        | `my-cluster`                                                                     |
+| `<your-app-name>`            | `my-app`                                                                         |
+| `<your-image>`               | `<your-registry>/<your-org>/<your-image>:<version>`                              |
+| `<your-namespace-prefix>`    | `myorg/prod` — used as a prefix for Secrets Manager + CloudWatch log group names |
+
+## Architecture at a glance
+
+![Amazon ECS deployment architecture](/images/deployment/ecs-architecture.svg)
+
+## Step 1 — IAM roles
+
+ECS uses two IAM roles per task: the **task execution role** (used by ECS to pull the image and write logs) and the **task role** (used by your application code to call AWS APIs).
+
+### Task execution role
+
+Attach the AWS-managed policy `AmazonECSTaskExecutionRolePolicy` and a custom policy granting access to the registry credentials and any Secrets Manager / SSM parameters referenced in the task definition:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["secretsmanager:GetSecretValue"],
+      "Resource": [
+        "arn:aws:secretsmanager:<your-region>:<your-account-id>:secret:<your-namespace-prefix>/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["ssm:GetParameters"],
+      "Resource": [
+        "arn:aws:ssm:<your-region>:<your-account-id>:parameter/<your-namespace-prefix>/*"
+      ]
+    }
+  ]
+}
+```
+
+### Task role
+
+For Aletyx Enterprise Build of Kogito and Drools workloads that **do not** integrate with AWS services beyond Secrets Manager (the common case), the task role can stay empty — the application reads its secrets via the task definition's `secrets` block, which is evaluated by the agent under the *execution* role. Add permissions to the task role only when the application code itself calls AWS APIs (uncommon).
+
+## Step 2 — Registry credentials
+
+Your private container registry requires an API token. Create a Secrets Manager secret in the docker-config JSON format expected by ECS:
+
+```sh
+aws secretsmanager create-secret \
+  --name <your-namespace-prefix>/registry-credentials \
+  --region <your-region> \
+  --secret-string '{
+    "username": "<your-account-email>",
+    "password": "<your-api-token>"
+  }'
+```
+
+Reference it from the task definition via `repositoryCredentials.credentialsParameter`. ECS rotates the in-flight pull on the next task launch, so token rotation is a no-downtime operation as long as the new value is in place before the next deployment.
+
+## Step 3 — Application secrets
+
+Create one Secrets Manager secret per sensitive value (database password, OIDC client secret, etc.). Per-secret entries keep the IAM scope small and let you rotate one value at a time:
+
+```sh
+aws secretsmanager create-secret \
+  --name <your-namespace-prefix>/db-password \
+  --region <your-region> \
+  --secret-string "<the-db-password>"
+
+aws secretsmanager create-secret \
+  --name <your-namespace-prefix>/oidc-client-secret \
+  --region <your-region> \
+  --secret-string "<entra-or-keycloak-secret>"
+
+aws secretsmanager create-secret \
+  --name <your-namespace-prefix>/oidc-callback-secret \
+  --region <your-region> \
+  --secret-string "$(openssl rand -hex 32)"
+
+aws secretsmanager create-secret \
+  --name <your-namespace-prefix>/oidc-internal-secret \
+  --region <your-region> \
+  --secret-string "$(openssl rand -hex 32)"
+```
+
+For non-sensitive configuration (URLs, log levels, feature flags), use SSM Parameter Store `String` parameters or hard-code the values in the task definition `environment` block — both are equivalent at runtime.
+
+## Step 4 — Task definition
+
+The task definition below assumes a Decision Control workload. The same shape applies to Decision Control Tower and the Tower Sidecar — swap the image, port, and env block accordingly.
+
+```json
+{
+  "family": "<your-app-name>",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "ephemeralStorage": { "sizeInGiB": 21 },
+  "executionRoleArn": "arn:aws:iam::<your-account-id>:role/<your-app-name>-task-execution",
+  "taskRoleArn": "arn:aws:iam::<your-account-id>:role/<your-app-name>-task",
+  "containerDefinitions": [
+    {
+      "name": "<your-app-name>",
+      "image": "<your-image>",
+      "essential": true,
+      "repositoryCredentials": {
+        "credentialsParameter": "arn:aws:secretsmanager:<your-region>:<your-account-id>:secret:<your-namespace-prefix>/registry-credentials"
+      },
+      "portMappings": [
+        { "containerPort": 8080, "protocol": "tcp" }
+      ],
+      "readonlyRootFilesystem": true,
+      "user": "1001:1001",
+      "environment": [
+        { "name": "SPRING_PROFILES_ACTIVE",        "value": "postgres" },
+        { "name": "SPRING_DATASOURCE_URL",         "value": "jdbc:postgresql://<rds-endpoint>:5432/<your-db>" },
+        { "name": "SPRING_DATASOURCE_USERNAME",    "value": "<your-db-user>" },
+        { "name": "HIBERNATE_DDL_AUTO",            "value": "validate" },
+        { "name": "APP_HOST",                      "value": "https://<your-public-hostname>" },
+        { "name": "ALETYX_OIDC_PROVIDER",          "value": "entra" },
+        { "name": "ALETYX_OIDC_CLIENT_ID",         "value": "<your-entra-client-id>" },
+        { "name": "ALETYX_OIDC_SCOPES",            "value": "openid,profile,email" },
+        { "name": "ALETYX_OIDC_ROLE_CLAIM_PATH",   "value": "roles" },
+        { "name": "ALETYX_OIDC_TENANT_CLAIM_NAME", "value": "tid" },
+        { "name": "ALETYX_OIDC_ENTRA_TENANT_ID",   "value": "<your-entra-tenant-id>" },
+        { "name": "ALETYX_OIDC_ENTRA_AUDIENCE",    "value": "<your-entra-client-id>" }
+      ],
+      "secrets": [
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:<your-region>:<your-account-id>:secret:<your-namespace-prefix>/db-password"
+        },
+        {
+          "name": "ALETYX_OIDC_ENTRA_CLIENT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:<your-region>:<your-account-id>:secret:<your-namespace-prefix>/oidc-client-secret"
+        },
+        {
+          "name": "ALETYX_OIDC_CALLBACK_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:<your-region>:<your-account-id>:secret:<your-namespace-prefix>/oidc-callback-secret"
+        },
+        {
+          "name": "ALETYX_OIDC_INTERNAL_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:<your-region>:<your-account-id>:secret:<your-namespace-prefix>/oidc-internal-secret"
+        }
+      ],
+      "linuxParameters": {
+        "tmpfs": [{ "containerPath": "/tmp", "size": 512 }]
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health || exit 1"],
+        "interval": 15,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/<your-namespace-prefix>/<your-app-name>",
+          "awslogs-region": "<your-region>",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      }
+    }
+  ]
+}
+```
+
+Key choices in the above:
+
+- **`networkMode: awsvpc`** — required for Fargate; recommended for EC2. Each task gets its own ENI, which simplifies security groups and gives the task an IP that the ALB can target directly (`ip` target type).
+- **`requiresCompatibilities: ["FARGATE"]`** — for EC2 launch type, swap to `["EC2"]` and remove `cpu` / `memory` from the task level (move them to the container definition's `cpu` / `memoryReservation`).
+- **`readonlyRootFilesystem: true`** with a `tmpfs` mount at `/tmp` — matches the hardening posture documented in the Kubernetes deployment guide.
+- **`user: "1001:1001"`** — runs as a non-root UID baked into the image.
+- **`healthCheck`** — both the container health check (here) and the ALB target group health check (next step) are valuable; the container check restarts the task locally, the ALB check reroutes traffic.
+
+### EC2 launch type variant
+
+For EC2, replace the launch type and provide instance-side resource hints:
+
+```json
+{
+  "requiresCompatibilities": ["EC2"],
+  "containerDefinitions": [
+    {
+      "cpu": 1024,
+      "memoryReservation": 1536,
+      "memory": 2048
+    }
+  ]
+}
+```
+
+Everything else (env, secrets, logging, health check) is identical.
+
+## Step 5 — ALB + target group
+
+The Application Load Balancer terminates TLS, routes by host header, and integrates with the ECS service via a target group that uses the `ip` target type (each task ENI is registered directly).
+
+```sh
+# Target group: HTTP on 8080, health on /actuator/health
+aws elbv2 create-target-group \
+  --region <your-region> \
+  --name <your-app-name>-tg \
+  --protocol HTTP \
+  --port 8080 \
+  --target-type ip \
+  --vpc-id <your-vpc-id> \
+  --health-check-protocol HTTP \
+  --health-check-path /actuator/health \
+  --health-check-interval-seconds 30 \
+  --health-check-timeout-seconds 5 \
+  --healthy-threshold-count 2 \
+  --unhealthy-threshold-count 3 \
+  --matcher HttpCode=200
+
+# Listener: HTTPS 443 (TLS termination via ACM), default forward to the TG.
+aws elbv2 create-listener \
+  --region <your-region> \
+  --load-balancer-arn <your-alb-arn> \
+  --protocol HTTPS \
+  --port 443 \
+  --certificates CertificateArn=<your-acm-cert-arn> \
+  --ssl-policy ELBSecurityPolicy-TLS13-1-2-2021-06 \
+  --default-actions Type=forward,TargetGroupArn=<your-tg-arn>
+
+# Optional redirect: HTTP 80 → HTTPS 443
+aws elbv2 create-listener \
+  --region <your-region> \
+  --load-balancer-arn <your-alb-arn> \
+  --protocol HTTP --port 80 \
+  --default-actions 'Type=redirect,RedirectConfig={Protocol=HTTPS,Port=443,StatusCode=HTTP_301}'
+```
+
+A short health-check interval (`30s` / `2 healthy`) is recommended so a failed deployment is caught quickly. The path `/actuator/health` is the same endpoint used by the container health check and is unauthenticated by design.
+
+## Step 6 — ECS service
+
+```sh
+aws ecs create-service \
+  --region <your-region> \
+  --cluster <your-cluster-name> \
+  --service-name <your-app-name> \
+  --task-definition <your-app-name>:1 \
+  --desired-count 2 \
+  --launch-type FARGATE \
+  --platform-version LATEST \
+  --network-configuration "awsvpcConfiguration={
+    subnets=[<private-subnet-1>,<private-subnet-2>],
+    securityGroups=[<task-sg>],
+    assignPublicIp=DISABLED
+  }" \
+  --load-balancers "targetGroupArn=<your-tg-arn>,containerName=<your-app-name>,containerPort=8080" \
+  --health-check-grace-period-seconds 90 \
+  --deployment-configuration "minimumHealthyPercent=100,maximumPercent=200" \
+  --deployment-controller "type=ECS"
+```
+
+The deployment controller `ECS` runs a rolling update — new tasks are started, the ALB waits for them to be healthy, then old tasks drain. For blue-green deployments, switch to `CODE_DEPLOY` and define a `CodeDeploy` application + deployment group.
+
+### Auto Scaling
+
+Decision Control is mostly request-bound, so target tracking against requests-per-target or CPU works well:
+
+```sh
+aws application-autoscaling register-scalable-target \
+  --service-namespace ecs \
+  --resource-id service/<your-cluster-name>/<your-app-name> \
+  --scalable-dimension ecs:service:DesiredCount \
+  --min-capacity 2 --max-capacity 6
+
+aws application-autoscaling put-scaling-policy \
+  --service-namespace ecs \
+  --resource-id service/<your-cluster-name>/<your-app-name> \
+  --scalable-dimension ecs:service:DesiredCount \
+  --policy-name cpu-target \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-scaling-policy-configuration '{
+    "TargetValue": 60.0,
+    "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+    },
+    "ScaleInCooldown": 300,
+    "ScaleOutCooldown": 60
+  }'
+```
+
+## Step 7 — Security groups
+
+Two security groups are typically enough:
+
+- **ALB SG**: ingress `443/tcp` from `0.0.0.0/0` (public hostname).
+- **Task SG**: ingress `8080/tcp` from the **ALB SG** only; egress to RDS port `5432/tcp` and HTTPS `443/tcp` (for the OIDC provider, image pulls, and Secrets Manager).
+
+The RDS security group should permit `5432/tcp` from the **Task SG** only. Never expose RDS publicly.
+
+## OIDC redirect URI
+
+The OIDC provider's registered redirect URI must exactly match `${APP_HOST}/auth/callback`. With the ALB terminating TLS, `APP_HOST=https://<your-public-hostname>`. ECS sets `X-Forwarded-Proto` automatically; Aletyx Enterprise Build of Kogito and Drools respects it when `FORWARD_HEADERS_STRATEGY=framework` is set (the default in 1.6.0+).
+
+Common pitfall: the registered redirect URI in Entra / Keycloak still pointing at the old ALB DNS name from a previous test environment. Update the registration when promoting to a new ALB / hostname.
+
+## Logging and observability
+
+The `awslogs` driver in the task definition streams stdout/stderr to a CloudWatch Logs group (`/<your-namespace-prefix>/<your-app-name>` in the example). Set a retention policy on the log group to control cost:
+
+```sh
+aws logs put-retention-policy \
+  --log-group-name /<your-namespace-prefix>/<your-app-name> \
+  --retention-in-days 30
+```
+
+For metrics, both ECS Service Metrics (CPU, memory, task count) and the application's own `/actuator/prometheus` endpoint are available. Wire the latter via a CloudWatch agent sidecar or an OTel collector if you already operate one — Aletyx Enterprise Build of Kogito and Drools workloads don't ship a metrics-export sidecar by default.
+
+## Database connectivity
+
+RDS in the same VPC is the production-recommended path. The task accesses the RDS endpoint via the private route. Use `iam` database authentication if your operating model already standardises on IAM credentials; otherwise the password-in-Secrets-Manager pattern shown above is the path of least resistance.
+
+For evaluation only, RDS Single-AZ + Burstable instance is sufficient. Production should run Multi-AZ + Provisioned IOPS or gp3 storage.
+
+## Operational tasks
+
+### Deploying a new image
+
+```sh
+# Update the task definition's image (jq + register-task-definition is the common
+# pattern; the AWS Console works the same).
+aws ecs update-service \
+  --cluster <your-cluster-name> \
+  --service <your-app-name> \
+  --task-definition <your-app-name>:<new-revision>
+```
+
+The service rolls forward task-by-task; the ALB drains old tasks once new ones report healthy.
+
+### Rotating a secret
+
+Update the secret value in Secrets Manager. Existing tasks continue to hold the old value in memory — they pick up the new one on the next start. Force a rotation by `aws ecs update-service --force-new-deployment`, which restarts tasks without changing the task definition.
+
+### Scaling manually
+
+```sh
+aws ecs update-service \
+  --cluster <your-cluster-name> \
+  --service <your-app-name> \
+  --desired-count 4
+```
+
+## Troubleshooting
+
+### Task stops immediately with `ResourceInitializationError`
+
+The execution role can't fetch the registry credentials or one of the Secrets Manager values. Check CloudTrail for `GetSecretValue` denials and confirm the role has access to every secret referenced in the task definition.
+
+### Task stops with `Essential container exited` after a few seconds
+
+Usually a startup failure inside the app. The first place to look is CloudWatch Logs at `/<your-namespace-prefix>/<your-app-name>/<stream>` — `kubectl logs --previous` equivalent. The two common causes are a stale schema (`HIBERNATE_DDL_AUTO=validate` against a DB without the latest migrations) and an `Unable to acquire JDBC Connection` from a misconfigured `SPRING_DATASOURCE_URL` or a Security Group that denies port 5432.
+
+### ALB target stuck `unhealthy`
+
+If the task is `Running` but the ALB target is `unhealthy`:
+
+- Confirm the target group port matches the container port (8080 by default).
+- Confirm the security group on the task allows ingress from the ALB SG on port 8080.
+- Curl the health endpoint from a bastion or another task in the same SG: `curl -v http://<task-private-ip>:8080/actuator/health`.
+
+A target that takes longer than `health-check-grace-period-seconds` to come healthy will be terminated and replaced — increase the grace period to 90–120 seconds for cold JVM starts.
+
+### OIDC `redirect_uri_mismatch`
+
+The OIDC provider's registered redirect URI does not exactly equal `${APP_HOST}/auth/callback`. Common causes: missing `/auth/callback` path, `http://` vs. `https://`, or a stale ALB DNS name still registered with the provider.
+
+### Costs are higher than expected
+
+If you launched with Fargate and the workload is steady-state high-utilisation, EC2 launch type is usually 30–50% cheaper at the per-vCPU-hour level. Capacity Providers let you mix Fargate (baseline) with Fargate Spot (burst) for additional savings on non-critical environments.

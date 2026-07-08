@@ -1,0 +1,108 @@
+---
+title: "Architecture"
+description: "How the Decision Control Tower Sidecar is structured — the workflow engine, process and task state, callback client, and optional integrations."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower-sidecar/architecture/"
+---
+
+The Aletyx Decision Control Tower Sidecar is a single, stateless container that runs the governance workflows for Aletyx Decision Control Tower. Conceptually it has four parts:
+
+- **Workflow engine** — hosts and executes the promotion/approval workflow definitions.
+- **Process & task state** — the runtime state and history (the Data Index surface) that Tower reads.
+- **Callback client** — authenticated outbound calls into Tower Core.
+- **Integration services** *(optional)* — outbound connectors (Git, messaging, REST) invoked from within a workflow, off by default.
+
+> A layered diagram in the house style (`.d2` → `.svg`, light + dark) should be authored under `docs/assets/diagrams/...` to match DC/Tower. Tracked as an open item.
+
+The Sidecar talks *back* to Tower Core through authenticated callbacks; Tower talks *inward* to the Sidecar to start and advance workflows and to query process and task history.
+
+## Core vs. Customizable
+
+The Sidecar is a **starter project**: it ships working examples you adapt. Its parts fall into two layers, and the boundary between them is the contract that keeps a customized Sidecar compatible with Aletyx Decision Control Tower.
+
+| Layer | What it contains | Customizable? |
+|---|---|---|
+| **Core (fixed)** | The Tower integration — the callback client and the **request/response contracts** for start, promote/deploy, notifications, and model retrieval. | ❌ No |
+| **Customizable** | The **workflow definitions** and the **example actions** (service steps) they invoke. | ✅ Yes |
+
+You encode your approval policy in the **workflow layer**; the **core layer** is what Tower depends on and must not change.
+
+<Warning>
+**Do not change the Tower contract**
+
+Adapt workflows and actions freely, but leave the core integration classes and the request/response payloads exactly as shipped. Tower calls and is called by the Sidecar through these contracts; altering them is what breaks a deployment — not customizing a workflow.
+</Warning>
+
+## Key Architectural Principles
+
+### A Fixed Tower Contract, a Free Workflow Layer
+
+The Sidecar's value is that the **approval policy is data, not platform code**. The workflow definitions and their actions are yours to change; the integration with Tower — the callbacks and their request/response shapes — is a fixed contract. This split lets you tailor governance deeply while staying upgrade-compatible with the platform.
+
+### Workflow-Driven Governance
+
+Every promotion is a long-running governance workflow, not an ad-hoc API call. The approval policy lives in the **workflow definition** hosted in the Sidecar, so the flow can evolve — extra stages, different assignment, post-approval integrations — without changing Tower Core.
+
+### Stateless Container, Dedicated Database
+
+The Sidecar holds no durable state in the container itself; all process, task, and job state lives in **its own PostgreSQL database**, distinct from Tower's. Schemas are never shared between Tower and the Sidecar. This keeps the container restartable and horizontally replaceable.
+
+### Authenticated Callback Boundary
+
+The Sidecar reaches Tower Core only through the callback endpoints under `/api/v1/workflow/callbacks/**`, authenticated by the shared `ALETYX_OIDC_CALLBACK_SECRET`. The same trust boundary covers every callback (promotion deploy, notifications, and model retrieval). Both components must hold the same secret value.
+
+### Governance Is Never Blocked by Optional Steps
+
+Optional integration steps (Git versioning, messaging) are **best-effort**: when disabled or unreachable they no-op and log, rather than aborting an approved promotion. The governance outcome does not depend on an external service being available.
+
+### On-Demand Model Retrieval
+
+The Sidecar does not hold the promoted model's files. When a workflow step needs them (for example, to commit to Git), it requests them from Tower on demand through a callback; Tower resolves the unit from the promotion record and returns the package. The retrieval is scoped to the workflow's own promotion.
+
+## Components
+
+### Workflow Engine
+
+Hosts the workflow definitions and executes process instances. Responsibilities:
+
+- Run the `standard_promotion` workflow and any customized governance workflows.
+- Create and transition user tasks for the appropriate group at each step.
+- Invoke service steps (callbacks, optional integrations) as the flow advances.
+
+### Process & Task State (Data Index)
+
+Exposes the query surface Tower reads for the task inbox and audit trail — process instances, task history, and per-process metrics — plus the audit-trail process-diagram (SVG) rendering.
+
+### Callback Client
+
+Makes authenticated calls into Tower Core: advancing the promotion on approval (deploy), sending notifications, and fetching the model package for versioning.
+
+### Integration Services (optional)
+
+Connectors invoked from a workflow when explicitly enabled per deployment — see [Configuration](/decision-control-tower-sidecar/deployment/configuration) and [Git Model Versioning](/decision-control-tower-sidecar/how-to/git-model-versioning).
+
+## Promotion Workflow (`standard_promotion`)
+
+<Warning>
+**`standard_promotion` is an example**
+
+This and the other two shipped workflows are examples that demonstrate the pattern — not production approval policy. Use them to learn the shape, then author your own. See [Customize the Promotion Workflow](/decision-control-tower-sidecar/how-to/customize-workflow).
+</Warning>
+
+The core workflow gates a promotion with human review. Tower Core records a promotion request and starts `standard_promotion` in the Sidecar; the workflow produces an **Approve** task for the `tower-approvers` group, with a **Change-Request** loop back to the requester. On final approval the Sidecar calls back into Tower Core, which copies the model from the source environment to the target.
+
+For the end-to-end sequence (including the callbacks), see the Tower [Architecture](/decision-control-tower/architecture) and [Tasks](/decision-control-tower/tasks) chapters.
+
+## Governance Workflow with External Integrations
+
+A customizable variant extends an approved promotion with outbound integrations. A typical flow runs review → **commit the model to Git** → call an external REST API → **post a completion message**. Each integration step is independently toggled and best-effort.
+
+To obtain the model's files for the Git step, the Sidecar calls a Tower callback that returns the unit's package (resolved from the promotion). The files are committed under a folder named after the unit, mirroring the package contents. See [Git Model Versioning](/decision-control-tower-sidecar/how-to/git-model-versioning) for the customization and configuration details.
+
+## Integrations
+
+| Integration | Direction | Purpose | Default |
+|---|---|---|---|
+| **Tower Core callbacks** | Sidecar → Tower | Advance promotion (deploy), notifications, model retrieval | Always on (secret-authenticated) |
+| **Git repository** | Sidecar → Git host | Commit the promoted model's files | Off |
+| **Messaging (e.g. Slack)** | Sidecar → messaging API | Post promotion-completion messages | Off |
+| **REST callout** | Sidecar → external API | Call an external service from a workflow step | Off |

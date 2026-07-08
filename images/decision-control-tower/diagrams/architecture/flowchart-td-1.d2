@@ -1,0 +1,65 @@
+direction: down
+
+vars: {
+  d2-config: {
+    sketch: true
+    theme-id: 200
+  }
+}
+
+classes: {
+  node: {
+    shape: rectangle
+    style: { fill: "#E0F2F1"; font-color: "#000000"; font-size: 34; bold: true }
+  }
+  store: {
+    shape: cylinder
+    style: { fill: "#FFF3E0"; font-color: "#000000"; font-size: 34; bold: true }
+  }
+}
+
+# Frontend Layer
+frontend: Frontend Layer {
+  ui: "Tower UI\n(Web Portal)" { class: node }
+}
+
+# Backend Layer
+backend: Backend Layer {
+  core: "Tower Core" { class: node }
+}
+
+# Workflow Layer
+workflow: Workflow Layer {
+  sidecar: "Tower Sidecar\n(Workflow Engine)" { class: node }
+  dataindex: Data Index { class: node }
+}
+
+# Data Layer
+data: Data Layer {
+  db: "Tower DB" { class: store }
+}
+
+# Identity & Messaging
+ext: Identity & Messaging {
+  oidc: "OIDC Provider" { class: node }
+  smtp: SMTP { class: node }
+}
+
+# Governed Decision Control environments
+envs: Governed Environments {
+  dev: "Decision Control\nDEV" { class: node }
+  test: "Decision Control\nTEST" { class: node }
+  prod: "Decision Control\nPROD" { class: node }
+}
+
+frontend.ui -> backend.core { style.animated: true }
+backend.core -> data.db { style.animated: true }
+backend.core -> workflow.sidecar { style.animated: true }
+workflow.sidecar -> backend.core { style.animated: true }
+backend.core -> workflow.dataindex { style.animated: true }
+ext.oidc -> frontend.ui { style.animated: true }
+ext.oidc -> backend.core { style.animated: true }
+backend.core -> ext.smtp { style.animated: true }
+backend.core -> envs.dev { style.animated: true }
+backend.core -> envs.test { style.animated: true }
+backend.core -> envs.prod { style.animated: true }

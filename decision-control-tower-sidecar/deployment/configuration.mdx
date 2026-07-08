@@ -1,0 +1,80 @@
+---
+title: "Decision Control Tower Sidecar — Configuration"
+sidebarTitle: "Configuration"
+description: "Environment-variable reference for the Decision Control Tower Sidecar — database, callbacks, and optional integrations."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower-sidecar/deployment/configuration/"
+---
+
+The Sidecar is configured entirely through environment variables. This chapter is the reference; for how to run it, see [Deployment](/decision-control-tower-sidecar/deployment/overview).
+
+## Core
+
+| Variable | Default | Description |
+|---|---|---|
+| `APP_HOST` | `localhost` | Bind address. Set to `0.0.0.0` in a container. |
+| `BACKEND_PORT` | `8080` | HTTP port the Sidecar listens on. |
+| `SPRING_PROFILES_ACTIVE` | `prod` | Active configuration profile. |
+
+## Database
+
+The Sidecar requires its **own** PostgreSQL database — never share a schema with Tower.
+
+| Variable | Default | Description |
+|---|---|---|
+| `ALETYX_DC_TOWER_SIDECAR_DB_URL` | (required) | JDBC URL, e.g. `jdbc:postgresql://sidecar-postgres:5432/decision_tower_sidecar`. |
+| `ALETYX_DC_TOWER_SIDECAR_DB_USERNAME` | (required) | Database user. |
+| `ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD` | (required) | Database password. Source from a secret manager. |
+
+## Tower callbacks
+
+How the Sidecar reaches Tower Core. The secret must match the value configured on Tower.
+
+| Variable | Default | Description |
+|---|---|---|
+| `ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL` | (required) | Base URL of Tower Core, e.g. `http://decision-control-tower:8080`. |
+| `ALETYX_OIDC_CALLBACK_SECRET` | (empty) | Shared secret authenticating Sidecar → Tower callbacks. **Must match Tower.** Rotate on both sides simultaneously. |
+
+## Integrations (optional)
+
+These variables configure the example actions. An action only runs if the **workflow includes it** — there is no single "integrations" switch. Git push additionally has its own master switch (`…GITHUB_ENABLED`, default `false`); Slack has no enable flag and simply stays inactive until a token and channel are set. With the shipped defaults, an approved promotion performs no outbound Git or messaging calls.
+
+<Warning>
+**Never ship credentials in the image**
+
+Provide tokens **only** through environment variables / your secret manager. Do not bake them into configuration files or images — a token committed to a repository will be detected and revoked.
+</Warning>
+
+### Git versioning
+
+Commits the promoted model's files to a Git repository on approval. See [Git Model Versioning](/decision-control-tower-sidecar/how-to/git-model-versioning).
+
+| Variable | Default | Description |
+|---|---|---|
+| `ALETYX_DC_TOWER_SIDECAR_GITHUB_ENABLED` | `false` | Master switch. When `false`, the Git step is a no-op and no model is fetched. |
+| `ALETYX_DC_TOWER_SIDECAR_GITHUB_API_URL` | `https://api.github.com` | Git host API base URL. |
+| `ALETYX_DC_TOWER_SIDECAR_GITHUB_TOKEN` | (empty) | Access token with **Contents: read and write** on the target repository. |
+| `ALETYX_DC_TOWER_SIDECAR_GITHUB_REPO` | (empty) | Target repository in `owner/repo` form. |
+| `ALETYX_DC_TOWER_SIDECAR_GITHUB_BRANCH` | `main` | Branch to commit to. |
+| `ALETYX_DC_TOWER_SIDECAR_GITHUB_COMMITTER_NAME` | `Aletyx Tower` | Commit author/committer name. |
+| `ALETYX_DC_TOWER_SIDECAR_GITHUB_COMMITTER_EMAIL` | `tower@aletyx.ai` | Commit author/committer email. |
+
+### Messaging (Slack)
+
+Posts a message when a promotion completes.
+
+| Variable | Default | Description |
+|---|---|---|
+| `ALETYX_DC_TOWER_SIDECAR_SLACK_API_URL` | `https://slack.com/api` | Messaging API base URL. |
+| `ALETYX_DC_TOWER_SIDECAR_SLACK_TOKEN` | (empty) | Bot token. Blank disables messaging. |
+| `ALETYX_DC_TOWER_SIDECAR_SLACK_CHANNEL` | (empty) | Target channel ID. Blank disables messaging. |
+
+### REST callout
+
+| Variable | Default | Description |
+|---|---|---|
+| `ALETYX_DC_TOWER_SIDECAR_HOLIDAYS_API_URL` | `https://date.nager.at` | Base URL for the example public-REST callout used by the integration workflow. |
+
+## Next Steps
+
+- [Git Model Versioning](/decision-control-tower-sidecar/how-to/git-model-versioning): enable and use the Git integration
+- [Architecture](/decision-control-tower-sidecar/architecture): how these pieces fit together

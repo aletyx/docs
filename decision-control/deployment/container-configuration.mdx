@@ -1,0 +1,169 @@
+---
+title: "Container Configuration"
+description: "Runtime requirements, environment variables, secrets, and example run commands for the Decision Control container."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/deployment/container-configuration/"
+---
+
+Decision Control ships as an OCI container image built on Eclipse Temurin 17. The image bundles the Spring Boot backend and the embedded single-page frontend; no separate web server is required.
+
+## Runtime requirements
+
+| Resource | Minimum | Recommended | Notes                                                              |
+| -------- | ------- | ----------- | ------------------------------------------------------------------ |
+| CPU      | 0.5 vCPU| 1–2 vCPU    | Burst on startup (JIT + schema validation)                         |
+| Memory   | 1 GiB   | 2 GiB       | JVM heap + metaspace + native. Set the container limit ≥ heap + ~512 MiB |
+| Disk     | minimal | —           | Stateless; all persistent data lives in PostgreSQL                 |
+
+| Requirement       | Detail                                                            |
+| ----------------- | ----------------------------------------------------------------- |
+| Outbound network  | Reach the database, the OIDC provider, and (optionally) the AI model provider |
+| Inbound network   | One HTTP port (`8080` by default) for UI + API + health           |
+| Filesystem        | Runs as a non-root user; no writable volume required              |
+
+## Environment variables
+
+### Server
+
+| Variable      | Default                 | Description                                                                                          |
+| ------------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| `APP_HOST`    | `http://localhost:8080` | Public URL of the application. Used by the frontend to build OIDC redirect URIs and for absolute links. **Must match the externally-reachable hostname.** |
+| `SPRING_PROFILES_ACTIVE` | `postgres`   | Selects the persistence profile. Use `postgres` for production.                                      |
+| `CORS_PROXY_ALLOWED_ORIGINS` | (empty)     | Comma-separated origins allowed for the CORS proxy. Set to the public hostname.                      |
+
+### Database
+
+See [Database Configuration](/decision-control/deployment/database-configuration). The container reads `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, and `HIBERNATE_DDL_AUTO`.
+
+### OIDC / Security
+
+See [Identity & Access Management](/decision-control/deployment/identity-access-management) for the full provider walkthrough. The container reads the `ALETYX_OIDC_*` family:
+
+| Variable                        | Default                | Description                                  |
+| ------------------------------- | ---------------------- | -------------------------------------------- |
+| `ALETYX_OIDC_PROVIDER`          | `entra`                | `entra`, `keycloak`, or `none`               |
+| `ALETYX_OIDC_CLIENT_ID`         | (empty)                | OAuth2 client ID                             |
+| `ALETYX_OIDC_SCOPES`            | `openid,profile,email` | Comma-separated scopes                       |
+| `ALETYX_OIDC_ROLE_CLAIM_PATH`   | `roles`                | JSON path to the roles claim                 |
+| `ALETYX_OIDC_TENANT_CLAIM_NAME` | `tenant_id`            | Tenant claim; set to `tid` for Entra         |
+| `ALETYX_OIDC_TENANT_DEFAULT_ID` | `0`                    | Tenant when the token has no tenant claim    |
+| `ALETYX_OIDC_ENTRA_TENANT_ID`   | (empty)                | Microsoft Entra tenant ID                    |
+| `ALETYX_OIDC_ENTRA_AUDIENCE`    | (empty)                | Token audience expected by the backend       |
+| `ALETYX_OIDC_ENTRA_CLIENT_SECRET` | (empty)              | Entra confidential client secret (sensitive) |
+| `ALETYX_OIDC_KEYCLOAK_ISSUER_URI` | (empty)              | Keycloak realm issuer URI                    |
+| `ALETYX_OIDC_KEYCLOAK_JWK_SET_URI`| (empty)              | Keycloak JWK set URI                         |
+| `ALETYX_OIDC_KEYCLOAK_CLIENT_ID`  | (empty)              | Keycloak client ID                           |
+| `ALETYX_OIDC_KEYCLOAK_CLIENT_SECRET` | (empty)           | Keycloak confidential client secret (sensitive) |
+| `ALETYX_OIDC_INTERNAL_SECRET`   | (empty)                | Shared secret for Tower → DC calls; sensitive. Set only when integrated with Decision Control Tower. |
+| `ALETYX_OIDC_RBAC_ENABLED`      | `false`                | Master toggle for URL-level RBAC             |
+| `ALETYX_OIDC_RBAC_ROLES_ALLOWED_*` | (empty)             | Per-action role allow-lists — see the OIDC chapter |
+
+### Logging
+
+Logging defaults to `INFO` at the root. Raise specific loggers via standard Spring Boot `LOGGING_LEVEL_*` environment variables when debugging a code path; revert before normal operation.
+
+## Secrets handling
+
+The image accepts secret values via plain environment variables. **Never embed secrets in the image, in command-line arguments, or in version-controlled configuration.** Use the secret-management primitive of your platform:
+
+- **Container / Podman**: pass secrets via `--env-file <file>` with restrictive permissions (`chmod 600`), or Container/Podman secrets.
+- **Kubernetes**: use a `Secret` referenced via `envFrom` or `valueFrom.secretKeyRef`; enable encryption at rest. If your platform integrates an external secret store, surface the values as environment variables — the container only consumes environment variables.
+- **OpenShift**: use a `Secret` and inherit the tenant's encryption-at-rest policy.
+
+Sensitive variables: `SPRING_DATASOURCE_PASSWORD`, `ALETYX_OIDC_ENTRA_CLIENT_SECRET` (or `ALETYX_OIDC_KEYCLOAK_CLIENT_SECRET`), `ALETYX_OIDC_INTERNAL_SECRET`.
+
+## Container registry authentication
+
+The Decision Control image is distributed from a private container registry. Credentials are issued per organization; the username is typically your account email and the password is an API token created in your account settings.
+
+On Container / Podman, log in once on the host that pulls the image:
+
+```sh
+docker login <your-registry> \
+  -u <your-account-email> \
+  -p <your-api-token>
+```
+
+On Kubernetes, create a `docker-registry` Secret in the target namespace and reference it from the `imagePullSecrets` of the Decision Control Deployment (see [Kubernetes & OpenShift Deployment](/decision-control/deployment/kubernetes-openshift-deployment)):
+
+```sh
+kubectl create secret docker-registry aletyx-registry \
+  --docker-server=<your-registry> \
+  --docker-username=<your-account-email> \
+  --docker-password=<your-api-token> \
+  --namespace=<your-namespace>
+```
+
+Rotate the token on the same cadence as your other infrastructure credentials. Recreating the Secret picks up the new token on the next image pull — running pods continue with their already-pulled image.
+
+## Example — container run (evaluation, no auth)
+
+```sh
+docker run --rm -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=postgres \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/dc \
+  -e SPRING_DATASOURCE_USERNAME=dc_app \
+  -e SPRING_DATASOURCE_PASSWORD=dc_app \
+  -e HIBERNATE_DDL_AUTO=update \
+  -e APP_HOST=http://localhost:8080 \
+  -e ALETYX_OIDC_PROVIDER=none \
+  registry.example.com/decision-control:<version>
+```
+
+## Example — production-shaped (Entra, env-file)
+
+```sh
+# dc.env  (chmod 600, never committed)
+SPRING_PROFILES_ACTIVE=postgres
+SPRING_DATASOURCE_URL=jdbc:postgresql://postgres.example.com:5432/dc
+SPRING_DATASOURCE_USERNAME=dc_app
+SPRING_DATASOURCE_PASSWORD=...
+HIBERNATE_DDL_AUTO=validate
+APP_HOST=https://dc.example.com
+CORS_PROXY_ALLOWED_ORIGINS=https://dc.example.com
+ALETYX_OIDC_PROVIDER=entra
+ALETYX_OIDC_CLIENT_ID=...
+ALETYX_OIDC_ENTRA_TENANT_ID=...
+ALETYX_OIDC_ENTRA_AUDIENCE=...
+ALETYX_OIDC_ENTRA_CLIENT_SECRET=...
+ALETYX_OIDC_TENANT_CLAIM_NAME=tid
+ALETYX_OIDC_RBAC_ENABLED=true
+ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS=dc-user,dc-admin
+```
+
+```sh
+docker run -d --name decision-control -p 8080:8080 \
+  --env-file dc.env \
+  registry.example.com/decision-control:<version>
+```
+
+## Health and verification
+
+The container exposes a single unauthenticated health endpoint, targeted by both Kubernetes probes:
+
+```
+GET /actuator/health
+```
+
+A healthy response is HTTP `200` with body:
+
+```json
+{
+  "status": "UP",
+  "groups": ["liveness", "readiness"]
+}
+```
+
+If the backend cannot reach the database, the overall status becomes `DOWN` and the endpoint returns a non-`200` status.
+
+The OIDC bootstrap endpoint:
+
+```
+GET /auth/config
+```
+
+returns the frontend's expected OIDC client configuration — useful for verifying the OIDC variables were read correctly without exercising a full login flow.
+
+## Operational considerations
+
+- The image runs as a **non-root** user.
+- The frontend reads runtime configuration from `GET /env.json`, which the backend renders from environment variables at startup. After changing environment variables, **restart the container** so the rendered `/env.json` reflects the new values. If a CDN sits in front, ensure `/env.json` is not cached (its path contains `.json`, which can match `*.js` caching rules).

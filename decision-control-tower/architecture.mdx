@@ -1,0 +1,195 @@
+---
+title: "Aletyx Decision Control Tower Architecture"
+sidebarTitle: "Architecture"
+description: "The Tower's components, how they communicate, and how it is deployed."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/architecture/"
+---
+
+<Info>
+**Keystone Edition Only**
+
+Aletyx Decision Control Tower is available exclusively in the **Keystone Edition** of Decision Control. It provides multi-environment governance, promotion workflows, and centralized auditing across your Decision Control estate.
+</Info>
+
+Aletyx Decision Control Tower sits *above* your Decision Control environments. It does not author or execute DMN itself — each environment runs its own Decision Control instance. Instead, the Tower coordinates those environments: it discovers their models, orchestrates approval workflows, promotes versions between environments, and records a complete audit trail. This document covers the Tower's components, how they communicate, and how it is deployed.
+
+## Architectural Overview
+
+Aletyx Decision Control Tower is composed of three deployable services plus its own data store, layered on top of the Decision Control environments it governs:
+
+- **Tower UI** — the unified web portal (environment browser, promotions, task inbox, audit trail)
+- **Tower Core** — the governance service: environment registry, promotion orchestration, task management, and auditing
+- **Tower Sidecar** — the workflow engine that runs the governance/approval workflows and exposes process and task state
+- **Tower data store** — holds the environment registry, promotion requests, audit data, and notification templates
+
+![Layered architecture diagram of Decision Control Tower: a Frontend Layer (Tower UI web portal), a Backend Layer (Tower Core), a Workflow Layer (Tower Sidecar workflow engine and Data Index), a Data Layer (Tower DB), plus Identity and Messaging (OIDC provider and SMTP), governing the Decision Control environments DEV, TEST and PROD](/images/decision-control-tower/diagrams/architecture/flowchart-td-1.svg)
+
+The Tower talks *outward* to each registered Decision Control environment over REST to browse units, versions, and models and to perform promotions, and talks *inward* to its sidecar to drive the `standard_promotion` workflow. The sidecar also serves the process and task history consumed by the Tower.
+
+## Key Architectural Principles
+
+### Separation of Governance from Execution
+
+The Tower never executes decisions. Each environment (DEV, TEST, PROD, …) is a fully independent Decision Control instance with its own data store. The Tower holds only governance state — who requested what, who approved it, and where each version lives — so that production decision execution is never coupled to the availability of the governance layer.
+
+### Workflow-Driven Promotion
+
+Every promotion is a long-running governance workflow, not an ad-hoc API call. When a model is submitted for promotion, Tower Core records a promotion request and starts the **`standard_promotion`** workflow in the Tower Sidecar. Human review becomes a review task assigned to the `tower-approvers` group, with a request-changes loop back to the requester. When the workflow reaches approval, the sidecar calls back into Tower Core, which copies the model from the source environment to the target. Because the policy lives in the workflow definition rather than in code, the approval flow can evolve (extra stages, different assignment) without changing Tower Core.
+
+### Resilient Service Boundaries
+
+The Tower depends on services that can be slow or unavailable — the sidecar and remote Decision Control instances. Every outbound call is made through a resilient client protected by a circuit breaker with a fallback, so a degraded environment surfaces as a clear health signal rather than cascading failures.
+
+### Tenant Isolation by Default
+
+All persistent data is tenant-scoped. The tenant identity is derived from the authenticated user's token claims and applied automatically to every data access — tenant ID is never accepted as an API parameter. This keeps multi-tenant deployments isolated without per-query boilerplate.
+
+## Core Components
+
+### Tower UI
+
+The unified web portal.
+
+- Served as static assets (no server-side rendering)
+- OAuth2 / OIDC authentication; roles extracted from the access token
+- Home landing with service cards; sidebar workspaces: Environments, Promotions, Tasks (a promotion's history is reached from its detail page)
+
+### Tower Core
+
+The governance service — the heart of the Tower. It owns the Tower data store and integrates the sidecar and remote Decision Control instances. Its responsibilities are:
+
+- The environment registry and model discovery across governed environments
+- Promotion orchestration and the promotion-request lifecycle
+- Task management (the review inbox) backed by the sidecar
+- Tenant-scoped data access, authentication, and resilience policy
+
+### Tower Sidecar
+
+The workflow engine, packaged as a single deployable unit. It:
+
+- Hosts the promotion/approval workflow definitions
+- Manages workflow instances and human (review) tasks
+- Exposes process and task state, consumed by Tower Core
+- Invokes Tower Core callbacks when a workflow reaches a notification or completion step
+
+### Data Store
+
+The Tower keeps a small, governance-focused data model (schema is managed through versioned migrations and validated at startup — never auto-generated). Conceptually it holds:
+
+- **Environments** — registered Decision Control environments: name, internal and public URLs, display order, an enabled flag, and free-form tags.
+- **Promotion requests** — one per promotion, carrying the current status, the submitter, a snapshot of the submission (source/target environment, unit, version, justification), and the deployment outcome.
+- **Email templates** — per-tenant, per-locale notification templates.
+
+> **Audit trail.** There is no dedicated audit-log table. The promotion audit trail is reconstructed at read time from the workflow engine's process/task history joined with promotion-request status and submission/deployment snapshots.
+
+Email notification templates are seeded from a configuration file at startup, allowing notification content to be customized per deployment and locale.
+
+## Promotion Workflow (`standard_promotion`)
+
+A promotion moves a published model version from a source environment to a target environment, gated by human review. The orchestration is the `standard_promotion` workflow hosted in the Tower Sidecar.
+
+The workflow carries the promotion context as variables — `requester`, `source`, `target`, `justification`, `reviewOutcome`/`reviewComment`, `changeResult`/`changeComment` — and has two user tasks:
+
+| Task | Assigned to | Output | Effect |
+|------|-------------|--------|--------|
+| **Approve** | `tower-approvers` group | `reviewOutcome` = `APPROVED` \| `REJECTED` \| `REQUEST_CHANGES` | Approve → promote; Reject → end; Request changes → hand back to requester |
+| **ChangeRequest** | the original `requester` | `changeResult` = `RESUBMITTED` \| `CANCELLED` | Resubmit → loop back to Approve; Cancel → end |
+
+![State diagram of the standard promotion workflow: a ChangeRequest raised by the requester can be Approved by tower-approvers and Promoted, or it can be Rejected or Cancelled](/images/decision-control-tower/diagrams/architecture/state-1.svg)
+
+End-to-end, including the callbacks into Tower Core:
+
+![Sequence diagram of the promotion workflow among Tower UI, Tower Core, Tower Sidecar and the source and target environments: a promotion request is submitted and recorded, the workflow starts, a review task is created and approved, and the workflow advances to deploy to the target environment](/images/decision-control-tower/diagrams/architecture/sequence-1.svg)
+
+If the reviewer chooses **REQUEST_CHANGES**, the workflow routes to a **ChangeRequest** task owned by the requester, who can **RESUBMIT** (returning to the Approve task) or **CANCEL** the promotion. The lifecycle of the persisted promotion request mirrors these workflow states; transitions are validated against the request's current state before being applied, so a callback can only advance a request that is actually in the expected state.
+
+## Integrations
+
+| Integration | Purpose | Resilience |
+|-------------|---------|------------|
+| **Tower Sidecar** | Start/advance workflow processes and tasks | Circuit breaker + fallback |
+| **Process/task history** | Query process and task history | Circuit breaker |
+| **Decision Control** | Browse units/versions/models, perform promotions | Typed error handling |
+| **OIDC Provider** | Authentication and role claims | Strategy selected by configuration |
+| **Email (SMTP)** | Workflow notification emails | Enabled via configuration toggle |
+
+## Security Architecture
+
+### Authentication & Authorization
+
+Tower Core is an OAuth2 / OIDC resource server. The active provider is selected by configuration:
+
+- **Entra (Azure AD)** — default; validates tokens against the configured tenant and audience
+- **Keycloak** — validates against the configured issuer / signing keys
+- **none** — local development only; injects a synthetic identity and roles
+
+Roles are read from a configurable token claim path (`aletyx.oidc.role-claim-path`, default `roles`) and drive access to governance actions. All `/api/**` routes require authentication, except the sidecar callback override.
+
+### Tenant Scoping
+
+The tenant ID is resolved from a configurable token claim (default `tenant_id`, with fallbacks) into a request-scoped tenant context, and is applied automatically to every data access so queries are always constrained to the caller's tenant.
+
+### Error Handling
+
+All error responses use the standardized problem-details format (RFC 7807). Internal details, upstream response bodies, and configuration paths are never leaked to API clients; CSV exports sanitize formula-injection characters.
+
+## Deployment
+
+Aletyx Decision Control Tower and the environments it governs are deployed as independent units, typically in Kubernetes or OpenShift.
+
+```yaml
+Namespace: decision-control-tower
+  ├── tower-ui            # web portal (static assets)
+  ├── tower-core          # governance service
+  │   └── data store      # Tower governance database
+  ├── tower-sidecar       # workflow runtime
+  └── (OIDC provider, SMTP — typically external)
+
+Governed environments (each independent):
+  ├── decision-control-dev   →  data store (dev)
+  ├── decision-control-test  →  data store (test)
+  └── decision-control-prod  →  data store (prod)
+```
+
+### Configuration
+
+Tower Core is configured entirely through environment variables (with sensible defaults). Key groups:
+
+| Variable prefix | Configures |
+|-----------------|------------|
+| `ALETYX_DC_TOWER_DB_*` | Database connection |
+| `ALETYX_DC_TOWER_SIDECAR_URL` | Tower Sidecar base URL |
+| `ALETYX_DC_TOWER_DATA_INDEX_URL` | Process/task history base URL |
+| `ALETYX_DC_TOWER_SMTP_*` / `ALETYX_DC_TOWER_EMAIL_*` | Notification email |
+| `ALETYX_DC_TOWER_CORS_ALLOWED_ORIGINS` | Allowed UI origins |
+| `ALETYX_OIDC_*` | Auth provider, audience, tenant claim, roles |
+| `ALETYX_OIDC_CALLBACK_SECRET` | Shared secret for sidecar callbacks |
+| `ALETYX_DC_TOWER_CB_*` | Circuit-breaker tuning |
+
+For complete deployment instructions, see the [Deployment](/decision-control-tower/deployment/overview) chapter, in particular [Container Configuration](/decision-control-tower/deployment/container-configuration) and [Identity & Access Management](/decision-control-tower/deployment/identity-access-management).
+
+## Observability
+
+### Health Checks
+
+```bash
+# Tower Core health
+curl http://localhost:8080/actuator/health
+```
+
+Tower Core also actively probes each registered environment's health on a configurable interval (`ALETYX_DC_TOWER_HEALTH_INTERVAL_MS`) and surfaces an aggregate view to the dashboard.
+
+### Resilience Signals
+
+Circuit-breaker state for the sidecar and process/task-history integrations is exposed through `/actuator/circuitbreakers` and `/actuator/circuitbreakerevents`, giving operators direct visibility into degraded upstreams.
+
+### Logging
+
+Structured logging, with sensitive values redacted. Errors are mapped to typed exceptions and returned as standardized problem-details responses without leaking internals.
+
+## Next Steps
+
+- [Portal Tour](/decision-control-tower/dashboard): Learn the Aletyx Decision Control Tower interface
+- [Environment Management](/decision-control-tower/environments): Configure and manage environments
+- [Task Management](/decision-control-tower/tasks): Work with approval tasks
+- [Deployment](/decision-control-tower/deployment/overview): Deploy Aletyx Decision Control Tower in your cluster

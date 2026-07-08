@@ -1,0 +1,143 @@
+---
+title: "Supported Operating Environments"
+description: "Compatibility matrix for runtimes, orchestrators, databases, identity providers, and browsers."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/deployment/supported-operating-environments/"
+---
+
+This chapter defines the platforms and component versions Aletyx supports for the current release of Decision Control Tower. The compatibility matrix reflects what is **tested and supported by Aletyx**; running on a configuration outside this matrix is technically possible in many cases but not covered by support agreements.
+
+## Container runtimes
+
+| Runtime           | Tested versions  | Notes                                                                                                              |
+| ----------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Container Engine** | 24.x, 25.x, 26.x | Linux installs (kernel 5.15+). Docker Desktop on macOS / Windows works for evaluation.                             |
+| **Podman**        | 4.x, 5.x         | Rootless mode supported. Use `podman` commands as drop-in replacements for the `docker run` examples in chapter 3. |
+| **containerd**    | 1.7.x            | Used directly when running on Kubernetes / OpenShift; not typically used as a standalone CLI.                      |
+| **CRI-O**         | 1.27+            | The default CRI on OpenShift; passes the same conformance as containerd.                                           |
+
+The container image is built and published as a multi-architecture manifest via Container Buildx and signed with cosign. All architectures supported by Buildx are covered (`linux/amd64`, `linux/arm64`, `linux/arm/v7`, etc.); the container runtime selects the variant matching the host transparently. Validate the cosign signature before promoting an image into a production registry.
+
+## Orchestration platforms
+
+| Platform                            | Tested versions              | Notes                                                                                            |
+| ----------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Kubernetes (vanilla / upstream)** | 1.26, 1.27, 1.28, 1.29, 1.30 | Reference deployment target. Manifests in chapter 4 work without modification.                   |
+| **Red Hat OpenShift**               | 4.12, 4.13, 4.14, 4.15       | Default `restricted-v2` SCC is sufficient. See chapter 4 for `Route` and `ImageStream` examples. |
+| **K3s / RKE2**                      | k3s v1.28+                   | Treat as vanilla Kubernetes with Traefik as the default ingress.                                 |
+| **Amazon EKS**                      | 1.27+                        | Tested with the AWS Load Balancer Controller and EBS CSI driver.                                 |
+| **Azure AKS**                       | 1.27+                        | Tested with NGINX or Application Gateway ingress.                                                |
+| **Google GKE**                      | 1.27+ Standard & Autopilot   | Autopilot requires explicit resource requests, which the manifests already declare.              |
+
+Single-node evaluation deployments via Container / Podman are also supported (see chapter 3) but are not recommended for production use.
+
+## Java runtime
+
+The application is built and tested against:
+
+| JRE                              | Status                                                                                                   |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Eclipse Temurin 17**           | supported (this is what the published image bundles)                                                     |
+| **OpenJDK 17 LTS** distributions | supported (Adoptium, Microsoft, Oracle, Amazon Corretto)                                                 |
+| Java 11 or below                 | not supported (Spring Boot 3.x requires Java 17+)                                                        |
+| Java 21                          | not yet certified — may work but is not part of the support matrix until the next minor release of Tower |
+
+## Database engines
+
+| Database                                                                                                     | Versions                                   | Status                   |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------ | ------------------------ |
+| **PostgreSQL**                                                                                               | 14, 15, 16, 17, 18                         | primary supported engine |
+| MySQL / MariaDB                                                                                              | —                                          | not supported            |
+| Oracle DB                                                                                                    | —                                          | not supported            |
+| Microsoft SQL Server                                                                                         | —                                          | not supported            |
+| Cloud-managed PostgreSQL (Amazon RDS / Aurora, Azure Database for PostgreSQL, Google Cloud SQL, CrunchyData) | versions matching the supported list above | supported                |
+
+In production, the Tower and Sidecar databases must be separate. Sharing a database is not supported and would conflict on Flyway migration history.
+
+## Identity providers
+
+| Provider                             | Versions / tier              | Status                                                                                                                                                    |
+| ------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Microsoft Entra ID**               | tenant tier `Free` and above | supported. Some advanced workflows (group-based app role assignment) require **Entra ID P1**.                                                             |
+| **Keycloak**                         | 22, 23, 24, 25, 26           | supported. Standalone and Operator-managed deployments both work.                                                                                         |
+| **Red Hat Build of Keycloak (RHBK)** | 22+                          | supported (functionally identical to Keycloak upstream).                                                                                                  |
+| Auth0 / Okta / generic OIDC          | —                            | not currently supported as first-party providers. The `keycloak` provider mode follows the standard OIDC flow and may interoperate, but is not certified. |
+
+Both providers must support OpenID Connect Authorization Code Flow with PKCE optional, the standard set of scopes (`openid`, `profile`, `email`), and a configurable claim path for user roles.
+
+## Reverse proxy / ingress controllers
+
+| Controller                     | Tested versions | Notes                                                                                                                                                              |
+| ------------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Traefik**                    | 2.10+, 3.0+     | Example annotations included in chapter 4.                                                                                                                         |
+| **ingress-nginx**              | 1.10+           | Standard Ingress objects work without controller-specific annotations.                                                                                             |
+| **HAProxy / OpenShift Router** | 4.12+           | Native on OpenShift via `Route`; works as Ingress controller on vanilla Kubernetes.                                                                                |
+| **Cloudflare Tunnel**          | latest          | Optional, for internet-facing exposure when terminating TLS at Cloudflare's edge. Requires a Cloudflare Zero Trust subscription if combining with access policies. |
+
+The application has no requirements on the reverse proxy beyond:
+
+- Forwarding `Host`, `X-Forwarded-Proto`, and `X-Forwarded-For` headers
+- Terminating TLS upstream (the application speaks plaintext HTTP to the proxy)
+- Permitting WebSocket upgrades (used by select diagnostic endpoints)
+
+## Browser support (end-user)
+
+| Browser                                 | Status        |
+| --------------------------------------- | ------------- |
+| Chrome (latest two stable)              | supported     |
+| Firefox (latest two stable)             | supported     |
+| Edge (Chromium, latest two stable)      | supported     |
+| Safari (latest two stable, macOS / iOS) | supported     |
+| Internet Explorer                       | not supported |
+
+## Network requirements
+
+Outbound connectivity from the Tower pod / container:
+
+| Target                                    | Port                  | Protocol   | Notes                                  |
+| ----------------------------------------- | --------------------- | ---------- | -------------------------------------- |
+| OIDC provider                             | 443                   | HTTPS      | discovery, token, JWK endpoints        |
+| Tower Sidecar                             | 8080 (or as deployed) | HTTP       | typically same cluster                 |
+| Tower's PostgreSQL                        | 5432 (or as deployed) | TCP        | typically same cluster or VPC          |
+| Each registered Decision Control instance | depends on instance   | HTTP/HTTPS | Tower probes them at `dc-internal-url` |
+
+Inbound connectivity to the Tower pod:
+
+| Source                  | Port                     | Protocol | Notes                   |
+| ----------------------- | ------------------------ | -------- | ----------------------- |
+| Reverse proxy / ingress | 8080 (or `BACKEND_PORT`) | HTTP     | terminated TLS upstream |
+| Cluster control plane   | 8080                     | HTTP     | health probes           |
+
+## Compatibility matrix at a glance
+
+| Component          | Supported version                                   | Notes                                             |
+| ------------------ | --------------------------------------------------- | ------------------------------------------------- |
+| Tower image        | current release                                     | refer to the release notes shipped with the image |
+| Sidecar image      | matched pair with Tower                             | refer to the release notes shipped with the image |
+| Java runtime       | Temurin 17 (LTS)                                    | bundled in the image                              |
+| PostgreSQL         | 14–18                                               | primary engine                                    |
+| Microsoft Entra ID | Free tier+                                          | P1+ recommended for group-based authorization     |
+| Keycloak           | 22–26                                               | including Red Hat Build of Keycloak               |
+| Kubernetes         | 1.26–1.30                                           | vanilla and managed distributions                 |
+| OpenShift          | 4.12–4.15                                           | `restricted-v2` SCC sufficient                    |
+| Container runtime  | Docker 24+, Podman 4+, containerd 1.7+, CRI-O 1.27+ | linux/amd64 architecture                          |
+
+## Out-of-scope configurations
+
+Configurations explicitly **not supported** for production use:
+
+- Sharing a database between Tower and the Sidecar.
+- Running Tower as `root` inside the container, or with privilege-escalation enabled.
+- Cross-tenant deployments where a single Tower instance serves multiple Entra tenants.
+- Tower without a sidecar (some workflow features will silently no-op).
+
+## Versioning and release cadence
+
+- **Patch releases**: bug fixes and security patches. Backwards-compatible with the previous patch's configuration. No database migrations beyond what the corresponding minor release shipped.
+- **Minor releases**: may introduce additional configuration variables. Existing configuration remains valid; new variables either have safe defaults or fail-fast at startup with a clear log message.
+- **Database migrations**: forward-only via Flyway. Downgrade requires restoring a database backup taken before the upgrade.
+
+Customers under support receive release notes detailing exactly which environment variables are added, deprecated, or whose default has changed in any given release.
+
+## Where to verify the matrix for your release
+
+Each released image carries the deployment guide that applies to it under `/docs/deployment` in the package. If you are reading this guide outside the image, confirm the version at the top of [README.md](/decision-control-tower/deployment/overview) matches the version of the image you intend to deploy.

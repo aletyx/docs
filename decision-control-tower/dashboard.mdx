@@ -1,0 +1,105 @@
+---
+title: "Portal Tour"
+description: "A walkthrough of the Aletyx Decision Control Tower portal: the Home landing, sidebar workspaces, masthead controls, session model, and notification surfaces."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/dashboard/"
+---
+
+This chapter walks through the Aletyx Decision Control Tower portal: the Home landing, the sidebar workspaces you'll work from day to day, the top-masthead controls, the session model, and the notification surfaces.
+
+## Home landing
+
+When you sign in to Aletyx Decision Control Tower, you land on the **Home** page (`/`) - a hero with three service cards (**Environments**, **Promotions**, **Tasks**). Pick a card to enter that area. The sidebar is hidden on Home and appears once you open a service.
+
+## Navigation Structure
+
+Once inside a service, Aletyx Decision Control Tower uses a **collapsible** sidebar with three entries:
+
+### Environments
+
+View and manage all Decision Control environments (at `/environments`):
+
+- Launch individual environments
+- View environment health status (`online` / `offline`)
+- See live Units / Models / Versions counts per environment
+- Tag and filter environments
+
+See [How-to: Environments](/decision-control-tower/how-to/environments) for the full walkthrough.
+
+### Promotions
+
+Manage promotion requests through the `standard_promotion` workflow. The area is a full flow: a **list** of all requests (`/promotions`), a **New Promotion Request** form (`/promotions/new`), and a per-request **detail** page with Workflow and Timeline tabs.
+
+See [How-to: Promotions](/decision-control-tower/how-to/promotions).
+
+### Tasks
+
+Work with approval tasks. The sidebar entry carries a badge with the pending count.
+
+- View tasks assigned to your role
+- Approve, reject, or request changes
+- Add comments and justification
+- Resubmit or cancel after a change request (requester only)
+
+See [How-to: Governance Tasks](/decision-control-tower/how-to/governance-tasks).
+
+<Note>
+**Promotion history is per-promotion**
+
+There is no standalone *Audit Trail* sidebar entry. A promotion's immutable record is reached from its detail page - the **Timeline** tab and the full **history** view. See [How-to: Promotion History](/decision-control-tower/how-to/audit-trail).
+</Note>
+
+### Top masthead
+
+The masthead across the top of every screen carries the global controls:
+
+- **Logo** - returns to Home.
+- **About** - opens a dialog with **Build Version** and **Commit SHA**, useful when filing support tickets.
+- **Settings (cog) menu** - **Theme** toggle (Light / Dark, persisted per browser) and **Logout** (when enabled; clears the session and returns to the login screen).
+
+## User Information
+
+The sidebar displays your user information:
+
+- **Username**: Your authenticated identity
+- **Role**: Your assigned Decision Control role
+
+Your role determines which environments and features you can access.
+
+## Responsive Design
+
+Aletyx Decision Control Tower adapts to different screen sizes:
+
+### Desktop View
+
+Full sidebar with labels and icons. All features accessible.
+
+### Tablet View
+
+Condensed sidebar with icons. Full functionality maintained.
+
+### Mobile View
+
+Collapsible sidebar. Optimized for touch interaction.
+
+## Session Management
+
+Aletyx Decision Control Tower manages your session through:
+
+- **OAuth2 / OIDC Tokens**: Secure authentication against the configured OIDC provider (Microsoft Entra ID or Keycloak - the default profile is `entra`).
+- **Auto-Refresh**: Tokens refreshed before expiration.
+- **Logout**: Clear the session and return to the login screen.
+
+## Notifications
+
+Aletyx Decision Control Tower surfaces feedback through two channels:
+
+- **In-app toasts** - short success / error / warning / info banners that appear after a user action (submitting a promotion, claiming a task, saving an environment). Toasts are transient; they fade after a few seconds and are not persisted.
+- **Email** - Tower sends SMTP email when a promotion enters the review step, addressed to the configured notification group. The sender, SMTP host, and template path are wired through the `ALETYX_DC_TOWER_EMAIL_*` and `ALETYX_DC_TOWER_SMTP_*` environment variables (see [Container Configuration](/decision-control-tower/deployment/container-configuration#email-notification)).
+
+There is no in-app subscription model - task discovery is by polling the Tasks page. Use the email channel when reviewers need to be paged outside the app.
+
+## Next Steps
+
+- [Environment Management](/decision-control-tower/environments): Detailed environment configuration
+- [Task Management](/decision-control-tower/tasks): Working with approval tasks
+- [Deployment](/decision-control-tower/deployment/overview): Deploy Aletyx Decision Control Tower

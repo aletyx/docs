@@ -1,0 +1,321 @@
+---
+title: "Decision Control Architecture"
+description: "Core architecture of Decision Control, deployment patterns, and the extended Aletyx Decision Control Tower capabilities available in the Keystone edition."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/architecture/"
+---
+
+Decision Control provides a unified platform for authoring, testing, versioning, and executing business decisions. This document covers the core architecture of Decision Control, deployment patterns, and the extended Aletyx Decision Control Tower capabilities available in the Keystone edition.
+
+## Architectural Overview
+
+At its core, Decision Control is a containerized application that combines:
+
+- **User Interface**: browser-based interfaces for authoring, testing, and management
+- **Decision Service**: executes decision models and exposes the management and execution APIs
+- **AI Layer**: natural-language decision testing (Innovator+)
+- **Data Store**: persistent storage of models, versions, and execution history
+
+![Layered architecture diagram of Decision Control: a Frontend Layer (Authoring UI with DMN Editor, Prompt UI with AI Testing, Management UI with Monitoring); a Backend Layer (REST APIs on Spring Boot, DMN Engine on Apache KIE, Version Manager for multi-version execution); an AI Layer (Natural Language Processing, MCP Server for AI integration); and a Data Layer (PostgreSQL storing models and executions)](/images/decision-control/diagrams/architecture/flowchart-td-1.svg)
+
+## Key Architectural Principles
+
+### Single Unified Interface
+
+Decision Control consolidates decision management into one application:
+
+- **Author**: Create DMN decision models visually in your browser
+- **Test**: Validate decisions with sample data or natural language queries
+- **Publish**: Version and deploy models with one click
+- **Execute**: Run decisions via REST APIs with full traceability
+- **Manage**: Monitor execution history and performance
+
+This eliminates the need for separate tools or manual deployment pipelines.
+
+### Multi-Version Execution
+
+Unlike traditional Kogito deployments where you must manage version routing yourself, Decision Control handles this automatically:
+
+![Diagram comparing version management: in the Traditional Approach the app calls separate v1.0 and v2.0 endpoints and you manage routing; in the Decision Control Approach a single API endpoint serves multiple running versions (1.0, 2.0 and 3.0)](/images/decision-control/diagrams/architecture/flowchart-lr-2.svg)
+
+**Benefits:**
+
+- Deploy new versions without breaking existing integrations
+- Execute specific versions on demand
+- Compare execution results across versions
+- Roll back instantly by routing to previous versions
+- Audit trail shows which version handled each request
+
+### Built-In Auditing and Traceability
+
+Every decision execution is recorded with:
+
+- Input data provided
+- Output results generated
+- Model version used
+- Execution timestamp
+- Processing duration
+- User context (if applicable)
+
+This enables compliance reporting, debugging, and performance analysis without additional infrastructure.
+
+## Edition-Specific Architecture
+
+Decision Control editions build progressively on the core architecture:
+
+### Pioneer Edition
+
+Core decision management capabilities:
+
+![Component diagram of the Pioneer Edition: an Authoring UI over a DMN Execution Engine, Version Management and REST APIs, backed by PostgreSQL](/images/decision-control/diagrams/architecture/flowchart-td-3.svg)
+
+**Features:**
+
+- Visual DMN authoring and editing
+- Model versioning and publishing
+- Decision execution via REST API
+- Basic execution history
+- Single-user workflows
+
+### Innovator Edition
+
+Adds AI-powered capabilities:
+
+![Component diagram of the Innovator Edition: Authoring UI and Prompt UI over a DMN Execution Engine, Version Management, REST APIs and an AI/NLP layer with MCP Server, backed by PostgreSQL](/images/decision-control/diagrams/architecture/flowchart-td-4.svg)
+
+**Additional Features:**
+
+- **Prompt UI**: Test decisions using natural language
+  - "What happens if income is $85,000 and credit score is 720?"
+  - AI translates to decision inputs and explains outputs
+- **MCP Server**: Act as a Model Context Protocol server for AI agent integration
+- Enhanced testing and validation capabilities
+- Basic analytics dashboard
+
+### Horizon Edition
+
+Adds enterprise scalability:
+
+![Deployment diagram of the Horizon Edition: a Load Balancer fronts multiple Decision Control replicas (Replica 1, 2 through N), backed by a PostgreSQL primary-plus-replicas database](/images/decision-control/diagrams/architecture/flowchart-td-5.svg)
+
+**Additional Features:**
+
+- **Horizontal Scaling**: Multiple container replicas behind load balancer
+- **Management UI**: Monitoring, analytics, and administration
+- **Enhanced Metrics**: metrics endpoint for observability (Prometheus-compatible)
+- **Connection Pooling**: Optimized database connections for high throughput
+- Works naturally with Kubernetes autoscaling
+
+### Keystone Edition
+
+Adds multi-environment governance with Aletyx Decision Control Tower (see [Aletyx Decision Control Tower Architecture](#control-tower-architecture-keystone) below):
+
+- All Horizon features
+- Aletyx Decision Control Tower unified portal
+- Multi-environment coordination
+- Approval workflows with four-eyes enforcement
+- Complete audit trails
+
+## Core Components
+
+### REST API Layer
+
+The decision service exposes decision management and execution:
+
+```yaml
+# Model Management (units, versions, and models are created from an uploaded package)
+POST   /api/management/upload                                            # Upload models (creates unit/version/models)
+GET    /api/management/units                                             # List decision units
+GET    /api/management/units/{unitId}/versions                          # List versions
+GET    /api/management/units/{unitId}/versions/{versionId}/models       # List models
+
+# Decision Execution
+POST   /api/runtime/{tenant}/{unit}/{version}/{model}                    # Execute a decision
+GET    /api/runtime/{tenant}/{unit}/{version}/{model}/schema            # Get input schema
+
+# Execution History / Monitoring
+GET    /api/monitoring/executions                                       # Execution history
+GET    /api/monitoring/executions/{id}                                  # Execution details
+
+# Health and Monitoring
+GET    /actuator/health                                                 # Health check
+GET    /actuator/prometheus                                             # Metrics endpoint
+```
+
+### DMN Execution Engine
+
+A standards-compliant DMN execution engine:
+
+- **DMN Compliant**: Full support for the DMN standard
+- **FEEL Expression Language**: Business-friendly expression syntax
+- **Decision Tables**: Visual tabular logic
+- **Business Knowledge Models**: Reusable decision components
+- **Compiled Caching**: Models compiled once, executed many times
+
+### Version Manager
+
+Handles multi-version deployment and execution:
+
+- Maintains multiple active versions simultaneously
+- Routes execution requests to specified version
+- Manages version lifecycle (created → enabled → disabled)
+- Tracks version lineage and dependencies
+
+### Data Store
+
+Decision Control persists all model and execution state (schema is managed through versioned migrations and validated at startup — never auto-generated). Conceptually it holds:
+
+- **Units** — top-level decision units (name, description, status).
+- **Versions** — versioned snapshots of a unit (version number, status, source/commit metadata, and a "latest enabled" flag), each belonging to a unit.
+- **Models** — the DMN model content and its generated input schema, keyed by a content hash and reused across versions.
+- **Model references** — the association between a version and the models it contains, each carrying its own status; an enabled reference is what makes a model executable.
+- **Execution logs** — an immutable record of every decision execution: inputs, outputs, the unit/version/model and identity involved, timestamp, and status. Stored as a point-in-time snapshot so it survives later deletion of the referenced model.
+- **Refresh log** — internal signals used to keep runtime caches consistent across replicas.
+- **Revisions** — change-history records backing the configuration audit trail.
+
+Units, versions, and model references share a common lifecycle status: `JUST_CREATED`, `ENABLED`, or `DISABLED`.
+
+## Differentiators vs Traditional Kogito
+
+Decision Control addresses key limitations in traditional Kogito/Drools deployments:
+
+| Capability | Traditional Kogito | Decision Control |
+|------------|-------------------|------------------|
+| **Version Management** | Manual endpoint management per version | Automatic multi-version routing |
+| **Deployment** | Build JAR, deploy to server | Click to publish, instant deployment |
+| **Auditing** | Custom implementation required | Built-in execution history |
+| **Testing** | Write test code | Visual testing + natural language |
+| **Rollback** | Redeploy previous version | Route to previous version instantly |
+| **Scalability** | Manual configuration | Built-in with Horizon edition |
+
+### Why This Matters
+
+**Traditional Approach:**
+
+1. Build decision model
+2. Package as JAR/container
+3. Deploy to server
+4. Update application to call new endpoint
+5. Manage old endpoints for backward compatibility
+6. Build custom audit logging
+7. Handle version routing logic
+
+**Decision Control Approach:**
+
+1. Build decision model in browser
+2. Click "Publish"
+3. Done: API automatically serves new version while maintaining old ones
+
+## Performance Considerations
+
+### Caching Strategy
+
+- **Compiled Models**: DMN models compiled on first execution, cached indefinitely
+- **Metadata**: Unit/version lists cached with 5-minute TTL
+- **Execution Results**: Not cached (each execution is unique)
+
+### Database Optimization
+
+- **Connection Pooling**: configurable connection pool
+- **Indexed Queries**: Primary keys, foreign keys, and common query patterns
+- **Batch Operations**: Bulk inserts for execution history
+
+### Resource Requirements
+
+| Component | CPU Request | Memory Request | CPU Limit | Memory Limit |
+|-----------|-------------|----------------|-----------|--------------|
+| Decision Control | 2 cores | 2 GB | 4 cores | 4 GB |
+| Database | 0.5 cores | 512 MB | 1 core | 1 GB |
+
+---
+
+### Multi-Environment Deployment
+
+Each environment runs its own Decision Control instance with isolated database:
+
+```yaml
+Namespace: decision-control
+  ├── decision-control-dev
+  │   └── PostgreSQL-dev
+  ├── decision-control-test
+  │   └── PostgreSQL-test
+  ├── decision-control-prod
+  │   └── PostgreSQL-prod
+  └── decision-control-tower
+      ├── tower-ui / tower-core
+      ├── tower-sidecar
+      └── PostgreSQL-tower
+```
+
+OIDC and SMTP are typically external services (managed in their own namespace or hosted elsewhere).
+
+### Roles and Permissions
+
+Aletyx Decision Control Tower authentication and authorisation are delegated to an OIDC provider (Entra ID or Keycloak). Two app roles drive access:
+
+| Role | Capabilities |
+|------|-------------|
+| `user` | View environments, models, tasks, and the audit trail; submit promotion requests |
+| `tower-approvers` | Everything `user` can do, plus approve / reject / request-changes on promotion tasks |
+
+For role assignment and the full OIDC setup, see the [Aletyx Decision Control Tower Identity & Access Management](/decision-control-tower/deployment/identity-access-management) chapter. For end-to-end setup instructions, see [Aletyx Decision Control Tower Deployment](/decision-control-tower/deployment/overview).
+
+## Security Architecture
+
+### Authentication
+
+All Decision Control components use OAuth2/OIDC:
+
+- **Pioneer/Innovator/Horizon**: OAuth2 / OIDC
+- **Keystone**: OIDC SSO with PKCE flow
+
+### Network Security
+
+![Network security diagram: traffic from the Internet enters over HTTPS through an Ingress and Load Balancer (TLS termination) to Decision Control, which connects to PostgreSQL over TCP port 5432](/images/decision-control/diagrams/architecture/flowchart-lr-8.svg)
+
+- All external traffic over HTTPS (TLS 1.2+)
+- Database connections within private network
+- Kubernetes network policies for pod isolation
+
+### Data Security
+
+- **At Rest**: database encryption via storage layer
+- **In Transit**: TLS for external, plain HTTP within cluster
+- **Secrets**: Kubernetes Secrets for credentials
+
+## Observability
+
+### Health Checks
+
+```bash
+# Application health
+curl http://localhost:8080/actuator/health
+
+# Readiness check
+curl http://localhost:8080/actuator/health/readiness
+```
+
+### Metrics
+
+Metrics are exposed at `/actuator/prometheus` (Prometheus-compatible):
+
+- `dmn_execution_duration_seconds`: Execution latency histogram
+- `dmn_executions_total`: Total executions by version
+- `http_server_requests_seconds`: HTTP request metrics
+- Memory and resource usage
+
+### Logging
+
+Structured JSON logs with:
+
+- Timestamp
+- Log level
+- Request ID
+- User context
+- Execution details
+
+## Next Steps
+
+- [Deployment](/decision-control/deployment/overview): Deploy Decision Control
+- [Usage Scenarios](/decision-control/usage-scenarios): Common usage patterns
+- [Integration and APIs](/decision-control/integration-and-apis): API reference and integration
+- [FAQ and Troubleshooting](/decision-control/faq-troubleshooting): Common issues

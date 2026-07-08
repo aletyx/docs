@@ -1,0 +1,315 @@
+---
+title: "Decision Control Tower — Deployment"
+description: "Quick-start to deploy Aletyx Decision Control Tower (with its required Sidecar) locally or on Kubernetes."
+sidebarTitle: "Deployment"
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/deployment/"
+---
+
+Copy-paste quickstart. Tower requires a companion Sidecar — both are deployed together, with their own PostgreSQL databases. For production hardening, OIDC providers, RBAC tuning, and operational diagnostics, follow the per-topic chapters in the nav.
+
+
+## Local — Container
+
+Tower + Sidecar + 2 Postgres (one per component) on the same host. Substitute `<your-registry>` and tags for the images you pull from.
+
+First, generate a shared callback secret. **Tower and the Sidecar must hold the same value** — any sufficiently-random string works. A 32-byte hex string is plenty:
+
+```bash
+export CALLBACK_SECRET=$(openssl rand -hex 32)
+```
+
+Then bring up the stack:
+
+```bash
+# 1. Networks
+docker network create aletyx-tower 2>/dev/null || true
+
+# 2. Tower Postgres
+docker run -d --name tower-postgres --network aletyx-tower \
+  -e POSTGRES_DB=decision_tower_db \
+  -e POSTGRES_USER=tower \
+  -e POSTGRES_PASSWORD=tower \
+  -p 5432:5432 \
+  postgres:18
+
+# 3. Sidecar Postgres
+docker run -d --name sidecar-postgres --network aletyx-tower \
+  -e POSTGRES_DB=decision_tower_sidecar \
+  -e POSTGRES_USER=sidecar \
+  -e POSTGRES_PASSWORD=sidecar \
+  -p 5433:5432 \
+  postgres:18
+
+# 4. Sidecar
+docker run -d --name tower-sidecar --network aletyx-tower \
+  -p 8181:8080 \
+  -e APP_HOST=0.0.0.0 \
+  -e BACKEND_PORT=8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e ALETYX_DC_TOWER_SIDECAR_DB_URL=jdbc:postgresql://sidecar-postgres:5432/decision_tower_sidecar \
+  -e ALETYX_DC_TOWER_SIDECAR_DB_USERNAME=sidecar \
+  -e ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD=sidecar \
+  -e ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL=http://decision-control-tower:8080 \
+  -e ALETYX_OIDC_CALLBACK_SECRET="$CALLBACK_SECRET" \
+  <your-registry>/aletyx/decision-control-tower-sidecar:<sidecar-version>
+
+# 5. Tower
+docker run --rm --name decision-control-tower --network aletyx-tower \
+  -p 8080:8080 \
+  -e APP_HOST=http://localhost:8080 \
+  -e SPRING_PROFILES_ACTIVE=postgres \
+  -e ALETYX_DC_TOWER_DB_URL=jdbc:postgresql://tower-postgres:5432/decision_tower_db \
+  -e ALETYX_DC_TOWER_DB_USERNAME=tower \
+  -e ALETYX_DC_TOWER_DB_PASSWORD=tower \
+  -e ALETYX_DC_TOWER_SIDECAR_URL=http://tower-sidecar:8080 \
+  -e ALETYX_DC_TOWER_DATA_INDEX_URL=http://tower-sidecar:8080 \
+  -e ALETYX_DC_TOWER_USE_MOCKS=false \
+  -e ALETYX_OIDC_PROVIDER=none \
+  -e ALETYX_OIDC_CALLBACK_SECRET="$CALLBACK_SECRET" \
+  <your-registry>/aletyx/decision-control-tower:<version>
+```
+
+Open [http://localhost:8080](http://localhost:8080). `ALETYX_OIDC_PROVIDER=none` bypasses authentication for local diagnostics. For real OIDC, see [Identity & Access Management](/decision-control-tower/deployment/identity-access-management).
+
+## Kubernetes — minimal manifest
+
+Tower + Sidecar in one file: Namespace, ConfigMaps, Secrets, Deployments, Services, Ingress for Tower. The Sidecar stays in-cluster (no Ingress).
+
+The two Secrets below reference `ALETYX_OIDC_CALLBACK_SECRET` — Tower and the Sidecar verify each other's callbacks with this value, so it must be identical on both. Generate one with `openssl rand -hex 32` and paste the same string into each.
+
+`ALETYX_OIDC_INTERNAL_SECRET` (Tower Secret) follows the same shape — same random string on Tower and on every Decision Control instance Tower aggregates. `openssl rand -hex 32` again.
+
+```yaml
+# decision-control-tower.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tower
+---
+# ---------- Tower ----------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: decision-control-tower-config
+  namespace: tower
+data:
+  APP_HOST: "https://<your-tower-host>"
+  APP_PORT: "8080"
+  BACKEND_PORT: "8080"
+  SPRING_PROFILES_ACTIVE: "postgres"
+  ALETYX_DC_TOWER_CORS_ALLOWED_ORIGINS: "https://<your-tower-host>"
+  ALETYX_DC_TOWER_DB_URL: "jdbc:postgresql://<db-host>:5432/<tower-db>"
+  ALETYX_DC_TOWER_DB_USERNAME: "<tower-db-user>"
+  ALETYX_DC_TOWER_SIDECAR_URL: "http://decision-control-tower-sidecar.tower.svc.cluster.local"
+  ALETYX_DC_TOWER_DATA_INDEX_URL: "http://decision-control-tower-sidecar.tower.svc.cluster.local"
+  ALETYX_DC_TOWER_USE_MOCKS: "false"
+  ALETYX_DC_TOWER_ENVIRONMENTS_FILE: "/app/config/environments.json"
+  ALETYX_DC_TOWER_SEED_TENANT_ID: "<your-entra-tenant-id>"
+  ALETYX_OIDC_PROVIDER: "entra"
+  ALETYX_OIDC_CLIENT_ID: "<your-entra-client-id>"
+  ALETYX_OIDC_SCOPES: "openid,profile,email"
+  ALETYX_OIDC_ROLE_CLAIM_PATH: "roles"
+  ALETYX_OIDC_TENANT_CLAIM_NAME: "tid"
+  ALETYX_OIDC_ENTRA_TENANT_ID: "<your-entra-tenant-id>"
+  ALETYX_OIDC_ENTRA_AUDIENCE: "<your-entra-client-id>"
+  ALETYX_OIDC_RBAC_ENABLED: "false"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: decision-control-tower-secret
+  namespace: tower
+type: Opaque
+stringData:
+  ALETYX_DC_TOWER_DB_PASSWORD: "<your-tower-db-password>"
+  ALETYX_OIDC_ENTRA_CLIENT_SECRET: "<your-entra-client-secret>"
+  ALETYX_OIDC_CALLBACK_SECRET: "<shared-with-sidecar>"
+  ALETYX_OIDC_INTERNAL_SECRET: "<shared-with-DC-instances>"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: decision-control-tower-static-config
+  namespace: tower
+data:
+  environments.json: |
+    [
+      {
+        "id": "<env-slug>",
+        "display-name": "<env-display>",
+        "description": "<env-description>",
+        "dc-internal-url": "http://<dc-service>.<dc-namespace>.svc.cluster.local",
+        "dc-external-url": "https://<dc-public-host>",
+        "display-order": 1
+      }
+    ]
+  notification-groups.json: |
+    {
+      "groups": {
+        "tower-approvers": {
+          "displayName": "Tower Approvers",
+          "emails": [ "<approver-email>" ]
+        }
+      }
+    }
+  email-template.json: |
+    [{"locale":"en","subject":"Promotion request: {{taskName}}","bodyFile":"email-template.html"}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decision-control-tower
+  namespace: tower
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: decision-control-tower }
+  template:
+    metadata:
+      labels: { app: decision-control-tower }
+    spec:
+      containers:
+        - name: decision-control-tower
+          image: <your-registry>/aletyx/decision-control-tower:<version>
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef: { name: decision-control-tower-config }
+            - secretRef:    { name: decision-control-tower-secret }
+          volumeMounts:
+            - name: static-config
+              mountPath: /app/config
+              readOnly: true
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 30
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 60
+          resources:
+            requests: { cpu: 500m,  memory: 2Gi }
+            limits:   { cpu: "2",   memory: 3Gi }
+      volumes:
+        - name: static-config
+          configMap: { name: decision-control-tower-static-config }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: decision-control-tower
+  namespace: tower
+spec:
+  selector: { app: decision-control-tower }
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: decision-control-tower
+  namespace: tower
+  annotations:
+    cert-manager.io/cluster-issuer: <your-cluster-issuer>
+spec:
+  ingressClassName: <your-ingress-class>
+  tls:
+    - hosts: [ "<your-tower-host>" ]
+      secretName: decision-control-tower-tls
+  rules:
+    - host: <your-tower-host>
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: decision-control-tower
+                port: { number: 80 }
+---
+# ---------- Sidecar ----------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: decision-control-tower-sidecar-config
+  namespace: tower
+data:
+  APP_HOST: "0.0.0.0"
+  BACKEND_PORT: "8080"
+  SPRING_PROFILES_ACTIVE: "prod"
+  ALETYX_DC_TOWER_SIDECAR_DB_URL: "jdbc:postgresql://<db-host>:5432/<sidecar-db>"
+  ALETYX_DC_TOWER_SIDECAR_DB_USERNAME: "<sidecar-db-user>"
+  ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL: "http://decision-control-tower.tower.svc.cluster.local"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: decision-control-tower-sidecar-secret
+  namespace: tower
+type: Opaque
+stringData:
+  ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD: "<your-sidecar-db-password>"
+  ALETYX_OIDC_CALLBACK_SECRET: "<shared-with-tower>"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decision-control-tower-sidecar
+  namespace: tower
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: decision-control-tower-sidecar }
+  template:
+    metadata:
+      labels: { app: decision-control-tower-sidecar }
+    spec:
+      containers:
+        - name: decision-control-tower-sidecar
+          image: <your-registry>/aletyx/decision-control-tower-sidecar:<sidecar-version>
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef: { name: decision-control-tower-sidecar-config }
+            - secretRef:    { name: decision-control-tower-sidecar-secret }
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: 8080 }
+            initialDelaySeconds: 30
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            initialDelaySeconds: 60
+          resources:
+            requests: { cpu: 250m, memory: 768Mi }
+            limits:   { memory: 1536Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: decision-control-tower-sidecar
+  namespace: tower
+spec:
+  selector: { app: decision-control-tower-sidecar }
+  ports:
+    - port: 80
+      targetPort: 8080
+```
+
+Apply and wait:
+
+```bash
+kubectl apply -f decision-control-tower.yaml
+kubectl rollout status deployment/decision-control-tower-sidecar -n tower
+kubectl rollout status deployment/decision-control-tower         -n tower
+```
+
+Then register `https://<your-tower-host>/auth/callback` as a Redirect URI on your Entra App Registration (or Keycloak client).
+
+## Next
+
+Use the chapters in the nav for the production-shaped path:
+
+- [Identity & Access Management](/decision-control-tower/deployment/identity-access-management) — Entra / Keycloak setup, `user` / `tower-approvers` roles, RBAC.
+- [Database Configuration](/decision-control-tower/deployment/database-configuration) — Tower + Sidecar databases, schema migration, TLS.
+- [Container Configuration](/decision-control-tower/deployment/container-configuration) — full env reference and worked `docker run` examples.
+- [Kubernetes & OpenShift Deployment](/decision-control-tower/deployment/kubernetes-openshift-deployment) — hardened manifests, OpenShift specifics, monitoring, troubleshooting.
+- [Supported Operating Environments](/decision-control-tower/deployment/supported-operating-environments) — what we test, what is out of scope.

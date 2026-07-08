@@ -1,0 +1,186 @@
+direction: down
+
+vars: {
+  d2-config: {
+    sketch: true
+  }
+}
+
+# Ingress / Route — Traefik, NGINX, or OpenShift Route.
+ingress: {
+  label: |md
+    **Ingress / Route**
+    Traefik · NGINX · OpenShift Route
+  |
+  shape: rectangle
+  style: {
+    fill: "#DDA0DD"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Service exposing Tower.
+service_tower: {
+  label: |md
+    **Service**
+    tower-svc:80
+  |
+  shape: rectangle
+  style: {
+    fill: "#87CEEB"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Tower Deployment.
+tower_deploy: {
+  label: |md
+    **Deployment** — Tower
+    replicas · image · resources 2Gi/3Gi
+  |
+  shape: rectangle
+  style: {
+    fill: "#90EE90"
+    stroke: "#333"
+    stroke-width: 3
+    bold: true
+    font-size: 18
+  }
+}
+
+# Tower's PostgreSQL.
+tower_db: {
+  label: |md
+    **PostgreSQL**
+    Tower database
+  |
+  shape: cylinder
+  style: {
+    fill: "#FFE4B5"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# ConfigMap + Secret wired via envFrom.
+config: {
+  label: |md
+    **ConfigMap + Secret**
+    envFrom
+  |
+  shape: rectangle
+  style: {
+    fill: "#F0F8FF"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Sidecar Service.
+service_sidecar: {
+  label: |md
+    **Service**
+    tower-sidecar-svc:80
+  |
+  shape: rectangle
+  style: {
+    fill: "#87CEEB"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Sidecar Deployment.
+sidecar_deploy: {
+  label: |md
+    **Deployment** — Tower Sidecar
+    workflow runtime · data index · jobs
+  |
+  shape: rectangle
+  style: {
+    fill: "#FFB6C1"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Sidecar's PostgreSQL.
+sidecar_db: {
+  label: |md
+    **PostgreSQL**
+    Sidecar database
+  |
+  shape: cylinder
+  style: {
+    fill: "#FFE4B5"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+ingress -> service_tower: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+service_tower -> tower_deploy: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+config -> tower_deploy: {
+  label: "envFrom"
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+tower_deploy <-> tower_db: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+tower_deploy -> service_sidecar: {
+  label: "in-cluster HTTP"
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+service_sidecar -> sidecar_deploy: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+sidecar_deploy <-> sidecar_db: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}

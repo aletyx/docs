@@ -1,0 +1,88 @@
+---
+title: "Environments"
+description: "Browse, filter, tag, and launch the Decision Control environments you have access to from the Environments page."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/how-to/environments/"
+---
+
+The Environments page lists every Decision Control environment you have access to with live counts (Units / Models / Versions), a status badge, and tag-based filters. It lives at `/environments` - reach it from the **Environments** card on the [Home page](/decision-control-tower/how-to/sign-in-and-global) or the **Environments** item in the sidebar.
+
+![Decision Control Environments page](/images/decision-control-tower/environments-landing.png)
+
+All how-tos on this page are available to **any signed-in Tower user** unless noted. Counts refresh automatically about every two minutes.
+
+## How to browse environments
+
+See all Decision Control environments and their health at a glance.
+
+**Steps:**
+
+1. Open **Environments** (from the Home page card or the sidebar) - the page header shows a branch icon and title **Decision Control Environments** above the environment cards.
+2. Read each card's status badge (**online** / **offline**) and **Units** / **Models** / **Versions** stats.
+
+**Verify:** Cards render with live counts; the toolbar shows "`{N} environments`".
+
+## How to find an environment
+
+Narrow the grid with the toolbar filters and search.
+
+<Tabs>
+  <Tab title="Filter by status">
+    1. Open the **status** dropdown (defaults to *All statuses*).
+    2. Choose **Online** or **Offline**.
+  </Tab>
+  <Tab title="Filter by tag">
+    1. Open the tag multi-select in the toolbar.
+    2. (Optional) Type in **Search tags…** to find a tag.
+    3. Select one or more tags; use **Clear all** to reset.
+  </Tab>
+  <Tab title="Search by name">
+    1. Type into the toolbar **Search** field.
+  </Tab>
+</Tabs>
+
+**Verify:** The grid shows only matching cards and the count reads "`{filtered} of {total}`". A count badge on the tag picker shows how many tags are active.
+
+<Tip>
+**Reset everything**
+
+Click **Clear filters** in the toolbar to drop status, tag, and name filters in one go.
+</Tip>
+
+## How to add a tag to an environment
+
+Label an environment for organization and filtering.
+
+**Prerequisites:** The environment is **online**; fewer than 6 tags already applied.
+
+**Steps:**
+
+1. On the environment card, click **add tag…**.
+2. Type a name in the inline **tag name…** field.
+3. Press <kbd>Enter</kbd> to confirm (or <kbd>Esc</kbd> to cancel).
+
+**Verify:** A colored tag label appears on the card (and becomes available in the tag filter).
+
+## How to remove a tag from an environment
+
+Detach a previously applied tag.
+
+**Prerequisites:** The environment is **online**.
+
+**Steps:**
+
+1. On the card, locate the tag label.
+2. Click its **×** ("Remove tag `{name}`").
+
+**Verify:** The tag label disappears from the card.
+
+## How to launch an environment's Decision Control workbench
+
+Jump from governance into the Decision Control authoring/management app for that environment.
+
+**Prerequisites:** The environment is **online**. (Offline cards show "Unavailable" instead.)
+
+**Steps:**
+
+1. On the environment card, click **Launch** (external-link icon).
+
+**Verify:** The environment's Decision Control app opens in a new browser tab. The workbench itself is documented in [Decision Control → How-To Guides](/decision-control/how-to/overview).

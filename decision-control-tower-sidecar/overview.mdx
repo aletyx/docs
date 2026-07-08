@@ -1,0 +1,110 @@
+---
+title: "Aletyx Decision Control Tower Sidecar"
+sidebarTitle: "Sidecar"
+description: "A starter project for the approval workflows behind a promotion — and the workflow engine Aletyx Decision Control Tower depends on at runtime."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower-sidecar/"
+---
+
+<Info>
+**A customizable starter, and a required companion to Aletyx Decision Control Tower**
+
+The Sidecar is an **example project** you adapt to your organization's approval policy — *and* the workflow engine Aletyx Decision Control Tower depends on at runtime. You customize the workflows; you do not change how it integrates with Tower. A Tower deployment without a matching Sidecar accepts logins but workflow-driven endpoints silently no-op.
+</Info>
+
+## Overview
+
+The Aletyx Decision Control Tower Sidecar is a **starter project that shows how to build the approval workflows behind a promotion** — moving a DMN model from one environment to the next (for example, **dev → qa → prd**) under human review. It ships with working example workflows and example actions, and it is meant to be **forked and tailored** to your governance process.
+
+The project has two clearly separated layers:
+
+- **Core (fixed)** — the application classes that integrate the Sidecar with Aletyx Decision Control Tower: the callbacks it makes into Tower and the request/response contracts those exchanges use.
+- **Customizable (yours)** — the **workflow definitions** and the **example actions** (service steps) they call. This is where you encode your approval policy.
+
+It is packaged as a single, stateless container with its own PostgreSQL database, deployed alongside Tower.
+
+## What you can — and cannot — change
+
+| Layer | Examples | Can the client change it? |
+|---|---|---|
+| **Workflows** | The promotion/approval flow: review stages, assignment, branching, which actions run | ✅ Yes — this is the point of the starter |
+| **Example actions** | Git versioning, messaging, REST callouts invoked from a workflow step | ✅ Yes — keep, replace, or add your own |
+| **Tower integration** | The callbacks into Tower (start, promote/deploy, notifications, model retrieval) | ❌ No — part of the core contract |
+| **Request/response contracts** | The payloads exchanged with Tower | ❌ No — changing them breaks Tower compatibility |
+
+<Warning>
+**The Tower contract is fixed**
+
+Customize the workflows and their actions freely, but do not alter the core integration or the request/response shapes. Tower relies on those exactly as shipped; changing them is what breaks a deployment.
+</Warning>
+
+## Key Capabilities
+
+### Workflow Execution
+
+Runs the governance workflows that gate promotions:
+
+- Executes the example `standard_promotion` workflow — human review before a model advances to the next environment.
+- Produces the review tasks (Approve, Change-Request) that appear in the Tower task inbox.
+- Drives state transitions and, on approval, calls back into Tower Core to complete the promotion.
+
+<Warning>
+**The shipped workflows are examples only**
+
+The Sidecar ships with three example workflows — **`standard_promotion`**, **`multi_level_approval_promotion`**, and **`approval_git_versioning_model_promotion`**. They exist to demonstrate the pattern; you are **not** required to use them. For a production environment, build your **own** workflow that encodes your organization's approval policy. See [Customize the Promotion Workflow](/decision-control-tower-sidecar/how-to/customize-workflow).
+</Warning>
+
+### Customizable Approval Policy
+
+Because the policy lives in the **workflow definition** rather than in code, you can add review stages, change assignment, or attach post-approval actions — all without touching the core Tower integration. See [Customize the Promotion Workflow](/decision-control-tower-sidecar/how-to/customize-workflow).
+
+### Example External-Service Actions
+
+The starter includes ready-to-study integration actions. Each runs only when the workflow includes it; with the shipped defaults they make no outbound calls (Git push is off until `…GITHUB_ENABLED=true`, Slack until its token/channel are set):
+
+- **Git versioning** — commit the promoted model's files to a Git repository for diffable history.
+- **Messaging** — post a notification (for example, to Slack) when a promotion completes.
+- **REST callouts** — call an external API from a workflow step.
+
+Treat these as worked examples: keep them, swap them, or model your own actions on them. See [Git Model Versioning](/decision-control-tower-sidecar/how-to/git-model-versioning).
+
+### Process & Task State
+
+Serves the runtime state Tower reads — process and task history (the Data Index surface), per-process metrics, and the audit-trail process-diagram (SVG) rendering.
+
+## Architecture
+
+The Sidecar is one of the three required pieces of a Aletyx Decision Control Tower deployment:
+
+1. **Tower (Spring Boot + SPA)** — the portal and governance API.
+2. **Tower Sidecar** — the workflow engine described here, with its own PostgreSQL database.
+3. **OIDC provider** — external authentication (Microsoft Entra ID or Keycloak).
+
+Tower talks *inward* to the Sidecar to start and advance workflows and to query process/task history; the Sidecar talks *back* to Tower Core through authenticated callbacks. For the core-vs-customizable split and the contract boundary, see [Architecture](/decision-control-tower-sidecar/architecture).
+
+## Use Cases
+
+### Enterprise Decision Governance
+
+The Sidecar makes promotions **reviewed, long-running workflows** rather than ad-hoc API calls — the foundation for separation of duties and auditable approvals across dev → qa → prd.
+
+### Tailored Governance Without Forking the Platform
+
+Teams adapt the **example workflows** to their own policy — extra stages, custom actions — while the fixed Tower contract keeps the customization compatible with the platform.
+
+### Versioned, Auditable Model History
+
+With the Git versioning action enabled, every approved promotion can land the model's files in a repository, giving regulated teams a diffable, externally-auditable record alongside the Tower audit trail.
+
+## Getting Started
+
+1. **Deploy the Sidecar with Tower**: see [Deployment](/decision-control-tower-sidecar/deployment/overview) — both are deployed together, each with its own PostgreSQL database.
+2. **Configure it**: see [Configuration](/decision-control-tower-sidecar/deployment/configuration) for the environment-variable reference.
+3. **Customize the workflow**: see [Customize the Promotion Workflow](/decision-control-tower-sidecar/how-to/customize-workflow).
+4. **Enable example actions** (optional): see [Git Model Versioning](/decision-control-tower-sidecar/how-to/git-model-versioning).
+
+## Next Steps
+
+- [Architecture](/decision-control-tower-sidecar/architecture): the core-vs-customizable layers and the Tower contract boundary
+- [Deployment](/decision-control-tower-sidecar/deployment/overview): run the Sidecar alongside Aletyx Decision Control Tower
+- [Configuration](/decision-control-tower-sidecar/deployment/configuration): environment-variable reference
+- [Customize the Promotion Workflow](/decision-control-tower-sidecar/how-to/customize-workflow): adapt the approval flow to your policy

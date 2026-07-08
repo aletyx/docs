@@ -1,0 +1,142 @@
+---
+title: "Aletyx Decision Control Tower"
+sidebarTitle: "Decision Control Tower"
+description: "Unified portal providing centralized access to all Decision Control environments, governance workflows, and audit capabilities."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/"
+---
+
+<Info>
+**Keystone Edition Only**
+
+Aletyx Decision Control Tower is exclusively available in the **Keystone Edition** of Decision Control. It provides enterprise-grade multi-environment governance and centralized management capabilities.
+</Info>
+
+## Overview
+
+Aletyx Decision Control Tower is a unified portal that provides centralized access to all Decision Control environments, governance workflows, and audit capabilities. It serves as the command center for managing decision models across your entire organization.
+
+![Overview diagram of Aletyx Decision Control Tower: a unified portal (Dashboard, Environments, Governance, Tasks and Audit Trail) managing the Decision Control environments Development, Test/UAT and Production](/images/decision-control-tower/diagrams/index/flowchart-td-1.svg)
+
+## Key Capabilities
+
+### Unified Environment Access
+
+Access all Decision Control environments from a single interface:
+
+- **Development**: Author and experiment with decision models
+- **Test/UAT**: Validate models with business stakeholders
+- **Production**: Execute live decisions with full governance
+
+Each environment is isolated with its own database and configuration, ensuring production stability.
+
+### Governance Workflows
+
+Implement enterprise approval processes:
+
+- **Submit for Review**: Business analysts submit models for promotion
+- **Review & Approve**: Members of the `tower-approvers` group approve, reject, or request changes
+- **Request-Changes Loop**: Requested changes return to the submitter to resubmit or cancel
+- **Audit Trail**: Complete history of all actions
+
+### Role-Based Access Control
+
+Aletyx Decision Control Tower integrates with an OIDC provider (Microsoft Entra ID or Keycloak) for authentication, and uses two app roles for authorization:
+
+| Role               | Capabilities                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `user`             | Read-only access to the dashboard, environments, models, and the audit trail.         |
+| `tower-approvers`  | Everything `user` can do, plus approve / reject / request-changes on promotion tasks. |
+
+Optional URL-level RBAC adds per-action allow-lists (publish, monitor, prompt, etc.); see [Identity & Access Management](/decision-control-tower/deployment/identity-access-management) for the full configuration.
+
+### Model Discovery
+
+Discover and track models across all environments:
+
+- View all published models
+- Compare versions across environments
+- Track model lifecycle and history
+- Search and filter by name, unit, or status
+
+### Task Management
+
+Manage approval tasks efficiently:
+
+- View pending tasks assigned to your role
+- Approve or reject with comments
+- Track task history and status
+- Receive notifications for new assignments
+
+## Architecture
+
+An Aletyx Decision Control Tower deployment is composed of three required pieces:
+
+### 1. Tower (Spring Boot + SPA)
+
+A single OCI image bundling the React SPA frontend and the Spring Boot backend:
+
+- Authorization Code with PKCE OAuth2 flow against the configured OIDC provider.
+- Server-side `/api/v1` endpoints for tasks, environments, and audit trail.
+- Tower's own PostgreSQL database for tasks, audit events, and seeded environments.
+- Health and configuration surfaces at `/actuator/health` and `/auth/config`.
+
+### 2. Tower Sidecar (required companion)
+
+A separate container that owns the workflow runtime state. Tower depends on it for process state, the data index, and the audit-trail SVG renderer — a Tower deployment without a matching sidecar accepts logins but workflow-driven endpoints silently no-op.
+
+- Its own PostgreSQL database, distinct from Tower's.
+- Authenticated callbacks back into Tower using a shared `ALETYX_OIDC_CALLBACK_SECRET`.
+
+### 3. OIDC provider
+
+Tower delegates user authentication to an external OIDC provider. Two are supported out of the box: **Microsoft Entra ID** and **Keycloak**, both wired through the shared `aletyx-oidc-spring-boot-starter`.
+
+- Centralized authentication and SSO.
+- App-role-based authorization (see the roles table above).
+- Token-based API security.
+- Session management owned by the provider.
+
+For the full deployment view — including image, env variables, Kubernetes / OpenShift manifests, and the sidecar wiring — see the [Deployment](/decision-control-tower/deployment/overview) chapters.
+
+## Use Cases
+
+### Enterprise Decision Management
+
+Organizations with multiple teams and environments benefit from:
+
+- Centralized visibility into all decision models
+- Standardized approval workflows
+- Audit compliance for regulators
+- Separation of duties
+
+### Regulated Industries
+
+Financial services, healthcare, and insurance organizations require:
+
+- Reviewed, auditable approval for all production changes
+- Complete audit trails
+- Role-based access control
+- Environment isolation
+
+### Large Development Teams
+
+Teams with multiple business analysts and reviewers need:
+
+- Task assignment and tracking
+- Parallel workflow processing
+- Notification and alerts
+- Progress monitoring
+
+## Getting Started
+
+1. **Deploy Aletyx Decision Control Tower**: See the [Deployment](/decision-control-tower/deployment/overview) chapters
+2. **Configure Environments**: See [Environment Management](/decision-control-tower/environments)
+3. **Set Up Users and Roles**: Configure your OIDC provider — see [Identity & Access Management](/decision-control-tower/deployment/identity-access-management) for Microsoft Entra ID or Keycloak setup
+4. **Manage Approvals**: See [Governance Tasks](/decision-control-tower/how-to/governance-tasks) for the day-to-day approve / reject / request-changes flow
+
+## Next Steps
+
+- [Portal Tour](/decision-control-tower/dashboard): Learn the Aletyx Decision Control Tower interface
+- [Environment Management](/decision-control-tower/environments): Configure and manage environments
+- [Task Management](/decision-control-tower/tasks): Work with approval tasks
+- [Deployment](/decision-control-tower/deployment/overview): Deploy Aletyx Decision Control Tower in your Kubernetes, OpenShift, or ECS environment

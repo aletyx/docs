@@ -1,0 +1,471 @@
+---
+title: "Usage Scenarios"
+description: "Step-by-step tutorials for common Decision Control workflows, from creating your first DMN model through promoting it to production."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/usage-scenarios/"
+---
+
+This document provides step-by-step tutorials for common Decision Control workflows, from creating your first DMN model through promoting it to production. Each scenario includes detailed instructions, screenshots descriptions, code examples, and best practices for enterprise deployment.
+
+## Scenario 1: Creating and Publishing a DMN Model
+
+Learn how to create a new decision model, test it, and publish it for use in Decision Control.
+
+### Overview
+
+This tutorial walks through creating a credit scoring decision model that evaluates loan applicants based on age, income, and credit history. You'll use the Decision Control Authoring UI to build the model, test it with sample data, and publish it for execution.
+
+**Time to Complete**: 30 minutes
+
+**Prerequisites**:
+
+- Access to Decision Control Development environment
+- User account with Business Analyst role (`decision-control-dev-users`)
+- Basic understanding of DMN concepts
+
+### Step 1: Access the Authoring UI
+
+1. **Navigate to Decision Control Dev**:
+
+   ```
+   https://decision-control-dev.example.com
+   ```
+
+2. **Log in with Keycloak**: You'll be redirected to the Keycloak login page. Enter your credentials:
+   - Username: `sarah@demo.local`
+   - Password: (your assigned password)
+
+3. **Click "Authoring UI"**: From the Decision Control landing page, select the Authoring UI option.
+
+<Tip>
+**First-Time Login**
+
+If this is your first time accessing Decision Control, you'll see a welcome screen. Click "Get Started" to proceed to the model authoring interface.
+</Tip>
+
+### Step 2: Create a New Unit
+
+Units organize related decision models. Create a unit for financial services models:
+
+1. **Click "Create Unit"**: In the top navigation, click the "+" button next to Units.
+
+2. **Enter Unit Details**:
+   - **Name**: `financial-services`
+   - **Description**: `Financial services decision models including credit scoring and risk assessment`
+   - **Status**: `ENABLED`
+
+3. **Click "Create"**: The system creates the unit and navigates to its detail page.
+
+**API Equivalent**:
+
+```bash
+curl -X POST https://decision-control-dev.example.com/api/management/units \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "financial-services",
+    "description": "Financial services decision models",
+    "status": "ENABLED"
+  }'
+```
+
+### Step 3: Create a Version
+
+Versions enable you to maintain multiple releases of your models:
+
+1. **Click "New Version"**: From the unit detail page, click "Create Version".
+
+2. **Enter Version Details**:
+   - **Version Number**: `1.0.0`
+   - **Change Log**: `Initial release with credit scoring model`
+   - **Status**: `DRAFT`
+
+3. **Click "Create"**: The version is created in DRAFT status, allowing model uploads.
+
+<Info>
+**Semantic Versioning**
+
+Use semantic versioning (MAJOR.MINOR.PATCH) for clarity:
+- MAJOR: Breaking changes to model interface
+- MINOR: New features, backward compatible
+- PATCH: Bug fixes, no interface changes
+</Info>
+
+### Step 4: Create the DMN Model
+
+Now create the actual decision model:
+
+1. **Click "Upload Model"** or **"Create New Model"**: Choose "Create New Model" to use the visual editor.
+
+2. **Name the Model**: `CreditScoring`
+
+3. **Create Input Data Nodes**:
+
+   Create three input nodes by dragging "Input Data" shapes from the palette:
+
+   - **Applicant Age** (type: `number`)
+   - **Annual Income** (type: `number`)
+   - **Credit History Length** (type: `number`)
+
+4. **Create the Risk Score Decision**:
+
+   Drag a "Decision" node onto the canvas:
+
+   - **Name**: `Risk Score`
+   - **Type**: `number`
+
+   Connect information requirements from all three input nodes to the Risk Score decision by dragging arrows from inputs to the decision node.
+
+5. **Define the Decision Logic**:
+
+   Click "Edit" on the Risk Score decision node, then select "Decision Table" as the expression type.
+
+   Create a decision table with the following rules:
+
+   | Applicant Age | Annual Income | Credit History Length | Risk Score |
+   |---------------|---------------|----------------------|------------|
+   | \< 25 | \< 30000 | \< 2 | 500 |
+   | \< 25 | >= 30000 | >= 2 | 600 |
+   | 25..40 | \< 50000 | \< 5 | 620 |
+   | 25..40 | >= 50000 | >= 5 | 720 |
+   | > 40 | \< 60000 | \< 10 | 680 |
+   | > 40 | >= 60000 | >= 10 | 780 |
+   | - | - | - | 650 |
+
+   <Tip>
+   **Hit Policy**
+
+   Use "FIRST" hit policy (F) for this table. The system evaluates rules top-to-bottom and returns the first match.
+   </Tip>
+
+6. **Add a Risk Category Decision**:
+
+   Create another decision node that depends on Risk Score:
+
+   - **Name**: `Risk Category`
+   - **Type**: `string`
+   - **Expression Type**: Decision Table
+
+   | Risk Score | Risk Category |
+   |------------|---------------|
+   | \< 600 | "HIGH" |
+   | 600..700 | "MEDIUM" |
+   | > 700 | "LOW" |
+
+7. **Add an Approval Decision**:
+
+   Final decision that recommends approval or rejection:
+
+   - **Name**: `Approval Recommended`
+   - **Type**: `boolean`
+   - **Expression Type**: Decision Table
+
+   | Risk Score | Annual Income | Approval Recommended |
+   |------------|---------------|---------------------|
+   | >= 700 | >= 50000 | true |
+   | >= 650 | >= 75000 | true |
+   | \< 600 | - | false |
+   | - | - | false |
+
+8. **Save the Model**: Click "Save" in the top toolbar. The DMN model is now part of version 1.0.0.
+
+### Step 5: Test the Model
+
+Before publishing, test the model with sample data:
+
+1. **Click "Test" Tab**: Switch to the Test view in the Authoring UI.
+
+2. **Enter Test Inputs**:
+   - Applicant Age: `35`
+   - Annual Income: `75000`
+   - Credit History Length: `10`
+
+3. **Click "Execute Decision"**: The system runs all decisions in the model.
+
+4. **Review Results**:
+   ```json
+   {
+     "Risk Score": 720,
+     "Risk Category": "LOW",
+     "Approval Recommended": true
+   }
+   ```
+
+5. **Test Edge Cases**: Try additional test scenarios:
+   - Young applicant with low income: Age 22, Income 25000, History 1
+   - High-risk applicant: Age 28, Income 40000, History 3
+   - Ideal applicant: Age 45, Income 100000, History 15
+
+<Warning>
+**Validation Required**
+
+Always test at least 5-10 scenarios covering edge cases, boundary conditions, and typical cases before publishing.
+</Warning>
+
+### Step 6: Publish the Version
+
+Once testing is complete, publish the version to make it available for execution:
+
+1. **Navigate to Versions**: Return to the unit detail page and select version 1.0.0.
+
+2. **Click "Publish Version"**: This marks the version as ready for use.
+
+3. **Confirm Publication**: A dialog confirms publication. The version status changes to `PUBLISHED`.
+
+**API Equivalent**:
+
+```bash
+curl -X POST https://decision-control-dev.example.com/api/management/units/1/versions/1/publish \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"publishedBy": "sarah@demo.local"}'
+```
+
+<Info>
+**Published Versions are Immutable**
+
+Once published, a version cannot be modified. To make changes, create a new version (e.g., 1.0.1 or 1.1.0).
+</Info>
+
+### Step 7: Execute the Decision via API
+
+Now that the model is published, execute it via REST API:
+
+```bash
+curl -X POST https://decision-control-dev.example.com/api/runtime/units/financial-services/versions/1.0.0/execute \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "modelName": "CreditScoring",
+    "decisionName": "Approval Recommended",
+    "context": {
+      "Applicant Age": 35,
+      "Annual Income": 75000,
+      "Credit History Length": 10
+    }
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "executionId": "exec-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "timestamp": "2025-01-25T14:30:00.000Z",
+  "modelName": "CreditScoring",
+  "decisionName": "Approval Recommended",
+  "result": {
+    "Risk Score": 720,
+    "Risk Category": "LOW",
+    "Approval Recommended": true
+  },
+  "executionTimeMs": 42,
+  "status": "SUCCESS"
+}
+```
+
+### Best Practices
+
+**Model Design**:
+
+- Keep decision tables focused on a single concern
+- Use descriptive names for inputs, decisions, and outputs
+- Document complex logic with annotations in the DMN model
+- Limit decision tables to 20-30 rules for maintainability
+
+**Testing**:
+
+- Test all decision paths before publishing
+- Create a test suite with expected inputs and outputs
+- Include boundary conditions (min/max values, empty strings)
+- Test with production-like data volumes
+
+**Versioning**:
+
+- Use semantic versioning consistently
+- Document all changes in the version changelog
+- Maintain backward compatibility when possible
+- Archive old versions but keep them available for audit
+
+## Scenario 2: Testing a Model with Prompt UI
+
+Use natural language to test decision models without knowing technical details.
+
+### Overview
+
+The Prompt UI allows business users to test DMN models using conversational queries. This tutorial demonstrates testing the credit scoring model from Scenario 1 using natural language.
+
+**Time to Complete**: 15 minutes
+
+**Prerequisites**:
+
+- Completed Scenario 1 (published CreditScoring model)
+- Access to Decision Control with Innovator edition or higher
+- User account with testing permissions
+
+### Step 1: Access Prompt UI
+
+1. **Navigate to Decision Control Dev**:
+   ```
+   https://decision-control-dev.example.com
+   ```
+
+2. **Click "Prompt UI"**: From the Decision Control landing page, select Prompt UI.
+
+3. **Select Your Model**: From the model selector dropdown:
+   - **Unit**: `financial-services`
+   - **Version**: `1.0.0`
+   - **Model**: `CreditScoring`
+
+### Step 2: Basic Natural Language Query
+
+Use conversational language to test the model:
+
+1. **Enter a Natural Language Query**:
+
+   ```
+   What is the approval recommendation for a 35-year-old applicant
+   with annual income of $75,000 and 10 years of credit history?
+   ```
+
+2. **Click "Execute" or Press Enter**: The system:
+   - Parses the natural language query
+   - Extracts input values (Age: 35, Income: 75000, History: 10)
+   - Executes the decision model
+   - Returns results in natural language
+
+3. **Review the Response**:
+
+   ```
+   Based on the credit scoring model:
+
+   Risk Score: 720
+   Risk Category: LOW
+   Approval Recommended: Yes
+
+   This applicant qualifies for approval with a low-risk profile.
+   The strong credit history (10 years) and solid income level
+   contribute to a favorable risk assessment.
+   ```
+
+### Step 3: Test Multiple Scenarios
+
+Try variations to understand model behavior:
+
+**High-Risk Scenario**:
+
+```
+Test a 22-year-old with $25,000 income and 1 year credit history
+```
+
+**Response**:
+```
+Risk Score: 500
+Risk Category: HIGH
+Approval Recommended: No
+
+This applicant does not qualify for approval due to high risk.
+Limited credit history and lower income contribute to elevated risk.
+```
+
+**Boundary Test**:
+
+```
+What happens with exactly $50,000 income, age 25, and 5 years history?
+```
+
+**Edge Case**:
+
+```
+Evaluate someone who is 65 years old with $150,000 income and 30 years credit history
+```
+
+### Step 4: Compare Results
+
+The Prompt UI allows side-by-side comparisons:
+
+1. **Click "Compare Mode"**: Enable comparison view.
+
+2. **Enter Two Scenarios**:
+
+   **Scenario A**:
+   ```
+   Age 30, Income $60,000, History 7 years
+   ```
+
+   **Scenario B**:
+   ```
+   Age 30, Income $62,000, History 7 years
+   ```
+
+3. **View Side-by-Side Results**: The system highlights differences in risk scores and approval decisions.
+
+### Step 5: Export Test Results
+
+Save test results for documentation:
+
+1. **Click "Export Results"**: Choose export format (CSV, JSON, or PDF).
+
+2. **Select Test Cases**: Check the scenarios you want to export.
+
+3. **Download**: Results include inputs, outputs, timestamps, and model version.
+
+**Example JSON Export**:
+
+```json
+{
+  "testSuite": "Credit Scoring Validation",
+  "modelName": "CreditScoring",
+  "version": "1.0.0",
+  "executedAt": "2025-01-25T14:30:00.000Z",
+  "executedBy": "sarah@demo.local",
+  "testCases": [
+    {
+      "caseId": 1,
+      "description": "Standard approval case",
+      "inputs": {
+        "Applicant Age": 35,
+        "Annual Income": 75000,
+        "Credit History Length": 10
+      },
+      "expectedOutputs": {
+        "Approval Recommended": true
+      },
+      "actualOutputs": {
+        "Risk Score": 720,
+        "Risk Category": "LOW",
+        "Approval Recommended": true
+      },
+      "status": "PASS"
+    }
+  ]
+}
+```
+
+### Best Practices
+
+**Query Construction**:
+
+- Use clear, specific language
+- Include all required input values
+- State units clearly (dollars, years, etc.)
+- Ask follow-up questions to explore edge cases
+
+**Testing Strategy**:
+
+- Start with typical scenarios
+- Test boundary conditions (minimum/maximum values)
+- Verify error handling (missing inputs, invalid values)
+- Compare similar scenarios to understand sensitivity
+
+**Documentation**:
+
+- Export test results for audit trails
+- Save test suites for regression testing
+- Include test cases in version changelogs
+- Share test results with stakeholders
+
+## Next Steps
+
+- [Integration and APIs](/decision-control/integration-and-apis): Integrate Decision Control with your systems
+- [Decision Control Tower](/decision-control-tower/overview): Promote models across environments and review approval tasks
+- [FAQ and Troubleshooting](/decision-control/faq-troubleshooting): Common issues and solutions

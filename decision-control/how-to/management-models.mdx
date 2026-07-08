@@ -1,0 +1,278 @@
+---
+title: "Management – Units & Models"
+description: "Manage the catalog of decision units, versions, and models from the Management workbench."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/how-to/management-models/"
+---
+
+Manage the catalog of decision units, versions, and models from the Management workbench. All guides on this page require Management access. To execute models, see [Management – Execute Rules](/decision-control/how-to/management-execute).
+
+The Management workbench uses a left sidebar with **Dashboard**, **Decision Units**, **Upload DMN**, and **Execute Rules** — the sections below match those entries.
+
+## Dashboard
+
+![Management dashboard](/images/decision-control/how-to/management-dashboard.png)
+
+The Dashboard is the default screen of Management. It shows six metric cards:
+
+| Card | What it shows |
+|------|---------------|
+| **Decision Models** | Total number of models across all units |
+| **Decision Units** | Total number of units |
+| **Total Executions** | All execution attempts in the time window |
+| **Successful Executions** | Executions that completed without error |
+| **Total Errors** | Executions that failed |
+| **Avg Speed** | Average evaluation time per execution |
+
+Each card is clickable and links to its detail screen.
+
+### How to view dashboard metrics
+
+**Steps:**
+
+1. Open **Management → Dashboard** (the default screen).
+2. Read the metric cards (see the table above).
+3. (Optional) Click a card to jump to its detail screen.
+
+**Verify:** Cards display current numbers and an "Updated at `<time>`" timestamp.
+
+### How to refresh dashboard statistics
+
+Pull the latest metrics on demand.
+
+**Steps:**
+
+1. On the Dashboard, click **Refresh Statistics**.
+
+**Verify:** Metrics update and the "Updated at" time changes.
+
+## Decision Units
+
+![Decision Units table](/images/decision-control/how-to/decision-units.png)
+
+<Note>
+**Units aren't created empty**
+
+A decision unit comes into existence only when you [upload DMN models](#how-to-upload-dmn-models). The "Create Decision Unit" button on the dashboard simply opens the Units page.
+</Note>
+
+Every unit row exposes the same controls. The how-tos below use them by name:
+
+| Control | What it does |
+|---------|--------------|
+| **STATUS** switch | Toggles the whole unit (and its models as endpoints) ENABLED/DISABLED |
+| Eye icon | Opens the unit's versions and models |
+| Pencil icon | Edits the unit's description |
+| Trash icon | Deletes the unit (cascades to versions/models) |
+
+### How to find a decision unit
+
+Locate units by name, date, or status.
+
+**Steps:**
+
+1. Open **Management → Decision Units**.
+2. Type in **Search**, and/or use the **Date** and **Status** filters.
+3. Sort by clicking column headers; click **Clear filters** to reset.
+
+**Verify:** The table narrows to matching units.
+
+### How to enable or disable a decision unit
+
+Make a unit's models available (or not) as API endpoints.
+
+**Steps:**
+
+1. On **Decision Units**, find the unit's row.
+2. Toggle the **STATUS** switch (shows ENABLED/DISABLED).
+
+**Verify:** The switch reflects the new state.
+
+### How to view a unit's versions and models
+
+Drill into a unit to manage its versions and models.
+
+**Steps:**
+
+1. On **Decision Units**, click the unit row (or the eye icon).
+
+**Verify:** The versions page opens, listing versions on the left.
+
+### How to edit a unit's description
+
+Update a unit's descriptive text.
+
+**Steps:**
+
+1. On **Decision Units**, click the pencil icon in the unit's **ACTIONS** column.
+2. Edit **Description** and click **Save Changes**.
+
+**Verify:** The new description shows in the table.
+
+### How to delete a decision unit
+
+Permanently remove a unit and all its versions/models.
+
+<Warning>
+**Cascade delete**
+
+Deleting a unit removes **every version and every model inside it**. The dialog shows the cascade count before you confirm — read it. If a 409 conflict appears (the unit is in use), you'll be offered a force-delete option that bypasses the check.
+</Warning>
+
+**Steps:**
+
+1. On **Decision Units**, click the trash icon in the unit's row.
+2. Review the cascade warning and click **Delete**.
+3. If a conflict appears, confirm the force-delete option.
+
+**Verify:** The unit disappears from the table.
+
+## Upload DMN
+
+![Upload DMN screen](/images/decision-control/how-to/upload-dmn.png)
+
+### How to upload DMN models
+
+Bring DMN models into the workbench from a ZIP archive.
+
+**Prerequisites:** A `.zip` of DMN models.
+
+**Steps:**
+
+1. Open **Management → Upload DMN**.
+2. Drag the ZIP onto the dropzone or click **Select File**.
+3. Click **Proceed to Upload**.
+
+**Verify:** A success card shows the created unit, version, and model count.
+
+### How to activate uploaded models
+
+Turn freshly uploaded models into live API endpoints.
+
+**Prerequisites:** A successful upload that produced models.
+
+**Steps:**
+
+1. In the post-upload **Activate DMN Models** dialog, click **Activate Models** (or **Skip for Now**).
+
+**Verify:** The unit, version, and each model are enabled; you can then click **View Units**.
+
+## Versions & Models
+
+![Versions and models page](/images/decision-control/how-to/versions-models.png)
+
+The versions page is split: **versions** on the left (one card per version), **models** on the right (one card per model inside the selected version). Both card types expose the same kinds of controls:
+
+| Control on a version card | What it does |
+|--------------------------|--------------|
+| Status control | Enable/disable the whole version |
+| Trash icon | Delete the version |
+
+| Control on a model card | What it does |
+|-------------------------|--------------|
+| Status control | Enable/disable the model |
+| Pencil icon | Edit the model's description |
+| External-link icon | Open the model in the authoring editor |
+| Play icon | Send the model to Execute Rules |
+| Trash icon | Delete the model |
+
+### How to manage versions of a unit
+
+Browse, filter, and act on a unit's versions.
+
+**Prerequisites:** On a unit's versions page.
+
+**Steps:**
+
+1. Use **Search**, the **Status** filter, or the sort dropdown in the left panel.
+2. Click a version card to load its models on the right.
+
+**Verify:** The version list filters/sorts and the selected version's models appear.
+
+### How to enable or disable a version
+
+Control whether a whole version is live.
+
+**Steps:**
+
+1. On a version card, click the status control (tooltip: "Click to change the version status").
+
+**Verify:** The version status updates.
+
+### How to delete a version
+
+Remove a single version of a unit.
+
+**Steps:**
+
+1. On the version card, click the trash icon.
+2. Confirm in the delete dialog.
+
+**Verify:** The version disappears from the list.
+
+### How to enable or disable a model
+
+Toggle an individual model within a version.
+
+**Prerequisites:** A version selected.
+
+**Steps:**
+
+1. On the model card (right panel), toggle the status control. (The parent unit/version auto-enable if needed.)
+
+**Verify:** The model status updates.
+
+### How to edit a model's description
+
+Annotate a specific model.
+
+**Steps:**
+
+1. On the model card, click the pencil icon.
+2. Edit the description and save.
+
+**Verify:** The description updates.
+
+### How to delete a model
+
+Remove a single model from a version.
+
+**Steps:**
+
+1. On the model card, click the trash icon and confirm.
+
+**Verify:** The model disappears from the list.
+
+### How to open a model in the editor from the version page
+
+Jump from a managed model into the authoring editor.
+
+**Prerequisites:** Authoring access to edit.
+
+**Steps:**
+
+1. On the model card, click the external-link icon (**Open model**).
+
+**Verify:** A new tab opens the editor for that model.
+
+### How to execute a model from the version page
+
+Quickly send a managed model to the execution screen.
+
+**Prerequisites:** The model enabled.
+
+**Steps:**
+
+1. On the model card, click the play icon (**Play model**).
+
+**Verify:** The Execute Rules screen opens for that model.
+
+### How to visualize a model
+
+Inspect a model's overview, DMN XML, JSON schema, and diagram.
+
+**Steps:**
+
+1. Open the model's **Visualize** view (for example, from a model's actions).
+2. Switch among the tabs: **Overview**, **DMN XML**, **JSON Schema**, **Visualize**.
+
+**Verify:** Each tab renders its content (the JSON Schema tab fetches the model schema).

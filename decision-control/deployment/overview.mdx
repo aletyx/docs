@@ -1,0 +1,169 @@
+---
+title: "Decision Control — Deployment"
+description: "Quick-start to deploy Aletyx Decision Control locally or on Kubernetes."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/deployment/"
+---
+
+Copy-paste quickstart. Two paths: local (Container) and Kubernetes (one manifest). For production hardening, OIDC providers, RBAC tuning, and operational diagnostics, follow the per-topic chapters in the nav.
+
+
+## Local — Container
+
+Decision Control + Postgres on the same host. Substitute `<your-registry>` and `<version>` for the image you pull from.
+
+```bash
+# 1. Postgres
+docker run -d --name dc-postgres \
+  -e POSTGRES_DB=decision_control \
+  -e POSTGRES_USER=dc \
+  -e POSTGRES_PASSWORD=dc \
+  -p 5432:5432 \
+  postgres:18
+
+# 2. Decision Control
+docker run --rm --name decision-control \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=postgres \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/decision_control \
+  -e SPRING_DATASOURCE_USERNAME=dc \
+  -e SPRING_DATASOURCE_PASSWORD=dc \
+  -e HIBERNATE_DDL_AUTO=update \
+  -e ALETYX_OIDC_PROVIDER=none \
+  <your-registry>/aletyx/decision-control-horizon:<version>
+```
+
+Open [http://localhost:8080](http://localhost:8080). `ALETYX_OIDC_PROVIDER=none` bypasses authentication for local diagnostics. For real OIDC, see [Identity & Access Management](/decision-control/deployment/identity-access-management).
+
+## Kubernetes — minimal manifest
+
+Single-file deployment: Namespace, ConfigMap, Secret, Deployment, Service, Ingress. Substitute the `<...>` placeholders for your cluster.
+
+`ALETYX_OIDC_INTERNAL_SECRET` (Secret below) is the shared secret used to authenticate Tower → Decision Control server-to-server calls. Generate one with `openssl rand -hex 32` and use the same string on every Decision Control instance Tower aggregates plus Tower itself. Skip if no Tower will talk to this DC.
+
+```yaml
+# decision-control.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: decision-control
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: decision-control-config
+  namespace: decision-control
+data:
+  SPRING_PROFILES_ACTIVE: "postgres"
+  APP_HOST: "https://<your-host>"
+  CORS_PROXY_ALLOWED_ORIGINS: "https://<your-host>"
+  HIBERNATE_DDL_AUTO: "validate"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://<db-host>:5432/<db-name>"
+  SPRING_DATASOURCE_USERNAME: "<db-user>"
+  ALETYX_OIDC_PROVIDER: "entra"
+  ALETYX_OIDC_CLIENT_ID: "<your-entra-client-id>"
+  ALETYX_OIDC_SCOPES: "openid,profile,email"
+  ALETYX_OIDC_ROLE_CLAIM_PATH: "roles"
+  ALETYX_OIDC_TENANT_CLAIM_NAME: "tid"
+  ALETYX_OIDC_ENTRA_TENANT_ID: "<your-entra-tenant-id>"
+  ALETYX_OIDC_ENTRA_AUDIENCE: "<your-entra-client-id>"
+  ALETYX_OIDC_RBAC_ENABLED: "true"
+  ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS: "user,tower-approvers"
+  ALETYX_OIDC_RBAC_ROLES_ALLOWED_PUBLISH: "user,tower-approvers"
+  ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_AUTHOR: "user"
+  ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_MANAGE: "tower-approvers"
+  ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_MONITOR: "tower-approvers"
+  ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_PROMPT: "user,tower-approvers"
+  ALETYX_OIDC_RBAC_ROLES_ALLOWED_ACCESS_RUN: "user,tower-approvers"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: decision-control-secret
+  namespace: decision-control
+type: Opaque
+stringData:
+  SPRING_DATASOURCE_PASSWORD: "<your-db-password>"
+  ALETYX_OIDC_ENTRA_CLIENT_SECRET: "<your-entra-client-secret>"
+  ALETYX_OIDC_INTERNAL_SECRET: "<your-shared-internal-secret>"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decision-control
+  namespace: decision-control
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: decision-control }
+  template:
+    metadata:
+      labels: { app: decision-control }
+    spec:
+      containers:
+        - name: decision-control
+          image: <your-registry>/aletyx/decision-control-horizon:<version>
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef: { name: decision-control-config }
+            - secretRef:    { name: decision-control-secret }
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 30
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 60
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: decision-control
+  namespace: decision-control
+spec:
+  selector: { app: decision-control }
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: decision-control
+  namespace: decision-control
+  annotations:
+    cert-manager.io/cluster-issuer: <your-cluster-issuer>
+spec:
+  ingressClassName: <your-ingress-class>
+  tls:
+    - hosts: [ "<your-host>" ]
+      secretName: decision-control-tls
+  rules:
+    - host: <your-host>
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: decision-control
+                port: { number: 80 }
+```
+
+Apply and wait for the pod to be ready:
+
+```bash
+kubectl apply -f decision-control.yaml
+kubectl rollout status deployment/decision-control -n decision-control
+```
+
+Then register `https://<your-host>/auth/callback` as a Redirect URI on your Entra App Registration (or Keycloak client) — without it, Entra returns `AADSTS50011` on the first sign-in.
+
+## Next
+
+Use the chapters in the nav for the production-shaped path:
+
+- [Identity & Access Management](/decision-control/deployment/identity-access-management) — Entra / Keycloak, role-claim mapping, URL-level RBAC.
+- [Database Configuration](/decision-control/deployment/database-configuration) — provisioning, backups, schema upgrade flow, TLS.
+- [Container Configuration](/decision-control/deployment/container-configuration) — full env reference, secrets handling, worked `docker run` examples.
+- [Kubernetes & OpenShift Deployment](/decision-control/deployment/kubernetes-openshift-deployment) — hardened manifests, security context, monitoring, troubleshooting.
+- [Supported Operating Environments](/decision-control/deployment/supported-operating-environments) — what we test, what is out of scope.

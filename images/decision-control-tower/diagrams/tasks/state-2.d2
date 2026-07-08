@@ -1,0 +1,62 @@
+vars: {
+  d2-config: {
+    sketch: true
+  }
+}
+
+direction: down
+
+# Promotion state machine — matches the PromotionStatus enum in
+# ai.aletyx.towercore.domain.PromotionStatus.
+
+PENDING: {
+  shape: rectangle
+  style.fill: "#FFE4B5"
+}
+ACTIVATED: {
+  shape: rectangle
+  style.fill: "#87CEEB"
+}
+IN_REVIEW: {
+  shape: rectangle
+  style.fill: "#87CEEB"
+}
+APPROVED: {
+  shape: rectangle
+  style.fill: "#90EE90"
+}
+DEPLOYING: {
+  shape: rectangle
+  style.fill: "#90EE90"
+}
+DEPLOYED: {
+  shape: rectangle
+  style.fill: "#90EE90"
+  style.bold: true
+}
+FAILED: {
+  shape: rectangle
+  style.fill: "#FFB6C1"
+}
+REJECTED: {
+  shape: rectangle
+  style.fill: "#FFB6C1"
+  style.bold: true
+}
+CANCELLED: {
+  shape: rectangle
+  style.fill: "#FFB6C1"
+}
+
+PENDING -> ACTIVATED: "Kogito starts process"
+ACTIVATED -> IN_REVIEW: "Reviewer claims task"
+IN_REVIEW -> APPROVED: "APPROVED transition"
+IN_REVIEW -> REJECTED: "REJECTED transition"
+IN_REVIEW -> ACTIVATED: "REQUEST_CHANGES\n(submitter resubmits)"
+ACTIVATED -> CANCELLED: "Cancelled by submitter"
+IN_REVIEW -> CANCELLED: "Cancelled by submitter"
+APPROVED -> DEPLOYING: "Auto"
+APPROVED -> CANCELLED: "Cancelled before deploy"
+DEPLOYING -> DEPLOYED: "Deploy succeeded"
+DEPLOYING -> FAILED: "Deploy error"
+FAILED -> DEPLOYING: "Retry"

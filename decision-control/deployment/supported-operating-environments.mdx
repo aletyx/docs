@@ -1,0 +1,67 @@
+---
+title: "Supported Operating Environments"
+description: "Compatibility matrix for runtimes, orchestrators, databases, identity providers, and browsers for Decision Control."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/deployment/supported-operating-environments/"
+---
+
+This chapter defines the environments in which Decision Control is supported, and what is explicitly out of scope.
+
+## Container runtimes
+
+| Runtime          | Supported | Notes                          |
+| ---------------- | --------- | ------------------------------ |
+| Container Engine    | Yes       | 24.0+                          |
+| Podman           | Yes       | 4.0+                           |
+| containerd       | Yes       | Via Kubernetes / CRI           |
+| CRI-O            | Yes       | Via OpenShift / Kubernetes     |
+
+The image is a standard OCI artifact and runs on any OCI-compliant runtime.
+
+## Orchestration platforms
+
+| Platform                  | Supported versions | Notes                                   |
+| ------------------------- | ------------------ | --------------------------------------- |
+| Kubernetes (vanilla)      | 1.26+              | Reference manifests provided            |
+| OpenShift                 | 4.12+              | Use `Route`; default `restricted-v2` SCC |
+| K3s / RKE2                | Current stable     | Single- or multi-node                   |
+| EKS / AKS / GKE           | Current stable     | Managed Kubernetes                      |
+
+## Java runtime
+
+The image bundles its own JRE (Eclipse Temurin 17). No host JRE is required. Running the application as a bare JAR outside the image is not a supported production configuration.
+
+## Database engines
+
+| Engine     | Versions | Supported |
+| ---------- | -------- | --------- |
+| PostgreSQL | 14–18    | Yes       |
+
+## Identity providers
+
+| Provider               | Supported versions | Notes                                   |
+| ---------------------- | ------------------ | --------------------------------------- |
+| Microsoft Entra ID     | Free tier and up   | Group assignment requires P1+           |
+| Keycloak / RH Build of Keycloak | 22+       | OpenID Connect Authorization Code flow  |
+
+## Ingress controllers
+
+Any standards-compliant ingress controller that can terminate TLS and forward HTTP to a `ClusterIP` Service (NGINX Ingress, Traefik, HAProxy, OpenShift Router, cloud load balancers). No controller-specific features are required.
+
+## Browsers
+
+| Browser          | Supported          |
+| ---------------- | ------------------ |
+| Chrome / Edge    | Latest 2 versions  |
+| Firefox          | Latest 2 versions  |
+| Safari           | Latest 2 versions  |
+
+## Out of scope
+
+The following are explicitly **not** supported for production:
+
+- `ALETYX_OIDC_PROVIDER=none` (bypasses authentication — diagnostics only).
+- `HIBERNATE_DDL_AUTO=create` against a production database (destroys data on restart).
+- Sharing one database across multiple Decision Control instances.
+- Running the container as root or with elevated capabilities.
+- Databases other than PostgreSQL.
+- Running the application outside its published container image.

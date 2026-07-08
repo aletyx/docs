@@ -1,0 +1,171 @@
+---
+title: "Task Management"
+sidebarTitle: "Tasks"
+description: "Tasks are approval requests in the governance workflow; Aletyx Decision Control Tower provides a central view of all tasks assigned to your role."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/tasks/"
+---
+
+Tasks are approval requests in the governance workflow. Aletyx Decision Control Tower provides a central view of all tasks assigned to your role.
+
+## Task Overview
+
+Tasks are the human-action steps inside a **promotion workflow**. Every promotion (moving a model from one environment to another) runs through the single `standard_promotion` workflow executed by the Tower Sidecar, which produces tasks for the appropriate group at each step.
+
+A typical promotion produces:
+
+- **An Approve task** — assigned to the `tower-approvers` group. The reviewer chooses one of `APPROVED`, `REJECTED`, or `REQUEST_CHANGES`.
+- **A ChangeRequest task** (only if the reviewer chose `REQUEST_CHANGES`) — handed back to the original submitter, who can either **resubmit** (returning the promotion to review) or **cancel** it.
+
+## Promotion lifecycle
+
+The promotion that owns a task moves through a known state machine. Tasks only exist while the promotion is in `ACTIVATED` or `IN_REVIEW`.
+
+| State          | What it means                                                                       |
+| -------------- | ----------------------------------------------------------------------------------- |
+| `PENDING`      | Request submitted; the workflow has not yet started in the Sidecar.                  |
+| `ACTIVATED`    | Workflow started; the first task is open for a reviewer.                             |
+| `IN_REVIEW`    | A reviewer is currently acting on the task.                                          |
+| `APPROVED`     | All required approvals are in; deployment to the target environment is queued.       |
+| `DEPLOYING`    | Deployment is running against the target Decision Control instance.                  |
+| `DEPLOYED`     | Deployment finished successfully — terminal happy-path state.                         |
+| `FAILED`       | Deployment hit an error and can be retried.                                          |
+| `REJECTED`     | A reviewer denied the request — terminal state, no deployment occurs.                |
+| `CANCELLED`    | Cancelled by the submitter or an admin before deployment started.                    |
+| `ROLLED_BACK`  | Deployment was reversed (future capability).                                         |
+
+## Task properties
+
+Each task exposes:
+
+| Property               | Description                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| **Promotion ID**       | Unique identifier of the promotion request that owns the task.                              |
+| **Status**             | Current promotion status (see lifecycle table above).                                       |
+| **Unit / Model**       | The Decision Control unit and model version being promoted.                                 |
+| **Source environment** | Environment the model is being promoted from.                                               |
+| **Target environment** | Environment the model is being promoted to.                                                  |
+| **Submitted by**       | User who created the promotion request.                                                     |
+| **Justification**      | Free-text reason supplied by the submitter, required for audit.                              |
+| **Assigned group**     | The OIDC role group that can act on the task (typically `tower-approvers`).                 |
+| **Created at**         | Timestamp the promotion was created.                                                        |
+| **Audit trail**        | Ordered list of every transition on this task (claim, approve, reject, resubmit, cancel).   |
+
+## Viewing Tasks
+
+### Task List
+
+The Tasks view shows all tasks assigned to your role:
+
+- Filter by status (Open, Completed, All)
+- Sort by date or priority
+- Search by model name
+- Group by type
+
+### Task Details
+
+Click a task to see full details:
+
+- Model version information
+- Request justification
+- Audit history
+- Related tasks
+
+## Actioning Tasks
+
+### Approve Task
+
+1. Review the model and request details
+2. Click "Approve"
+3. Add required comment
+4. Confirm action
+
+![Sequence diagram of approving a task: an Approver opens the task and clicks Approve in the Tower API; the Tower Sidecar transitions the promotion to APPROVED then DEPLOYING, deploys the model to the target Decision Control environment, and reports deployment success](/images/decision-control-tower/diagrams/tasks/sequence-1.svg)
+
+### Reject Task
+
+1. Review the model and request details
+2. Click "Reject"
+3. Add required comment explaining rejection
+4. Confirm action
+
+The submitter will be notified and can make corrections.
+
+## Review and Request-Changes Flow
+
+Aletyx Decision Control Tower promotions run the `standard_promotion` workflow, which separates the **review** role from the **requester**:
+
+- **Approve task**: assigned to the `tower-approvers` group. The reviewer chooses `APPROVED`, `REJECTED`, or `REQUEST_CHANGES`.
+- **ChangeRequest task**: when the reviewer requests changes, the task is handed back to the original requester, who can **resubmit** (returning to review) or **cancel** the promotion.
+- **Audit**: every action — submit, approve, reject, request changes, resubmit, cancel — is recorded in the audit trail.
+
+Example:
+
+- Sarah (Business Analyst) submits a model for promotion
+- The Approve task appears for the `tower-approvers` group
+- Tom (an approver) reviews and either approves, rejects, or requests changes
+- If Tom requests changes, the ChangeRequest task returns to Sarah to resubmit or cancel
+
+## Task Workflow
+
+![State diagram of the task workflow: PENDING to ACTIVATED to IN_REVIEW, which can transition to APPROVED then DEPLOYING then DEPLOYED (or FAILED), to REJECTED with resubmission, or to CANCELLED](/images/decision-control-tower/diagrams/tasks/state-2.svg)
+
+## Role-based task assignment
+
+Tasks are assigned to OIDC role groups; whoever holds the matching app role in the configured provider can claim and act on them. Aletyx Decision Control Tower uses two roles:
+
+| Role               | Capabilities                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `user`             | View the task list, the dashboard, environments, and the audit trail. No transitions. |
+| `tower-approvers`  | Everything `user` can do, plus claim, approve, reject, request changes on tasks.      |
+
+Group membership is configured in the OIDC provider (see [Identity & Access Management](/decision-control-tower/deployment/identity-access-management)). Tower compares the role claim in the JWT literally to the role names above, so the claim or group-mapping in the provider must produce exactly `user` or `tower-approvers`.
+
+## Task History
+
+All task actions are recorded in the audit trail:
+
+- Who performed the action
+- When it was performed
+- What action was taken
+- Comments provided
+
+## Metrics
+
+Aletyx Decision Control Tower exposes Micrometer counters via the standard Spring Boot Actuator (`/actuator/prometheus`):
+
+| Counter                          | Increment                                              |
+| -------------------------------- | ------------------------------------------------------ |
+| `tower.promotions.submitted`     | Each time a user submits a new promotion request.       |
+| `tower.processes.operations`     | Tagged by `operation=started\|cancelled`.               |
+| `tower.environments.operations`  | Tagged by `operation=created\|updated\|deleted`.        |
+
+Combine with the per-deployment `process_instances_*` metrics emitted by the Tower Sidecar to derive higher-level views like approval lead time or rejection rate in your observability stack.
+
+## Troubleshooting
+
+### Task Not Appearing
+
+1. Verify you have the correct role
+2. Check task is still open
+3. Refresh the view
+4. Clear browser cache
+
+### Cannot Approve
+
+1. Verify you are a member of the `tower-approvers` group
+2. Confirm the task is still open (not already actioned)
+3. Ensure all required fields are completed
+4. Check session hasn't expired
+
+### Deployment Failed
+
+1. Check target environment health
+2. Verify database connectivity
+3. Review deployment logs
+4. Contact administrator
+
+## Next Steps
+
+- [Environment Management](/decision-control-tower/environments): Understanding environments
+- [Portal Tour](/decision-control-tower/dashboard): Tour of the Aletyx Decision Control Tower interface
+- [Governance Tasks (how-to)](/decision-control-tower/how-to/governance-tasks): Claim, approve, reject, and request changes

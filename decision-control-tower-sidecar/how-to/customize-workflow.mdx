@@ -1,0 +1,101 @@
+---
+title: "Customize the Promotion Workflow"
+description: "Adapt the Sidecar's example approval workflows to your own policy — what lives in the customizable layer, what is off-limits, and how to make changes safely."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower-sidecar/how-to/customize-workflow/"
+---
+
+The Sidecar ships as a **starter**: the example workflows encode a default approval policy, and you adapt them to your own. This guide explains what lives in the customizable layer, what is off-limits, and how to make changes safely.
+
+<Info>
+**One rule above all**
+
+Change the **workflows** and their **actions** as much as you need. Do **not** change the **Tower integration** or the **request/response contracts** — Tower depends on those exactly as shipped. See [Architecture](/decision-control-tower-sidecar/architecture#core-vs-customizable).
+</Info>
+
+## What you can change
+
+| Area | Examples |
+|---|---|
+| **Review stages** | Add a second approval, a compliance sign-off, or a four-eyes step |
+| **Assignment** | Route tasks to different groups per stage or per environment |
+| **Branching** | Different paths for dev → qa vs qa → prd, or by model type |
+| **Actions** | Add, remove, or replace the steps a workflow runs (e.g. the Git, messaging, and REST example actions) |
+
+## What you must not change
+
+| Area | Why it's fixed |
+|---|---|
+| **Tower callbacks** | Tower starts and advances workflows and receives promotion/deploy, notification, and model-retrieval callbacks through these. |
+| **Request/response contracts** | The payloads exchanged with Tower. Changing a field breaks compatibility. |
+| **Workflow variables Tower sets/reads** | The promotion context (requester, source, target, justification, review outcome, and the promotion identifier) is the handshake with Tower. Keep these intact. |
+
+## How the example workflows are organized
+
+The starter includes three example workflows so you can see the pattern:
+
+- **`standard_promotion`** — the baseline: review → on approval, deploy to the target environment.
+- **`multi_level_approval_promotion`** — the same shape with additional review stages.
+- **`approval_git_versioning_model_promotion`** — review plus post-approval actions (Git versioning, messaging, a REST callout).
+
+Each is a workflow definition whose steps are either **Tower-contract steps** (review tasks and the callbacks — keep these) or **actions** (the customizable service steps).
+
+<Warning>
+**These three are examples — build your own for production**
+
+The shipped workflows exist to demonstrate the pattern. You are **not** required to use any of them, and they are **not** intended as production approval policy. For a production environment, author your own workflow that encodes your organization's process, reusing only the fixed Tower-contract steps.
+</Warning>
+
+## How to add a review stage
+
+Extend the approval policy with another human step.
+
+**Prerequisites:** A target group for the new stage (an approver group your OIDC provider can assign).
+
+**Steps:**
+
+1. In the workflow definition, add a user task for the new stage and route the flow through it (before or after the existing approval, as your policy requires).
+2. Assign the task to the appropriate group.
+3. Keep the existing Tower-contract steps (the review handshake and the approval callback) in place.
+4. Rebuild and redeploy the Sidecar.
+
+**Verify:** Submit a test promotion in Tower; confirm the new stage appears as a task for the assigned group and that the promotion advances only after each required stage is completed.
+
+## How to add or replace an action
+
+Attach work that runs as the workflow advances — for example, your own notification or system-of-record update.
+
+**Prerequisites:** The endpoint/credentials your action needs, supplied via environment variables (see [Configuration](/decision-control-tower-sidecar/deployment/configuration)).
+
+**Steps:**
+
+1. Add the action as a service step at the point in the workflow where it should run.
+2. If it should be optional, gate it behind a configuration flag and make it **best-effort** — log and continue on failure so governance is never blocked (the same pattern the example actions follow).
+3. Leave the Tower-contract steps untouched.
+4. Rebuild and redeploy.
+
+**Verify:** Run a promotion and confirm the action ran (its side effect is visible) and that an approved promotion still completes even if the action is disabled or its target is unavailable.
+
+## How to remove an example action
+
+Drop an example you don't need (for instance, the holidays REST callout).
+
+**Steps:**
+
+1. Remove the action step from the workflow definition.
+2. Leave its configuration variables unset (they simply have no effect once the step is gone).
+3. Rebuild and redeploy.
+
+**Verify:** The promotion flow runs without the removed step and no calls are made to that action's target.
+
+<Warning>
+**Keep workflows in sync with their diagrams**
+
+Tower renders a process diagram for each workflow. If you change a workflow's shape, regenerate its diagram so the audit trail and task drawer show the actual flow.
+</Warning>
+
+## Next Steps
+
+- [Build a customized Sidecar](/decision-control-tower-sidecar/deployment/overview#build-a-customized-sidecar): prerequisites and commands to rebuild after changing a workflow
+- [Git Model Versioning](/decision-control-tower-sidecar/how-to/git-model-versioning): the Git action, end to end
+- [Configuration](/decision-control-tower-sidecar/deployment/configuration): variables for actions and core wiring
+- [Architecture](/decision-control-tower-sidecar/architecture): the core-vs-customizable split

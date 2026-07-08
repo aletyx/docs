@@ -1,0 +1,119 @@
+---
+title: "Decision Control Tower Sidecar — Deployment"
+sidebarTitle: "Deployment"
+description: "Run the Decision Control Tower Sidecar alongside Tower, with its own PostgreSQL database."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower-sidecar/deployment/"
+---
+
+The Sidecar is always deployed **together with Aletyx Decision Control Tower**, each with its own PostgreSQL database. This chapter covers the Sidecar container in isolation; for the combined Tower + Sidecar setup (Kubernetes manifest, OIDC, RBAC), follow the [Tower Deployment](/decision-control-tower/deployment/overview) chapters.
+
+<Info>
+**Shared callback secret**
+
+Tower and the Sidecar must hold the **same** `ALETYX_OIDC_CALLBACK_SECRET`. Generate one and pass it to both:
+```bash
+export CALLBACK_SECRET=$(openssl rand -hex 32)
+```
+</Info>
+
+## Local — Container
+
+The Sidecar plus its own PostgreSQL on the same host. Substitute `<your-registry>` and the image tag you pull.
+
+```bash
+# 1. Sidecar Postgres (dedicated — never share with Tower's database)
+docker run -d --name sidecar-postgres --network aletyx-tower \
+  -e POSTGRES_DB=decision_tower_sidecar \
+  -e POSTGRES_USER=sidecar \
+  -e POSTGRES_PASSWORD=sidecar \
+  -p 5433:5432 \
+  postgres:18
+
+# 2. Sidecar
+docker run -d --name tower-sidecar --network aletyx-tower \
+  -p 8181:8080 \
+  -e APP_HOST=0.0.0.0 \
+  -e BACKEND_PORT=8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e ALETYX_DC_TOWER_SIDECAR_DB_URL=jdbc:postgresql://sidecar-postgres:5432/decision_tower_sidecar \
+  -e ALETYX_DC_TOWER_SIDECAR_DB_USERNAME=sidecar \
+  -e ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD=sidecar \
+  -e ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL=http://decision-control-tower:8080 \
+  -e ALETYX_OIDC_CALLBACK_SECRET="$CALLBACK_SECRET" \
+  <your-registry>/aletyx/decision-control-tower-sidecar:<sidecar-version>
+```
+
+Tower then points at the Sidecar with `ALETYX_DC_TOWER_SIDECAR_URL` and `ALETYX_DC_TOWER_DATA_INDEX_URL` (see the Tower quickstart).
+
+## Kubernetes / OpenShift
+
+In a cluster the Sidecar is a stateless `Deployment` (single replica) behind its own `ClusterIP` Service, with **no Ingress** — it is reached only by Tower over the pod network. Tower addresses it by in-cluster DNS, for example:
+
+```
+http://tower-sidecar.<namespace>.svc.cluster.local
+```
+
+The full reference manifest (Namespace, ConfigMap, Secret, both Deployments and Services, Ingress for Tower) lives in the Tower chapter: [Kubernetes & OpenShift Deployment](/decision-control-tower/deployment/kubernetes-openshift-deployment).
+
+## Resource profile
+
+The Sidecar is a JVM container; size it like Tower (heap set via `JAVA_TOOL_OPTIONS`). Provision enough memory for heap, metaspace, and native overhead to avoid `OOMKilled` events under GC pressure. See the Tower [Container Configuration](/decision-control-tower/deployment/container-configuration) for the JVM and resource guidance, which applies to the Sidecar as well.
+
+## Build a customized Sidecar
+
+The Sidecar is a self-contained Maven project (no parent POM), so once you [customize a workflow](/decision-control-tower-sidecar/how-to/customize-workflow) you build it on its own.
+
+**Prerequisites:**
+
+- A JDK and Maven.
+- Access to the **Aletyx Maven repository** — the build resolves Aletyx artifacts (the automation BOM and Kogito add-ons) from it. Configure it in your `~/.m2/settings.xml`:
+
+```xml
+<settings>
+  <profiles>
+    <profile>
+      <id>aletyx</id>
+      <repositories>
+        <repository>
+          <id>maven-aletyx</id>
+          <url>https://maven-horizon.aletyx.services</url>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>maven-aletyx</id>
+          <url>https://maven-horizon.aletyx.services</url>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>aletyx</activeProfile>
+  </activeProfiles>
+</settings>
+```
+
+<Note>
+**Repository access**
+
+If the Aletyx Maven repository requires authentication, add a matching `<servers>` entry with `<id>maven-aletyx</id>` and the credentials Aletyx provides. Without the repository configured, the build cannot resolve the Aletyx automation BOM and Kogito add-ons.
+</Note>
+
+**Build:**
+
+```bash
+# After editing or adding a workflow (a .bpmn under src/main/resources),
+# regenerate the workflow code:
+mvn process-classes
+
+# Build the deployable application:
+mvn clean package
+```
+
+Package the resulting application into your container image and deploy it as shown above.
+
+## Next Steps
+
+- [Customize the Promotion Workflow](/decision-control-tower-sidecar/how-to/customize-workflow): adapt the approval flow, then rebuild
+- [Configuration](/decision-control-tower-sidecar/deployment/configuration): the full environment-variable reference (database, callbacks, integrations)
+- [Git Model Versioning](/decision-control-tower-sidecar/how-to/git-model-versioning): enable Git push on approved promotions

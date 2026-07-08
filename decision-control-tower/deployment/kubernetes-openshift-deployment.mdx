@@ -1,0 +1,602 @@
+---
+title: "Kubernetes & OpenShift Deployment"
+description: "Reference manifests, sidecar wiring, and OpenShift specifics for deploying Decision Control Tower."
+sidebarTitle: "Kubernetes & OpenShift"
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/deployment/kubernetes-openshift-deployment/"
+---
+
+This chapter describes how to deploy Decision Control Tower on a Kubernetes cluster (vanilla upstream Kubernetes 1.26+) or Red Hat OpenShift (4.12+). The reference manifests target a single namespace per environment (e.g. `tower-prod`) and assume PostgreSQL is available either inside the cluster or as a managed service reachable from pods.
+
+## Architecture overview
+
+A standard production install consists of an Ingress / Route, a Tower Service backed by the Tower Deployment, a Tower Sidecar Deployment behind its own Service, and one PostgreSQL database per component:
+
+<img src="/images/decision-control-tower/architecture-overview.svg" alt="Tower Kubernetes / OpenShift deployment architecture" className="block dark:hidden" />
+<img src="/images/decision-control-tower/architecture-overview-dark.svg" alt="Tower Kubernetes / OpenShift deployment architecture" className="hidden dark:block" />
+
+Both Tower and the Sidecar are stateless containers; durability is provided by the two PostgreSQL databases. The Sidecar component handles process / case / job state for workflow features and is reached by Tower over the cluster's pod network. See chapter 2 for database provisioning details.
+
+## Required resources and dependencies
+
+| Resource                                     | Cluster scope                                 | Notes                                                                                                                                                 |
+| -------------------------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Namespace                                    | namespace-scoped                              | One per environment (`tower-dev`, `tower-qa`, `tower-prod`)                                                                                           |
+| Deployment (Tower)                           | namespace-scoped                              | Single replica is sufficient functionally; multiple replicas require sticky sessions or stateless authentication only (see "High availability" below) |
+| Deployment (Sidecar)                         | namespace-scoped                              | Single replica                                                                                                                                        |
+| Service (Tower)                              | namespace-scoped                              | ClusterIP, port 80 → 8080                                                                                                                             |
+| Service (Sidecar)                            | namespace-scoped                              | ClusterIP, port 80 → 8080                                                                                                                             |
+| Ingress / Route                              | namespace-scoped                              | TLS-terminated entry point for browser traffic to Tower                                                                                               |
+| ConfigMap                                    | namespace-scoped                              | Non-sensitive configuration (URLs, log levels, etc.)                                                                                                  |
+| Secret (`tower-secret`)                      | namespace-scoped                              | Sensitive: DB password, OIDC client secret, sidecar callback secret                                                                                   |
+| (optional) ConfigMap (`tower-static-config`) | namespace-scoped                              | Holds `environments.json` seed                                                                                                                        |
+| PostgreSQL access                            | cluster-internal Service or external endpoint | Network policy / firewall must permit Tower pods → DB                                                                                                 |
+
+## Reference manifests
+
+The manifests below use literal values for clarity. In practice they are commonly templated via Helm, Kustomize or a deploy script that performs envsubst before `kubectl apply`. Variables that vary per environment are called out as `<placeholder>`.
+
+### Namespace
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tower-prod
+  labels:
+    app.kubernetes.io/part-of: decision-control-tower
+```
+
+### ConfigMap (non-sensitive configuration)
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tower-config
+  namespace: tower-prod
+data:
+  # Server
+  APP_HOST: "https://dc-tower.example.com"
+  APP_PORT: "8080"
+  BACKEND_PORT: "8080"
+
+  # Database — password lives in tower-secret
+  ALETYX_DC_TOWER_DB_URL: "jdbc:postgresql://postgres.data.svc.cluster.local:5432/decision_tower_db"
+  ALETYX_DC_TOWER_DB_USERNAME: "tower"
+
+  # OIDC (Entra example)
+  ALETYX_DC_TOWER_USE_MOCKS: "false"
+  ALETYX_OIDC_PROVIDER: "entra"
+  ALETYX_OIDC_CLIENT_ID: "<your-entra-client-id>"
+  ALETYX_OIDC_SCOPES: "openid,profile,email"
+  ALETYX_OIDC_ROLE_CLAIM_PATH: "roles"
+  ALETYX_OIDC_ENTRA_TENANT_ID: "<your-entra-tenant-id>"
+  ALETYX_OIDC_ENTRA_AUDIENCE: "<your-entra-client-id>"
+
+  # CORS — restrict to the public hostname
+  ALETYX_DC_TOWER_CORS_ALLOWED_ORIGINS: "https://dc-tower.example.com"
+
+  # Sidecar wiring — in-cluster DNS, NOT the public hostname
+  ALETYX_DC_TOWER_SIDECAR_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
+  ALETYX_DC_TOWER_DATA_INDEX_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
+
+  # Environment seed file (mounted from tower-static-config)
+  ALETYX_DC_TOWER_ENVIRONMENTS_FILE: "/app/config/environments.json"
+
+  # Health probe loop
+  ALETYX_DC_TOWER_HEALTH_INTERVAL_MS: "30000"
+  ALETYX_DC_TOWER_HEALTH_TIMEOUT: "5"
+  ALETYX_DC_TOWER_HEALTH_POOL_SIZE: "4"
+
+  # Task list
+  ALETYX_DC_TOWER_TASKS_PAGE_SIZE: "200"
+  ALETYX_DC_TOWER_TASKS_FUTURE_TIMEOUT: "5"
+  ALETYX_DC_TOWER_TASKS_EXECUTOR_POOL_SIZE: "0"
+
+  # Logging
+  ALETYX_DC_TOWER_LOG_LEVEL_ROOT: "INFO"
+  ALETYX_DC_TOWER_LOG_LEVEL_APP: "INFO"
+  ALETYX_DC_TOWER_LOG_LEVEL_WEB: "ERROR"
+  ALETYX_DC_TOWER_LOG_LEVEL_HTTP: "ERROR"
+  ALETYX_DC_TOWER_LOG_LEVEL_SQL: "ERROR"
+```
+
+### Secret
+
+For demonstration the manifest below uses `stringData`; in real deployments the values are loaded from a secret manager (Vault, Sealed Secrets, External Secrets Operator).
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tower-secret
+  namespace: tower-prod
+type: Opaque
+stringData:
+  ALETYX_DC_TOWER_DB_PASSWORD: "<from-secret-manager>"
+  ALETYX_OIDC_ENTRA_CLIENT_SECRET: "<from-secret-manager>"
+  ALETYX_OIDC_CALLBACK_SECRET: "<shared-with-sidecar>"
+```
+
+### ConfigMap — `environments.json` seed (optional)
+
+The Tower seeds the `environments` table on every startup from a JSON file. The seeder upserts by `id`, so editing the file and rolling the Deployment is the right way to update environment URLs after the initial bootstrap.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tower-static-config
+  namespace: tower-prod
+data:
+  environments.json: |
+    [
+      {
+        "id": "dev",
+        "display-name": "Development",
+        "description": "Development environment",
+        "dc-internal-url": "http://decision-control.dev.svc.cluster.local",
+        "dc-external-url": "https://dc-dev.example.com",
+        "display-order": 1
+      },
+      {
+        "id": "prod",
+        "display-name": "Production",
+        "description": "Production environment",
+        "dc-internal-url": "http://decision-control.prod.svc.cluster.local",
+        "dc-external-url": "https://dc.example.com",
+        "display-order": 0
+      }
+    ]
+```
+
+#### Field reference
+
+The seed schema uses **kebab-case** keys (Jackson `PropertyNamingStrategies.KEBAB_CASE`):
+
+| JSON key          | DB column       | Notes                                                                                     |
+| ----------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| `id`              | `slug`          | Upsert lookup key. Use a stable, lowercase, dash-separated identifier.                    |
+| `display-name`    | `name`          | Human-readable name shown in the UI                                                       |
+| `description`     | `description`   | Short description                                                                         |
+| `dc-internal-url` | `internal_url`  | Server-side probe target — use the cluster-internal URL of each Decision Control instance |
+| `dc-external-url` | `public_url`    | Browser navigation target when a user clicks "Open environment"                           |
+| `display-order`   | `display_order` | Sort order in the UI (lower numbers first)                                                |
+
+The `enabled` column is set to `true` automatically on insert. To temporarily disable an environment without deleting it, edit the row directly in the database.
+
+### Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decision-control-tower
+  namespace: tower-prod
+  labels:
+    app: decision-control-tower
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: decision-control-tower
+  template:
+    metadata:
+      labels:
+        app: decision-control-tower
+    spec:
+      containers:
+        - name: decision-control-tower
+          image: <your-registry>/aletyx/decision-control-tower:<version>
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: tower-config
+            - secretRef:
+                name: tower-secret
+          volumeMounts:
+            - name: static-config
+              mountPath: /app/config
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "500m"
+            limits:
+              memory: "3Gi"
+              cpu: "2000m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
+      volumes:
+        - name: static-config
+          configMap:
+            name: tower-static-config
+            optional: true
+        - name: tmp
+          emptyDir: {}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+```
+
+### Service
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: decision-control-tower
+  namespace: tower-prod
+spec:
+  selector:
+    app: decision-control-tower
+  ports:
+    - port: 80
+      targetPort: 8080
+```
+
+### Ingress (vanilla Kubernetes / Traefik)
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: decision-control-tower
+  namespace: tower-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - dc-tower.example.com
+      secretName: dc-tower-tls
+  rules:
+    - host: dc-tower.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: decision-control-tower
+                port:
+                  number: 80
+```
+
+If you use the `cert-manager` operator, annotate the Ingress accordingly:
+
+```yaml
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+```
+
+### Sidecar component (required)
+
+Tower **requires** the Sidecar container for its core workflow features — process state, data index queries, jobs, and audit-trail SVG rendering. A Tower deployment without a matching Sidecar will start and accept logins, but workflow-driven endpoints will silently no-op. Deploy both together.
+
+A minimal sidecar deployment in the same namespace:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tower-sidecar-config
+  namespace: tower-prod
+data:
+  BACKEND_PORT: "8080"
+  APP_HOST: "0.0.0.0"
+  SPRING_PROFILES_ACTIVE: "prod"
+
+  # Canonical DB envs read by the Sidecar's application.properties:
+  #   spring.datasource.url=${ALETYX_DC_TOWER_SIDECAR_DB_URL}
+  #   spring.datasource.username=${ALETYX_DC_TOWER_SIDECAR_DB_USERNAME}
+  #   spring.datasource.password=${ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD}
+  ALETYX_DC_TOWER_SIDECAR_DB_URL: "jdbc:postgresql://postgres-sidecar.data.svc.cluster.local:5432/sidecar_db"
+  ALETYX_DC_TOWER_SIDECAR_DB_USERNAME: "sidecar"
+
+  # Callback URL the Sidecar uses to call back into Tower.
+  ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL: "http://decision-control-tower.tower-prod.svc.cluster.local"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tower-sidecar-secret
+  namespace: tower-prod
+type: Opaque
+stringData:
+  ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD: "<from-secret-manager>"
+  # Shared callback secret used to authenticate Sidecar → Tower callbacks.
+  # Value must match the Tower-side Secret entry of the same name.
+  ALETYX_OIDC_CALLBACK_SECRET: "<shared-with-tower>"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tower-sidecar
+  namespace: tower-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tower-sidecar
+  template:
+    metadata:
+      labels:
+        app: tower-sidecar
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: tower-sidecar
+          image: <your-registry>/aletyx/decision-control-tower-sidecar:<tag>
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: tower-sidecar-config
+            - secretRef:
+                name: tower-sidecar-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 45
+            periodSeconds: 15
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+            limits:
+              memory: "1.5Gi"
+              cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tower-sidecar
+  namespace: tower-prod
+spec:
+  selector:
+    app: tower-sidecar
+  ports:
+    - port: 80
+      targetPort: 8080
+```
+
+The shared callback secret must be **identical** on both sides — the Sidecar attaches it to outbound callbacks; Tower verifies it on inbound. Both Tower and the Sidecar expose the value under `ALETYX_OIDC_CALLBACK_SECRET`. Rotation requires updating both Secrets and rolling both Deployments.
+
+Once both are running, point Tower at the Sidecar Service in the Tower ConfigMap:
+
+```yaml
+ALETYX_DC_TOWER_SIDECAR_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
+ALETYX_DC_TOWER_DATA_INDEX_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
+```
+
+Use the in-cluster Service hostname — never a public ingress URL, which would add latency and a failure surface to what is a same-cluster call.
+
+<Note>
+The Sidecar image expects BPMN process diagrams (`*.svg`) at `${KOGITO_SVG_FOLDER_PATH}` (default `/svgs`) for the audit-trail UI to render process pictures. If you ship custom workflows, mount a ConfigMap containing the rendered SVGs at that path. Refer to the Sidecar package documentation for the full list.
+</Note>
+
+### Database connectivity
+
+For an in-cluster PostgreSQL, refer to it via the standard service DNS pattern (`<service>.<namespace>.svc.cluster.local`). For a managed database (Cloud SQL, RDS, Azure Database), use the host endpoint directly. In both cases:
+
+- Ensure pods have outbound access to the database. On clusters with default-deny `NetworkPolicy`, add a rule that permits Tower pods to the database service / IP range.
+- Place the password in the `tower-secret`. Never embed it in the URL or in the ConfigMap.
+- For TLS connections, append the standard JDBC parameters to the URL (`?ssl=true&sslmode=require`).
+
+If you operate a database-as-code controller (e.g. CrunchyData PGO, Zalando postgres-operator), Tower's database can be provisioned alongside the application; the only requirement is that the user owns the database (see chapter 2).
+
+## OpenShift-specific considerations
+
+### Routes vs. Ingress
+
+OpenShift supports both. Most OpenShift teams prefer `Route`, which is the native primitive and handles TLS termination at the cluster router automatically:
+
+```yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: decision-control-tower
+  namespace: tower-prod
+spec:
+  host: dc-tower.apps.<cluster-domain>
+  to:
+    kind: Service
+    name: decision-control-tower
+    weight: 100
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+```
+
+If your team standardizes on `Ingress` (e.g., behind a shared ingress controller), the manifest from the Kubernetes section works on OpenShift unchanged provided the cluster has an `IngressClass` for that controller.
+
+### Security Context Constraints (SCC)
+
+The Tower image runs as `nonroot` and tolerates a read-only root filesystem with `/tmp` as `emptyDir`. This satisfies the OpenShift default `restricted-v2` SCC without modification. No SCC binding is required.
+
+### Image streams
+
+If your team uses ImageStreams to pin and promote images across environments, a typical setup is:
+
+```yaml
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: decision-control-tower
+  namespace: tower-prod
+spec:
+  tags:
+    - name: stable
+      from:
+        kind: DockerImage
+        name: <your-registry>/aletyx/decision-control-tower:latest
+      referencePolicy:
+        type: Source
+      importPolicy:
+        scheduled: false
+```
+
+Reference it in the Deployment via the `image-lookup` annotation:
+
+```yaml
+metadata:
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"decision-control-tower:stable"},"fieldPath":"spec.template.spec.containers[?(@.name==\"decision-control-tower\")].image"}]'
+```
+
+Beyond image management, no OpenShift-specific code paths exist in the application.
+
+### Persistent volumes
+
+Tower itself does not require persistent storage — all state is in PostgreSQL. The Sidecar component writes only to `/tmp` and PostgreSQL.
+
+If you mount the seed JSON via PVC instead of ConfigMap (rare, mostly relevant for very large environment lists), use `accessModes: [ReadOnlyMany]` to allow scaled deployments.
+
+## High availability
+
+Running multiple Tower replicas is supported provided:
+
+1. The OIDC flow uses stateless tokens (default with both Entra and Keycloak — no session affinity required).
+2. The shared callback secret is identical on every replica (it is, since it lives in a Secret).
+3. The Decision Control health probes are tolerant of being run by multiple replicas (they are; each replica probes independently).
+
+To scale:
+
+```yaml
+spec:
+  replicas: 3
+```
+
+Add a `PodDisruptionBudget` to keep at least one replica during voluntary disruptions:
+
+```yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: decision-control-tower
+  namespace: tower-prod
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: decision-control-tower
+```
+
+## Operational commands
+
+```sh
+# Apply the full set of manifests (vanilla Kubernetes)
+kubectl apply -n tower-prod -f tower-namespace.yaml
+kubectl apply -n tower-prod -f tower-config.yaml -f tower-secret.yaml
+kubectl apply -n tower-prod -f tower-static-config.yaml
+kubectl apply -n tower-prod -f tower-sidecar.yaml
+kubectl apply -n tower-prod -f tower-deployment.yaml
+kubectl apply -n tower-prod -f tower-service.yaml -f tower-ingress.yaml
+
+# Verify the rollout
+kubectl -n tower-prod rollout status deployment/tower-sidecar
+kubectl -n tower-prod rollout status deployment/decision-control-tower
+
+# Inspect logs
+kubectl -n tower-prod logs deploy/decision-control-tower --tail=200
+kubectl -n tower-prod logs deploy/tower-sidecar --tail=200
+
+# Trigger a rolling restart (e.g. after editing the ConfigMap or Secret)
+kubectl -n tower-prod rollout restart deploy/decision-control-tower
+
+# Roll back to the previous revision
+kubectl -n tower-prod rollout undo deploy/decision-control-tower
+
+# Smoke test the OIDC config endpoint from inside the cluster
+kubectl -n tower-prod run curl --rm -it --image=curlimages/curl -- \
+  curl -s http://decision-control-tower.tower-prod.svc.cluster.local/auth/config
+```
+
+## Diagnostic patterns
+
+| Symptom                                               | Common cause                                                                         | First step                                                                                                           |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Pod stuck in `CreateContainerConfigError`             | Missing or misnamed Secret key                                                       | `kubectl describe pod <name>` and verify all `envFrom` references resolve                                            |
+| `OOMKilled` in `kubectl get events`                   | Memory limit below the JVM heap                                                      | Raise `resources.limits.memory` to ≥ 3 GiB or override `JAVA_TOOL_OPTIONS` to use a smaller heap                     |
+| Login redirects in a loop                             | Clock skew or redirect URI mismatch with the OIDC provider                           | Verify NTP and confirm the registered redirect URI in the OIDC provider matches `${APP_HOST}/auth/callback`          |
+| Environments page shows `status=DOWN` for all entries | Tower cannot reach the registered Decision Control instances at their `internal_url` | From inside the Tower pod, exec a `curl` (or `kubectl debug` with a tools image) to the URL and confirm reachability |
+| Rolling restart never completes                       | Liveness probe failing                                                               | Inspect `kubectl describe pod` for the failing probe; check whether the database is reachable                        |
+
+For diagnostics that require a shell, the Tower image is distroless and ships no shell of its own. Use `kubectl debug` with a container image your organization trusts (an ephemeral debug container targeting the Tower pod), or run the diagnostic command from a separate pod in the same namespace.
+
+## Troubleshooting
+
+### Cannot log in
+
+1. Verify the OIDC provider's registered redirect URI matches `${APP_HOST}/auth/callback` exactly — including the scheme (`https://`) and any trailing path.
+2. Tail the Tower pod logs while attempting to log in:
+   ```sh
+   kubectl logs -f deployment/decision-control-tower -n <your-namespace>
+   ```
+3. Confirm the OIDC provider is reachable from inside the cluster (network policies, firewall, DNS).
+
+### Environments not loading
+
+The Tower and Sidecar images are distroless and ship no shell, so `kubectl exec` is not available. Use `kubectl run` to launch a short-lived helper pod in the same namespace, or `kubectl debug --copy-to` with a tools image, and run the checks from there.
+
+1. Verify the Tower Sidecar Deployment is `1/1 Running` — Tower depends on it for environment state. If the Sidecar is missing or crash-looping, the environments page surfaces no rows.
+2. From a helper pod in the same namespace, check the Sidecar Service is reachable at the URL Tower uses (the value of `ALETYX_DC_TOWER_SIDECAR_URL`):
+   ```sh
+   kubectl run sidecar-check --rm -it --restart=Never \
+     -n <your-namespace> --image=curlimages/curl:8.10.1 -- \
+     curl -fsS http://<tower-sidecar-service>/actuator/health
+   ```
+3. Verify the Sidecar can reach its database, again from a helper pod:
+   ```sh
+   kubectl run db-check --rm -it --restart=Never \
+     -n <your-namespace> --image=postgres:15-alpine -- \
+     psql 'host=<your-sidecar-db-host> user=<sidecar-user> dbname=<sidecar-db> sslmode=disable' -c '\conninfo'
+   ```
+4. The `environments` table is seeded from `/app/config/environments.json` on first boot. If the table is empty in an existing deployment, confirm the seed file is mounted (see chapter 4 — ConfigMap `environments.json` seed).
+
+### Tasks not appearing
+
+1. Verify the signed-in user holds a role in `ALETYX_OIDC_RBAC_ROLES_ALLOWED_*` for `ACCESS` or the more specific action — empty allow-lists deny everything when RBAC is enabled.
+2. Confirm the underlying workflow ran and produced tasks: the Sidecar's Data Index logs show task creation events.
+3. Tail the Tower pod logs for errors emitted by the task-fetch loop. Slow / unreachable Sidecar HTTP shows up as timeouts.

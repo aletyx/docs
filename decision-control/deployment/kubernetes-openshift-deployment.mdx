@@ -1,0 +1,348 @@
+---
+title: "Kubernetes & OpenShift Deployment"
+description: "Reference manifests, database connectivity, and OpenShift specifics for deploying Decision Control."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/deployment/kubernetes-openshift-deployment/"
+---
+
+This chapter provides reference manifests for a single-namespace Decision Control deployment. Substitute your namespace, hostname, image reference, and secret values.
+
+## Architecture overview
+
+Decision Control is a stateless Spring Boot application. A namespace deployment consists of:
+
+| Resource     | Purpose                                                       |
+| ------------ | ------------------------------------------------------------- |
+| `Namespace`  | Isolation boundary                                            |
+| `ConfigMap`  | Non-sensitive configuration (server, OIDC public metadata, DB URL/username, AI toggles) |
+| `Secret`     | Sensitive values (DB password, OIDC client secret, AI API key)|
+| `Deployment` | The application pods                                           |
+| `Service`    | Stable in-cluster address (ClusterIP)                         |
+| `Ingress` / `Route` | External exposure with TLS                             |
+
+PostgreSQL is assumed to exist already, reachable from the namespace (managed service, an operator-provisioned instance, or a database in another namespace).
+
+## Namespace
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: decision-control
+```
+
+## ConfigMap
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dc-config
+  namespace: decision-control
+data:
+  SPRING_PROFILES_ACTIVE: "postgres"
+  APP_HOST: "https://dc.example.com"
+  CORS_PROXY_ALLOWED_ORIGINS: "https://dc.example.com"
+  HIBERNATE_DDL_AUTO: "validate"
+
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres.infra.svc.cluster.local:5432/dc"
+  SPRING_DATASOURCE_USERNAME: "dc_app"
+
+  # OIDC (Entra example) — secrets live in the Secret below
+  ALETYX_OIDC_PROVIDER: "entra"
+  ALETYX_OIDC_CLIENT_ID: "<your-entra-client-id>"
+  ALETYX_OIDC_SCOPES: "openid,profile,email"
+  ALETYX_OIDC_ROLE_CLAIM_PATH: "roles"
+  ALETYX_OIDC_TENANT_CLAIM_NAME: "tid"
+  ALETYX_OIDC_ENTRA_TENANT_ID: "<your-entra-tenant-id>"
+  ALETYX_OIDC_ENTRA_AUDIENCE: "<your-entra-client-id>"
+  ALETYX_OIDC_RBAC_ENABLED: "false"
+```
+
+## Secret
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dc-secret
+  namespace: decision-control
+type: Opaque
+stringData:
+  SPRING_DATASOURCE_PASSWORD: "<from-secret-manager>"
+  ALETYX_OIDC_ENTRA_CLIENT_SECRET: "<from-secret-manager>"
+  # Set only when integrated with Decision Control Tower:
+  # ALETYX_OIDC_INTERNAL_SECRET: "<shared-with-tower>"
+```
+
+Secret encryption at rest must be enabled on the cluster.
+
+## Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decision-control
+  namespace: decision-control
+  labels:
+    app: decision-control
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: decision-control
+  template:
+    metadata:
+      labels:
+        app: decision-control
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: decision-control
+          image: registry.example.com/decision-control:<version>
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: dc-config
+            - secretRef:
+                name: dc-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+      volumes:
+        - name: tmp
+          emptyDir: {}
+```
+
+## Service
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: decision-control
+  namespace: decision-control
+spec:
+  selector:
+    app: decision-control
+  ports:
+    - port: 80
+      targetPort: 8080
+```
+
+## Ingress (Kubernetes)
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: decision-control
+  namespace: decision-control
+spec:
+  tls:
+    - hosts:
+        - dc.example.com
+      secretName: dc-tls
+  rules:
+    - host: dc.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: decision-control
+                port:
+                  number: 80
+```
+
+The OIDC redirect URI registered at your provider must match `https://dc.example.com/auth/callback`.
+
+## Database connectivity
+
+- Point `SPRING_DATASOURCE_URL` at the database's in-cluster service DNS or external endpoint.
+- For TLS, append SSL parameters to the URL and mount the CA — see [Database Configuration](/decision-control/deployment/database-configuration#tls-to-the-database).
+- First rollout against an empty database: set `HIBERNATE_DDL_AUTO=update`, then switch to `validate` and re-apply.
+
+## OpenShift specifics
+
+- Replace the `Ingress` with a `Route`:
+
+```yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: decision-control
+  namespace: decision-control
+spec:
+  host: dc.example.com
+  to:
+    kind: Service
+    name: decision-control
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+```
+
+- The image runs as non-root and is compatible with the default `restricted-v2` SCC. Do not grant `anyuid`.
+- Use `ImageStreams` if your registry workflow relies on them; otherwise reference the image directly.
+
+## High availability
+
+- Decision Control is stateless — scale horizontally by raising `replicas`. All state lives in PostgreSQL.
+- The OIDC flow uses stateless tokens, so no session affinity is required.
+- Size the database connection pool and PostgreSQL `max_connections` for the total replica count.
+
+## Diagnostics
+
+| Symptom                                       | Likely cause                                              | Action                                                                                          |
+| --------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Pod `CrashLoopBackOff` on startup             | Datasource unreachable or `validate` schema mismatch       | Check logs for HikariCP / Hibernate errors; confirm DB reachability and schema                  |
+| `OOMKilled`                                   | Memory limit below JVM heap                                | Raise `resources.limits.memory` to ≥ 2 GiB                                                       |
+| `401` on every request                        | Backend OIDC active but frontend reads `provider=none`     | Restart the pod so `/env.json` is re-rendered; ensure `/env.json` is not cached by a CDN         |
+| Login redirects in a loop                     | Clock skew or redirect URI mismatch                        | Verify NTP; confirm the registered redirect URI matches `${APP_HOST}/auth/callback`             |
+| Rolling restart never completes               | Liveness probe failing                                     | Inspect `kubectl describe pod` for the failing probe; check DB reachability                      |
+
+For diagnostics that require a shell, the Decision Control image is distroless and ships no shell of its own. Use `kubectl debug` with a container image your organization trusts (an ephemeral debug container targeting the pod), or run the diagnostic command from a separate pod in the same namespace.
+
+## Updating configuration
+
+ConfigMap and Secret changes are not picked up by running pods. After editing either, restart the Deployment to roll the change forward:
+
+```sh
+kubectl apply -f decision-control-config.yaml -n <your-namespace>
+kubectl rollout restart deployment/decision-control -n <your-namespace>
+kubectl rollout status deployment/decision-control -n <your-namespace>
+```
+
+Image-only updates (a new tag for the same `Deployment`) use the rolling update strategy without manual intervention — `kubectl set image` triggers the rollout. Provider envs, secrets, and TLS material continue to be sourced from the existing ConfigMap and Secret.
+
+For scaling decisions, see the [High availability](#high-availability) note above. `kubectl scale deployment/decision-control --replicas=N` works as expected once the prerequisites (stateless auth and a DB pool sized for the total replica count) are satisfied.
+
+## Monitoring and observability
+
+Decision Control exposes the standard Spring Boot Actuator endpoints. The default exposed set is `health`, `info`, `metrics`, and `prometheus` — adjust via `ACTUATOR_ENDPOINTS` if your stack requires a different list.
+
+### Liveness and readiness
+
+The Kubernetes probes consume the same `/actuator/health` endpoint as documented in [Container Configuration](/decision-control/deployment/container-configuration#health-and-verification). A healthy pod returns HTTP `200` with body:
+
+```json
+{ "status": "UP", "groups": ["liveness", "readiness"] }
+```
+
+The Deployment manifest already wires `readinessProbe` and `livenessProbe` against this endpoint with conservative initial-delay and failure-threshold values. Tighten them only after measuring real boot times for your image and JVM.
+
+### Prometheus
+
+A `ServiceMonitor` scrapes the application directly when you run the Prometheus Operator. The example below assumes the Service is `decision-control` exposing the default Spring Boot port:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: decision-control
+  namespace: <your-namespace>
+  labels:
+    release: prometheus  # match your Prometheus Operator selector
+spec:
+  selector:
+    matchLabels:
+      app: decision-control
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+```
+
+For non-Operator Prometheus, scrape the pod IPs directly via the standard `prometheus.io/scrape: "true"` pod annotation pattern; the path is the same.
+
+### Logs
+
+Decision Control writes JSON-structured logs to stdout. Stream them with `kubectl logs`; pipe to your log-aggregation stack (Loki, ELK, Datadog) the same way as any other Spring Boot service in the cluster.
+
+```sh
+kubectl logs -f deployment/decision-control -n <your-namespace>
+```
+
+Increase verbosity per logger using `LOGGING_LEVEL_*` env variables (Spring's standard mechanism). Set them on the ConfigMap and roll the Deployment; remove the override before normal operation to avoid log-volume cost.
+
+## Troubleshooting
+
+Common failure modes and where to look:
+
+### Pod stuck in `ImagePullBackOff`
+
+Verify the image-pull Secret in the same namespace as the Deployment is the one referenced by `imagePullSecrets`, and that the registry credentials are still valid. The Aletyx portal lets you reissue an API token without revoking the previous one — useful for rotating without downtime.
+
+```sh
+kubectl get events -n <your-namespace> --sort-by=.lastTimestamp | grep -i pull
+kubectl describe pod <pod> -n <your-namespace>
+```
+
+### Pod stuck in `CrashLoopBackOff`
+
+Read the pod logs — `kubectl logs <pod> -n <namespace> --previous` shows the last crash even after restart. The two most common causes:
+
+- **`HIBERNATE_DDL_AUTO=validate` against a stale schema** after a major image bump that added tables. Either run a migration manually or temporarily switch to `update` (then revert).
+- **`401` against `/actuator/health` because the probe is going through the OIDC filter.** The health endpoint must be unauthenticated; if the path is filtered behind auth, the probe will 401 and Kubernetes will restart the pod.
+
+### Pod stuck in `Pending`
+
+The scheduler has no node that fits the pod. Inspect with `kubectl describe pod` — the events line at the bottom names the constraint (resource shortfall, taint, PVC binding, etc.).
+
+### Database connection failures
+
+Test reachability from inside the namespace before suspecting application config:
+
+```sh
+kubectl run dc-netcheck --rm -it --image=alpine -n <your-namespace> -- \
+  /bin/sh -c "apk add --no-cache postgresql-client && \
+              psql 'host=<your-db-host> user=<your-user> dbname=<your-db> sslmode=require'"
+```
+
+If the connection from a fresh pod also fails, the issue is networking (NetworkPolicy, firewall, DNS) — not Decision Control's config. If the pod connects but Decision Control's logs still show HikariCP errors, double-check the `SPRING_DATASOURCE_*` env values match what the netcheck used.
+
+### Ingress / Route returns 404 or 503
+
+Verify the Ingress / Route is matched by the controller (`kubectl get ingress -A` shows the address); then verify TLS termination:
+
+```sh
+kubectl -n ingress-nginx logs deployment/ingress-nginx-controller --tail=200
+curl -vk https://<your-host>/actuator/health
+```
+
+A `503` typically means the Service has no Ready endpoints — i.e. the upstream Deployment is not Running. A `404` from the controller (rather than the application) means the host header doesn't match a known Ingress.

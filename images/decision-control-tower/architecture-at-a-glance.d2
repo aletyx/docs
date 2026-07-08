@@ -1,0 +1,141 @@
+direction: down
+
+vars: {
+  d2-config: {
+    sketch: true
+  }
+}
+
+# OIDC Provider — handles browser sign-in and issues the bearer token.
+oidc: {
+  label: |md
+    **OIDC Provider**
+    Microsoft Entra ID or Keycloak
+  |
+  shape: rectangle
+  style: {
+    fill: "#DDA0DD"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Decision Control Tower — SPA + Spring Boot API + own PostgreSQL.
+tower: {
+  label: |md
+    **Decision Control Tower**
+    Frontend (SPA) · Spring Boot API
+    /api/v1 · /actuator · /auth
+  |
+  shape: rectangle
+  style: {
+    fill: "#90EE90"
+    stroke: "#333"
+    stroke-width: 3
+    bold: true
+    font-size: 18
+  }
+}
+
+tower_db: {
+  label: |md
+    **PostgreSQL**
+    Tower database
+  |
+  shape: cylinder
+  style: {
+    fill: "#FFE4B5"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Sidecar — required companion: process state, data index, jobs, SVGs.
+sidecar: {
+  label: |md
+    **Tower Sidecar** (required)
+    Process state · Data Index · Jobs
+  |
+  shape: rectangle
+  style: {
+    fill: "#FFB6C1"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+sidecar_db: {
+  label: |md
+    **PostgreSQL**
+    Sidecar database
+  |
+  shape: cylinder
+  style: {
+    fill: "#FFE4B5"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Registered Decision Control instances — Tower probes their health.
+dc_instances: {
+  label: |md
+    **Decision Control instances**
+    Registered in the `environments` table
+  |
+  shape: rectangle
+  style: {
+    fill: "#87CEEB"
+    stroke: "#333"
+    stroke-width: 2
+    bold: true
+    font-size: 18
+  }
+}
+
+# Connections.
+oidc -> tower: {
+  label: "auth code / token"
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+tower <-> tower_db: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+tower <-> sidecar: {
+  label: "in-cluster HTTP"
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+sidecar <-> sidecar_db: {
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}
+
+tower -> dc_instances: {
+  label: "health probes"
+  style: {
+    stroke-width: 2
+    animated: true
+  }
+}

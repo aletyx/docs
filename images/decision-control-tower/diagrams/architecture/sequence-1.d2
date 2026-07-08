@@ -1,0 +1,30 @@
+vars: {
+  d2-config: {
+    sketch: true
+    theme-id: 200
+  }
+}
+
+promotion: {
+  shape: sequence_diagram
+  style.font-size: 24
+
+  ui: Tower UI
+  core: Tower Core
+  sc: Tower Sidecar (Promotion Workflow)
+  src: Source Environment
+  tgt: Target Environment
+
+  ui -> core: "Submit promotion request"
+  core -> core: "Record promotion request"
+  core -> sc: "Start promotion workflow"
+  sc -> core: "Workflow started"
+  sc -> core: "Notify: review task ready"
+  ui -> core: "View review tasks"
+  ui -> core: "Approve review task"
+  core -> sc: "Advance workflow"
+  sc -> core: "Approval granted — execute promotion"
+  core -> src: "Read published model"
+  core -> tgt: "Publish model to target"
+  core -> core: "Record audit trail"
+}

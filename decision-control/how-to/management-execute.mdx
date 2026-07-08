@@ -1,0 +1,88 @@
+---
+title: "Management – Execute Rules"
+description: "Run published decision models with inputs and inspect their outputs."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/how-to/management-execute/"
+---
+
+Run published decision models with inputs and inspect their outputs. All guides require Management access.
+
+![Execute Rules screen](/images/decision-control/how-to/execute-rules.png)
+
+Search for a model, fill the **InputForm** (or **Json**) tab, click **Execute**, and read the **Results** tab.
+
+## How to find and open a model to execute
+
+Locate a deployed model and load its input form.
+
+<Warning>
+**Only ENABLED models can be executed**
+
+Disabled models appear in the list but can't be expanded. Enable the model (and its parent unit/version) on the [Versions & Models page](/decision-control/how-to/management-models#versions-models) first.
+</Warning>
+
+**Steps:**
+
+1. Open **Management → Execute Rules**.
+2. Type in **Search models by name or unit…**.
+3. Click the model to expand it (or **Open Model**). Use **Refresh all models** if it's missing.
+
+**Verify:** The model expands and its input form/schema loads.
+
+## How to execute a decision model
+
+Run a model with inputs and view its outputs.
+
+**Prerequisites:** A model opened in Execute Rules.
+
+Provide the inputs in whichever form you prefer:
+
+<Tabs>
+  <Tab title="Guided form">
+    1. On the **InputForm** tab, fill in the generated fields.
+    2. Click **Execute**.
+  </Tab>
+  <Tab title="Raw JSON">
+    1. On the **Json** tab, paste or edit the input payload.
+    2. Click **Execute**.
+  </Tab>
+</Tabs>
+
+Then open the **Results** tab to view the output (toggle **Summary**/**JSON**, copy as needed).
+
+**Verify:** The Results tab shows the evaluated output.
+
+## How to execute a model with AI explanation
+
+Run a model and generate a business/technical narration of the result — useful for stakeholders who need the *why*, not just the value.
+
+**Prerequisites:** AI flags enabled (the button is hidden otherwise).
+
+**Steps:**
+
+1. Enter inputs as above.
+2. Click **Execute with AI** (also labeled **Execute & Explain**).
+3. Open the narration panel for **Business** / **Technical** explanations.
+
+    ![AI narration panel after executing](/images/decision-control/how-to/execute-with-ai.png)
+
+**Verify:** Results appear plus AI narration.
+
+## How to review execution history in Execute Rules
+
+Revisit prior runs for the open model.
+
+**Prerequisites:** Previous executions in this session.
+
+**Steps:**
+
+1. Open the **History** tab.
+2. Filter by **All** / **Success** / **Error** / **Explained** (runs done with **Execute with AI** that produced an AI narration), and click **View details** to replay one.
+3. (Optional) Click **Clear History** to remove all entries.
+
+<Info>
+**Scope of the history**
+
+This history is **session-local** (kept in your browser) — it's perfect for replaying scenarios while you work, but it doesn't survive a reload or move with you across browsers. For persistent execution records, see [Monitoring → Executions](/decision-control/how-to/monitoring#executions).
+</Info>
+
+**Verify:** The chosen run's inputs/results load; clearing empties the list.

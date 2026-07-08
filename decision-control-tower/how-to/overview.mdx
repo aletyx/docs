@@ -1,0 +1,49 @@
+---
+title: "How-To Guides"
+description: "Task-focused guides for Aletyx Decision Control Tower, the governance portal — each guide answers a single \"how do I…?\" question with the shortest path to done."
+source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control-tower/how-to/"
+---
+
+Task-focused guides for Aletyx Decision Control Tower, the governance portal. Each guide answers a single "how do I…?" question with the shortest path to done.
+
+<Info>
+**Keystone Edition Only**
+
+Aletyx Decision Control Tower is exclusively available in the **Keystone Edition** of Decision Control. Once provisioned, the portal exposes all of its features - the UI itself does not gate features by edition.
+</Info>
+
+<CardGroup cols={2}>
+  <Card title="Sign in & Global" icon="log-in" href="/decision-control-tower/how-to/sign-in-and-global">
+    Sign in (SSO or username), sign out, switch theme, and view the About dialog.
+  </Card>
+  <Card title="Environments" icon="cloud" href="/decision-control-tower/how-to/environments">
+    Browse, filter, tag, and launch your Decision Control environments.
+  </Card>
+  <Card title="Promotions" icon="upload" href="/decision-control-tower/how-to/promotions">
+    Create, track, open, and cancel promotion requests through a governed workflow.
+  </Card>
+  <Card title="Governance Tasks" icon="clipboard-list" href="/decision-control-tower/how-to/governance-tasks">
+    Approve, reject, request changes, resubmit, cancel, and annotate tasks.
+  </Card>
+  <Card title="Promotion History" icon="history" href="/decision-control-tower/how-to/audit-trail">
+    Inspect a promotion's timeline, full history, and per-task detail.
+  </Card>
+</CardGroup>
+
+## Access and visibility
+
+What you can do in Aletyx Decision Control Tower depends on **what access your administrator gave you**. Your organization picks its own role names, but those roles map to three kinds of access in the portal:
+
+| Access | What it allows |
+|--------|----------------|
+| **Any signed-in Tower user** | Browse environments, create and track promotions, open a promotion's timeline/history, open task details and notes, view the dashboard |
+| **Approval access** | Claim, approve, reject, or request changes on tasks at the step you're allowed to review; drill into a promotion's full task history |
+| **Original requester** | Resubmit (with a new version) or cancel a request that was returned to you for changes |
+
+<Note>
+**Four-eyes is enforced through claims**
+
+Acting on a task requires you to **claim** it first. The claim model - combined with how steps are assigned - keeps any one person from completing both submission and approval, so segregation of duties is preserved without per-action role checks in the UI.
+</Note>
+
+Each guide notes the access it needs under **Prerequisites**.
