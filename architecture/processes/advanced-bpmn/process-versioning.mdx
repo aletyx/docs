@@ -31,7 +31,8 @@ The recommended versioning approach follows these principles:
 
 This diagram illustrates the lifecycle of a process from initial deployment through version updates to cleanup:
 
-[![Process SVG Transition](/images/architecture/core/processes/advanced-bpmn/images/version-to-version.svg)](/images/architecture/core/processes/advanced-bpmn/images/version-to-version.svg)
+[<img src="/images/architecture/core/processes/advanced-bpmn/images/version-to-version.svg" alt="Process SVG Transition" className="block dark:hidden" />
+<img src="/images/architecture/core/processes/advanced-bpmn/images/version-to-version-dark.svg" alt="Process SVG Transition" className="hidden dark:block" />](/images/architecture/core/processes/advanced-bpmn/images/version-to-version.svg)
 
 ### Initial Deployment (Version 1)
 
@@ -141,7 +142,8 @@ my-process-container:1.0.1
 **Pros:** Simplified deployment, single service endpoint
 **Cons:** Larger container size, less clear separation of versions
 
-[![Single Container with Multiple Versions](/images/architecture/core/processes/advanced-bpmn/images/container-single.svg)](/images/architecture/core/processes/advanced-bpmn/images/container-single.svg)
+[<img src="/images/architecture/core/processes/advanced-bpmn/images/container-single.svg" alt="Single Container with Multiple Versions" className="block dark:hidden" />
+<img src="/images/architecture/core/processes/advanced-bpmn/images/container-single-dark.svg" alt="Single Container with Multiple Versions" className="hidden dark:block" />](/images/architecture/core/processes/advanced-bpmn/images/container-single.svg)
 
 ### Approach 2: Multiple Containers with Version-specific Routing
 
@@ -158,13 +160,15 @@ my-process-container-v2:1.0.0
 **Pros:** Clean separation of versions, independent scaling, handles underlying model changes beyond process better
 **Cons:** More complex routing logic needed, more containers deployed
 
-[![Multiple Containers with Version-specific Routing](/images/architecture/core/processes/advanced-bpmn/images/container-strategy-2.svg)](/images/architecture/core/processes/advanced-bpmn/images/container-strategy-2.svg)
+[<img src="/images/architecture/core/processes/advanced-bpmn/images/container-strategy-2.svg" alt="Multiple Containers with Version-specific Routing" className="block dark:hidden" />
+<img src="/images/architecture/core/processes/advanced-bpmn/images/container-strategy-2-dark.svg" alt="Multiple Containers with Version-specific Routing" className="hidden dark:block" />](/images/architecture/core/processes/advanced-bpmn/images/container-strategy-2.svg)
 
 ### Cleanup Approach: Regardless of Strategy
 
 After there are no more active instances, then cleanup can be performed to remove the V1.0.0 from the deployed container.
 
-[![Single Container with Multiple Versions](/images/architecture/core/processes/advanced-bpmn/images/container-strategy-1.svg)](/images/architecture/core/processes/advanced-bpmn/images/container-strategy-1.svg)
+[<img src="/images/architecture/core/processes/advanced-bpmn/images/container-strategy-1.svg" alt="Single Container with Multiple Versions" className="block dark:hidden" />
+<img src="/images/architecture/core/processes/advanced-bpmn/images/container-strategy-1-dark.svg" alt="Single Container with Multiple Versions" className="hidden dark:block" />](/images/architecture/core/processes/advanced-bpmn/images/container-strategy-1.svg)
 
 ## Practical Example
 

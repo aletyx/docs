@@ -140,7 +140,8 @@ This session was previously disposed.
 
 Ruleflows use BPMN process definitions to control decision execution:
 
-[![Flowchart of a classic Drools ruleflow: Start leads to a Validation ruleflow group and a 'Valid Application?' decision; if yes it runs Scoring then Approval Logic, if no it runs Rejection, then End](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-1.svg)](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-1.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-1.svg" alt="Flowchart of a classic Drools ruleflow: Start leads to a Validation ruleflow group and a 'Valid Application?' decision; if yes it runs Scoring then Approval Logic, if no it runs Rejection, then End" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-1-dark.svg" alt="Flowchart of a classic Drools ruleflow: Start leads to a Validation ruleflow group and a 'Valid Application?' decision; if yes it runs Scoring then Approval Logic, if no it runs Rejection, then End" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-1.svg)
 
 Each **Ruleflow Group** contains related rules that execute together when that stage of the process is reached.
 
@@ -157,7 +158,8 @@ Both Kogito and traditional jBPM processes support **Business Rule Tasks** to em
 
 **Example BPMN with Business Rule Task:**
 
-[![BPMN flowchart of a hybrid loan process: Start (Loan Application) to a Validate Data service task, then Credit Scoring and Risk Assessment business rule tasks, then an 'Approved?' decision; yes goes to a Final Review user task and End Approved, no goes to End Rejected](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-2.svg)](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-2.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-2.svg" alt="BPMN flowchart of a hybrid loan process: Start (Loan Application) to a Validate Data service task, then Credit Scoring and Risk Assessment business rule tasks, then an 'Approved?' decision; yes goes to a Final Review user task and End Approved, no goes to End Rejected" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-2-dark.svg" alt="BPMN flowchart of a hybrid loan process: Start (Loan Application) to a Validate Data service task, then Credit Scoring and Risk Assessment business rule tasks, then an 'Approved?' decision; yes goes to a Final Review user task and End Approved, no goes to End Rejected" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-2.svg)
 
 **Configuring a Business Rule Task:**
 
@@ -179,7 +181,8 @@ Execute decisions in a defined sequence where each decision may influence the ne
 
 **Use case:** Multi-stage approval process
 
-[![Flowchart of a sequential decision chain: Application Data passes through Validation Rules, Scoring Rules, Pricing Rules and Approval Rules to produce the Decision Output](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-3.svg)](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-3.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-3.svg" alt="Flowchart of a sequential decision chain: Application Data passes through Validation Rules, Scoring Rules, Pricing Rules and Approval Rules to produce the Decision Output" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-3-dark.svg" alt="Flowchart of a sequential decision chain: Application Data passes through Validation Rules, Scoring Rules, Pricing Rules and Approval Rules to produce the Decision Output" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-lr-3.svg)
 
 **Implementation:**
 
@@ -193,7 +196,8 @@ Evaluate multiple independent decision sets concurrently for performance.
 
 **Use case:** Risk assessment from multiple perspectives
 
-[![Flowchart of parallel decision evaluation: an Application is evaluated simultaneously by Credit Risk Rules, Fraud Detection Rules and Compliance Rules, whose outputs are combined in Aggregate Results to produce the Final Decision](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-4.svg)](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-4.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-4.svg" alt="Flowchart of parallel decision evaluation: an Application is evaluated simultaneously by Credit Risk Rules, Fraud Detection Rules and Compliance Rules, whose outputs are combined in Aggregate Results to produce the Final Decision" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-4-dark.svg" alt="Flowchart of parallel decision evaluation: an Application is evaluated simultaneously by Credit Risk Rules, Fraud Detection Rules and Compliance Rules, whose outputs are combined in Aggregate Results to produce the Final Decision" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-4.svg)
 
 **Implementation:**
 
@@ -207,7 +211,8 @@ Route to different decision logic based on runtime conditions.
 
 **Use case:** Product-specific pricing rules
 
-[![Flowchart of conditional decision routing: a Product Application is routed by product type to Mortgage, Auto Loan or Credit Card pricing rules, then converges on Generate Quote](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-5.svg)](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-5.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-5.svg" alt="Flowchart of conditional decision routing: a Product Application is routed by product type to Mortgage, Auto Loan or Credit Card pricing rules, then converges on Generate Quote" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-5-dark.svg" alt="Flowchart of conditional decision routing: a Product Application is routed by product type to Mortgage, Auto Loan or Credit Card pricing rules, then converges on Generate Quote" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/decision-process/flowchart-td-5.svg)
 
 **Implementation:**
 
@@ -289,7 +294,8 @@ Connect decision services with process workflows via events.
 
 **Architecture:**
 
-[![Sequence diagram of event-driven integration over Kafka between App, Decision Service and Process Service: App publishes ApplicationSubmitted; the Decision Service consumes it, executes rules and publishes ApplicationScored; the Process Service consumes that, continues the workflow and publishes ApprovalRequired](/images/architecture/assets/diagrams/core/integration/decision-process/sequence-6.svg)](/images/architecture/assets/diagrams/core/integration/decision-process/sequence-6.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/decision-process/sequence-6.svg" alt="Sequence diagram of event-driven integration over Kafka between App, Decision Service and Process Service: App publishes ApplicationSubmitted; the Decision Service consumes it, executes rules and publishes ApplicationScored; the Process Service consumes that, continues the workflow and publishes ApprovalRequired" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/decision-process/sequence-6-dark.svg" alt="Sequence diagram of event-driven integration over Kafka between App, Decision Service and Process Service: App publishes ApplicationSubmitted; the Decision Service consumes it, executes rules and publishes ApplicationScored; the Process Service consumes that, continues the workflow and publishes ApprovalRequired" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/decision-process/sequence-6.svg)
 
 **CloudEvents format:**
 

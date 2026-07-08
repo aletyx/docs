@@ -12,7 +12,8 @@ This guide visually explains how the Drools rule engine processes your business 
 
 At a high level, Drools follows this sequence when processing rules:
 
-[![Diagram](/images/components/assets/diagrams/drools/visual-guide/flowchart-td-1.svg)](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-td-1.svg)
+[<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-td-1.svg" alt="Diagram" className="block dark:hidden" />
+<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-td-1-dark.svg" alt="Diagram" className="hidden dark:block" />](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-td-1.svg)
 
 Let's break down each of these steps and understand what happens behind the scenes.
 
@@ -20,7 +21,8 @@ Let's break down each of these steps and understand what happens behind the scen
 
 The Drools rule engine has three key components that interact during rule processing:
 
-[![Diagram](/images/components/assets/diagrams/drools/visual-guide/flowchart-lr-2.svg)](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-lr-2.svg)
+[<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-lr-2.svg" alt="Diagram" className="block dark:hidden" />
+<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-lr-2-dark.svg" alt="Diagram" className="hidden dark:block" />](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-lr-2.svg)
 
 The three key components work together:
 
@@ -30,7 +32,8 @@ The three key components work together:
 
 Here's a simplified view of how these components interact:
 
-[![Diagram](/images/components/assets/diagrams/drools/visual-guide/flowchart-td-4.svg)](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-td-4.svg)
+[<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-td-4.svg" alt="Diagram" className="block dark:hidden" />
+<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-td-4-dark.svg" alt="Diagram" className="hidden dark:block" />](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-td-4.svg)
 
 ## 2. Pattern Matching Process
 
@@ -49,7 +52,8 @@ While Phreak is architecturally different from Rete, the conceptual model remain
 
 Here's a simplified visualization of how a Rete/Phreak network might look for a rule:
 
-[![Diagram](/images/components/assets/diagrams/drools/visual-guide/flowchart-td-6.svg)](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-td-6.svg)
+[<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-td-6.svg" alt="Diagram" className="block dark:hidden" />
+<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-td-6-dark.svg" alt="Diagram" className="hidden dark:block" />](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-td-6.svg)
 
 Let's understand each node type:
 
@@ -132,7 +136,8 @@ As facts flow through the network:
 2. The `Applicant` fact is checked against its constraints (credit score &gt; 700)
 3. If both match, the rule is activated and placed on the agenda
 
-[![Diagram](/images/components/assets/diagrams/drools/visual-guide/flowchart-lr-5.svg)](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-lr-5.svg)
+[<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-lr-5.svg" alt="Diagram" className="block dark:hidden" />
+<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-lr-5-dark.svg" alt="Diagram" className="hidden dark:block" />](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-lr-5.svg)
 
 ### 4. Rule Execution
 
@@ -211,7 +216,8 @@ In this example, the "High Priority Rule" will fire before the "Low Priority Rul
 
 Rules can be partitioned into agenda groups, and only rules in the focus group are eligible for execution:
 
-[![Diagram](/images/components/assets/diagrams/drools/visual-guide/flowchart-td-7.svg)](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-td-7.svg)
+[<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-td-7.svg" alt="Diagram" className="block dark:hidden" />
+<img src="/images/components/assets/diagrams/drools/visual-guide/flowchart-td-7-dark.svg" alt="Diagram" className="hidden dark:block" />](https://docs.aletyx.ai/assets/diagrams/drools/visual-guide/flowchart-td-7.svg)
 
 Only rules in the "calculation" group will fire until that group is empty or loses focus.
 

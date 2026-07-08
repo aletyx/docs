@@ -20,7 +20,8 @@ Service orchestration differs from service choreography by providing centralized
 
 **Orchestration vs Choreography:**
 
-[![Diagram contrasting Orchestration and Choreography: in orchestration a central Orchestrator Process invokes Service A, B and C; in choreography the services coordinate by reacting to events](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-1.svg)](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-1.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-1.svg" alt="Diagram contrasting Orchestration and Choreography: in orchestration a central Orchestrator Process invokes Service A, B and C; in choreography the services coordinate by reacting to events" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-1-dark.svg" alt="Diagram contrasting Orchestration and Choreography: in orchestration a central Orchestrator Process invokes Service A, B and C; in choreography the services coordinate by reacting to events" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-1.svg)
 
 **When to use orchestration:**
 
@@ -63,7 +64,8 @@ Configure a Service Task to call an external credit bureau API:
 
 **Process diagram:**
 
-[![Flowchart of a REST service task example: Start, Validate Application, a 'Get Credit Score' service task, then a 'Score 700 or above?' decision; yes leads to Approve, no leads to Reject, then End](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-2.svg)](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-2.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-2.svg" alt="Flowchart of a REST service task example: Start, Validate Application, a 'Get Credit Score' service task, then a 'Score 700 or above?' decision; yes leads to Approve, no leads to Reject, then End" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-2-dark.svg" alt="Flowchart of a REST service task example: Start, Validate Application, a 'Get Credit Score' service task, then a 'Score 700 or above?' decision; yes leads to Approve, no leads to Reject, then End" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-2.svg)
 
 **Service Task configuration:**
 
@@ -175,7 +177,8 @@ For long-running operations, configure Service Tasks to execute asynchronously.
 
 **Process behavior with async:**
 
-[![Sequence diagram of an asynchronous service task: the Process queues a Credit Check task with the Job Service and continues to the next safe point; the Job Service invokes the external Credit Bureau API, receives the credit score, signals task completion and the process resumes](/images/architecture/assets/diagrams/core/integration/service-orchestration/sequence-3.svg)](/images/architecture/assets/diagrams/core/integration/service-orchestration/sequence-3.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/sequence-3.svg" alt="Sequence diagram of an asynchronous service task: the Process queues a Credit Check task with the Job Service and continues to the next safe point; the Job Service invokes the external Credit Bureau API, receives the credit score, signals task completion and the process resumes" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/sequence-3-dark.svg" alt="Sequence diagram of an asynchronous service task: the Process queues a Credit Check task with the Job Service and continues to the next safe point; the Job Service invokes the external Credit Bureau API, receives the credit score, signals task completion and the process resumes" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/service-orchestration/sequence-3.svg)
 
 **Job Service configuration (application.properties):**
 
@@ -199,7 +202,8 @@ Call services in a defined sequence where each service depends on previous resul
 
 **Use case: Loan Approval Workflow**
 
-[![Flowchart of sequential service orchestration: Start, Validate Data, Check Credit Score, Verify Employment, Calculate DTI Ratio, Determine Eligibility, End](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-4.svg)](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-4.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-4.svg" alt="Flowchart of sequential service orchestration: Start, Validate Data, Check Credit Score, Verify Employment, Calculate DTI Ratio, Determine Eligibility, End" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-4-dark.svg" alt="Flowchart of sequential service orchestration: Start, Validate Data, Check Credit Score, Verify Employment, Calculate DTI Ratio, Determine Eligibility, End" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-4.svg)
 
 **Implementation:**
 
@@ -219,7 +223,8 @@ Invoke multiple independent services concurrently for performance.
 
 **Use case: Multi-Bureau Credit Check**
 
-[![Flowchart of parallel service orchestration: after Start a parallel gateway calls the Experian, Equifax and TransUnion APIs concurrently, then a join gateway leads to Aggregate Scores and End](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-5.svg)](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-5.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-5.svg" alt="Flowchart of parallel service orchestration: after Start a parallel gateway calls the Experian, Equifax and TransUnion APIs concurrently, then a join gateway leads to Aggregate Scores and End" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-5-dark.svg" alt="Flowchart of parallel service orchestration: after Start a parallel gateway calls the Experian, Equifax and TransUnion APIs concurrently, then a join gateway leads to Aggregate Scores and End" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-5.svg)
 
 **Implementation:**
 
@@ -239,7 +244,8 @@ Route to different services based on runtime conditions.
 
 **Use case: Product-Specific Pricing**
 
-[![Flowchart of conditional service routing: after Start the process branches on product type to the Mortgage, Auto Loan or Personal Loan pricing service, then converges on Generate Quote](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-6.svg)](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-6.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-6.svg" alt="Flowchart of conditional service routing: after Start the process branches on product type to the Mortgage, Auto Loan or Personal Loan pricing service, then converges on Generate Quote" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-6-dark.svg" alt="Flowchart of conditional service routing: after Start the process branches on product type to the Mortgage, Auto Loan or Personal Loan pricing service, then converges on Generate Quote" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-6.svg)
 
 **Implementation:**
 
@@ -260,7 +266,8 @@ Handle service failures gracefully with error boundary events.
 
 **Pattern: Service with Fallback**
 
-[![Flowchart of error handling: Start, Primary Service, End; an error boundary event on the Primary Service diverts to a Fallback Service when an error occurs](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-7.svg)](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-7.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-7.svg" alt="Flowchart of error handling: Start, Primary Service, End; an error boundary event on the Primary Service diverts to a Fallback Service when an error occurs" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-7-dark.svg" alt="Flowchart of error handling: Start, Primary Service, End; an error boundary event on the Primary Service diverts to a Fallback Service when an error occurs" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-7.svg)
 
 **Implementation:**
 
@@ -277,7 +284,8 @@ Handle service failures gracefully with error boundary events.
 
 **Compensation pattern:**
 
-[![Flowchart of compensation handling: Reserve Inventory then Charge Payment; if an error occurs, compensation runs Release Inventory and Cancel Order](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-8.svg)](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-8.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-8.svg" alt="Flowchart of compensation handling: Reserve Inventory then Charge Payment; if an error occurs, compensation runs Release Inventory and Cancel Order" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-8-dark.svg" alt="Flowchart of compensation handling: Reserve Inventory then Charge Payment; if an error occurs, compensation runs Release Inventory and Cancel Order" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-lr-8.svg)
 
 ### Saga Pattern with Orchestration
 
@@ -285,7 +293,8 @@ Implement distributed transactions using compensation.
 
 **Use case: Order Fulfillment Saga**
 
-[![Flowchart of an orchestrated saga: Start Order, Reserve Inventory, Charge Payment, Ship Order, End Success; on failure, compensating steps Refund Payment, Release Inventory and Cancel Order lead to End Cancelled](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-9.svg)](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-9.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-9.svg" alt="Flowchart of an orchestrated saga: Start Order, Reserve Inventory, Charge Payment, Ship Order, End Success; on failure, compensating steps Refund Payment, Release Inventory and Cancel Order lead to End Cancelled" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-9-dark.svg" alt="Flowchart of an orchestrated saga: Start Order, Reserve Inventory, Charge Payment, Ship Order, End Success; on failure, compensating steps Refund Payment, Release Inventory and Cancel Order lead to End Cancelled" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/service-orchestration/flowchart-td-9.svg)
 
 **Implementation steps:**
 

@@ -1,0 +1,139 @@
+<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+	<!-- Background -->
+	<rect width="800" height="600" fill="#f8f9fa" rx="5" ry="5" />
+	<text x="400" y="30" font-family="Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle"
+		fill="#333">Model Context Protocol Integration with DMN</text>
+
+	<!-- DMN Layer -->
+	<rect x="50" y="80" width="700" height="120" rx="10" ry="10" fill="#e1f5fe" stroke="#01579b" stroke-width="2" />
+	<text x="400" y="100" font-family="Arial, sans-serif" font-size="18" font-weight="bold"
+		text-anchor="middle">Business Decision Models (DMN)</text>
+
+	<!-- DMN Components -->
+	<rect x="80" y="120" width="120" height="60" rx="8" ry="8" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5" />
+	<text x="140" y="150" font-family="Arial, sans-serif" font-size="14" text-anchor="middle">Policy
+		Rules</text>
+
+	<rect x="220" y="120" width="120" height="60" rx="8" ry="8" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5" />
+	<text x="280" y="150" font-family="Arial, sans-serif" font-size="14" text-anchor="middle">Decision
+		Tables</text>
+
+	<rect x="360" y="120" width="120" height="60" rx="8" ry="8" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5" />
+	<text x="420" y="150" font-family="Arial, sans-serif" font-size="14" text-anchor="middle">FEEL
+		Expressions</text>
+
+	<rect x="500" y="120" width="120" height="60" rx="8" ry="8" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5" />
+	<text x="560" y="150" font-family="Arial, sans-serif" font-size="14" text-anchor="middle">Business
+		KPIs</text>
+
+	<!-- MCP Layer -->
+	<rect x="50" y="230" width="700" height="160" rx="10" ry="10" fill="#fff9c4" stroke="#f57f17" stroke-width="2" />
+	<text x="400" y="250" font-family="Arial, sans-serif" font-size="18" font-weight="bold"
+		text-anchor="middle">Intelligent Process and Model Context Protocol</text>
+
+	<!-- MCP Components -->
+	<rect x="80" y="270" width="200" height="100" rx="8" ry="8" fill="#ffecb3" stroke="#ff8f00" stroke-width="1.5" />
+	<text x="180" y="295" font-family="Arial, sans-serif" font-size="14" font-weight="bold"
+		text-anchor="middle">Semantic Understanding</text>
+	<text x="180" y="320" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Natural Language Processing</text>
+	<text x="180" y="340" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Business Context Extraction</text>
+	<text x="180" y="360" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Policy Intent Interpretation</text>
+
+	<rect x="300" y="270" width="200" height="100" rx="8" ry="8" fill="#ffecb3" stroke="#ff8f00" stroke-width="1.5" />
+	<text x="400" y="295" font-family="Arial, sans-serif" font-size="14" font-weight="bold"
+		text-anchor="middle">Knowledge Integration</text>
+	<text x="400" y="320" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		DMN-LLM Alignment</text>
+	<text x="400" y="340" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Business Rule Extraction</text>
+	<text x="400" y="360" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Decision Logic Mapping</text>
+
+	<rect x="520" y="270" width="200" height="100" rx="8" ry="8" fill="#ffecb3" stroke="#ff8f00" stroke-width="1.5" />
+	<text x="620" y="295" font-family="Arial, sans-serif" font-size="14" font-weight="bold"
+		text-anchor="middle">Governance Layer</text>
+	<text x="620" y="320" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Auditability Controls</text>
+	<text x="620" y="340" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Version Management</text>
+	<text x="620" y="360" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Compliance Validation</text>
+
+	<!-- Business Intelligence Layer -->
+	<rect x="50" y="420" width="700" height="140" rx="10" ry="10" fill="#e8f5e9" stroke="#388e3c" stroke-width="2" />
+	<text x="400" y="440" font-family="Arial, sans-serif" font-size="18" font-weight="bold"
+		text-anchor="middle">Enhanced Business Intelligence</text>
+
+	<!-- BI Components -->
+	<rect x="80" y="460" width="150" height="80" rx="8" ry="8" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1.5" />
+	<text x="155" y="480" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle">Policy
+		Insights</text>
+	<text x="155" y="500" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Exception Analysis</text>
+	<text x="155" y="520" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Compliance Metrics</text>
+
+	<rect x="250" y="460" width="150" height="80" rx="8" ry="8" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1.5" />
+	<text x="325" y="480" font-family="Arial, sans-serif" font-size="14" font-weight="bold"
+		text-anchor="middle">Decision Analytics</text>
+	<text x="325" y="500" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Decision Patterns</text>
+	<text x="325" y="520" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Outcome Prediction</text>
+
+	<rect x="420" y="460" width="150" height="80" rx="8" ry="8" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1.5" />
+	<text x="495" y="480" font-family="Arial, sans-serif" font-size="14" font-weight="bold"
+		text-anchor="middle">Business Optimization</text>
+	<text x="495" y="500" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Process Improvement</text>
+	<text x="495" y="520" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">• Rule
+		Refinement</text>
+
+	<rect x="590" y="460" width="150" height="80" rx="8" ry="8" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1.5" />
+	<text x="665" y="480" font-family="Arial, sans-serif" font-size="14" font-weight="bold"
+		text-anchor="middle">Executive Insights</text>
+	<text x="665" y="500" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Strategic KPI Dashboard</text>
+	<text x="665" y="520" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">•
+		Business Impact Analysis</text>
+
+	<!-- Data Flow Arrows -->
+	<path d="M400,200 L400,230" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+	<path d="M400,390 L400,420" stroke="#666" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
+
+	<!-- Bidirectional Flow -->
+	<path d="M180,200 C180,215 80,215 80,230" stroke="#0288d1" stroke-width="1.5" fill="none"
+		marker-end="url(#arrowhead)" />
+	<path d="M80,270 C80,255 180,255 180,240" stroke="#f57f17" stroke-width="1.5" fill="none"
+		marker-end="url(#arrowhead)" />
+
+	<path d="M620,200 C620,215 720,215 720,230" stroke="#0288d1" stroke-width="1.5" fill="none"
+		marker-end="url(#arrowhead)" />
+	<path d="M720,270 C720,255 620,255 620,240" stroke="#f57f17" stroke-width="1.5" fill="none"
+		marker-end="url(#arrowhead)" />
+
+	<!-- Integration Line -->
+	<path d="M155,380 C155,400 155,420 155,460" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="5,3" fill="none"
+		marker-end="url(#arrowhead)" />
+	<path d="M400,380 C400,400 325,420 325,460" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="5,3" fill="none"
+		marker-end="url(#arrowhead)" />
+	<path d="M400,380 C400,400 495,420 495,460" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="5,3" fill="none"
+		marker-end="url(#arrowhead)" />
+	<path d="M620,380 C620,400 665,420 665,460" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="5,3" fill="none"
+		marker-end="url(#arrowhead)" />
+
+	<!-- Arrowhead marker -->
+	<defs>
+		<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+			<polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+		</marker>
+	</defs>
+
+	<!-- Aletyx Enterprise Label -->
+	<rect x="520" y="35" width="230" height="30" rx="15" ry="15" fill="#b7b2b2" stroke="#16293F" stroke-width="2" />
+	<text x="635" y="50" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle"
+		fill="#16293F">Aletyx Enterprise Exclusive</text>
+</svg>

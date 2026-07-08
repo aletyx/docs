@@ -15,7 +15,8 @@ At its core, Decision Control is a containerized application that combines:
 - **AI Layer**: natural-language decision testing (Innovator+)
 - **Data Store**: persistent storage of models, versions, and execution history
 
-![Layered architecture diagram of Decision Control: a Frontend Layer (Authoring UI with DMN Editor, Prompt UI with AI Testing, Management UI with Monitoring); a Backend Layer (REST APIs on Spring Boot, DMN Engine on Apache KIE, Version Manager for multi-version execution); an AI Layer (Natural Language Processing, MCP Server for AI integration); and a Data Layer (PostgreSQL storing models and executions)](/images/decision-control/diagrams/architecture/flowchart-td-1.svg)
+<img src="/images/decision-control/diagrams/architecture/flowchart-td-1.svg" alt="Layered architecture diagram of Decision Control: a Frontend Layer (Authoring UI with DMN Editor, Prompt UI with AI Testing, Management UI with Monitoring); a Backend Layer (REST APIs on Spring Boot, DMN Engine on Apache KIE, Version Manager for multi-version execution); an AI Layer (Natural Language Processing, MCP Server for AI integration); and a Data Layer (PostgreSQL storing models and executions)" className="block dark:hidden" />
+<img src="/images/decision-control/diagrams/architecture/flowchart-td-1-dark.svg" alt="Layered architecture diagram of Decision Control: a Frontend Layer (Authoring UI with DMN Editor, Prompt UI with AI Testing, Management UI with Monitoring); a Backend Layer (REST APIs on Spring Boot, DMN Engine on Apache KIE, Version Manager for multi-version execution); an AI Layer (Natural Language Processing, MCP Server for AI integration); and a Data Layer (PostgreSQL storing models and executions)" className="hidden dark:block" />
 
 ## Key Architectural Principles
 
@@ -35,7 +36,8 @@ This eliminates the need for separate tools or manual deployment pipelines.
 
 Unlike traditional Kogito deployments where you must manage version routing yourself, Decision Control handles this automatically:
 
-![Diagram comparing version management: in the Traditional Approach the app calls separate v1.0 and v2.0 endpoints and you manage routing; in the Decision Control Approach a single API endpoint serves multiple running versions (1.0, 2.0 and 3.0)](/images/decision-control/diagrams/architecture/flowchart-lr-2.svg)
+<img src="/images/decision-control/diagrams/architecture/flowchart-lr-2.svg" alt="Diagram comparing version management: in the Traditional Approach the app calls separate v1.0 and v2.0 endpoints and you manage routing; in the Decision Control Approach a single API endpoint serves multiple running versions (1.0, 2.0 and 3.0)" className="block dark:hidden" />
+<img src="/images/decision-control/diagrams/architecture/flowchart-lr-2-dark.svg" alt="Diagram comparing version management: in the Traditional Approach the app calls separate v1.0 and v2.0 endpoints and you manage routing; in the Decision Control Approach a single API endpoint serves multiple running versions (1.0, 2.0 and 3.0)" className="hidden dark:block" />
 
 **Benefits:**
 
@@ -66,7 +68,8 @@ Decision Control editions build progressively on the core architecture:
 
 Core decision management capabilities:
 
-![Component diagram of the Pioneer Edition: an Authoring UI over a DMN Execution Engine, Version Management and REST APIs, backed by PostgreSQL](/images/decision-control/diagrams/architecture/flowchart-td-3.svg)
+<img src="/images/decision-control/diagrams/architecture/flowchart-td-3.svg" alt="Component diagram of the Pioneer Edition: an Authoring UI over a DMN Execution Engine, Version Management and REST APIs, backed by PostgreSQL" className="block dark:hidden" />
+<img src="/images/decision-control/diagrams/architecture/flowchart-td-3-dark.svg" alt="Component diagram of the Pioneer Edition: an Authoring UI over a DMN Execution Engine, Version Management and REST APIs, backed by PostgreSQL" className="hidden dark:block" />
 
 **Features:**
 
@@ -80,7 +83,8 @@ Core decision management capabilities:
 
 Adds AI-powered capabilities:
 
-![Component diagram of the Innovator Edition: Authoring UI and Prompt UI over a DMN Execution Engine, Version Management, REST APIs and an AI/NLP layer with MCP Server, backed by PostgreSQL](/images/decision-control/diagrams/architecture/flowchart-td-4.svg)
+<img src="/images/decision-control/diagrams/architecture/flowchart-td-4.svg" alt="Component diagram of the Innovator Edition: Authoring UI and Prompt UI over a DMN Execution Engine, Version Management, REST APIs and an AI/NLP layer with MCP Server, backed by PostgreSQL" className="block dark:hidden" />
+<img src="/images/decision-control/diagrams/architecture/flowchart-td-4-dark.svg" alt="Component diagram of the Innovator Edition: Authoring UI and Prompt UI over a DMN Execution Engine, Version Management, REST APIs and an AI/NLP layer with MCP Server, backed by PostgreSQL" className="hidden dark:block" />
 
 **Additional Features:**
 
@@ -95,7 +99,8 @@ Adds AI-powered capabilities:
 
 Adds enterprise scalability:
 
-![Deployment diagram of the Horizon Edition: a Load Balancer fronts multiple Decision Control replicas (Replica 1, 2 through N), backed by a PostgreSQL primary-plus-replicas database](/images/decision-control/diagrams/architecture/flowchart-td-5.svg)
+<img src="/images/decision-control/diagrams/architecture/flowchart-td-5.svg" alt="Deployment diagram of the Horizon Edition: a Load Balancer fronts multiple Decision Control replicas (Replica 1, 2 through N), backed by a PostgreSQL primary-plus-replicas database" className="block dark:hidden" />
+<img src="/images/decision-control/diagrams/architecture/flowchart-td-5-dark.svg" alt="Deployment diagram of the Horizon Edition: a Load Balancer fronts multiple Decision Control replicas (Replica 1, 2 through N), backed by a PostgreSQL primary-plus-replicas database" className="hidden dark:block" />
 
 **Additional Features:**
 
@@ -270,7 +275,8 @@ All Decision Control components use OAuth2/OIDC:
 
 ### Network Security
 
-![Network security diagram: traffic from the Internet enters over HTTPS through an Ingress and Load Balancer (TLS termination) to Decision Control, which connects to PostgreSQL over TCP port 5432](/images/decision-control/diagrams/architecture/flowchart-lr-8.svg)
+<img src="/images/decision-control/diagrams/architecture/flowchart-lr-8.svg" alt="Network security diagram: traffic from the Internet enters over HTTPS through an Ingress and Load Balancer (TLS termination) to Decision Control, which connects to PostgreSQL over TCP port 5432" className="block dark:hidden" />
+<img src="/images/decision-control/diagrams/architecture/flowchart-lr-8-dark.svg" alt="Network security diagram: traffic from the Internet enters over HTTPS through an Ingress and Load Balancer (TLS termination) to Decision Control, which connects to PostgreSQL over TCP port 5432" className="hidden dark:block" />
 
 - All external traffic over HTTPS (TLS 1.2+)
 - Database connections within private network

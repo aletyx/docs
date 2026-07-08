@@ -132,7 +132,8 @@ mp.messaging.outgoing.fraud-alerts.value.serializer=org.apache.kafka.common.seri
 
 **Event flow diagram:**
 
-[![Sequence diagram of outgoing fraud alerts: the Banking system publishes a Transaction event to Kafka; the Rules service consumes it, evaluates rules, detects a large amount and publishes a FraudAlert; the Alert service consumes it and notifies Operations](/images/architecture/assets/diagrams/core/integration/event-driven/sequence-1.svg)](/images/architecture/assets/diagrams/core/integration/event-driven/sequence-1.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/event-driven/sequence-1.svg" alt="Sequence diagram of outgoing fraud alerts: the Banking system publishes a Transaction event to Kafka; the Rules service consumes it, evaluates rules, detects a large amount and publishes a FraudAlert; the Alert service consumes it and notifies Operations" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/event-driven/sequence-1-dark.svg" alt="Sequence diagram of outgoing fraud alerts: the Banking system publishes a Transaction event to Kafka; the Rules service consumes it, evaluates rules, detects a large amount and publishes a FraudAlert; the Alert service consumes it and notifies Operations" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/event-driven/sequence-1.svg)
 
 ### Consuming Rule Events
 
@@ -218,7 +219,8 @@ mp.messaging.outgoing.dmn-responses.value.serializer=org.apache.kafka.common.ser
 
 **Decision event flow:**
 
-[![Sequence diagram of request and response decisioning over Kafka: App publishes a DecisionRequest to the request topic; the DMN service consumes it, evaluates a decision table and publishes a DecisionResponse to the response topic; the Process consumes it and continues the workflow](/images/architecture/assets/diagrams/core/integration/event-driven/sequence-2.svg)](/images/architecture/assets/diagrams/core/integration/event-driven/sequence-2.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/event-driven/sequence-2.svg" alt="Sequence diagram of request and response decisioning over Kafka: App publishes a DecisionRequest to the request topic; the DMN service consumes it, evaluates a decision table and publishes a DecisionResponse to the response topic; the Process consumes it and continues the workflow" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/event-driven/sequence-2-dark.svg" alt="Sequence diagram of request and response decisioning over Kafka: App publishes a DecisionRequest to the request topic; the DMN service consumes it, evaluates a decision table and publishes a DecisionResponse to the response topic; the Process consumes it and continues the workflow" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/event-driven/sequence-2.svg)
 
 ## Event-Driven Processes with jBPM
 
@@ -356,7 +358,8 @@ Combine multiple event patterns for sophisticated orchestrations.
 
 **Multi-service choreography:**
 
-[![Sequence diagram of complex event choreography over Kafka among Portal, Loan Process, Credit, Fraud and Notification services: ApplicationSubmitted starts the process, which requests and catches CreditCheckComplete and FraudCheckComplete events before making the decision and notifying](/images/architecture/assets/diagrams/core/integration/event-driven/sequence-6.svg)](/images/architecture/assets/diagrams/core/integration/event-driven/sequence-6.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/event-driven/sequence-6.svg" alt="Sequence diagram of complex event choreography over Kafka among Portal, Loan Process, Credit, Fraud and Notification services: ApplicationSubmitted starts the process, which requests and catches CreditCheckComplete and FraudCheckComplete events before making the decision and notifying" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/event-driven/sequence-6-dark.svg" alt="Sequence diagram of complex event choreography over Kafka among Portal, Loan Process, Credit, Fraud and Notification services: ApplicationSubmitted starts the process, which requests and catches CreditCheckComplete and FraudCheckComplete events before making the decision and notifying" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/event-driven/sequence-6.svg)
 
 ## Event Integration Patterns
 
@@ -445,7 +448,8 @@ Coordinate distributed transactions across services.
 
 **Choreography-based saga:**
 
-[![Flowchart of a saga pattern: Order Created leads to Reserve Inventory and a 'Success?' check; if yes it charges payment and ships the order, if no it compensates by releasing inventory and cancelling the order](/images/architecture/assets/diagrams/core/integration/event-driven/flowchart-td-7.svg)](/images/architecture/assets/diagrams/core/integration/event-driven/flowchart-td-7.svg)
+[<img src="/images/architecture/assets/diagrams/core/integration/event-driven/flowchart-td-7.svg" alt="Flowchart of a saga pattern: Order Created leads to Reserve Inventory and a 'Success?' check; if yes it charges payment and ships the order, if no it compensates by releasing inventory and cancelling the order" className="block dark:hidden" />
+<img src="/images/architecture/assets/diagrams/core/integration/event-driven/flowchart-td-7-dark.svg" alt="Flowchart of a saga pattern: Order Created leads to Reserve Inventory and a 'Success?' check; if yes it charges payment and ships the order, if no it compensates by releasing inventory and cancelling the order" className="hidden dark:block" />](/images/architecture/assets/diagrams/core/integration/event-driven/flowchart-td-7.svg)
 
 **Implementation with Kogito:**
 

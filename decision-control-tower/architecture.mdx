@@ -22,7 +22,8 @@ Aletyx Decision Control Tower is composed of three deployable services plus its 
 - **Tower Sidecar** — the workflow engine that runs the governance/approval workflows and exposes process and task state
 - **Tower data store** — holds the environment registry, promotion requests, audit data, and notification templates
 
-![Layered architecture diagram of Decision Control Tower: a Frontend Layer (Tower UI web portal), a Backend Layer (Tower Core), a Workflow Layer (Tower Sidecar workflow engine and Data Index), a Data Layer (Tower DB), plus Identity and Messaging (OIDC provider and SMTP), governing the Decision Control environments DEV, TEST and PROD](/images/decision-control-tower/diagrams/architecture/flowchart-td-1.svg)
+<img src="/images/decision-control-tower/diagrams/architecture/flowchart-td-1.svg" alt="Layered architecture diagram of Decision Control Tower: a Frontend Layer (Tower UI web portal), a Backend Layer (Tower Core), a Workflow Layer (Tower Sidecar workflow engine and Data Index), a Data Layer (Tower DB), plus Identity and Messaging (OIDC provider and SMTP), governing the Decision Control environments DEV, TEST and PROD" className="block dark:hidden" />
+<img src="/images/decision-control-tower/diagrams/architecture/flowchart-td-1-dark.svg" alt="Layered architecture diagram of Decision Control Tower: a Frontend Layer (Tower UI web portal), a Backend Layer (Tower Core), a Workflow Layer (Tower Sidecar workflow engine and Data Index), a Data Layer (Tower DB), plus Identity and Messaging (OIDC provider and SMTP), governing the Decision Control environments DEV, TEST and PROD" className="hidden dark:block" />
 
 The Tower talks *outward* to each registered Decision Control environment over REST to browse units, versions, and models and to perform promotions, and talks *inward* to its sidecar to drive the `standard_promotion` workflow. The sidecar also serves the process and task history consumed by the Tower.
 
@@ -95,11 +96,13 @@ The workflow carries the promotion context as variables — `requester`, `source
 | **Approve** | `tower-approvers` group | `reviewOutcome` = `APPROVED` \| `REJECTED` \| `REQUEST_CHANGES` | Approve → promote; Reject → end; Request changes → hand back to requester |
 | **ChangeRequest** | the original `requester` | `changeResult` = `RESUBMITTED` \| `CANCELLED` | Resubmit → loop back to Approve; Cancel → end |
 
-![State diagram of the standard promotion workflow: a ChangeRequest raised by the requester can be Approved by tower-approvers and Promoted, or it can be Rejected or Cancelled](/images/decision-control-tower/diagrams/architecture/state-1.svg)
+<img src="/images/decision-control-tower/diagrams/architecture/state-1.svg" alt="State diagram of the standard promotion workflow: a ChangeRequest raised by the requester can be Approved by tower-approvers and Promoted, or it can be Rejected or Cancelled" className="block dark:hidden" />
+<img src="/images/decision-control-tower/diagrams/architecture/state-1-dark.svg" alt="State diagram of the standard promotion workflow: a ChangeRequest raised by the requester can be Approved by tower-approvers and Promoted, or it can be Rejected or Cancelled" className="hidden dark:block" />
 
 End-to-end, including the callbacks into Tower Core:
 
-![Sequence diagram of the promotion workflow among Tower UI, Tower Core, Tower Sidecar and the source and target environments: a promotion request is submitted and recorded, the workflow starts, a review task is created and approved, and the workflow advances to deploy to the target environment](/images/decision-control-tower/diagrams/architecture/sequence-1.svg)
+<img src="/images/decision-control-tower/diagrams/architecture/sequence-1.svg" alt="Sequence diagram of the promotion workflow among Tower UI, Tower Core, Tower Sidecar and the source and target environments: a promotion request is submitted and recorded, the workflow starts, a review task is created and approved, and the workflow advances to deploy to the target environment" className="block dark:hidden" />
+<img src="/images/decision-control-tower/diagrams/architecture/sequence-1-dark.svg" alt="Sequence diagram of the promotion workflow among Tower UI, Tower Core, Tower Sidecar and the source and target environments: a promotion request is submitted and recorded, the workflow starts, a review task is created and approved, and the workflow advances to deploy to the target environment" className="hidden dark:block" />
 
 If the reviewer chooses **REQUEST_CHANGES**, the workflow routes to a **ChangeRequest** task owned by the requester, who can **RESUBMIT** (returning to the Approve task) or **CANCEL** the promotion. The lifecycle of the persisted promotion request mirrors these workflow states; transitions are validated against the request's current state before being applied, so a callback can only advance a request that is actually in the expected state.
 
