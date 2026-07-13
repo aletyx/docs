@@ -6,6 +6,9 @@
 drafts/
 *.draft.mdx
 
+# Archived pages (removed from the site, kept for reference)
+archive/
+
 # Migration tooling
 migrate.py
 migration-report.md

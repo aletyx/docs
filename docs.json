@@ -83,8 +83,7 @@
               {
                 "group": "Playground Tutorials",
                 "pages": [
-                  "guides/getting-started/getting-started-playground",
-                  "guides/getting-started/getting-started-start-aletyx"
+                  "guides/getting-started/getting-started-playground"
                 ]
               },
               {
@@ -191,13 +190,6 @@
                   "architecture/integration/decision-process",
                   "architecture/integration/event-driven",
                   "architecture/integration/service-orchestration"
-                ]
-              },
-              {
-                "group": "Testing",
-                "pages": [
-                  "architecture/testing/overview",
-                  "architecture/testing/test-scenarios"
                 ]
               }
             ]
@@ -421,8 +413,7 @@
               {
                 "group": "Model Context Protocol",
                 "pages": [
-                  "components/mcp/overview",
-                  "components/mcp/first-interaction"
+                  "components/mcp/overview"
                 ]
               }
             ]
@@ -554,6 +545,22 @@
     }
   },
   "redirects": [
+    {
+      "source": "/guides/getting-started/getting-started-start-aletyx",
+      "destination": "/guides/getting-started/getting-started-playground"
+    },
+    {
+      "source": "/architecture/testing/test-scenarios",
+      "destination": "/architecture/overview"
+    },
+    {
+      "source": "/architecture/testing/overview",
+      "destination": "/architecture/overview"
+    },
+    {
+      "source": "/components/mcp/first-interaction",
+      "destination": "/components/mcp/overview"
+    },
     {
       "source": "/decision-control",
       "destination": "/decision-control/overview"

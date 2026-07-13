@@ -1,11 +1,11 @@
 ---
 title: "Quickstart for Developers"
-description: "Developer quickstart: scaffold an Aletyx project with start.aletyx.ai, then build and run a decision or process service locally with Java and Maven."
+description: "Developer quickstart: scaffold an Aletyx project with the Kogito Spring Boot Maven archetype, then build and run a decision or process service locally with Java and Maven."
 ---
 
 This path is for **developers** who integrate, customize, and extend Aletyx in
-code. You'll scaffold a project with [start.aletyx.ai](https://start.aletyx.ai)
-and run it locally.
+code. You'll scaffold a Spring Boot project with the Kogito Maven archetype and
+run it locally.
 
 ## Prerequisites
 
@@ -18,27 +18,29 @@ for the full workstation configuration.
 ## Scaffold and run a service
 
 <Steps>
-  <Step title="Open the project starter">
-    Go to [start.aletyx.ai](https://start.aletyx.ai).
-  </Step>
-  <Step title="Configure your project">
-    Set the Group ID, Artifact ID, Version, Runtime (Spring Boot or Quarkus),
-    target version, and Maven access token.
-  </Step>
-  <Step title="Select a template">
-    Choose a starting point — for example *Intelligent Decision Service*,
-    *Decision Service*, *Rule Service*, *Hybrid Decision Service*, *Decision
-    Orchestration*, or *Workflow Automation*.
-  </Step>
-  <Step title="Generate and download">
-    Click **Download Project** to get a pre-configured ZIP.
+  <Step title="Generate a new module">
+    Generate a new module, either using your prefered tool or the [Kogito Spring Boot archetype](https://mvnrepository.com/artifact/org.kie.kogito/kogito-spring-boot-archetype/10.2.0),
+    setting your own Group ID, Artifact ID, and Version:
+
+    ```bash
+    mvn archetype:generate \
+        -DarchetypeGroupId=org.kie.kogito \
+        -DarchetypeArtifactId=kogito-spring-boot-archetype \
+        -DarchetypeVersion=10.2.0 \
+        -DgroupId=com.example \
+        -DartifactId=my-decision-service \
+        -Dversion=1.0.0-SNAPSHOT
+    ```
+
+    Your favorite Java tooling works too — every major IDE can create a Maven
+    project from an archetype (for example, IntelliJ IDEA's *New Project → Maven
+    Archetype* or the Eclipse Maven project wizard) using the same coordinates.
   </Step>
   <Step title="Build it">
-    Unzip and run `mvn clean install`.
+    `cd` into the new directory and run `mvn clean install`.
   </Step>
   <Step title="Run it">
-    Launch with `mvn spring-boot:run` (Spring Boot) or `mvn quarkus:dev`
-    (Quarkus), then open `localhost:8080`.
+    Launch with `mvn spring-boot:run`, then open `localhost:8080`.
   </Step>
   <Step title="Customize and extend">
     Modify decision models, add configuration, connect data sources, and
@@ -47,20 +49,23 @@ for the full workstation configuration.
 </Steps>
 
 <Check>
-  You have a running Aletyx service scaffolded from a template. Integrate it with
-  your systems via the API or call processes directly from Java.
+  You have a running Aletyx service scaffolded from the archetype. Integrate it
+  with your systems via the API or call processes directly from Java.
 </Check>
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Project scaffolding guide" icon="cubes" href="https://docs.aletyx.ai/guides/getting-started/getting-started-start-aletyx/">
-    Full walkthrough of start.aletyx.ai.
+  <Card title="Playground accelerators" icon="cubes" href="https://docs.aletyx.ai/components/playground/accelerators/">
+    Scaffold customizable projects from the Playground.
   </Card>
   <Card title="MCP for AI integration" icon="robot" href="https://docs.aletyx.ai/components/mcp/">
     Expose decisions to LLMs via the Model Context Protocol.
   </Card>
   <Card title="Core concepts & Java" icon="java" href="https://docs.aletyx.ai/core/">
     Core features and Java integration.
+  </Card>
+  <Card title="Kogito documentation" icon="book" href="https://docs.kogito.kie.org/1.13.0/html_single/">
+    Full Kogito reference, including project creation and Spring Boot usage.
   </Card>
 </CardGroup>

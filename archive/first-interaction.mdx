@@ -1,25 +1,45 @@
 ---
 title: "First Interaction"
-description: "Build a Spring Boot decision service that exposes a DMN model over the Model Context Protocol (MCP) and connect it to Claude Desktop for natural-language decisions."
+description: "Build a decision service that exposes a DMN model over the Model Context Protocol (MCP) and connect it to Claude Desktop for natural-language decisions."
 source: "https://docs.aletyx.ai/components/mcp/first-interaction/"
 ---
 
-This guide walks you through setting up a Spring Boot service that combines Decision Model and Notation (DMN) with Model Context Protocol (MCP) to create an intelligent decision service that can interact with Claude.
+This guide walks you through setting up a service that combines Decision Model and Notation (DMN) with Model Context Protocol (MCP) to create an intelligent decision service that can interact with Claude. The service can run on either Quarkus or Spring Boot — the steps below show both alternatives wherever the commands differ.
 
 ## Prerequisites
 
 - Java 17 installed
 - Maven 3.9.6 installed
-- Basic knowledge of Spring Boot
+- Basic knowledge of Java and Maven
 - Claude Desktop application
 
 ## Step 1: Create Your Intelligent Decision Service
 
-1. Visit [start.aletyx.ai](https://start.aletyx.ai)
-2. Select the "Intelligent Decision Service" template
-     [![Intelligent Decision Service](/images/components/components/mcp/images/intelligent-decision-service.png)](https://docs.aletyx.ai/components/mcp/images/intelligent-decision-service.png)
-3. Fill out the form or leave it as is to create a project called `start-with-aletyx`
-4. Click "Download Project" to get your starter code
+Generate a new module for your preferred runtime using the upstream Kogito tooling — the Quarkus Maven plugin with the Kogito extension, or the [Kogito Spring Boot archetype](https://mvnrepository.com/artifact/org.kie.kogito/kogito-spring-boot-archetype/10.2.0) — setting your own Group ID, Artifact ID, and Version:
+
+<CodeGroup>
+
+```bash Quarkus
+mvn io.quarkus:quarkus-maven-plugin:create \
+    -DprojectGroupId=com.example \
+    -DprojectArtifactId=intelligent-decision-service \
+    -DprojectVersion=1.0.0-SNAPSHOT \
+    -Dextensions=kogito-quarkus
+```
+
+```bash Spring Boot
+mvn archetype:generate \
+    -DarchetypeGroupId=org.kie.kogito \
+    -DarchetypeArtifactId=kogito-spring-boot-archetype \
+    -DarchetypeVersion=10.2.0 \
+    -DgroupId=com.example \
+    -DartifactId=intelligent-decision-service \
+    -Dversion=1.0.0-SNAPSHOT
+```
+
+</CodeGroup>
+
+Your favorite Java tooling works too — for Quarkus you can generate the project from [code.quarkus.io](https://code.quarkus.io/?e=org.kie.kogito%3Akogito-quarkus) with the Kogito extension, and every major IDE can create a Maven project from an archetype (for example, IntelliJ IDEA's *New Project → Maven Archetype* or the Eclipse Maven project wizard) using the same coordinates.
 
 ## Step 2: Configure Maven Access to Aletyx Repository
 
@@ -65,10 +85,10 @@ Contact Aletyx at [aletyx.ai/contact-us](https://aletyx.ai/contact-us) to get yo
 
 ## Step 3: Understand and Modify the DMN Model
 
-The downloaded project includes a sample DMN model. For the traffic violation example:
+The generated project includes a sample DMN model. For the traffic violation example:
 
 1. Open the project in your preferred IDE
-2. Navigate to `src/main/resources/dmn/`
+2. Navigate to `src/main/resources/`
 3. Locate the DMN model file (e.g., `TrafficViolation.dmn`)
 4. Use the DMN editor in your IDE or a standalone DMN tool to modify the model as needed
   The sample traffic violation model includes:
@@ -81,11 +101,19 @@ The downloaded project includes a sample DMN model. For the traffic violation ex
 1. Navigate to your project directory in the terminal
 2. Build and run the application:
 
-  ```bash
+  <CodeGroup>
+
+  ```bash Quarkus
+  mvn clean quarkus:dev
+  ```
+
+  ```bash Spring Boot
   mvn clean spring-boot:run
   ```
+
+  </CodeGroup>
 3. Verify the service is running by checking:
-4. The console output should show that Spring Boot has started successfully
+4. The console output should show that the application has started successfully
 5. The MCP endpoints are available (typically at [http://localhost:8080/sse](http://localhost:8080/sse))
 
 ## Step 5: Configure Claude Desktop for MCP Connection
@@ -143,14 +171,14 @@ The downloaded project includes a sample DMN model. For the traffic violation ex
 
 If you encounter connection issues:
 
-1. Verify your Spring Boot application is running properly
-2. Check the Spring Boot logs for any MCP-related errors
+1. Verify your application is running properly
+2. Check the application logs for any MCP-related errors
 3. Try clearing the MCP authentication cache:
 
   ```bash
   rm -rf ~/.mcp-auth
   ```
-4. Restart both the Spring Boot application and Claude Desktop
+4. Restart both the application and Claude Desktop
 5. Ensure you're using compatible versions of MCP client and server
 6. Check for any network issues or firewalls blocking the connection
 
@@ -158,12 +186,14 @@ If you encounter connection issues:
 
 - Create more complex DMN models for your business decisions
 - Integrate with existing business rules and processes
-- Extend the Spring Boot service with additional APIs
+- Extend the service with additional APIs
 - Connect other MCP-compatible clients to your decision service
 
 ## Additional Resources
 
 - [DMN Specification](https://www.omg.org/dmn/)
+- [Kogito Documentation](https://docs.kogito.kie.org/1.13.0/html_single/)
+- [Quarkus Documentation](https://quarkus.io/guides/)
 - [Spring Boot Documentation](https://spring.io/projects/spring-boot)
 - [Model Context Protocol](https://modelcontextprotocol.org/)
 - [Aletyx Documentation](https://docs.aletyx.ai/)
