@@ -36,6 +36,13 @@ resolve() {
   target="${target%%\?*}"
   [ -z "$target" ] && return 1  # pure anchor / empty
 
+  # The site is served under the /docs base path (aletyx.ai/docs). Mintlify
+  # prepends it to markdown/component links at render time, but raw <a> tags
+  # must hardcode it — resolve those against the docs root.
+  if [[ "$target" == /docs/* ]]; then
+    target="${target#/docs}"
+  fi
+
   local prefix
   if [[ "$target" == /* ]]; then
     prefix="$root$target"
