@@ -77,7 +77,6 @@
             "pages": [
               "quickstart",
               "quickstart/decision-analysts",
-              "quickstart/developers",
               "quickstart/tech-leads",
               "guides/getting-started/ai-assistant",
               {
@@ -545,6 +544,10 @@
     }
   },
   "redirects": [
+    {
+      "source": "/quickstart/developers",
+      "destination": "/quickstart"
+    },
     {
       "source": "/guides/getting-started/getting-started-start-aletyx",
       "destination": "/guides/getting-started/getting-started-playground"
