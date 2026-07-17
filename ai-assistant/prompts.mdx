@@ -1,0 +1,132 @@
+---
+title: "Prompts"
+description: "Prompt ideas to try with the Aletyx AI Assistant on the Loan Pre-Qualification sample model."
+---
+
+This page shows some ideas of prompts to use with the Aletyx AI Assistant on the **Loan Pre-Qualification** sample model from the [Setup guide](/ai-assistant/setup). Copy them as-is to see what the assistant can do - then adapt them to your own models.
+
+## Explain the model
+
+```text wrap
+Explain this decision model in plain language.
+```
+
+The assistant walks through the model's inputs, intermediate decisions, and final decision table - useful for getting oriented in a model you didn't build, or for checking that the logic matches what the business expects.
+
+![The assistant explaining the Loan Pre-Qualification model in plain language, with its overview of the model's inputs](/images/ai-assistant/prompts/00-model-explain.png)
+
+Here is the assistant's full response:
+
+<Accordion title="Loan Pre-Qualification Decision Model – Plain Language Explanation">
+This DMN model automates the **pre-qualification process for loan applicants**. It evaluates whether a borrower qualifies for a loan by analyzing their creditworthiness, debt levels, and payment capacity.
+
+**Overview**
+
+The model takes three pieces of information about an applicant:
+
+1. **Applicant Data** – their income, debts, expenses, taxes, and insurance
+2. **Requested Product** – the loan amount, rate, and term they're applying for
+3. **Credit Score** – their FICO score
+
+It then produces a **Loan Pre-Qualification** decision that states whether they are **Qualified** or **Not Qualified**, along with a specific reason.
+
+**How It Works (Step-by-Step)**
+
+**Step 1: Evaluate Credit Score Rating**
+
+The **Credit Score Rating** decision converts a FICO score into a rating category:
+
+- Excellent (750+)
+- Good (700–750)
+- Fair (650–700)
+- Poor (600–650)
+- Bad (below 600)
+
+**Step 2: Calculate Debt Ratios**
+
+**Front End Ratio** (Mortgage Payment to Income)
+
+- Calculates the applicant's PITI (Principal, Interest, Tax, Insurance) based on the requested loan
+- Compares it to the lender's acceptable threshold (28%)
+- Result: **Sufficient** or **Insufficient**
+
+**Back End Ratio** (Debt to Income)
+
+- Calculates total monthly debt obligations (repayments + expenses) divided by income
+- Compares it to the lender's acceptable threshold (36%)
+- Result: **Sufficient** or **Insufficient**
+
+**Step 3: Make Final Decision**
+
+The **Loan Pre-Qualification** decision combines all three factors in a decision table:
+
+| Credit Score | Back End Ratio | Front End Ratio | Result | Reason |
+|---|---|---|---|---|
+| Poor/Bad | Any | Any | ❌ Not Qualified | Credit Score too low |
+| Fair/Good/Excellent | Insufficient | Sufficient | ❌ Not Qualified | Debt to income ratio too high |
+| Fair/Good/Excellent | Sufficient | Insufficient | ❌ Not Qualified | Mortgage payment to income ratio too high |
+| Fair/Good/Excellent | Insufficient | Insufficient | ❌ Not Qualified | Both ratios too high |
+| Fair/Good/Excellent | Sufficient | Sufficient | ✅ Qualified | Pre-qualified successfully |
+
+**Key Business Rules**
+
+- **Credit Score is a gate:** Poor or bad credit automatically disqualifies
+- **Income-based limits:** Applicants must keep debt and mortgage payments within acceptable percentages of monthly income
+- **All checks must pass:** For qualification, the applicant needs a fair/good/excellent credit score AND both debt ratios must be sufficient
+</Accordion>
+
+## Change a business rule
+
+```text wrap
+Change to 42% the percentage of the applicant's gross monthly income relative to all monthly debt obligations that qualifies the applicant for a loan.
+```
+
+This asks the assistant to raise the **Back End Ratio** threshold - the debt-to-income limit - from 36% to 42%. Note that the prompt describes the rule in business terms ("percentage of gross monthly income relative to all monthly debt obligations") rather than naming a node: the assistant finds where that logic lives in the model, proposes the change, and lets you review it before applying.
+
+![The prompt in the assistant chat and the proposed changes to the Lender Acceptable DTI, pending review in the Changes tab](/images/ai-assistant/prompts/01-change-backend-ratio.png)
+
+The assistant changed the back end ratio exactly as you'd expect: it located the **Lender Acceptable DTI** business knowledge model - the node that holds the debt-to-income threshold - and updated its expression from `0.36` to `0.42`. The affected node is highlighted on the diagram, and the **Changes** tab lists the edit with its old and new values, so you can accept it with the check mark or revert it before anything is applied to the model.
+
+<Tip>
+**Be specific**
+
+Naming the exact parts you want - the fields, the values, the conditions - gives much better results than a vague request. Notice how the prompt above spells out the business meaning instead of just saying "change the ratio."
+</Tip>
+
+## Change a decision table
+
+```text wrap
+Make each tier of the credit score table 10% lower so that more applications are qualified.
+```
+
+This one targets a whole decision table rather than a single value: the **Credit Score Rating** table, which maps the applicant's FICO score to a rating from Excellent to Bad.
+
+The assistant recalculated every tier boundary 10% lower - Excellent moves from 750 to 675, Good to 630, Fair to 585, and Poor to 540 - so more applicants land in the qualifying ratings. Each modified cell is highlighted in the table with its own accept and revert controls, and the assistant waits for your approval of the pending changes before they're applied.
+
+## Review and approve the changes
+
+Whatever the prompt, remember that the assistant only *proposes* changes - nothing is applied to your model until you approve it. Review every suggestion in the **Changes** panel at the bottom of the editor: it lists each edit with its old and new values, grouped by the node it belongs to, and the affected cells are highlighted in the editor itself.
+
+![The Changes panel listing the assistant's proposed edits, with per-change controls and the Accept all changes button](/images/ai-assistant/prompts/04-approve-changes.png)
+
+Approve or reject at whatever granularity you need: each change and each group has its own **accept** (check mark) and **revert** controls, and the check mark button in the panel's toolbar accepts all pending changes at once. Reverting a change discards it and restores the previous value.
+
+## Upload a new decision table
+
+The assistant can also build a model from scratch. Go back to the Playground home screen and click **New Decision Table** - it creates an empty single-decision table model (a DMNS file).
+
+![The Playground home screen with the New Decision Table option under Create](/images/ai-assistant/prompts/03-new-decision-table.png)
+
+With the empty table open, click **Aletyx AI** to open the assistant. You don't have to describe the table in words - the assistant also accepts file uploads. To follow along, save the [credit tier decision table PDF](/images/ai-assistant/prompts/credit_tier_decision_table_final.pdf) locally, then click the **upload** icon next to the message box and attach it. This is the table it contains:
+
+![A credit tier decision table with Credit Score and Payment History inputs, a Credit Tier output, and a rationale for each row](/images/ai-assistant/prompts/03-credit_tier_decision_table.png)
+
+Then send the file with the prompt:
+
+```text wrap
+Create this decision table
+```
+
+The assistant reads the table from the file and builds it for you - the **Credit Score** and **Payment History** inputs, the **Credit Tier** output, all six rows with their ranges and conditions, and the rationale for each row as annotations - ready for you to review and accept.
+
+The assistant can also generate test cases for your models - see [Testing](/ai-assistant/testing).

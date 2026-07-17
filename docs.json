@@ -101,6 +101,15 @@
             ]
           },
           {
+            "group": "AI Assistant",
+            "pages": [
+              "ai-assistant/overview",
+              "ai-assistant/setup",
+              "ai-assistant/prompts",
+              "ai-assistant/testing"
+            ]
+          },
+          {
             "group": "Core Concepts",
             "pages": [
               "core-concepts",

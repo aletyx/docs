@@ -16,3 +16,4 @@ migration-report.md
 # Local production mirror (reference only, not site content)
 docs-backup/
 docs-local/
+/prompts/
