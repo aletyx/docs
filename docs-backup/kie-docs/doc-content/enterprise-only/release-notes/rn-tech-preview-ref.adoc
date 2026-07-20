@@ -1,0 +1,26 @@
+[id='rn-tech-preview-con']
+= Technology preview
+
+This section lists features that are in Technology Preview in {PRODUCT} {PRODUCT_VERSION}. {CENTRAL} includes an experimental features administration page that is disabled by default. To enable this page, set the value of the `appformer.experimental.features` property to `true`.
+
+== Prediction Service API
+
+You can use the prediction service API to provide a prediction service that assists with user tasks. The prediction service can use artificial intelligence (AI). For example, you can use the Predictive Model Markup Language (PMML) models or Statistical Machine Intelligence and Learning Engine (SMILE) to implement the service.
+
+
+////
+== Deploying a high-availability authoring environment on {OPENSHIFT} 4.x
+You can deploy a high-availability {PRODUCT} authoring environment on {OPENSHIFT} 4.x using the operator.
+
+== OpenShift operator installer wizard
+An installer wizard is provided in the {OPENSHIFT} operator for {PRODUCT}. You can use the wizard to deploy an {PRODUCT} environment on {OPENSHIFT} with the operator.
+////
+
+== Authoring perspective customization
+
+You can perform the following tasks to customize the {CENTRAL} authoring perspective:
+
+* Open a {CENTRAL} project directly using a URL path parameter, without going through a list of spaces and projects.
+* Hide or show the project toolbar, *Metrics* tab, and *Change Request* tab according to your requirements.
+* Enhance the pagination.
+* Customize the number of assets present on the project screen.

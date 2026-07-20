@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+~ Copyright 2015 Red Hat, Inc. and/or its affiliates
+~
+~ Licensed under the Apache License, Version 2.0 (the "License");
+~ you may not use this file except in compliance with the License.
+~ You may obtain a copy of the License at
+~
+~       http://www.apache.org/licenses/LICENSE-2.0
+~
+~ Unless required by applicable law or agreed to in writing, software
+~ distributed under the License is distributed on an "AS IS" BASIS,
+~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~ See the License for the specific language governing permissions and
+~ limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-parent</artifactId>
+    <!-- 7.67.2-SNAPSHOT is no longer resolvable; use the released 7.67.0.Final -->
+    <version>7.67.0.Final</version>
+  </parent>
+
+  <artifactId>kie-docs</artifactId>
+  <!-- Keep the original module version so child poms (which declare the
+       7.67.2-SNAPSHOT parent version) continue to resolve against this pom -->
+  <version>7.67.2-SNAPSHOT</version>
+
+  <packaging>pom</packaging>
+  <name>KIE :: Documentation</name>
+  <description>KIE Documentation</description>
+
+  <scm>
+    <connection>scm:git:git@github.com:kiegroup/kie-docs.git</connection>
+    <developerConnection>scm:git:git@github.com:kiegroup/kie-docs.git</developerConnection>
+    <url>https://github.com/kiegroup/kie-docs</url>
+  </scm>
+
+  <modules>
+    <module>doc-content</module>
+  </modules>
+
+  <build>
+    <plugins>
+      <!-- kie-parent binds spotbugs 3.1.8, whose bundled Groovy cannot even
+           load on modern JDKs (GroovyBugError before the skip flag is read).
+           Unbind the execution: it has no value for a docs-only build. -->
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>spotbugs</id>
+            <phase>none</phase>
+          </execution>
+          <execution>
+            <id>spotbugs-check</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <repositories>
+    <!-- Bootstrap repository to locate the parent pom when the parent pom has not been build locally. -->
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+</project>

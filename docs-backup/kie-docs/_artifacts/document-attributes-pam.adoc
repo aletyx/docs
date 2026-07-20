@@ -1,0 +1,46 @@
+:PRODUCT: IBM Business Automation Manager Open Editions
+:PRODUCT_SHORT: IBM Business Automation Manager
+:PRODUCT_INIT_TOP: IBAMOE
+:PRODUCT_INIT_CAP_TOP: IBAMOE
+:PRODUCT_INIT: bamoe
+:PRODUCT_INIT_CAP: bamoe
+:PRODUCT_INIT_BA: bamoe
+:PRODUCT_INIT_CAP_BA: bamoe
+
+:CONTEXTUAL_BPMSUITE: {PRODUCT}
+:CONTEXTUAL_BPMSUITE_SHORT: {PRODUCT_SHORT}
+
+:PRODUCT_OLD: Red Hat JBoss BPM Suite
+:URL_COMPONENT_PRODUCT_OLD: red_hat_jboss_bpm_suite
+
+:PRODUCT_VERSION: 8.0
+:PRODUCT_VERSION_LONG: 8.0.2
+:PRODUCT_FILE: {PRODUCT_INIT}-{ENTERPRISE_VERSION_LONG}
+:PRODUCT_FILE_BA: {PRODUCT_INIT_BA}-{ENTERPRISE_VERSION_LONG}
+
+:URL_COMPONENT_PRODUCT: ibm_business_automation_manager_open_editions
+
+:URL_BASE_GITHUB: {URL_BASE_GITHUB_PAM}
+
+:PROJECT: Mortgage_Process
+
+:DECISION_ENGINE: decision engine
+:DECISION_ENGINE_CAP: Decision engine
+:PROCESS_ENGINE: process engine
+:PROCESS_ENGINE_CAP: Process engine
+:PLANNING_ENGINE: planning engine
+:PLANNING_ENGINE_CAP: Planning engine
+:URL_COMPONENT_DECISION_ENGINE: decision-engine
+:URL_COMPONENT_PROCESS_ENGINE: process-engine
+:URL_COMPONENT_PLANNING_ENGINE: planner-engine
+
+:PRODUCT_DOWNLOAD_LINK: https://www.ibm.com/support/pages/node/6596913
+
+// Different in RHDM, and thus specified in each product attributes. The truly global CENTRAL attributes remain in document-attributes.adoc.
+:URL_COMPONENT_CENTRAL: business-central
+:CENTRAL_CAPITAL_UNDER: BUSINESS_CENTRAL
+:CENTRAL_ONEWORD: businesscentral
+
+:KAFKA_PRODUCT: Red Hat AMQ Streams
+
+:CONTACT: {PRODUCT} documentation team: brms-docs@redhat.com

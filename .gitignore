@@ -3,3 +3,7 @@
 *.local.*
 *-local
 
+
+# Maven build output in the kie-docs source mirror
+docs-backup/kie-docs/target/
+docs-backup/kie-docs/**/target/

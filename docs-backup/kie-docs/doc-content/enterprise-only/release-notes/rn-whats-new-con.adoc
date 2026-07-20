@@ -1,0 +1,78 @@
+[id='rn-whats-new-con']
+= New features
+
+This section highlights new features in {PRODUCT} {PRODUCT_VERSION}.
+
+== Ability to use a custom registry and specific images
+
+You can now configure the custom registry to use specific images during the configuration of the environment.
+
+ifdef::PAM[]
+
+== Ability to output error logs of eager initialization of Kafka emitters
+
+You can now set the `org.kie.jbpm.event.emitters.eagerInit` property to `true` to output the error log when {KIE_SERVER} starts and initializes the Kafka emitter.
+
+endif::PAM[]
+
+== Ability to use a secret for admin users during KieApp configuration
+
+You can now use a secret containing the credentials for admin users during `KieApp` configuration.
+
+== Ability to change the route termination and enable edge termination
+
+During configuration of the environment, you can now change the route termination, enable edge termination, and set optional credentials.
+
+ifdef::PAM[]
+
+== Process Designer
+
+=== Ability to set the priority of a task as a process variable in {CENTRAL}
+
+It is now possible to set the priority of a task as an MVEL expression.
+
+== {PROCESS_ENGINE_CAP}
+
+=== Support for exploded installations of Spring Boot business automation applications
+
+It is now possible to get support for exploded installations of Spring Boot business automation applications. If the application working directory is not the default directory, you can set it with the `org.kie.maven.resolver.folder=/my-workspace/` variable. Note that for the Spring Boot image you must copy this variable into the  `JAVA_TOOL_OPTIONS: "-Dorg.kie.maven.resolver.folder=..."` environment variable.
+
+=== Ability to remove the process ID from the EJB timer column
+
+It is now possible to remove the process ID from the EJB timer column. You can now correlate `process-instance-id` and `ejb-timer-id`.
+
+endif::PAM[]
+
+== {OPENSHIFT}
+
+ifdef::PAM[]
+
+=== Process Instance Migration Service now uses Quarkus
+Process Instance Migration Service now uses Quarkus instead of Thorntail.
+
+endif::PAM[]
+
+=== Configurable startup strategy when using the Operator installer
+
+When you deploy {PRODUCT} on {OPENSHIFT} using the operator installer, by default the deployment uses the `OpenShiftStartupStrategy` setting. If necessary, you can now switch to the Controller startup strategy in the configuration user interface.
+
+=== Custom host name routes
+You can now set custom host names for external routes by using the `routeHostname` property.
+
+=== Improved SSL configurability
+You can now enable or disable SSL in the operator and expose the SSL route.
+
+=== Default configuration for cross domain resource sharing (CORS)
+You can now specify whether to use a default or user-customized CORS configuration.
+
+=== {DATAGRID} user name and password configuration on {OPENSHIFT}
+
+When deploying a high-availability {PRODUCT} environment on {OPENSHIFT}, you can now configure the user name and password for the {DATAGRID} component.
+
+ifdef::PAM[]
+
+== Spring Boot
+
+The `start.jpbm.org` website is no longer available. To create Spring Boot business applications, use Maven archetype commands.
+
+endif::PAM[]

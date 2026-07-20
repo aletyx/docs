@@ -1,0 +1,18 @@
+[id='kie-server-wls-install-proc']
+= Installing {KIE_SERVER} with {WEBLOGIC}
+
+After you have configured all required system properties in {WEBLOGIC}, you can install {KIE_SERVER} with {WEBLOGIC} to streamline {PRODUCT} application management.
+
+.Prerequisites
+* An {WEBLOGIC} instance is configured as described in xref:wls-configure-proc[].
+
+.Procedure
+. Navigate to the {PRODUCT_DOWNLOAD_LINK}[IBM Business Automation Manager Open Editions {ENTERPRISE_VERSION} downloads] page  and follow the instructions to download *{PRODUCT} {PRODUCT_VERSION} - {KIE_SERVER} EE7*.
+. Extract the downloaded `{PRODUCT_INIT_TOP}-{PRODUCT_VERSION}-KS7.Zip` file to a temporary directory.
+. In the WebLogic Administration Console, navigate to *Deployments* to view all existing applications.
+. Click *Install*.
+. Navigate to the temporary directory where you downloaded and extracted the `{PRODUCT_INIT_TOP}-{PRODUCT_VERSION}-KS7.Zip` file, and go to `{PRODUCT_INIT_TOP}-{PRODUCT_VERSION}-KS7/kie-server.war`.
+. Select the `kie-server.war` file and click *Next* to continue.
+. Select *Install this deployment as an application* as the targeting style and click *Next*.
+. Set the application name to `kie-server` and set the security model to `DD Only`. Leave the remaining options as default and click *Next* to continue.
+. In the *Additional Configuration* section, choose *No, I will review the configuration later* and click *Finish*.
