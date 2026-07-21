@@ -1,0 +1,501 @@
+---
+title: "jBPM controller Java client API for KIE Server templates and instances"
+description: "Connect to the jBPM controller using REST or WebSocket protocol from your Java client application to interact with KIE Server templates, instances, and associated KIE containers."
+source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#controller-java-api-con_kie-apis"
+---
+
+jBPM provides an jBPM controller Java client API that enables you to connect to the jBPM controller using REST or WebSocket protocol from your Java client application. You can use the jBPM controller Java client API as an alternative to the jBPM controller REST API to interact with your KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units) in jBPM without using the Business Central user interface. This API support enables you to maintain your jBPM servers and resources more efficiently and optimize your integration and development with jBPM.
+
+With the jBPM controller Java client API, you can perform the following actions also supported by the jBPM controller REST API:
+
+- Retrieve information about KIE Server templates, instances, and associated KIE containers
+- Update, start, or stop KIE containers associated with KIE Server templates and instances
+- Create, update, or delete KIE Server templates
+- Create, update, or delete KIE Server instances
+
+jBPM controller Java client API requests require the following components:
+
+**Authentication**
+
+The jBPM controller Java client API requires HTTP Basic authentication for the following user roles, depending on controller type:
+
+- `rest-all` user role if you installed Business Central and you want to use the built-in jBPM controller
+- `kie-server` user role if you installed the headless jBPM controller separately from Business Central
+
+To view configured user roles for your jBPM distribution, navigate to `~/$SERVER_HOME/standalone/configuration/application-roles.properties` and `~/application-users.properties`.
+
+To add a user with the `kie-server` role or the `rest-all` role or both (assuming a Keystore is already set), navigate to `~/$SERVER_HOME/bin` and run the following command with the role or roles specified:
+
+```bash
+$ ./bin/jboss-cli.sh --commands="embed-server --std-out=echo,/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity(identity=<USERNAME>),/subsystem=elytron/filesystem-realm=ApplicationRealm:set-password(identity=<USERNAME>, clear={password='<PASSWORD>'}),/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity-attribute(identity=<USERNAME>, name=role, value=['rest-all','kie-server'])"
+```
+
+In case the Keystore is not set, then execute the following command to create a Keystore:
+
+```bash
+$ keytool -importpassword -keystore $SERVER_HOME/standalone/configuration/kie_keystore.jceks -keypass <SECRETKEYPASSWORD> -alias kieserver -storepass <SECRETSTOREPASSWORD> -storetype JCEKS
+```
+
+Also, add the following properties to `~/$SERVER_HOME/standalone/configuration/standalone-full.xml`:
+
+```xml
+    <property name="kie.keystore.keyStoreURL" value="file:///data/jboss/rhpam780/standalone/configuration/kie_keystore.jceks"/>
+    <property name="kie.keystore.keyStorePwd" value="<SECRETSTOREPASSWORD>"/>
+    <property name="kie.keystore.key.server.alias" value="kieserver"/>
+    <property name="kie.keystore.key.server.pwd" value="<SECRETKEYPASSWORD>"/>
+    <property name="kie.keystore.key.ctrl.alias" value="kieserver"/>
+    <property name="kie.keystore.key.ctrl.pwd" value="<SECRETKEYPASSWORD>"/>
+```
+
+To configure the `kie-server` or `rest-all` user with jBPM controller access, navigate to `~/$SERVER_HOME/standalone/configuration/standalone-full.xml`, uncomment the `org.kie.server` properties (if applicable), and add the controller user login credentials and controller location (if needed):
+
+```xml
+<property name="org.kie.server.location" value="http://localhost:8080/kie-server/services/rest/server"/>
+<property name="org.kie.server.controller" value="http://localhost:8080/business-central/rest/controller"/>
+<property name="org.kie.server.controller.user" value="<USERNAME>"/>
+<property name="org.kie.server.id" value="default-kieserver"/>
+```
+
+For more information about user roles and jBPM installation options, see
+[Installing the KIE Server](/archive/kie-server/installation).
+
+**Project dependencies**
+
+The jBPM controller Java client API requires the following dependencies on the relevant classpath of your Java project:
+
+```xml
+<!-- For remote execution on controller -->
+<dependency>
+  <groupId>org.kie.server</groupId>
+  <artifactId>kie-server-controller-client</artifactId>
+  <version>${jbpm.version}</version>
+</dependency>
+
+<!-- For REST client -->
+<dependency>
+  <groupId>org.jboss.resteasy</groupId>
+  <artifactId>resteasy-client</artifactId>
+  <version>${resteasy.version}</version>
+</dependency>
+
+<!-- For WebSocket client -->
+<dependency>
+  <groupId>io.undertow</groupId>
+  <artifactId>undertow-websockets-jsr</artifactId>
+  <version>${undertow.version}</version>
+</dependency>
+
+<!-- For debug logging (optional) -->
+<dependency>
+  <groupId>ch.qos.logback</groupId>
+  <artifactId>logback-classic</artifactId>
+  <version>${logback.version}</version>
+</dependency>
+```
+
+The `<version>` for jBPM dependencies is the Maven artifact version for jBPM currently used in your project (for example, 7.67.2.Final).
+
+**Client request configuration**
+
+All Java client requests with the jBPM controller Java client API must define at least the following controller communication components:
+
+- Credentials of the `rest-all` user if you installed Business Central, or the `kie-server` user if you installed the headless jBPM controller separately from Business Central
+- jBPM controller location for REST or WebSocket protocol:
+  - Example REST URL: `http://localhost:8080/business-central/rest/controller`
+  - Example WebSocket URL: `ws://localhost:8080/headless-controller/websocket/controller`
+- Marshalling format for API requests and responses (JSON or JAXB)
+- A `KieServerControllerClient` object, which serves as the entry point for starting the server communication using the Java client API
+- A `KieServerControllerClientFactory` defining REST or WebSocket protocol and user access
+- The jBPM controller client service or services used, such as `listServerTemplates`, `getServerTemplate`, or `getServerInstances`
+
+The following are examples of REST and WebSocket client configurations with these components:
+
+```java Client configuration example with REST
+import org.kie.server.api.marshalling.MarshallingFormat;
+import org.kie.server.controller.api.model.spec.ServerTemplateList;
+import org.kie.server.controller.client.KieServerControllerClient;
+import org.kie.server.controller.client.KieServerControllerClientFactory;
+
+public class ListServerTemplatesExample {
+
+    private static final String URL = "http://localhost:8080/business-central/rest/controller";
+    private static final String USER = "baAdmin";
+    private static final String PASSWORD = "password@1";
+
+    private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
+
+    public static void main(String[] args) {
+        KieServerControllerClient client = KieServerControllerClientFactory.newRestClient(URL,
+                                                                                          USER,
+                                                                                          PASSWORD);
+
+        final ServerTemplateList serverTemplateList = client.listServerTemplates();
+        System.out.println(String.format("Found %s server template(s) at controller url: %s",
+                                         serverTemplateList.getServerTemplates().length,
+                                         URL));
+    }
+}
+```
+
+```java Client configuration example with WebSocket
+import org.kie.server.api.marshalling.MarshallingFormat;
+import org.kie.server.controller.api.model.spec.ServerTemplateList;
+import org.kie.server.controller.client.KieServerControllerClient;
+import org.kie.server.controller.client.KieServerControllerClientFactory;
+
+public class ListServerTemplatesExample {
+
+    private static final String URL = "ws://localhost:8080/my-controller/websocket/controller";
+    private static final String USER = "baAdmin";
+    private static final String PASSWORD = "password@1";
+
+    private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
+
+    public static void main(String[] args) {
+        KieServerControllerClient client = KieServerControllerClientFactory.newWebSocketClient(URL,
+                                                                                               USER,
+                                                                                               PASSWORD);
+
+        final ServerTemplateList serverTemplateList = client.listServerTemplates();
+        System.out.println(String.format("Found %s server template(s) at controller url: %s",
+                                         serverTemplateList.getServerTemplates().length,
+                                         URL));
+    }
+}
+```
+
+## Sending requests with the jBPM controller Java client API
+
+The jBPM controller Java client API enables you to connect to the jBPM controller using REST or WebSocket protocols from your Java client application. You can use the jBPM controller Java client API as an alternative to the jBPM controller REST API to interact with your KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units) in jBPM without using the Business Central user interface.
+
+**Prerequisites**
+
+- KIE Server is installed and running.
+- The jBPM controller or headless jBPM controller is installed and running.
+- You have `rest-all` user role access to the jBPM controller if you installed Business Central, or `kie-server` user role access to the headless jBPM controller installed separately from Business Central.
+- You have a Java project with jBPM resources.
+
+**Procedure**
+
+1. In your client application, ensure that the following dependencies have been added to the relevant classpath of your Java project:
+
+   ```xml
+   <!-- For remote execution on controller -->
+   <dependency>
+     <groupId>org.kie.server</groupId>
+     <artifactId>kie-server-controller-client</artifactId>
+     <version>${jbpm.version}</version>
+   </dependency>
+
+   <!-- For REST client -->
+   <dependency>
+     <groupId>org.jboss.resteasy</groupId>
+     <artifactId>resteasy-client</artifactId>
+     <version>${resteasy.version}</version>
+   </dependency>
+
+   <!-- For WebSocket client -->
+   <dependency>
+     <groupId>io.undertow</groupId>
+     <artifactId>undertow-websockets-jsr</artifactId>
+     <version>${undertow.version}</version>
+   </dependency>
+
+   <!-- For debug logging (optional) -->
+   <dependency>
+     <groupId>ch.qos.logback</groupId>
+     <artifactId>logback-classic</artifactId>
+     <version>${logback.version}</version>
+   </dependency>
+   ```
+
+2. In the `~/kie/server/controller/client` folder
+   of the Java client API in [GitHub](https://github.com/kiegroup/droolsjbpm-integration/tree/master/kie-server-parent/kie-server-controller/kie-server-controller-client/src/main/java/org/kie/server/controller/client)
+   , identify the relevant Java client implementation for the request you want to send, such as the `RestKieServerControllerClient` implementation to access client services for KIE Server templates and KIE containers in REST protocol.
+
+3. In your client application, create a `.java` class for the API request. The class must contain the necessary imports, the jBPM controller location and user credentials, a `KieServerControllerClient` object, and the client method to execute, such as `createServerTemplate` and `createContainer` from the `RestKieServerControllerClient` implementation. Adjust any configuration details according to your use case.
+
+   ```java Creating and interacting with a KIE Server template and KIE containers
+   import java.util.Arrays;
+   import java.util.HashMap;
+   import java.util.Map;
+
+   import org.kie.server.api.marshalling.MarshallingFormat;
+   import org.kie.server.api.model.KieContainerStatus;
+   import org.kie.server.api.model.KieScannerStatus;
+   import org.kie.server.api.model.ReleaseId;
+   import org.kie.server.controller.api.model.spec.*;
+   import org.kie.server.controller.client.KieServerControllerClient;
+   import org.kie.server.controller.client.KieServerControllerClientFactory;
+
+   public class RestTemplateContainerExample {
+
+     private static final String URL = "http://localhost:8080/business-central/rest/controller";
+     private static final String USER = "baAdmin";
+     private static final String PASSWORD = "password@1";
+
+       private static KieServerControllerClient client;
+
+       public static void main(String[] args) {
+           KieServerControllerClient client = KieServerControllerClientFactory.newRestClient(URL,
+                                                                                             USER,
+                                                                                             PASSWORD,
+                                                                                             MarshallingFormat.JSON);
+           // Create server template and KIE container, start and stop KIE container, and delete server template
+           ServerTemplate serverTemplate = createServerTemplate();
+           ContainerSpec container = createContainer(serverTemplate);
+           client.startContainer(container);
+           client.stopContainer(container);
+           client.deleteServerTemplate(serverTemplate.getId());
+       }
+
+       // Re-create and configure server template
+       protected static ServerTemplate createServerTemplate() {
+           ServerTemplate serverTemplate = new ServerTemplate();
+           serverTemplate.setId("example-client-id");
+           serverTemplate.setName("example-client-name");
+           serverTemplate.setCapabilities(Arrays.asList(Capability.PROCESS.name(),
+                                                        Capability.RULE.name(),
+                                                        Capability.PLANNING.name()));
+
+           client.saveServerTemplate(serverTemplate);
+
+           return serverTemplate;
+       }
+
+       // Re-create and configure KIE containers
+       protected static ContainerSpec createContainer(ServerTemplate serverTemplate){
+           Map<Capability, ContainerConfig> containerConfigMap = new HashMap();
+
+           ProcessConfig processConfig = new ProcessConfig("PER_PROCESS_INSTANCE", "kieBase", "kieSession", "MERGE_COLLECTION");
+           containerConfigMap.put(Capability.PROCESS, processConfig);
+
+           RuleConfig ruleConfig = new RuleConfig(500l, KieScannerStatus.SCANNING);
+           containerConfigMap.put(Capability.RULE, ruleConfig);
+
+           ReleaseId releaseId = new ReleaseId("org.kie.server.testing", "stateless-session-kjar", "1.0.0-SNAPSHOT");
+
+           ContainerSpec containerSpec = new ContainerSpec("example-container-id", "example-client-name", serverTemplate, releaseId, KieContainerStatus.STOPPED, containerConfigMap);
+           client.saveContainerSpec(serverTemplate.getId(), containerSpec);
+
+           return containerSpec;
+       }
+   }
+   ```
+
+4. Run the configured `.java` class from your project directory to execute the request, and review the jBPM controller response.
+
+   If you enabled debug logging, KIE Server responds with a detailed response according to your configured marshalling format, such as JSON. If you encounter request errors, review the returned error code messages and adjust your Java configurations accordingly.
+
+## Supported jBPM controller Java clients
+
+The following are some of the Java client services available in the `org.kie.server.controller.client` package of your jBPM distribution. You can use these services to interact with related resources in the jBPM controller similarly to the jBPM controller REST API.
+
+- `KieServerControllerClient`: Used as the entry point for communicating with the jBPM controller
+- `RestKieServerControllerClient`: Implementation used to interact with KIE Server templates and KIE containers in REST protocol (found in `~/org/kie/server/controller/client/rest`)
+- `WebSocketKieServerControllerClient`: Implementation used to interact with KIE Server templates and KIE containers in WebSocket protocol (found in `~/org/kie/server/controller/client/websocket`)
+
+For the full list of available jBPM controller Java clients,
+see the Java client API source in [GitHub](https://github.com/kiegroup/droolsjbpm-integration/tree/master/kie-server-parent/kie-server-controller/kie-server-controller-client/src/main/java/org/kie/server/controller/client).
+
+## Example requests with the jBPM controller Java client API
+
+The following are examples of jBPM controller Java client API requests for basic interactions with the jBPM controller. For the full list of available jBPM controller Java clients,
+see the Java client API source in [GitHub](https://github.com/kiegroup/droolsjbpm-integration/tree/master/kie-server-parent/kie-server-controller/kie-server-controller-client/src/main/java/org/kie/server/controller/client).
+
+**Creating and interacting with KIE Server templates and KIE containers**
+
+You can use the `ServerTemplate` and `ContainerSpec` services in the REST or WebSocket jBPM controller clients to create, dispose, and update KIE Server templates and KIE containers, and to start and stop KIE containers, as illustrated in this example.
+
+```java Example request to create and interact with a KIE Server template and KIE containers
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.kie.server.api.marshalling.MarshallingFormat;
+import org.kie.server.api.model.KieContainerStatus;
+import org.kie.server.api.model.KieScannerStatus;
+import org.kie.server.api.model.ReleaseId;
+import org.kie.server.controller.api.model.spec.*;
+import org.kie.server.controller.client.KieServerControllerClient;
+import org.kie.server.controller.client.KieServerControllerClientFactory;
+
+public class RestTemplateContainerExample {
+
+  private static final String URL = "http://localhost:8080/business-central/rest/controller";
+  private static final String USER = "baAdmin";
+  private static final String PASSWORD = "password@1";
+
+    private static KieServerControllerClient client;
+
+    public static void main(String[] args) {
+        KieServerControllerClient client = KieServerControllerClientFactory.newRestClient(URL,
+                                                                                          USER,
+                                                                                          PASSWORD,
+                                                                                          MarshallingFormat.JSON);
+        // Create server template and KIE container, start and stop KIE container, and delete server template
+        ServerTemplate serverTemplate = createServerTemplate();
+        ContainerSpec container = createContainer(serverTemplate);
+        client.startContainer(container);
+        client.stopContainer(container);
+        client.deleteServerTemplate(serverTemplate.getId());
+    }
+
+    // Re-create and configure server template
+    protected static ServerTemplate createServerTemplate() {
+        ServerTemplate serverTemplate = new ServerTemplate();
+        serverTemplate.setId("example-client-id");
+        serverTemplate.setName("example-client-name");
+        serverTemplate.setCapabilities(Arrays.asList(Capability.PROCESS.name(),
+                                                     Capability.RULE.name(),
+                                                     Capability.PLANNING.name()));
+
+        client.saveServerTemplate(serverTemplate);
+
+        return serverTemplate;
+    }
+
+    // Re-create and configure KIE containers
+    protected static ContainerSpec createContainer(ServerTemplate serverTemplate){
+        Map<Capability, ContainerConfig> containerConfigMap = new HashMap();
+
+        ProcessConfig processConfig = new ProcessConfig("PER_PROCESS_INSTANCE", "kieBase", "kieSession", "MERGE_COLLECTION");
+        containerConfigMap.put(Capability.PROCESS, processConfig);
+
+        RuleConfig ruleConfig = new RuleConfig(500l, KieScannerStatus.SCANNING);
+        containerConfigMap.put(Capability.RULE, ruleConfig);
+
+        ReleaseId releaseId = new ReleaseId("org.kie.server.testing", "stateless-session-kjar", "1.0.0-SNAPSHOT");
+
+        ContainerSpec containerSpec = new ContainerSpec("example-container-id", "example-client-name", serverTemplate, releaseId, KieContainerStatus.STOPPED, containerConfigMap);
+        client.saveContainerSpec(serverTemplate.getId(), containerSpec);
+
+        return containerSpec;
+    }
+}
+```
+
+**Listing KIE Server templates and specifying connection timeout (REST)**
+
+When you use REST protocol for jBPM controller Java client API requests, you can provide your own `javax.ws.rs.core.Configuration` specification to modify the underlying REST client API, such as connection timeout.
+
+```java Example REST request to return server templates and specify connection timeout
+import java.util.concurrent.TimeUnit;
+import javax.ws.rs.core.Configuration;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+
+import org.kie.server.api.marshalling.MarshallingFormat;
+import org.kie.server.controller.api.model.spec.ServerTemplateList;
+import org.kie.server.controller.client.KieServerControllerClient;
+import org.kie.server.controller.client.KieServerControllerClientFactory;
+
+public class RESTTimeoutExample {
+
+  private static final String URL = "http://localhost:8080/business-central/rest/controller";
+  private static final String USER = "baAdmin";
+  private static final String PASSWORD = "password@1";
+
+  public static void main(String[] args) {
+
+      // Specify connection timeout
+      final Configuration configuration =
+              new ResteasyClientBuilder()
+                      .establishConnectionTimeout(10,
+                                                    TimeUnit.SECONDS)
+                      .socketTimeout(60,
+                                       TimeUnit.SECONDS)
+                        .getConfiguration();
+        KieServerControllerClient client = KieServerControllerClientFactory.newRestClient(URL,
+                                                                                          USER,
+                                                                                          PASSWORD,
+                                                                                          MarshallingFormat.JSON,
+                                                                                          configuration);
+
+        // Retrieve list of server templates
+        final ServerTemplateList serverTemplateList = client.listServerTemplates();
+        System.out.println(String.format("Found %s server template(s) at controller url: %s",
+                                         serverTemplateList.getServerTemplates().length,
+                                         URL));
+    }
+}
+```
+
+**Listing KIE Server templates and specifying event notifications (WebSocket)**
+
+When you use WebSocket protocol for jBPM controller Java client API requests, you can enable event notifications based
+on changes that happen in the particular jBPM controller to which the client API is connected. For example, you can
+receive notifications when KIE Server templates or instances are connected to or updated in the jBPM controller.
+
+```java Example WebSocket request to return server templates and specify event notifications
+import org.kie.server.api.marshalling.MarshallingFormat;
+import org.kie.server.controller.api.model.events.*;
+import org.kie.server.controller.api.model.spec.ServerTemplateList;
+import org.kie.server.controller.client.KieServerControllerClient;
+import org.kie.server.controller.client.KieServerControllerClientFactory;
+import org.kie.server.controller.client.event.EventHandler;
+
+public class WebSocketEventsExample {
+
+    private static final String URL = "ws://localhost:8080/my-controller/websocket/controller";
+    private static final String USER = "baAdmin";
+    private static final String PASSWORD = "password@1";
+
+    public static void main(String[] args) {
+        KieServerControllerClient client = KieServerControllerClientFactory.newWebSocketClient(URL,
+                                                                                               USER,
+                                                                                               PASSWORD,
+                                                                                               MarshallingFormat.JSON,
+                                                                                               new TestEventHandler());
+
+        // Retrieve list of server templates
+        final ServerTemplateList serverTemplateList = client.listServerTemplates();
+        System.out.println(String.format("Found %s server template(s) at controller url: %s",
+                                         serverTemplateList.getServerTemplates().length,
+                                         URL));
+        try {
+            Thread.sleep(60 * 1000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Set up event notifications
+    static class TestEventHandler implements EventHandler {
+
+        @Override
+        public void onServerInstanceConnected(ServerInstanceConnected serverInstanceConnected) {
+            System.out.println("serverInstanceConnected = " + serverInstanceConnected);
+        }
+
+        @Override
+        public void onServerInstanceDeleted(ServerInstanceDeleted serverInstanceDeleted) {
+            System.out.println("serverInstanceDeleted = " + serverInstanceDeleted);
+        }
+
+        @Override
+        public void onServerInstanceDisconnected(ServerInstanceDisconnected serverInstanceDisconnected) {
+            System.out.println("serverInstanceDisconnected = " + serverInstanceDisconnected);
+        }
+
+        @Override
+        public void onServerTemplateDeleted(ServerTemplateDeleted serverTemplateDeleted) {
+            System.out.println("serverTemplateDeleted = " + serverTemplateDeleted);
+        }
+
+        @Override
+        public void onServerTemplateUpdated(ServerTemplateUpdated serverTemplateUpdated) {
+            System.out.println("serverTemplateUpdated = " + serverTemplateUpdated);
+        }
+
+        @Override
+        public void onServerInstanceUpdated(ServerInstanceUpdated serverInstanceUpdated) {
+            System.out.println("serverInstanceUpdated = " + serverInstanceUpdated);
+        }
+
+        @Override
+        public void onContainerSpecUpdated(ContainerSpecUpdated containerSpecUpdated) {
+            System.out.println("onContainerSpecUpdated = " + containerSpecUpdated);
+        }
+    }
+}
+```

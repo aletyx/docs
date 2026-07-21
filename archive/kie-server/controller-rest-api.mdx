@@ -1,0 +1,439 @@
+---
+title: "jBPM controller REST API for KIE Server templates and instances"
+description: "Use the jBPM controller REST API to interact with your KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units) in jBPM without using the Business Central user interface."
+source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#controller-rest-api-con_kie-apis"
+---
+
+jBPM provides an jBPM controller REST API that you can use to interact with your KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units) in jBPM without using the Business Central user interface. This API support enables you to maintain your jBPM servers and resources more efficiently and optimize your integration and development with jBPM.
+
+With the jBPM controller REST API, you can perform the following actions:
+
+- Retrieve information about KIE Server templates, instances, and associated KIE containers
+- Update, start, or stop KIE containers associated with KIE Server templates and instances
+- Create, update, or delete KIE Server templates
+- Create, update, or delete KIE Server instances
+
+Requests to the jBPM controller REST API require the following components:
+
+**Authentication**
+
+The jBPM controller REST API requires HTTP Basic authentication or token-based authentication for the following user roles, depending on controller type:
+
+- `rest-all` user role if you installed Business Central and you want to use the built-in jBPM controller
+- `kie-server` user role if you installed the headless jBPM controller separately from Business Central
+
+To view configured user roles for your jBPM distribution, navigate to `~/$SERVER_HOME/standalone/configuration/application-roles.properties` and `~/application-users.properties`.
+
+To add a user with the `kie-server` role or the `rest-all` role or both, navigate to `~/$SERVER_HOME/bin` and run the following command with the role or roles specified:
+
+```bash
+$ ./bin/jboss-cli.sh --commands="embed-server --std-out=echo,/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity(identity=<USERNAME>),/subsystem=elytron/filesystem-realm=ApplicationRealm:set-password(identity=<USERNAME>, clear={password='<PASSWORD>'}),/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity-attribute(identity=<USERNAME>, name=role, value=['kie-server','rest-all'])"
+```
+
+To configure the `kie-server` or `rest-all` user with jBPM controller access, navigate to `~/$SERVER_HOME/standalone/configuration/standalone-full.xml`, uncomment the `org.kie.server` properties (if applicable), and add the controller user login credentials and controller location (if needed):
+
+```xml
+<property name="org.kie.server.location" value="http://localhost:8080/kie-server/services/rest/server"/>
+<property name="org.kie.server.controller" value="http://localhost:8080/business-central/rest/controller"/>
+<property name="org.kie.server.controller.user" value="baAdmin"/>
+<property name="org.kie.server.controller.pwd" value="password@1"/>
+<property name="org.kie.server.id" value="default-kieserver"/>
+```
+
+For more information about user roles and jBPM installation options, see
+[Installing the KIE Server](/archive/kie-server/installation).
+
+**HTTP headers**
+
+The jBPM controller REST API requires the following HTTP headers for API requests:
+
+- `Accept`: Data format accepted by your requesting client:
+    - `application/json` (JSON)
+    - `application/xml` (XML, for JAXB)
+- `Content-Type`: Data format of your `POST` or `PUT` API request data:
+    - `application/json` (JSON)
+    - `application/xml` (XML, for JAXB)
+
+**HTTP methods**
+
+The jBPM controller REST API supports the following HTTP methods for API requests:
+
+- `GET`: Retrieves specified information from a specified resource endpoint
+- `POST`: Updates a resource or resource instance
+- `PUT`: Creates a resource or resource instance
+- `DELETE`: Deletes a resource or resource instance
+
+**Base URL**
+
+The base URL for jBPM controller REST API requests is `http://SERVER:PORT/CONTROLLER/rest/`, such as `http://localhost:8080/business-central/rest/` if you are using the jBPM controller built in to Business Central.
+
+**Endpoints**
+
+jBPM controller REST API endpoints, such as `/controller/management/servers/{serverTemplateId}` for a specified KIE Server template, are the URIs that you append to the jBPM controller REST API base URL to access the corresponding server resource or type of server resource in jBPM.
+
+**Example request URL for `/controller/management/servers/{serverTemplateId}` endpoint**
+
+`http://localhost:8080/business-central/rest/controller/management/servers/default-kieserver`
+
+**Request parameters and request data**
+
+Some jBPM controller REST API requests require specific parameters in the request URL path to identify or filter specific resources and to perform specific actions. You can append URL parameters to the endpoint in the format `?<PARAM>=<VALUE>&<PARAM>=<VALUE>`.
+
+**Example DELETE request URL with parameters**
+
+`http://localhost:8080/business-central/rest/controller/server/new-kieserver-instance?location=http://localhost:8080/kie-server/services/rest/server`
+
+HTTP `POST` and `PUT` requests may additionally require a request body or file with data to accompany the request.
+
+**Example PUT request URL and JSON request body data**
+
+`http://localhost:8080/business-central/rest/controller/management/servers/new-kieserver`
+
+```json
+{
+  "server-id": "new-kieserver",
+  "server-name": "new-kieserver",
+  "container-specs": [],
+  "server-config": {},
+  "capabilities": [
+    "RULE",
+    "PROCESS",
+    "PLANNING"
+  ]
+}
+```
+
+## Sending requests with the jBPM controller REST API using a REST client or curl utility
+
+The jBPM controller REST API enables you to interact with your KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units) in jBPM without using the Business Central user interface. You can send jBPM controller REST API requests using any REST client or curl utility.
+
+**Prerequisites**
+
+- KIE Server is installed and running.
+- The jBPM controller or headless jBPM controller is installed and running.
+- You have `rest-all` user role access to the jBPM controller if you installed Business Central, or `kie-server` user role access to the headless jBPM controller installed separately from Business Central.
+
+**Procedure**
+
+1. Identify the relevant [API endpoint](#supported-jbpm-controller-rest-api-endpoints) to which you want to send a request, such as `[GET] /controller/management/servers` to retrieve KIE Server templates from the jBPM controller.
+
+2. In a REST client or curl utility, enter the following components for a `GET` request to `controller/management/servers`. Adjust any request details according to your use case.
+
+    For REST client:
+
+    - **Authentication**: Enter the user name and password of the jBPM controller user with the `rest-all` role or the headless jBPM controller user with the `kie-server` role.
+    - **HTTP Headers**: Set the following header:
+        - `Accept`: `application/json`
+    - **HTTP method**: Set to `GET`.
+    - **URL**: Enter the jBPM controller REST API base URL and endpoint, such as `http://localhost:8080/business-central/rest/controller/management/servers`.
+
+    For curl utility:
+
+    - `-u`: Enter the user name and password of the jBPM controller user with the `rest-all` role or the headless jBPM controller user with the `kie-server` role.
+    - `-H`: Set the following header:
+        - `Accept`: `application/json`
+    - `-X`: Set to `GET`.
+    - **URL**: Enter the jBPM controller REST API base URL and endpoint, such as `http://localhost:8080/business-central/rest/controller/management/servers`.
+
+    ```bash
+    curl -u 'baAdmin:password@1' -H "Accept: application/json" -X GET "http://localhost:8080/business-central/rest/controller/management/servers"
+    ```
+
+3. Execute the request and review the jBPM controller response.
+
+    Example server response (JSON):
+
+    ```json
+    {
+      "server-template": [
+        {
+          "server-id": "default-kieserver",
+          "server-name": "default-kieserver",
+          "container-specs": [
+            {
+              "container-id": "employeerostering_1.0.0-SNAPSHOT",
+              "container-name": "employeerostering",
+              "server-template-key": {
+                "server-id": "default-kieserver",
+                "server-name": "default-kieserver"
+              },
+              "release-id": {
+                "group-id": "employeerostering",
+                "artifact-id": "employeerostering",
+                "version": "1.0.0-SNAPSHOT"
+              },
+              "configuration": {
+                "RULE": {
+                  "org.kie.server.controller.api.model.spec.RuleConfig": {
+                    "pollInterval": null,
+                    "scannerStatus": "STOPPED"
+                  }
+                },
+                "PROCESS": {
+                  "org.kie.server.controller.api.model.spec.ProcessConfig": {
+                    "runtimeStrategy": "SINGLETON",
+                    "kbase": "",
+                    "ksession": "",
+                    "mergeMode": "MERGE_COLLECTIONS"
+                  }
+                }
+              },
+              "status": "STARTED"
+            },
+            {
+              "container-id": "mortgage-process_1.0.0-SNAPSHOT",
+              "container-name": "mortgage-process",
+              "server-template-key": {
+                "server-id": "default-kieserver",
+                "server-name": "default-kieserver"
+              },
+              "release-id": {
+                "group-id": "mortgage-process",
+                "artifact-id": "mortgage-process",
+                "version": "1.0.0-SNAPSHOT"
+              },
+              "configuration": {
+                "RULE": {
+                  "org.kie.server.controller.api.model.spec.RuleConfig": {
+                    "pollInterval": null,
+                    "scannerStatus": "STOPPED"
+                  }
+                },
+                "PROCESS": {
+                  "org.kie.server.controller.api.model.spec.ProcessConfig": {
+                    "runtimeStrategy": "PER_PROCESS_INSTANCE",
+                    "kbase": "",
+                    "ksession": "",
+                    "mergeMode": "MERGE_COLLECTIONS"
+                  }
+                }
+              },
+              "status": "STARTED"
+            }
+          ],
+          "server-config": {},
+          "server-instances": [
+            {
+              "server-instance-id": "default-kieserver-instance@localhost:8080",
+              "server-name": "default-kieserver-instance@localhost:8080",
+              "server-template-id": "default-kieserver",
+              "server-url": "http://localhost:8080/kie-server/services/rest/server"
+            }
+          ],
+          "capabilities": [
+            "RULE",
+            "PROCESS",
+            "PLANNING"
+          ]
+        }
+      ]
+    }
+    ```
+
+4. In your REST client or curl utility, send another API request with the following components for a `PUT` request to `/controller/management/servers/{serverTemplateId}` to create a new KIE Server template. Adjust any request details according to your use case.
+
+    For REST client:
+
+    - **Authentication**: Enter the user name and password of the jBPM controller user with the `rest-all` role or the headless jBPM controller user with the `kie-server` role.
+    - **HTTP Headers**: Set the following headers:
+        - `Accept`: `application/json`
+        - `Content-Type`: `application/json`
+    - **HTTP method**: Set to `PUT`.
+    - **URL**: Enter the jBPM controller REST API base URL and endpoint, such as `http://localhost:8080/business-central/rest/controller/management/servers/new-kieserver`.
+    - **Request body**: Add a JSON request body with the configurations for the new KIE Server template:
+
+    ```json
+    {
+      "server-id": "new-kieserver",
+      "server-name": "new-kieserver",
+      "container-specs": [],
+      "server-config": {},
+      "capabilities": [
+        "RULE",
+        "PROCESS",
+        "PLANNING"
+      ]
+    }
+    ```
+
+    For curl utility:
+
+    - `-u`: Enter the user name and password of the jBPM controller user with the `rest-all` role or the headless jBPM controller user with the `kie-server` role.
+    - `-H`: Set the following headers:
+        - `Accept`: `application/json`
+        - `Content-Type`: `application/json`
+    - `-X`: Set to `PUT`.
+    - **URL**: Enter the jBPM controller REST API base URL and endpoint, such as `http://localhost:8080/business-central/rest/controller/management/servers/new-kieserver`.
+    - `-d`: Add a JSON request body or file (`@file.json`) with the configurations for the new KIE Server template:
+
+    ```bash
+    curl -u 'baAdmin:password@1' -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "http://localhost:8080/business-central/rest/controller/management/servers/new-kieserver" -d "{ \"server-id\": \"new-kieserver\", \"server-name\": \"new-kieserver\", \"container-specs\": [], \"server-config\": {}, \"capabilities\": [ \"RULE\", \"PROCESS\", \"PLANNING\" ]}"
+    ```
+
+    ```bash
+    curl -u 'baAdmin:password@1' -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "http://localhost:8080/business-central/rest/controller/management/servers/new-kieserver" -d @my-server-template-configs.json
+    ```
+
+5. Execute the request and confirm the successful jBPM controller response.
+
+    If you encounter request errors, review the returned error code messages and adjust your request accordingly.
+
+## Sending requests with the jBPM controller REST API using the Swagger interface
+
+The jBPM controller REST API supports a Swagger web interface that you can use instead of a standalone REST client or curl utility to interact with your KIE Server templates, instances, and associated KIE containers in jBPM without using the Business Central user interface.
+
+<Note>
+By default, the Swagger web interface for the jBPM controller is enabled by the `org.kie.workbench.swagger.disabled=false` system property. To disable the Swagger web interface for the jBPM controller, set this system property to `true`.
+</Note>
+
+**Prerequisites**
+
+- The jBPM controller is installed and running.
+- You have `rest-all` user role access to the jBPM controller if you installed Business Central, or `kie-server` user role access to the headless jBPM controller installed separately from Business Central.
+
+**Procedure**
+
+1. In a web browser, navigate to `http://SERVER:PORT/CONTROLLER/docs`, such as `http://localhost:8080/business-central/docs`, and log in with the user name and password of the jBPM controller user with the `rest-all` role or the headless jBPM controller user with the `kie-server` role.
+
+    <Note>
+    If you are using the jBPM controller built in to Business Central, the Swagger page associated with the jBPM controller is identified as the "Business Central API" for Business Central REST services. If you are using the headless jBPM controller without Business Central, the Swagger page associated with the headless jBPM controller is identified as the "Controller API". In both cases, the jBPM controller REST API endpoints are the same.
+    </Note>
+
+2. In the Swagger page, select the relevant API endpoint to which you want to send a request, such as **Controller :: KIE Server templates and KIE containers** → **[GET] /controller/management/servers** to retrieve KIE Server templates from the jBPM controller.
+
+3. Click **Try it out** and provide any optional parameters by which you want to filter results, if applicable.
+
+4. In the **Response content type** drop-down menu, select the desired format of the server response, such as **application/json** for JSON format.
+
+5. Click **Execute** and review the KIE Server response.
+
+    Example server response (JSON):
+
+    ```json
+    {
+      "server-template": [
+        {
+          "server-id": "default-kieserver",
+          "server-name": "default-kieserver",
+          "container-specs": [
+            {
+              "container-id": "employeerostering_1.0.0-SNAPSHOT",
+              "container-name": "employeerostering",
+              "server-template-key": {
+                "server-id": "default-kieserver",
+                "server-name": "default-kieserver"
+              },
+              "release-id": {
+                "group-id": "employeerostering",
+                "artifact-id": "employeerostering",
+                "version": "1.0.0-SNAPSHOT"
+              },
+              "configuration": {
+                "RULE": {
+                  "org.kie.server.controller.api.model.spec.RuleConfig": {
+                    "pollInterval": null,
+                    "scannerStatus": "STOPPED"
+                  }
+                },
+                "PROCESS": {
+                  "org.kie.server.controller.api.model.spec.ProcessConfig": {
+                    "runtimeStrategy": "SINGLETON",
+                    "kbase": "",
+                    "ksession": "",
+                    "mergeMode": "MERGE_COLLECTIONS"
+                  }
+                }
+              },
+              "status": "STARTED"
+            },
+            {
+              "container-id": "mortgage-process_1.0.0-SNAPSHOT",
+              "container-name": "mortgage-process",
+              "server-template-key": {
+                "server-id": "default-kieserver",
+                "server-name": "default-kieserver"
+              },
+              "release-id": {
+                "group-id": "mortgage-process",
+                "artifact-id": "mortgage-process",
+                "version": "1.0.0-SNAPSHOT"
+              },
+              "configuration": {
+                "RULE": {
+                  "org.kie.server.controller.api.model.spec.RuleConfig": {
+                    "pollInterval": null,
+                    "scannerStatus": "STOPPED"
+                  }
+                },
+                "PROCESS": {
+                  "org.kie.server.controller.api.model.spec.ProcessConfig": {
+                    "runtimeStrategy": "PER_PROCESS_INSTANCE",
+                    "kbase": "",
+                    "ksession": "",
+                    "mergeMode": "MERGE_COLLECTIONS"
+                  }
+                }
+              },
+              "status": "STARTED"
+            }
+          ],
+          "server-config": {},
+          "server-instances": [
+            {
+              "server-instance-id": "default-kieserver-instance@localhost:8080",
+              "server-name": "default-kieserver-instance@localhost:8080",
+              "server-template-id": "default-kieserver",
+              "server-url": "http://localhost:8080/kie-server/services/rest/server"
+            }
+          ],
+          "capabilities": [
+            "RULE",
+            "PROCESS",
+            "PLANNING"
+          ]
+        }
+      ]
+    }
+    ```
+
+6. In the Swagger page, navigate to the **Controller :: KIE Server templates and KIE containers** → **[GET] `/controller/management/servers/{serverTemplateId}`** endpoint to send another request to create a new KIE Server template. Adjust any request details according to your use case.
+
+7. Click **Try it out** and enter the following components for the request:
+
+    - **serverTemplateId**: Enter the ID of the new KIE Server template, such as `new-kieserver`.
+    - **body**: Set the **Parameter content type** to the desired request body format, such as **application/json** for JSON format, and add a request body with the configurations for the new KIE Server template:
+
+    ```json
+    {
+      "server-id": "new-kieserver",
+      "server-name": "new-kieserver",
+      "container-specs": [],
+      "server-config": {},
+      "capabilities": [
+        "RULE",
+        "PROCESS",
+        "PLANNING"
+      ]
+    }
+    ```
+
+8. In the **Response content type** drop-down menu, select the desired format of the server response, such as **application/json** for JSON format.
+
+9. Click **Execute** and confirm the successful jBPM controller response.
+
+    If you encounter request errors, review the returned error code messages and adjust your request accordingly.
+
+## Supported jBPM controller REST API endpoints
+
+The jBPM controller REST API provides endpoints for interacting with KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units). The jBPM controller REST API base URL is `http://SERVER:PORT/CONTROLLER/rest/`. All requests require HTTP Basic authentication or token-based authentication for the `rest-all` user role if you installed Business Central and you want to use the built-in jBPM controller, or the `kie-server` user role if you installed the headless jBPM controller separately from Business Central.
+
+For the full list of jBPM controller REST API endpoints and descriptions, use one of the following resources:
+
+- [Controller REST API](http://jbpm.org/learn/documentation.html) on the jBPM Documentation page (static)
+- Swagger UI for the jBPM controller REST API at `http://SERVER:PORT/CONTROLLER/docs` (dynamic, requires running jBPM controller)
+
+  <Note>
+  By default, the Swagger web interface for the jBPM controller is enabled by the `org.kie.workbench.swagger.disabled=false` system property. To disable the Swagger web interface for the jBPM controller, set this system property to `true`.
+
+  If you are using the jBPM controller built in to Business Central, the Swagger page associated with the jBPM controller is identified as the "Business Central API" for Business Central REST services. If you are using the headless jBPM controller without Business Central, the Swagger page associated with the headless jBPM controller is identified as the "Controller API". In both cases, the jBPM controller REST API endpoints are the same.
+  </Note>

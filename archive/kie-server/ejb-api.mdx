@@ -1,0 +1,87 @@
+---
+title: "EJB API for KIE sessions and task services"
+description: "jBPM provides an Enterprise JavaBeans (EJB) API that you can use for embedded use cases to access KieSession and TaskService objects remotely from an application."
+source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#ejb-api-con_kie-apis"
+---
+
+jBPM provides an Enterprise JavaBeans (EJB) API that you can use for embedded use cases to access `KieSession` and `TaskService` objects remotely from an application. The EJB API enables close transaction integration between the jBPM engine in jBPM and remote customer applications.
+
+Although KIE Server does not support EJB, you can use EJB as a remote protocol for the jBPM engine similar to remote REST or JMS operations with KIE Server.
+
+The implementation of the EJB interface is a single framework-independent and container-agnostic API that you can use with framework-specific code. The EJB services are exposed through the `org.jbpm.services.api` and `org.jbpm.services.ejb` packages in jBPM. The implementation does not support the `RuleService` class, but the `ProcessService` class exposes an `execute` method that enables you to use various rule-related commands, such as `InsertCommand` and `FireAllRulesCommand`.
+
+<Note>
+Contexts and Dependency Injection (CDI) is also supported through the `org.jbpm.services.cdi` package in jBPM. However, to avoid conflicts in your EJB integration, do not use EJB and CDI together.
+</Note>
+
+For more information about jBPM integration with EJB, see [\[_ejb\]](https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#_ejb).
+
+## Supported EJB services
+
+For the full list of available Enterprise JavaBeans (EJB) services in jBPM,
+see the EJB services source in [GitHub](https://github.com/kiegroup/jbpm/tree/master/jbpm-services/jbpm-services-ejb).
+
+The artifacts that provide the EJB interface to the jBPM services are in the following packages:
+
+- `org.jbpm.services.ejb.api`: Contains extensions of the jBPM services API for the EJB interface
+- `org.jbpm.services.ejb.impl`: Contains EJB wrappers on top of the core service implementation
+- `org.jbpm.services.ejb.client`: Contains the EJB remote client implementation, supported on Wildfly only
+
+The `org.jbpm.services.ejb.api` package contains the following service interfaces that you can use with remote EJB clients:
+
+- `DefinitionServiceEJBRemote`: Use this interface to gather information about processes (ID, name, and version), process variables (name and type), defined reusable sub-processes, domain-specific services, user tasks, and user task inputs and outputs.
+- `DeploymentServiceEJBRemote`: Use this interface to initiate deployments and undeployments. The interface includes the methods `deploy`, `undeploy`, `getRuntimeManager`, `getDeployedUnits`, `isDeployed`, `activate`, `deactivate`, and `getDeployedUnit`. Calling the `deploy` method with an instance of `DeploymentUnit` deploys the unit into the runtime engine by building a `RuntimeManager` instance. After a successful deployment, an instance of `DeployedUnit` is created and cached for further use. (To use these methods, you must install the artifacts of the project in a Maven repository.)
+- `ProcessServiceEJBRemote`: Use this interface to control the life cycle of one or more processes and work items.
+- `RuntimeDataServiceEJBRemote`: Use this interface to retrieve data related to the run time, such as process instances, process definitions, node instance information, and variable information. The interface includes several convenience methods for gathering task information based on owner, status, and time.
+- `UserTaskServiceEJBRemote`: Use this interface to control the life cycle of a user task. The interface includes several convenience methods for interacting with user tasks, such as `activate`, `start`, `stop`, and `execute`.
+- `QueryServiceEJBRemote`: Use this interface for advanced queries.
+- `ProcessInstanceMigrationServiceEJBRemote`: Use this interface to migrate process instances when a new version of a process definition is deployed.
+
+If you run EJB applications and Business Central on the same KIE Server instance, you can synchronize the information between EJB and Business Central at a specified interval by setting the `org.jbpm.deploy.sync.int` system property. After the service finishes the synchronization, you can access the updated information using REST operations.
+
+<Note>
+EJB services in jBPM are intended for embedded use cases. If you run EJB applications and Business Central on the same KIE Server instance, you must also add the `kie-services` package on the class path of your EJB application.
+</Note>
+
+## Deploying an EJB services WAR file
+
+You can use the Enterprise JavaBeans (EJB) interface to create and deploy an EJB services WAR file that you want to use as part of your jBPM distribution.
+
+**Procedure**
+
+1. Register a human task callback using a startup Java class, such as the following example:
+
+    ```java
+    @Singleton
+    @Startup
+    public class StartupBean {
+
+      @PostConstruct
+      public void init()
+      { System.setProperty("org.jbpm.ht.callback", "jaas"); }
+
+    }
+    ```
+
+2. Build your EJB project to generate the WAR file according to your project configuration.
+
+3. Deploy the generated file on the Wildfly instance where jBPM is running.
+
+    Avoid using the `Singleton` strategy for your runtime sessions. The `Singleton` strategy can cause applications to load the same `ksession` instance multiple times from the underlying file system and cause optimistic lock exceptions.
+
+    If you want to deploy the EJB WAR file on a Wildfly instance separate from the one where jBPM is running, configure your application or the application server to invoke a remote EJB and to propagate the security context.
+
+    If you are using Hibernate to create a database schema for jBPM, update the `persistence.xml` file in Business Central and set the value of the `hibernate.hbm2ddl.auto` property to `update` instead of `create`.
+
+4. Test the deployment locally by creating a basic web application and injecting the EJB services, as shown in the following example:
+
+    ```java
+    @EJB(lookup = "ejb:/sample-war-ejb-app/ProcessServiceEJBImpl!org.jbpm.services.ejb.api.ProcessServiceEJBRemote")
+    private ProcessServiceEJBRemote processService;
+
+    @EJB(lookup = "ejb:/sample-war-ejb-app/UserTaskServiceEJBImpl!org.jbpm.services.ejb.api.UserTaskServiceEJBRemote")
+    private UserTaskServiceEJBRemote userTaskService;
+
+    @EJB(lookup = "ejb:/sample-war-ejb-app/RuntimeDataServiceEJBImpl!org.jbpm.services.ejb.api.RuntimeDataServiceEJBRemote")
+    private RuntimeDataServiceEJBRemote runtimeDataService;
+    ```

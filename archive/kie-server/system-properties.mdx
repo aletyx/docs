@@ -1,0 +1,271 @@
+---
+title: "KIE Server system properties"
+description: "System properties (bootstrap switches) accepted by KIE Server to configure the behavior of the server."
+source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#kie-server-system-properties-ref_kie-apis"
+---
+
+KIE Server accepts the following system properties (bootstrap switches) to configure the behavior of the server:
+
+**System properties for disabling KIE Server extensions**
+
+| Property | Values | Default | Description |
+|---|---|---|---|
+| `org.drools.server.ext.disabled` | `true`, `false` | `false` | If set to `true`, disables the Business Rule Management (BRM) support (for example, rules support). |
+| `org.jbpm.server.ext.disabled` | `true`, `false` | `false` | If set to `true`, disables the jBPM support (for example, processes support). |
+| `org.jbpm.ui.server.ext.disabled` | `true`, `false` | `false` | If set to `true`, disables the jBPM UI extension. |
+| `org.jbpm.case.server.ext.disabled` | `true`, `false` | `false` | If set to `true`, disables the jBPM case management extension. |
+| `org.kie.prometheus.server.ext.disabled` | `true`, `false` | `true` | If set to `true`, disables the Prometheus Server extension. |
+| `org.kie.scenariosimulation.server.ext.disabled` | `true`, `false` | `true` | If set to `true`, disables the Test scenario Server extension. |
+| `org.kie.dmn.server.ext.disabled` | `true`, `false` | `false` | If set to `true`, disables the KIE Server DMN support. |
+| `org.kie.swagger.server.ext.disabled` | `true`, `false` | `false` | If set to `true`, disables the KIE Server swagger documentation support |
+
+<Note>
+Some jBPM controller properties listed in the following table are marked as required. Set these properties when you create or remove KIE Server containers in Business Central. If you use KIE Server separately without any interaction with Business Central, you do not need to set the required properties.
+</Note>
+
+**System properties required for jBPM controller**
+
+| Property | Values | Default | Description |
+|---|---|---|---|
+| `org.kie.server.id` | String | N/A | An arbitrary ID to be assigned to the server. If a headless jBPM controller is configured outside of Business Central, this is the ID under which the server connects to the headless jBPM controller to fetch the KIE container configurations. If not provided, the ID is automatically generated. |
+| `org.kie.server.user` | String | `kieserver` | The user name used to connect with KIE Server from the jBPM controller, required when running in managed mode. Set this property in Business Central system properties. Set this property when using an jBPM controller. |
+| `org.kie.server.pwd` | String | `kieserver1!` | The password used to connect with KIE Server from the jBPM controller, required when running in managed mode. Set this property in Business Central system properties. Set this property when using an jBPM controller. |
+| `org.kie.server.token` | String | N/A | A property that enables you to use token-based authentication between the jBPM controller and KIE Server instead of the basic user name and password authentication. The jBPM controller sends the token as a parameter in the request header. The server requires long-lived access tokens because the tokens are not refreshed. |
+| `org.kie.server.location` | URL | N/A | The URL of the KIE Server instance used by the jBPM controller to call back on this server, for example, `http://localhost:8230/kie-server/services/rest/server`. Setting this property is required when using an jBPM controller. |
+| `org.kie.server.controller` | Comma-separated list | N/A | A comma-separated list of URLs to the jBPM controller REST endpoints, for example, `http://localhost:8080/business-central/rest/controller`. Setting this property is required when using an jBPM controller. |
+| `org.kie.server.controller.user` | String | `kieserver` | The user name to connect to the jBPM controller REST API. Setting this property is required when using an jBPM controller. |
+| `org.kie.server.controller.pwd` | String | `kieserver1!` | The password to connect to the jBPM controller REST API. Setting this property is required when using an jBPM controller. |
+| `org.kie.server.controller.token` | String | N/A | A property that enables you to use token-based authentication between KIE Server and the jBPM controller instead of the basic user name and password authentication. The server sends the token as a parameter in the request header. The server requires long-lived access tokens because the tokens are not refreshed. |
+| `org.kie.server.controller.connect` | Long | `10000` | The waiting time in milliseconds between repeated attempts to connect KIE Server to the jBPM controller when the server starts. |
+
+**Persistence system properties**
+
+| Property | Values | Default | Description |
+|---|---|---|---|
+| `org.kie.server.persistence.ds` | String | N/A | A data source JNDI name. Set this property when enabling the BPM support. |
+| `org.kie.server.persistence.tm` | String | N/A | A transaction manager platform for Hibernate properties. Set this property when enabling the BPM support. |
+| `org.kie.server.persistence.dialect` | String | N/A | The Hibernate dialect to be used. Set this property when enabling the BPM support. |
+| `org.kie.server.persistence.schema` | String | N/A | The database schema to be used. |
+
+**Executor system properties**
+
+| Property | Values | Default | Description |
+|---|---|---|---|
+| `org.kie.executor.interval` | Integer | `0` | The time between the moment the jBPM executor finishes a job and the moment it starts a new one, in a time unit specified in the `org.kie.executor.timeunit` property. |
+| `org.kie.executor.timeunit` | [`java.util.concurrent.TimeUnit`](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/TimeUnit.html) constant | `SECONDS` | The time unit in which the `org.kie.executor.interval` property is specified. |
+| `org.kie.executor.pool.size` | Integer | `1` | The number of threads used by the jBPM executor. |
+| `org.kie.executor.retry.count` | Integer | `3` | The number of retries the jBPM executor attempts on a failed job. |
+| `org.kie.executor.jms.queue` | String | `queue/KIE.SERVER.EXECUTOR` | Job executor JMS queue for KIE Server. |
+| `org.kie.executor.jms.jobHeader` | `true`, `false` | `false` | If set to `true`, the request identifier is included in the JMS header as the `jobId` property. |
+| `org.kie.executor.disabled` | `true`, `false` | `false` | If set to `true`, disables the KIE Server executor. |
+
+**Human task system properties**
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Values</th>
+      <th>Default</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>org.jbpm.ht.callback</code></td>
+      <td>
+        <p><code>mvel</code></p>
+        <p><code>ldap</code></p>
+        <p><code>db</code></p>
+        <p><code>jaas</code></p>
+        <p><code>props</code></p>
+        <p><code>custom</code></p>
+      </td>
+      <td><code>jaas</code></td>
+      <td>
+        <p>A property that specifies the implementation of user group callback to be used:</p>
+        <ul>
+          <li><code>mvel</code>: Default; mostly used for testing.</li>
+          <li><code>ldap</code>: LDAP; requires additional configuration in the <code>jbpm.usergroup.callback.properties</code> file.</li>
+          <li><code>db</code>: Database; requires additional configuration in the <code>jbpm.usergroup.callback.properties</code> file.</li>
+          <li><code>jaas</code>: JAAS; delegates to the container to fetch information about user data.</li>
+          <li><code>props</code>: A simple property file; requires additional file that keeps all information (users and groups).</li>
+          <li><code>custom</code>: A custom implementation; specify the fully qualified name of the class in the <code>org.jbpm.ht.custom.callback</code> property.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>org.jbpm.ht.custom.callback</code></td>
+      <td>Fully qualified name</td>
+      <td>N/A</td>
+      <td>A custom implementation of the <code>UserGroupCallback</code> interface in case the <code>org.jbpm.ht.callback</code> property is set to <code>custom</code>.</td>
+    </tr>
+    <tr>
+      <td><code>org.jbpm.task.cleanup.enabled</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>true</code></td>
+      <td>Enables task cleanup job listener to remove tasks once the process instance is completed.</td>
+    </tr>
+    <tr>
+      <td><code>org.jbpm.task.bam.enabled</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>true</code></td>
+      <td>Enables task BAM module to store task related information.</td>
+    </tr>
+    <tr>
+      <td><code>org.jbpm.ht.admin.user</code></td>
+      <td>String</td>
+      <td><code>Administrator</code></td>
+      <td>User who can access all the tasks from KIE Server.</td>
+    </tr>
+    <tr>
+      <td><code>org.jbpm.ht.admin.group</code></td>
+      <td>String</td>
+      <td><code>Administrators</code></td>
+      <td>The group that users must belong to in order to view all the tasks from KIE Server.</td>
+    </tr>
+  </tbody>
+</table>
+
+**System properties for loading keystore**
+
+| Property | Values | Default | Description |
+|---|---|---|---|
+| `kie.keystore.keyStoreURL` | URL | N/A | The URL is used to load a Java Cryptography Extension KeyStore (JCEKS). For example, `file:///home/kie/keystores/keystore.jceks`. |
+| `kie.keystore.keyStorePwd` | String | N/A | The password is used for the JCEKS. |
+| `kie.keystore.key.server.alias` | String | N/A | The alias name of the key for REST services where the password is stored. |
+| `kie.keystore.key.server.pwd` | String | N/A | The password of an alias for REST services. |
+| `kie.keystore.key.ctrl.alias` | String | N/A | The alias of the key for default REST jBPM controller. |
+| `kie.keystore.key.ctrl.pwd` | String | N/A | The password of an alias for default REST jBPM controller. |
+
+**System properties for retrying committing transactions**
+
+| Property | Values | Default | Description |
+|---|---|---|---|
+| `org.kie.optlock.retries` | Integer | 5 | This property describes how many times the process engine retries a transaction before failing permanently. |
+| `org.kie.optlock.delay` | Integer | 50 | The delay time before the first retry, in milliseconds. |
+| `org.kie.optlock.delayFactor` | Integer | 4 | The multiplier for increasing the delay time for each subsequent retry. With the default values, the process engine waits 50 milliseconds before the first retry, 200 milliseconds before the second retry, 800 milliseconds before the third retry, and so on. |
+
+**Other system properties**
+
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Values</th>
+      <th>Default</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>kie.maven.settings.custom</code></td>
+      <td>Path</td>
+      <td>N/A</td>
+      <td>The location of a custom <code>settings.xml</code> file for Maven configuration.</td>
+    </tr>
+    <tr>
+      <td><code>kie.server.jms.queues.response</code></td>
+      <td>String</td>
+      <td><code>queue/KIE.SERVER.RESPONSE</code></td>
+      <td>The response queue JNDI name for JMS.</td>
+    </tr>
+    <tr>
+      <td><code>org.drools.server.filter.classes</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>false</code></td>
+      <td>When set to <code>true</code>, the Drools KIE Server extension accepts custom classes annotated by the <code>XmlRootElement</code> or <code>Remotable</code> annotations only.</td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.bypass.auth.user</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>false</code></td>
+      <td>A property that enables you to bypass the authenticated user for task-related operations, for example queries.</td>
+    </tr>
+    <tr>
+      <td><code>org.jbpm.rule.task.firelimit</code></td>
+      <td>Integer</td>
+      <td><code>10000</code></td>
+      <td>This property specifies the maximum number of executed rules to avoid situations where rules run into an infinite loop and make the server completely unresponsive.</td>
+    </tr>
+    <tr>
+      <td><code>org.jbpm.ejb.timer.local.cache</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>true</code></td>
+      <td>This property turns off the EJB Timers local cache.</td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.domain</code></td>
+      <td>String</td>
+      <td>N/A</td>
+      <td>The JAAS <code>LoginContext</code> domain used to authenticate users when using JMS.</td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.repo</code></td>
+      <td>Path</td>
+      <td><code>.</code></td>
+      <td>The location where KIE Server state files are stored.</td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.sync.deploy</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>false</code></td>
+      <td>
+        <p>A property that instructs KIE Server to hold the deployment until the jBPM controller provides the container deployment configuration. This property only affects servers running in managed mode. The following options are available:</p>
+        <ul>
+          <li><code>false</code>: The connection to the jBPM controller is asynchronous. The application starts, connects to the jBPM controller, and once successful, deploys the containers. The application accepts requests even before the containers are available.</li>
+          <li><code>true</code>: The deployment of the server application joins the jBPM controller connection thread with the main deployment and awaits its completion. This option can lead to a potential deadlock in case more applications are on the same server. Use only one application on one server instance.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.startup.strategy</code></td>
+      <td><code>ControllerBasedStartupStrategy</code>, <code>LocalContainersStartupStrategy</code></td>
+      <td><code>ControllerBasedStartupStrategy</code></td>
+      <td>The Startup strategy of KIE Server used to control the KIE containers that are deployed and the order in which they are deployed.</td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.mgmt.api.disabled</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>false</code></td>
+      <td>When set to <code>true</code>, disables KIE Server management API.</td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.xstream.enabled.packages</code></td>
+      <td>Java packages like <code>org.kie.example</code>. You can also specify wildcard expressions like <code>org.kie.example.*</code>.</td>
+      <td>N/A</td>
+      <td>A property that specifies additional packages to allowlist for marshalling using XStream.</td>
+    </tr>
+    <tr>
+      <td><code>org.kie.store.services.class</code></td>
+      <td>String</td>
+      <td><code>org.drools.persistence.jpa.KnowledgeStoreServiceImpl</code></td>
+      <td>Fully qualified name of the class that implements <code>KieStoreServices</code> that are responsible for bootstrapping KieSession instances.</td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.strict.id.format</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>false</code></td>
+      <td>While using JSON marshalling, if the property is set to <code>true</code>, it will always return a response in the proper JSON format. For example, if the original response contains only a single number, then the response is wrapped in a JSON format. For example, <strong>&#123;"value" : 1&#125;</strong>.</td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.json.customObjectDeserializerCNFEBehavior</code></td>
+      <td><code>IGNORE</code>, <code>WARN</code>, <code>EXCEPTION</code></td>
+      <td><code>IGNORE</code></td>
+      <td>
+        <p>While using JSON unmarshalling, when a class in a payload is not found, the behavior can be changed using this property as follows:</p>
+        <ul>
+          <li>If the property is set to <code>IGNORE</code>, the payload is converted to a HashMap</li>
+          <li>If the property is set to <code>WARN</code>, the payload is converted to a HashMap and a warning is logged</li>
+          <li>If the property is set to <code>EXCEPTION</code>, KIE Server throws an exception</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>org.kie.server.strict.jaxb.format</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>false</code></td>
+      <td>When the value of this property is set to <code>true</code>, KIE Server validates the data type of the data in the REST API payload. For example, if a data field has the number data type and contains something other than a number, you will receive an error.</td>
+    </tr>
+  </tbody>
+</table>

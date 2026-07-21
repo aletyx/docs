@@ -1,0 +1,864 @@
+---
+title: "KIE Server capabilities and extensions"
+description: "The capabilities in KIE Server are determined by plug-in extensions that you can enable, disable, or further extend to meet your business needs."
+source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#kie-server-extensions-con_kie-apis"
+---
+
+The capabilities in KIE Server are determined by plug-in extensions that you can enable, disable, or further extend to meet your business needs. KIE Server supports the following default capabilities and extensions:
+
+**Table: KIE Server capabilities and extensions**
+
+| Capability name | Extension name | Description |
+|---|---|---|
+| `KieServer` | `KieServer` | Provides the core capabilities of KIE Server, such as creating and disposing KIE containers on your server instance |
+| `BRM` | `Drools` | Provides the Business Rule Management (BRM) capabilities, such as inserting facts and executing business rules |
+| `BPM` | `jBPM` | Provides the Business Process Management (BPM) capabilities, such as managing user tasks and executing business processes |
+| `BPM-UI` | `jBPM-UI` | Provides additional user-interface capabilities related to business processes, such as rendering XML forms and SVG images in process diagrams |
+| `CaseMgmt` | `Case-Mgmt` | Provides the case management capabilities for business processes, such as managing case definitions and milestones |
+| `DMN` | `DMN` | Provides the Decision Model and Notation (DMN) capabilities, such as managing DMN data types and executing DMN models |
+| `Swagger` | `Swagger` | Provides the Swagger web-interface capabilities for interacting with the KIE Server REST API |
+
+To view the supported extensions of a running KIE Server instance, send a `GET` request to the following REST API endpoint and review the XML or JSON server response:
+
+```text Base URL for GET request for KIE Server information
+http://SERVER:PORT/kie-server/services/rest/server
+```
+
+```json Example JSON response with KIE Server information
+{
+  "type": "SUCCESS",
+  "msg": "Kie Server info",
+  "result": {
+    "kie-server-info": {
+      "id": "test-kie-server",
+      "version": "7.67.2.20190818-050814",
+      "name": "test-kie-server",
+      "location": "http://localhost:8080/kie-server/services/rest/server",
+      "capabilities": [
+        "KieServer",
+        "BRM",
+        "BPM",
+        "CaseMgmt",
+        "BPM-UI",
+        "BRP",
+        "DMN",
+        "Swagger"
+      ],
+      "messages": [
+        {
+          "severity": "INFO",
+          "timestamp": {
+            "java.util.Date": 1566169865791
+          },
+          "content": [
+            "Server KieServerInfo{serverId='test-kie-server', version='7.67.2.20190818-050814', name='test-kie-server', location='http:/localhost:8080/kie-server/services/rest/server', capabilities=[KieServer, BRM, BPM, CaseMgmt, BPM-UI, BRP, DMN, Swagger]', messages=null', mode=DEVELOPMENT}started successfully at Sun Aug 18 23:11:05 UTC 2019"
+          ]
+        }
+      ],
+      "mode": "DEVELOPMENT"
+    }
+  }
+}
+```
+
+To enable or disable KIE Server extensions, configure the related `*.server.ext.disabled` KIE Server system property. For example, to disable the `BRM` capability, set the system property `org.drools.server.ext.disabled=true`. For all KIE Server system properties, see
+[KIE Server system properties](/archive/kie-server/system-properties).
+
+By default, KIE Server extensions are exposed through REST or JMS data transports and use predefined client APIs. You can extend existing KIE Server capabilities with additional REST endpoints, extend supported transport methods beyond REST or JMS, or extend functionality in the KIE Server client.
+
+This flexibility in KIE Server functionality enables you to adapt your KIE Server instances to your business needs, instead of adapting your business needs to the default KIE Server capabilities.
+
+## Extending an existing KIE Server capability with a custom REST API endpoint
+
+The KIE Server REST API enables you to interact with your KIE containers and business assets (such as business rules, processes, and solvers) in jBPM without using the Business Central user interface. The available REST endpoints are determined by the capabilities enabled in your KIE Server system properties (for example, `org.drools.server.ext.disabled=false` for the `BRM` capability). You can extend an existing KIE Server capability with a custom REST API endpoint to further adapt the KIE Server REST API to your business needs.
+
+As an example, this procedure extends the `Drools` KIE Server extension (for the `BRM` capability) with the following custom REST API endpoint:
+
+```text Example custom REST API endpoint
+/server/containers/instances/{containerId}/ksession/{ksessionId}
+```
+
+This example custom endpoint accepts a list of facts to be inserted into the working memory of the Drools engine, automatically executes all rules, and retrieves all objects from the KIE session in the specified KIE container.
+
+**Procedure**
+
+1. Create an empty Maven project and define the following packaging type and dependencies in the `pom.xml` file for the project:
+
+   ```xml Example pom.xml file in the sample project
+   <packaging>jar</packaging>
+
+   <properties>
+     <version.org.kie>7.67.2.Final</version.org.kie>
+   </properties>
+
+   <dependencies>
+     <dependency>
+       <groupId>org.kie</groupId>
+       <artifactId>kie-api</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.kie</groupId>
+       <artifactId>kie-internal</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.kie.server</groupId>
+       <artifactId>kie-server-api</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.kie.server</groupId>
+       <artifactId>kie-server-services-common</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.kie.server</groupId>
+       <artifactId>kie-server-services-drools</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.kie.server</groupId>
+       <artifactId>kie-server-rest-common</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.drools</groupId>
+       <artifactId>drools-core</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.drools</groupId>
+       <artifactId>drools-compiler</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.slf4j</groupId>
+       <artifactId>slf4j-api</artifactId>
+       <version>1.7.25</version>
+     </dependency>
+   </dependencies>
+   ```
+
+2. Implement the `org.kie.server.services.api.KieServerApplicationComponentsService` interface in a Java class in your project, as shown in the following example:
+
+   ```java Sample implementation of the KieServerApplicationComponentsService interface
+   public class CusomtDroolsKieServerApplicationComponentsService implements KieServerApplicationComponentsService {  (1)
+
+       private static final String OWNER_EXTENSION = "Drools";  (2)
+
+       public Collection<Object> getAppComponents(String extension, SupportedTransports type, Object... services) {  (3)
+           // Do not accept calls from extensions other than the owner extension:
+           if ( !OWNER_EXTENSION.equals(extension) ) {
+               return Collections.emptyList();
+           }
+
+           RulesExecutionService rulesExecutionService = null;  (4)
+           KieServerRegistry context = null;
+
+           for( Object object : services ) {
+               if( RulesExecutionService.class.isAssignableFrom(object.getClass()) ) {
+                   rulesExecutionService = (RulesExecutionService) object;
+                   continue;
+               } else if( KieServerRegistry.class.isAssignableFrom(object.getClass()) ) {
+                   context = (KieServerRegistry) object;
+                   continue;
+               }
+           }
+
+           List<Object> components = new ArrayList<Object>(1);
+           if( SupportedTransports.REST.equals(type) ) {
+               components.add(new CustomResource(rulesExecutionService, context));  (5)
+           }
+
+           return components;
+       }
+
+   }
+   ```
+
+   1. Delivers REST endpoints to the KIE Server infrastructure that is deployed when the application starts.
+   2. Specifies the extension that you are extending, such as the `Drools` extension in this example.
+   3. Returns all resources that the REST container must deploy. Each extension that is enabled in your KIE Server instance calls the `getAppComponents` method, so the `if ( !OWNER_EXTENSION.equals(extension) )` call returns an empty collection for any extensions other than the specified `OWNER_EXTENSION` extension.
+   4. Lists the services from the specified extension that you want to use, such as the `RulesExecutionService` and `KieServerRegistry` services from the `Drools` extension in this example.
+   5. Specifies the transport type for the extension, either `REST` or `JMS` (`REST` in this example), and the `CustomResource` class that returns the resource as part of the `components` list.
+
+3. Implement the `CustomResource` class that KIE Server can use to provide the additional functionality for the new REST resource, as shown in the following example:
+
+   ```java Sample implementation of the CustomResource class
+   // Custom base endpoint:
+   @Path("server/containers/instances/{containerId}/ksession")
+   public class CustomResource {
+
+       private static final Logger logger = LoggerFactory.getLogger(CustomResource.class);
+
+       private KieCommands commandsFactory = KieServices.Factory.get().getCommands();
+
+       private RulesExecutionService rulesExecutionService;
+       private KieServerRegistry registry;
+
+       public CustomResource() {
+
+       }
+
+       public CustomResource(RulesExecutionService rulesExecutionService, KieServerRegistry registry) {
+           this.rulesExecutionService = rulesExecutionService;
+           this.registry = registry;
+       }
+
+       // Supported HTTP method, path parameters, and data formats:
+       @POST
+       @Path("/{ksessionId}")
+       @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+       @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+       public Response insertFireReturn(@Context HttpHeaders headers,
+               @PathParam("containerId") String id,
+               @PathParam("ksessionId") String ksessionId,
+               String cmdPayload) {
+
+           Variant v = getVariant(headers);
+           String contentType = getContentType(headers);
+
+           // Marshalling behavior and supported actions:
+           MarshallingFormat format = MarshallingFormat.fromType(contentType);
+           if (format == null) {
+               format = MarshallingFormat.valueOf(contentType);
+           }
+           try {
+               KieContainerInstance kci = registry.getContainer(id);
+
+               Marshaller marshaller = kci.getMarshaller(format);
+
+               List<?> listOfFacts = marshaller.unmarshall(cmdPayload, List.class);
+
+               List<Command<?>> commands = new ArrayList<Command<?>>();
+               BatchExecutionCommand executionCommand = commandsFactory.newBatchExecution(commands, ksessionId);
+
+               for (Object fact : listOfFacts) {
+                   commands.add(commandsFactory.newInsert(fact, fact.toString()));
+               }
+               commands.add(commandsFactory.newFireAllRules());
+               commands.add(commandsFactory.newGetObjects());
+
+               ExecutionResults results = rulesExecutionService.call(kci, executionCommand);
+
+               String result = marshaller.marshall(results);
+
+
+               logger.debug("Returning OK response with content '{}'", result);
+               return createResponse(result, v, Response.Status.OK);
+           } catch (Exception e) {
+               // If marshalling fails, return the `call-container` response to maintain backward compatibility:
+               String response = "Execution failed with error : " + e.getMessage();
+               logger.debug("Returning Failure response with content '{}'", response);
+               return createResponse(response, v, Response.Status.INTERNAL_SERVER_ERROR);
+           }
+
+       }
+   }
+   ```
+
+   In this example, the `CustomResource` class for the custom endpoint specifies the following data and behavior:
+
+   - Uses the base endpoint `server/containers/instances/{containerId}/ksession`
+   - Uses `POST` HTTP method
+   - Expects the following data to be given in REST requests:
+     - The `containerId` as a path argument
+     - The `ksessionId` as a path argument
+     - List of facts as a message payload
+   - Supports all KIE Server data formats:
+     - XML (JAXB, XStream)
+     - JSON
+   - Unmarshals the payload into a `List<?>` collection and, for each item in the list, creates an `InsertCommand` instance followed by `FireAllRules` and `GetObject` commands.
+   - Adds all commands to the `BatchExecutionCommand` instance that calls to the Drools engine.
+
+4. To make the new endpoint discoverable for KIE Server, create a `META-INF/services/org.kie.server.services.api.KieServerApplicationComponentsService` file in your Maven project and add the fully qualified class name of the `KieServerApplicationComponentsService` implementation class within the file. For this example, the file contains the single line `org.kie.server.ext.drools.rest.CusomtDroolsKieServerApplicationComponentsService`.
+
+5. Build your project and copy the resulting JAR file into the `~/kie-server.war/WEB-INF/lib` directory of your project.
+
+6. Start KIE Server and deploy the built project to the running KIE Server. You can deploy the project using either the Business Central interface or the KIE Server REST API (a `PUT` request to `http://SERVER:PORT/kie-server/services/rest/server/containers/{containerId}`).
+
+   After your project is deployed on a running KIE Server, you can start interacting with your new REST endpoint.
+
+   For this example, you can use the following information to invoke the new endpoint:
+
+   - **Example request URL:** `http://localhost:8080/kie-server/services/rest/server/containers/instances/demo/ksession/defaultKieSession`
+   - **HTTP method:** `POST`
+   - **HTTP headers:**
+     - `Content-Type: application/json`
+     - `Accept: application/json`
+   - **Example message payload:**
+
+     ```json
+     [
+       {
+         "org.jbpm.test.Person": {
+           "name": "john",
+           "age": 25
+         }
+       },
+       {
+         "org.jbpm.test.Person": {
+           "name": "mary",
+           "age": 22
+         }
+       }
+     ]
+     ```
+
+   - **Example server response:** `200` (success)
+   - **Example server log output:**
+
+     ```text
+     13:37:20,347 INFO  [stdout] (default task-24) Hello mary
+     13:37:20,348 INFO  [stdout] (default task-24) Hello john
+     ```
+
+## Extending KIE Server to use a custom data transport
+
+By default, KIE Server extensions are exposed through REST or JMS data transports. You can extend KIE Server to support a custom data transport to adapt KIE Server transport protocols to your business needs.
+
+As an example, this procedure adds a custom data transport to KIE Server that uses the `Drools` extension and that is based on Apache MINA, an open-source Java network-application framework. The example custom MINA transport exchanges string-based data that relies on existing marshalling operations and supports only JSON format.
+
+**Procedure**
+
+1. Create an empty Maven project and define the following packaging type and dependencies in the `pom.xml` file for the project:
+
+   ```xml Example pom.xml file in the sample project
+   <packaging>jar</packaging>
+
+   <properties>
+     <version.org.kie>7.67.2.Final</version.org.kie>
+   </properties>
+
+   <dependencies>
+     <dependency>
+       <groupId>org.kie</groupId>
+       <artifactId>kie-api</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.kie</groupId>
+       <artifactId>kie-internal</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.kie.server</groupId>
+       <artifactId>kie-server-api</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.kie.server</groupId>
+       <artifactId>kie-server-services-common</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.kie.server</groupId>
+       <artifactId>kie-server-services-drools</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.drools</groupId>
+       <artifactId>drools-core</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.drools</groupId>
+       <artifactId>drools-compiler</artifactId>
+       <version>${version.org.kie}</version>
+     </dependency>
+     <dependency>
+       <groupId>org.slf4j</groupId>
+       <artifactId>slf4j-api</artifactId>
+       <version>1.7.25</version>
+     </dependency>
+     <dependency>
+       <groupId>org.apache.mina</groupId>
+       <artifactId>mina-core</artifactId>
+       <version>2.1.3</version>
+     </dependency>
+   </dependencies>
+   ```
+
+2. Implement the `org.kie.server.services.api.KieServerExtension` interface in a Java class in your project, as shown in the following example:
+
+   ```java Sample implementation of the KieServerExtension interface
+   public class MinaDroolsKieServerExtension implements KieServerExtension {
+
+       private static final Logger logger = LoggerFactory.getLogger(MinaDroolsKieServerExtension.class);
+
+       public static final String EXTENSION_NAME = "Drools-Mina";
+
+       private static final Boolean disabled = Boolean.parseBoolean(System.getProperty("org.kie.server.drools-mina.ext.disabled", "false"));
+       private static final String MINA_HOST = System.getProperty("org.kie.server.drools-mina.ext.port", "localhost");
+       private static final int MINA_PORT = Integer.parseInt(System.getProperty("org.kie.server.drools-mina.ext.port", "9123"));
+
+       // Taken from dependency on the `Drools` extension:
+       private KieContainerCommandService batchCommandService;
+
+       // Specific to MINA:
+       private IoAcceptor acceptor;
+
+       public boolean isActive() {
+           return disabled == false;
+       }
+
+       public void init(KieServerImpl kieServer, KieServerRegistry registry) {
+
+           KieServerExtension droolsExtension = registry.getServerExtension("Drools");
+           if (droolsExtension == null) {
+               logger.warn("No Drools extension available, quitting...");
+               return;
+           }
+
+           List<Object> droolsServices = droolsExtension.getServices();
+           for( Object object : droolsServices ) {
+               // If the given service is null (not configured), continue to the next service:
+               if (object == null) {
+                   continue;
+               }
+               if( KieContainerCommandService.class.isAssignableFrom(object.getClass()) ) {
+                   batchCommandService = (KieContainerCommandService) object;
+                   continue;
+               }
+           }
+           if (batchCommandService != null) {
+               acceptor = new NioSocketAcceptor();
+               acceptor.getFilterChain().addLast( "codec", new ProtocolCodecFilter( new TextLineCodecFactory( Charset.forName( "UTF-8" ))));
+
+               acceptor.setHandler( new TextBasedIoHandlerAdapter(batchCommandService) );
+               acceptor.getSessionConfig().setReadBufferSize( 2048 );
+               acceptor.getSessionConfig().setIdleTime( IdleStatus.BOTH_IDLE, 10 );
+               try {
+                   acceptor.bind( new InetSocketAddress(MINA_HOST, MINA_PORT) );
+
+                   logger.info("{} -- Mina server started at {} and port {}", toString(), MINA_HOST, MINA_PORT);
+               } catch (IOException e) {
+                   logger.error("Unable to start Mina acceptor due to {}", e.getMessage(), e);
+               }
+
+           }
+       }
+
+       public void destroy(KieServerImpl kieServer, KieServerRegistry registry) {
+           if (acceptor != null) {
+               acceptor.dispose();
+               acceptor = null;
+           }
+           logger.info("{} -- Mina server stopped", toString());
+       }
+
+       public void createContainer(String id, KieContainerInstance kieContainerInstance, Map<String, Object> parameters) {
+           // Empty, already handled by the `Drools` extension
+
+       }
+
+       public void disposeContainer(String id, KieContainerInstance kieContainerInstance, Map<String, Object> parameters) {
+         // Empty, already handled by the `Drools` extension
+
+       }
+
+       public List<Object> getAppComponents(SupportedTransports type) {
+           // Nothing for supported transports (REST or JMS)
+           return Collections.emptyList();
+       }
+
+       public <T> T getAppComponents(Class<T> serviceType) {
+
+           return null;
+       }
+
+       public String getImplementedCapability() {
+           return "BRM-Mina";
+       }
+
+       public List<Object> getServices() {
+           return Collections.emptyList();
+       }
+
+       public String getExtensionName() {
+           return EXTENSION_NAME;
+       }
+
+       public Integer getStartOrder() {
+           return 20;
+       }
+
+       @Override
+       public String toString() {
+           return EXTENSION_NAME + " KIE Server extension";
+       }
+   }
+   ```
+
+   The `KieServerExtension` interface is the main extension interface that KIE Server can use to provide the additional functionality for the new MINA transport. The interface consists of the following components:
+
+   ```java Overview of the KieServerExtension interface
+   public interface KieServerExtension {
+
+       boolean isActive();
+
+       void init(KieServerImpl kieServer, KieServerRegistry registry);
+
+       void destroy(KieServerImpl kieServer, KieServerRegistry registry);
+
+       void createContainer(String id, KieContainerInstance kieContainerInstance, Map<String, Object> parameters);
+
+       void disposeContainer(String id, KieContainerInstance kieContainerInstance, Map<String, Object> parameters);
+
+       List<Object> getAppComponents(SupportedTransports type);
+
+       <T> T getAppComponents(Class<T> serviceType);
+
+       String getImplementedCapability();  (1)
+
+       List<Object> getServices();
+
+       String getExtensionName();  (2)
+
+       Integer getStartOrder();  (3)
+   }
+   ```
+
+   1. Specifies the capability that is covered by this extension. The capability must be unique within KIE Server.
+   2. Defines a human-readable name for the extension.
+   3. Determines when the specified extension should be started. For extensions that have dependencies on other extensions, this setting must not conflict with the parent setting. For example, in this case, this custom extension depends on the `Drools` extension, which has `StartOrder` set to `0`, so this custom add-on extension must be greater than `0` (set to `20` in the sample implementation).
+
+   In the previous `MinaDroolsKieServerExtension` sample implementation of this interface, the `init` method is the main element for collecting services from the `Drools` extension and for bootstrapping the MINA server. All other methods in the `KieServerExtension` interface can remain with the standard implementation to fulfill interface requirements.
+
+   The `TextBasedIoHandlerAdapter` class is the handler on the MINA server that reacts to incoming requests.
+
+3. Implement the `TextBasedIoHandlerAdapter` handler for the MINA server, as shown in the following example:
+
+   ```java Sample implementation of the TextBasedIoHandlerAdapter handler
+   public class TextBasedIoHandlerAdapter extends IoHandlerAdapter {
+
+       private static final Logger logger = LoggerFactory.getLogger(TextBasedIoHandlerAdapter.class);
+
+       private KieContainerCommandService batchCommandService;
+
+       public TextBasedIoHandlerAdapter(KieContainerCommandService batchCommandService) {
+           this.batchCommandService = batchCommandService;
+       }
+
+       @Override
+       public void messageReceived( IoSession session, Object message ) throws Exception {
+           String completeMessage = message.toString();
+           logger.debug("Received message '{}'", completeMessage);
+           if( completeMessage.trim().equalsIgnoreCase("quit") || completeMessage.trim().equalsIgnoreCase("exit") ) {
+               session.close(false);
+               return;
+           }
+
+           String[] elements = completeMessage.split("\\|");
+           logger.debug("Container id {}", elements[0]);
+           try {
+               ServiceResponse<String> result = batchCommandService.callContainer(elements[0], elements[1], MarshallingFormat.JSON, null);
+
+               if (result.getType().equals(ServiceResponse.ResponseType.SUCCESS)) {
+                   session.write(result.getResult());
+                   logger.debug("Successful message written with content '{}'", result.getResult());
+               } else {
+                   session.write(result.getMsg());
+                   logger.debug("Failure message written with content '{}'", result.getMsg());
+               }
+           } catch (Exception e) {
+
+           }
+       }
+   }
+   ```
+
+   In this example, the handler class receives text messages and executes them in the `Drools` service.
+
+   Consider the following handler requirements and behavior when you use the `TextBasedIoHandlerAdapter` handler implementation:
+
+   - Anything that you submit to the handler must be a single line because each incoming transport request is a single line.
+   - You must pass a KIE container ID in this single line so that the handler expects the format `containerID|payload`.
+   - You can set a response in the way that it is produced by the marshaller. The response can be multiple lines.
+   - The handler supports a *stream mode* that enables you to send commands without disconnecting from a KIE Server session. To end a KIE Server session in stream mode, send either an `exit` or `quit` command to the server.
+
+4. To make the new data transport discoverable for KIE Server, create a `META-INF/services/org.kie.server.services.api.KieServerExtension` file in your Maven project and add the fully qualified class name of the `KieServerExtension` implementation class within the file. For this example, the file contains the single line `org.kie.server.ext.mina.MinaDroolsKieServerExtension`.
+
+5. Build your project and copy the resulting JAR file and the `mina-core-2.0.9.jar` file (which the extension depends on in this example) into the `~/kie-server.war/WEB-INF/lib` directory of your project.
+
+6. Start the KIE Server and deploy the built project to the running KIE Server. You can deploy the project using either the Business Central interface or the KIE Server REST API (a `PUT` request to `http://SERVER:PORT/kie-server/services/rest/server/containers/{containerId}`).
+
+   After your project is deployed on a running KIE Server, you can view the status of the new data transport in your KIE Server log and start using your new data transport:
+
+   ```text New data transport in the server log
+   Drools-Mina KIE Server extension -- Mina server started at localhost and port 9123
+   Drools-Mina KIE Server extension has been successfully registered as server extension
+   ```
+
+   For this example, you can use Telnet to interact with the new MINA-based data transport in KIE Server:
+
+   ```shell Starting Telnet and connecting to KIE Server on port 9123 in a command terminal
+   telnet 127.0.0.1 9123
+   ```
+
+   ```shell Example interactions with KIE Server in a command terminal
+   Trying 127.0.0.1...
+   Connected to localhost.
+   Escape character is '^]'.
+
+   # Request body:
+   demo|{"lookup":"defaultKieSession","commands":[{"insert":{"object":{"org.jbpm.test.Person":{"name":"john","age":25}}}},{"fire-all-rules":""}]}
+
+   # Server response:
+   {
+     "results" : [ {
+       "key" : "",
+       "value" : 1
+     } ],
+     "facts" : [ ]
+   }
+
+   demo|{"lookup":"defaultKieSession","commands":[{"insert":{"object":{"org.jbpm.test.Person":{"name":"mary","age":22}}}},{"fire-all-rules":""}]}
+   {
+     "results" : [ {
+       "key" : "",
+       "value" : 1
+     } ],
+     "facts" : [ ]
+   }
+
+   demo|{"lookup":"defaultKieSession","commands":[{"insert":{"object":{"org.jbpm.test.Person":{"name":"james","age":25}}}},{"fire-all-rules":""}]}
+   {
+     "results" : [ {
+       "key" : "",
+       "value" : 1
+     } ],
+     "facts" : [ ]
+   }
+   exit
+   Connection closed by foreign host.
+   ```
+
+   ```text Example server log output
+   16:33:40,206 INFO  [stdout] (NioProcessor-2) Hello john
+   16:34:03,877 INFO  [stdout] (NioProcessor-2) Hello mary
+   16:34:19,800 INFO  [stdout] (NioProcessor-2) Hello james
+   ```
+
+## Extending the KIE Server client with a custom client API
+
+KIE Server uses predefined client APIs that you can interact with to use KIE Server services. You can extend the KIE Server client with a custom client API to adapt KIE Server services to your business needs.
+
+As an example, this procedure adds a custom client API to KIE Server to accommodate a custom data transport (configured previously for this scenario) that is based on Apache MINA, an open-source Java network-application framework.
+
+**Procedure**
+
+1. Create an empty Maven project and define the following packaging type and dependencies in the `pom.xml` file for the project:
+
+   ```xml Example pom.xml file in the sample project
+   <packaging>jar</packaging>
+
+   <properties>
+      <version.org.kie>7.67.2.Final</version.org.kie>
+    </properties>
+
+    <dependencies>
+      <dependency>
+        <groupId>org.kie.server</groupId>
+        <artifactId>kie-server-api</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.kie.server</groupId>
+         <artifactId>kie-server-client</artifactId>
+         <version>${version.org.kie}</version>
+       </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-compiler</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+    </dependencies>
+   ```
+
+2. Implement the relevant `ServicesClient` interface in a Java class in your project, as shown in the following example:
+
+   ```java Sample RulesMinaServicesClient interface
+   public interface RulesMinaServicesClient extends RuleServicesClient {
+
+   }
+   ```
+
+   A specific interface is required because you must register client implementations based on the interface, and you can have only one implementation for a given interface.
+
+   For this example, the custom MINA-based data transport uses the `Drools` extension, so this example `RulesMinaServicesClient` interface extends the existing `RuleServicesClient` client API from the `Drools` extension.
+
+3. Implement the `RulesMinaServicesClient` interface that KIE Server can use to provide the additional client functionality for the new MINA transport, as shown in the following example:
+
+   ```java Sample implementation of the RulesMinaServicesClient interface
+   public class RulesMinaServicesClientImpl implements RulesMinaServicesClient {
+
+       private String host;
+       private Integer port;
+
+       private Marshaller marshaller;
+
+       public RulesMinaServicesClientImpl(KieServicesConfiguration configuration, ClassLoader classloader) {
+           String[] serverDetails = configuration.getServerUrl().split(":");
+
+           this.host = serverDetails[0];
+           this.port = Integer.parseInt(serverDetails[1]);
+
+           this.marshaller = MarshallerFactory.getMarshaller(configuration.getExtraJaxbClasses(), MarshallingFormat.JSON, classloader);
+       }
+
+       public ServiceResponse<String> executeCommands(String id, String payload) {
+
+           try {
+               String response = sendReceive(id, payload);
+               if (response.startsWith("{")) {
+                   return new ServiceResponse<String>(ResponseType.SUCCESS, null, response);
+               } else {
+                   return new ServiceResponse<String>(ResponseType.FAILURE, response);
+               }
+           } catch (Exception e) {
+               throw new KieServicesException("Unable to send request to KIE Server", e);
+           }
+       }
+
+       public ServiceResponse<String> executeCommands(String id, Command<?> cmd) {
+           try {
+               String response = sendReceive(id, marshaller.marshall(cmd));
+               if (response.startsWith("{")) {
+                   return new ServiceResponse<String>(ResponseType.SUCCESS, null, response);
+               } else {
+                   return new ServiceResponse<String>(ResponseType.FAILURE, response);
+               }
+           } catch (Exception e) {
+               throw new KieServicesException("Unable to send request to KIE Server", e);
+           }
+       }
+
+       protected String sendReceive(String containerId, String content) throws Exception {
+
+           // Flatten the content to be single line:
+           content = content.replaceAll("\\n", "");
+
+           Socket minaSocket = null;
+           PrintWriter out = null;
+           BufferedReader in = null;
+
+           StringBuffer data = new StringBuffer();
+           try {
+               minaSocket = new Socket(host, port);
+               out = new PrintWriter(minaSocket.getOutputStream(), true);
+               in = new BufferedReader(new InputStreamReader(minaSocket.getInputStream()));
+
+               // Prepare and send data:
+               out.println(containerId + "|" + content);
+               // Wait for the first line:
+               data.append(in.readLine());
+               // Continue as long as data is available:
+               while (in.ready()) {
+                   data.append(in.readLine());
+               }
+
+               return data.toString();
+           } finally {
+               out.close();
+               in.close();
+               minaSocket.close();
+           }
+       }
+   }
+   ```
+
+   This example implementation specifies the following data and behavior:
+
+   - Uses socket-based communication for simplicity
+   - Relies on default configurations from the KIE Server client and uses `ServerUrl` for providing the host and port of the MINA server
+   - Specifies JSON as the marshalling format
+   - Requires received messages to be JSON objects that start with an open bracket `{`
+   - Uses direct socket communication with a blocking API while waiting for the first line of the response and then reads all lines that are available
+   - Does not use *stream mode* and therefore disconnects the KIE Server session after invoking a command
+
+4. Implement the `org.kie.server.client.helper.KieServicesClientBuilder` interface in a Java class in your project, as shown in the following example:
+
+   ```java Sample implementation of the KieServicesClientBuilder interface
+   public class MinaClientBuilderImpl implements KieServicesClientBuilder {  (1)
+
+       public String getImplementedCapability() {  (2)
+           return "BRM-Mina";
+       }
+
+       public Map<Class<?>, Object> build(KieServicesConfiguration configuration, ClassLoader classLoader) {  (3)
+           Map<Class<?>, Object> services = new HashMap<Class<?>, Object>();
+
+           services.put(RulesMinaServicesClient.class, new RulesMinaServicesClientImpl(configuration, classLoader));
+
+           return services;
+       }
+
+   }
+   ```
+
+   1. Enables you to provide additional client APIs to the generic KIE Server client infrastructure
+   2. Defines the KIE Server capability (extension) that the client uses
+   3. Provides a map of the client implementations, where the key is the interface and the value is the fully initialized implementation
+
+5. To make the new client API discoverable for the KIE Server client, create a `META-INF/services/org.kie.server.client.helper.KieServicesClientBuilder` file in your Maven project and add the fully qualified class name of the `KieServicesClientBuilder` implementation class within the file. For this example, the file contains the single line `org.kie.server.ext.mina.client.MinaClientBuilderImpl`.
+
+6. Build your project and copy the resulting JAR file into the `~/kie-server.war/WEB-INF/lib` directory of your project.
+
+7. Start KIE Server and deploy the built project to the running KIE Server. You can deploy the project using either the Business Central interface or the KIE Server REST API (a `PUT` request to `http://SERVER:PORT/kie-server/services/rest/server/containers/{containerId}`).
+
+   After your project is deployed on a running KIE Server, you can start interacting with your new KIE Server client. You use your new client in the same way as the standard KIE Server client, by creating the client configuration and client instance, retrieving the service client by type, and invoking client methods.
+
+   For this example, you can create a `RulesMinaServiceClient` client instance and invoke operations on KIE Server through the MINA transport:
+
+   ```java Sample implementation to create the RulesMinaServiceClient client
+   protected RulesMinaServicesClient buildClient() {
+       KieServicesConfiguration configuration = KieServicesFactory.newRestConfiguration("localhost:9123", null, null);
+       List<String> capabilities = new ArrayList<String>();
+       // Explicitly add capabilities (the MINA client does not respond to `get-server-info` requests):
+       capabilities.add("BRM-Mina");
+
+       configuration.setCapabilities(capabilities);
+       configuration.setMarshallingFormat(MarshallingFormat.JSON);
+
+       configuration.addJaxbClasses(extraClasses);
+
+       KieServicesClient kieServicesClient =  KieServicesFactory.newKieServicesClient(configuration);
+
+       RulesMinaServicesClient rulesClient = kieServicesClient.getServicesClient(RulesMinaServicesClient.class);
+
+       return rulesClient;
+   }
+   ```
+
+   ```java Sample configuration to invoke operations on KIE Server through the MINA transport
+   RulesMinaServicesClient rulesClient = buildClient();
+
+   List<Command<?>> commands = new ArrayList<Command<?>>();
+   BatchExecutionCommand executionCommand = commandsFactory.newBatchExecution(commands, "defaultKieSession");
+
+   Person person = new Person();
+   person.setName("mary");
+   commands.add(commandsFactory.newInsert(person, "person"));
+   commands.add(commandsFactory.newFireAllRules("fired"));
+
+   ServiceResponse<String> response = rulesClient.executeCommands(containerId, executionCommand);
+   Assert.assertNotNull(response);
+
+   Assert.assertEquals(ResponseType.SUCCESS, response.getType());
+
+   String data = response.getResult();
+
+   Marshaller marshaller = MarshallerFactory.getMarshaller(extraClasses, MarshallingFormat.JSON, this.getClass().getClassLoader());
+
+   ExecutionResultImpl results = marshaller.unmarshall(data, ExecutionResultImpl.class);
+   Assert.assertNotNull(results);
+
+   Object personResult = results.getValue("person");
+   Assert.assertTrue(personResult instanceof Person);
+
+   Assert.assertEquals("mary", ((Person) personResult).getName());
+   Assert.assertEquals("JBoss Community", ((Person) personResult).getAddress());
+   Assert.assertEquals(true, ((Person) personResult).isRegistered());
+   ```
