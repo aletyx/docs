@@ -203,6 +203,116 @@
             ]
           },
           {
+            "group": "Guides",
+            "pages": [
+              "guides/overview",
+              "guides/decisions",
+              "guides/processes",
+              {
+                "group": "Decision Modeling",
+                "pages": [
+                  "guides/tutorials/dmn/overview",
+                  "guides/tutorials/dmn/dmn-intro",
+                  "guides/tutorials/dmn/dmn-basic-example",
+                  "guides/tutorials/dmn/dmn-accelerators",
+                  "guides/tutorials/dmn/dmn-basic-deployment",
+                  "guides/tutorials/dmn/dmn-deeper",
+                  "guides/tutorials/dmn/dmn-advanced-deployment"
+                ]
+              },
+              {
+                "group": "Process Development",
+                "pages": [
+                  "guides/tutorials/lab-rules-orchestration",
+                  "guides/tutorials/lab-saga",
+                  "guides/tutorials/lab-eda",
+                  "guides/tutorials/bpmn-example",
+                  "guides/tutorials/sub-adhoc"
+                ]
+              },
+              {
+                "group": "Industry Use Cases",
+                "pages": [
+                  "guides/use-cases/overview",
+                  "guides/use-cases/compliance",
+                  "guides/use-cases/finance",
+                  "guides/use-cases/healthcare",
+                  "guides/use-cases/human-resources",
+                  "guides/use-cases/insurance",
+                  "guides/use-cases/lending",
+                  "guides/use-cases/manufacturing",
+                  "guides/use-cases/onboarding",
+                  "guides/use-cases/retail"
+                ]
+              },
+              "guides/best-practices"
+            ]
+          },
+          {
+            "group": "Platform",
+            "pages": [
+              "components/overview",
+              "tech-stack",
+              "components/jbpm",
+              "components/kogito",
+              {
+                "group": "Adaptive Process Architecture",
+                "pages": [
+                  "components/compact-architecture/overview",
+                  "components/compact-architecture/scaling"
+                ]
+              },
+              {
+                "group": "Playground",
+                "pages": [
+                  "components/playground/overview",
+                  "components/playground/components",
+                  "components/playground/accelerators",
+                  "components/playground/advanced-accelerator",
+                  "components/playground/dev-deployment",
+                  "components/playground/customizing",
+                  "components/playground/dmn-tutorial",
+                  "components/playground/bpmn-tutorial",
+                  "components/playground/self-hosting"
+                ]
+              },
+              "decisions-genai",
+              {
+                "group": "Model Context Protocol",
+                "pages": [
+                  "components/mcp/overview"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/overview",
+              {
+                "group": "AWS Marketplace",
+                "pages": [
+                  "deployment/aws-marketplace/overview",
+                  "deployment/aws-marketplace/sandbox",
+                  "deployment/aws-marketplace/ssl-https",
+                  "deployment/aws-marketplace/security",
+                  "deployment/aws-marketplace/troubleshooting"
+                ]
+              },
+              {
+                "group": "Cloud-Native",
+                "pages": [
+                  "deployment/cloud-native/overview",
+                  "deployment/cloud-native/jvm-vs-native",
+                  "deployment/kubernetes",
+                  "deployment/openshift",
+                  "deployment/cloud-native/ecs",
+                  "components/compact-architecture/securing-the-architecture"
+                ]
+              }
+            ]
+          },
+          {
             "group": "Decision Control",
             "pages": [
               "decision-control/overview",
@@ -364,116 +474,6 @@
               "kie-server/prometheus-monitoring",
               "kie-server/performance-tuning",
               "kie-server/task-assigning"
-            ]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "guides/overview",
-              "guides/decisions",
-              "guides/processes",
-              {
-                "group": "Decision Modeling",
-                "pages": [
-                  "guides/tutorials/dmn/overview",
-                  "guides/tutorials/dmn/dmn-intro",
-                  "guides/tutorials/dmn/dmn-basic-example",
-                  "guides/tutorials/dmn/dmn-accelerators",
-                  "guides/tutorials/dmn/dmn-basic-deployment",
-                  "guides/tutorials/dmn/dmn-deeper",
-                  "guides/tutorials/dmn/dmn-advanced-deployment"
-                ]
-              },
-              {
-                "group": "Process Development",
-                "pages": [
-                  "guides/tutorials/lab-rules-orchestration",
-                  "guides/tutorials/lab-saga",
-                  "guides/tutorials/lab-eda",
-                  "guides/tutorials/bpmn-example",
-                  "guides/tutorials/sub-adhoc"
-                ]
-              },
-              {
-                "group": "Industry Use Cases",
-                "pages": [
-                  "guides/use-cases/overview",
-                  "guides/use-cases/compliance",
-                  "guides/use-cases/finance",
-                  "guides/use-cases/healthcare",
-                  "guides/use-cases/human-resources",
-                  "guides/use-cases/insurance",
-                  "guides/use-cases/lending",
-                  "guides/use-cases/manufacturing",
-                  "guides/use-cases/onboarding",
-                  "guides/use-cases/retail"
-                ]
-              },
-              "guides/best-practices"
-            ]
-          },
-          {
-            "group": "Platform",
-            "pages": [
-              "components/overview",
-              "tech-stack",
-              "components/jbpm",
-              "components/kogito",
-              {
-                "group": "Adaptive Process Architecture",
-                "pages": [
-                  "components/compact-architecture/overview",
-                  "components/compact-architecture/scaling"
-                ]
-              },
-              {
-                "group": "Playground",
-                "pages": [
-                  "components/playground/overview",
-                  "components/playground/components",
-                  "components/playground/accelerators",
-                  "components/playground/advanced-accelerator",
-                  "components/playground/dev-deployment",
-                  "components/playground/customizing",
-                  "components/playground/dmn-tutorial",
-                  "components/playground/bpmn-tutorial",
-                  "components/playground/self-hosting"
-                ]
-              },
-              "decisions-genai",
-              {
-                "group": "Model Context Protocol",
-                "pages": [
-                  "components/mcp/overview"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Deployment",
-            "pages": [
-              "deployment/overview",
-              {
-                "group": "AWS Marketplace",
-                "pages": [
-                  "deployment/aws-marketplace/overview",
-                  "deployment/aws-marketplace/sandbox",
-                  "deployment/aws-marketplace/ssl-https",
-                  "deployment/aws-marketplace/security",
-                  "deployment/aws-marketplace/troubleshooting"
-                ]
-              },
-              {
-                "group": "Cloud-Native",
-                "pages": [
-                  "deployment/cloud-native/overview",
-                  "deployment/cloud-native/jvm-vs-native",
-                  "deployment/kubernetes",
-                  "deployment/openshift",
-                  "deployment/cloud-native/ecs",
-                  "components/compact-architecture/securing-the-architecture"
-                ]
-              }
             ]
           },
           {
