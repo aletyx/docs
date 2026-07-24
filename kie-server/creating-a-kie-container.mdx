@@ -1,33 +1,29 @@
 ---
-title: "Creating a Kie Container"
-description: "Once your Execution Server is registered, you can start adding Kie Containers to it."
+title: "Creating a KIE container"
+description: "Once your Execution Server is registered, you can start adding KIE containers to it."
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#_creating_a_kie_container"
 ---
 
-Once your Execution Server is registered, you can start adding **Kie Containers** to it.
+{/* TODO: Review this */}
 
-**Kie Containers** are self contained environments that have been provisioned to hold instances of your packaged and deployed rule instances.
+Once your Execution Server is registered, you can start adding **KIE containers** to it.
+
+**KIE containers** are self-contained environments that have been provisioned to hold instances of your packaged and deployed rules.
 
 1. Start by clicking the **+** icon next to the Execution Server where you want to deploy your Container. This will bring up the New Container screen.
 
-2. If you know the **Group Name**, **Artifact Id** and **Version** (GAV) of your deployed package, then you can enter those details and click the Ok button to select that instance (and provide a name for the Container);
+2. If you know the **Group Name**, **Artifact Id** and **Version** (GAV) of your deployed package, then you can enter those details and click the Ok button to select that instance (and provide a name for the Container).
 
 3. If you don't know these values, you can search Business Central for all packages that can be deployed. Click the **Search** button without entering any value in the search field (you can narrow your search by entering any term that you know exists in the package that you want to deploy).
 
-   <Info>
-   **Important**
-
-   INSERT SCREENSHOT HERE
-   </Info>
-
-   The figure above shows that there are three deployable packages available to be used as containers on the Execution Server.
+   The search results show the deployable packages that are available to be used as containers on the Execution Server.
    Select the one that you want by clicking the Select button.
    This will auto-populate the **GAV** and you can then click the **Ok** button to use this deployable as the new Container.
 
 4. Optionally, enter an alias for this Container, which you can use instead of the container name while accessing the execution server. By default, the alias is the related **Artifact Id**.
 
    <Note>
-   You can configure the same alias for different containers. When you use the alias, the latest version of associated containers is executed. This can be helpful when you deploy a new container version but do not want to change the client codes.
+   You can configure the same alias for different containers. When you use the alias, the latest version of associated containers is executed. This can be helpful when you deploy a new container version but do not want to change the client code.
    </Note>
 
 5. Enter a name for this Container at the top and then press the Ok button.

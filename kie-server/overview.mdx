@@ -1,0 +1,46 @@
+---
+title: "Overview"
+description: "KIE Execution Server is a modular, standalone server component that can be used to instantiate and execute rules and processes via REST, JMS and Java interfaces."
+source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#_overview_2"
+---
+
+*KIE Server* is a modular, standalone server component that can be used to instantiate and execute rules and processes. It exposes this functionality via REST, JMS and Java interfaces to client applications.
+
+At its core, *KIE Server* is a configurable web application packaged as a WAR file.
+Distributions are available for web containers and for Jakarta EE containers. 
+
+*Aletyx Enterprise Build of KIE Server* is a fully compatible, drop-in replacement for KIE Server that allows applications to fix security issues and modernize infrastructure without breaking. With Aletyx Enterprise Build of KIE Server, developers can leverage up to date Java and Jakarta EE, without changing applications built for classic KIE Server. 
+
+<Note>
+In this documentation, for brevity, "KIE Server" always refers to "Aletyx Enterprise Build of KIE Server". When relevant, legacy KIE Server will be referred to as "Classic KIE Server".
+</Note>
+
+Most capabilities on the KIE Server are configurable, and based on the concept of extensions.
+Each extension can be enabled/disabled independently, allowing the user to configure the server to their needs.
+
+The current version of the KIE Server ships with two default extensions:
+
+- BRM: provides support for the execution of Business Rules using the [Drools](/drools/overview) engine.
+- BPM: provides support for the execution of Business Processes using the [jBPM](/components/jbpm) engine. It supports process execution, task execution, asynchronous job execution and process management in general.
+
+Both extensions are enabled by default, but can be disabled by setting the corresponding property (see the [system properties](/kie-server/system-properties) chapter for details).
+
+This server was designed to have a low footprint, with minimal memory consumption, and therefore, to be easily deployable on a cloud environment.
+Each instance of this server can open and instantiate multiple *KIE containers*, which allows you to execute multiple services in parallel.
+
+## Glossary
+
+- **KIE Server**: an execution server purely focused on providing a runtime environment for both rules and processes. These capabilities are provided by *KIE Server Extensions*. More capabilities can be added by further extensions (e.g. a customer could add their own extensions to cover missing functionality, which will then use the infrastructure of the KIE Server). A KIE Server instance is a standalone KIE Server executing on a given application server/web container. A KIE Server instantiates and provides support for multiple KIE containers.
+- **KIE Server Extension**: a "plugin" for the KIE Server that adds capabilities to the server. The KIE Server ships with two default KIE Server extensions: BRM and BPM.
+- **KIE container**: an in-memory instantiation of a kjar, allowing for the instantiation and usage of its assets (domain models, processes, rules, etc). A KIE Server exposes KIE containers through a standard API over transport protocols like REST and JMS.
+- **Controller**: a server-backed REST endpoint that will be responsible for managing KIE Server instances. Such an endpoint must provide the following capabilities:
+  - respond to connect requests
+  - sync all registered containers on the corresponding *KIE Server ID*
+  - respond to disconnect requests
+- **KIE Server state**: the currently known state of a given KIE Server instance. This is a local storage (by default in a file) that maintains the following information:
+  - list of registered jBPM controllers
+  - list of known containers
+  - KIE Server configuration
+
+    The server state is persisted upon receipt of events like: a *KIE container* is created, a *KIE container* is disposed, a jBPM controller accepts registration of a *KIE Server* instance, etc.
+- **KIE Server ID**: an arbitrarily assigned identifier to which configurations are assigned. At boot, each KIE Server instance is assigned an ID, and that ID is matched to a configuration on the jBPM controller. The KIE Server instance fetches and uses that configuration to set itself up.

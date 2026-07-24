@@ -4,7 +4,9 @@ description: "Use the jBPM controller REST API to interact with your KIE Server 
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#controller-rest-api-con_kie-apis"
 ---
 
-jBPM provides an jBPM controller REST API that you can use to interact with your KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units) in jBPM without using the Business Central user interface. This API support enables you to maintain your jBPM servers and resources more efficiently and optimize your integration and development with jBPM.
+{/* TODO: Review this */}
+
+jBPM provides a jBPM controller REST API that you can use to interact with your KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units) in jBPM without using the Business Central user interface. This API support enables you to maintain your jBPM servers and resources more efficiently and optimize your integration and development with jBPM.
 
 With the jBPM controller REST API, you can perform the following actions:
 
@@ -41,7 +43,7 @@ To configure the `kie-server` or `rest-all` user with jBPM controller access, na
 ```
 
 For more information about user roles and jBPM installation options, see
-[Installing the KIE Server](/archive/kie-server/installation).
+[Installing the KIE Server](/kie-server/installation).
 
 **HTTP headers**
 
@@ -143,6 +145,7 @@ The jBPM controller REST API enables you to interact with your KIE Server templa
 
     Example server response (JSON):
 
+    {/* TODO: Review this */}
     ```json
     {
       "server-template": [
@@ -309,6 +312,7 @@ By default, the Swagger web interface for the jBPM controller is enabled by the 
 
     Example server response (JSON):
 
+    {/* TODO: Review this */}
     ```json
     {
       "server-template": [
@@ -396,7 +400,7 @@ By default, the Swagger web interface for the jBPM controller is enabled by the 
     }
     ```
 
-6. In the Swagger page, navigate to the **Controller :: KIE Server templates and KIE containers** → **[GET] `/controller/management/servers/{serverTemplateId}`** endpoint to send another request to create a new KIE Server template. Adjust any request details according to your use case.
+6. In the Swagger page, navigate to the **Controller :: KIE Server templates and KIE containers** → **[PUT] `/controller/management/servers/{serverTemplateId}`** endpoint to send another request to create a new KIE Server template. Adjust any request details according to your use case.
 
 7. Click **Try it out** and enter the following components for the request:
 

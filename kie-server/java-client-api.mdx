@@ -4,6 +4,8 @@ description: "Connect to KIE Server using REST protocol from your Java client ap
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#kie-server-java-api-con_kie-apis"
 ---
 
+{/* TODO: Review this */}
+
 jBPM provides a KIE Server Java client API that enables you to connect to KIE Server using REST protocol from your Java client application. You can use the KIE Server Java client API as an alternative to the KIE Server REST API to interact with your KIE containers and business assets (such as business rules, processes, and solvers) in jBPM without using the Business Central user interface. This API support enables you to maintain your jBPM resources more efficiently and optimize your integration and development with jBPM.
 
 With the KIE Server Java client API, you can perform the following actions also supported by the KIE Server REST API:
@@ -27,7 +29,7 @@ $ ./bin/jboss-cli.sh --commands="embed-server --std-out=echo,/subsystem=elytron/
 ```
 
 For more information about user roles and jBPM installation options, see
-[Installing the KIE Server](/archive/kie-server/installation).
+[Installing the KIE Server](/kie-server/installation).
 
 **Project dependencies**
 
@@ -57,7 +59,7 @@ The KIE Server Java client API requires the following dependencies on the releva
 </dependency>
 ```
 
-The `<version>` for jBPM dependencies is the Maven artifact version for jBPM currently used in your project (for example, 7.67.2.Final).
+The `<version>` for jBPM dependencies is the Maven artifact version for jBPM currently used in your project (for example, 7.67.2.Final). {/* TODO: Review this */}
 
 **Client request configuration**
 
@@ -226,9 +228,7 @@ The KIE Server Java client API enables you to connect to KIE Server using REST p
    </dependency>
    ```
 
-2. In the `~/kie/server/client` folder
-   of the Java client API in [GitHub](https://github.com/kiegroup/droolsjbpm-integration/tree/master/kie-server-parent/kie-server-remote/kie-server-client/src/main/java/org/kie/server/client)
-   , identify the relevant Java client for the request you want to send, such as `KieServicesClient` to access client services for KIE containers and other assets in KIE Server.
+2. In the `~/kie/server/client` folder of the Java client API in [GitHub](https://github.com/kiegroup/droolsjbpm-integration/tree/master/kie-server-parent/kie-server-remote/kie-server-client/src/main/java/org/kie/server/client), identify the relevant Java client for the request you want to send, such as `KieServicesClient` to access client services for KIE containers and other assets in KIE Server.
 
 3. In your client application, create a `.java` class for the API request. The class must contain the necessary imports, KIE Server location and user credentials, a `KieServicesClient` object, and the client method to execute, such as `createContainer` and `disposeContainer` from the `KieServicesClient` client. Adjust any configuration details according to your use case.
 
@@ -298,7 +298,7 @@ The KIE Server Java client API enables you to connect to KIE Server using REST p
    In this example, when you dispose a container, the `ServiceResponse` returns a `Void` response. When you create a container, the `ServiceResponse` returns a `KieContainerResource` object.
 
    <Note>
-   A conversation between a client and a specific KIE Server container in a clustered environment is secured by a unique `conversationID`. The `conversationID` is transferred using the `X-KIE-ConversationId` REST header. If you update the container, unset the previous `conversationID`. Use `KieServiesClient.completeConversation()` to unset the `conversationID` for Java API.
+   A conversation between a client and a specific KIE Server container in a clustered environment is secured by a unique `conversationID`. The `conversationID` is transferred using the `X-KIE-ConversationId` REST header. If you update the container, unset the previous `conversationID`. Use `KieServicesClient.completeConversation()` to unset the `conversationID` for the Java API.
    </Note>
 
 4. Run the configured `.java` class from your project directory to execute the request, and review the KIE Server response.
@@ -307,6 +307,7 @@ The KIE Server Java client API enables you to connect to KIE Server using REST p
 
    Example server response for a new KIE container (log):
 
+   {/* TODO: Review this */}
    ```text
    10:23:35.194 [main] INFO  o.k.s.a.m.MarshallerFactory - Marshaller extensions init
    10:23:35.396 [main] DEBUG o.k.s.client.balancer.LoadBalancer - Load balancer RoundRobinBalancerStrategy{availableEndpoints=[http://localhost:8080/kie-server/services/rest/server]} selected url 'http://localhost:8080/kie-server/services/rest/server'
@@ -419,8 +420,8 @@ The following are some of the Java client services available in the `org.kie.ser
 - `RuleServicesClient`: Used to send commands to the server to perform rule-related operations, such as executing rules or inserting objects into the KIE session
 - `ProcessServicesClient`: Used to start, signal, and abort processes or work items
 - `QueryServicesClient`: Used to query processes, process nodes, and process variables
-- `UserTaskServicesClient`: Used to perform all user-task operations, such as starting, claiming, or canceling a task, and to query tasks by a specified field, such as by user or by process instances ID
-- `UIServicesClient`: Used to get String representation of forms (XML or JSON) and of a process image (SVG)
+- `UserTaskServicesClient`: Used to perform all user-task operations, such as starting, claiming, or canceling a task, and to query tasks by a specified field, such as by user or by process instance ID
+- `UIServicesClient`: Used to get a String representation of forms (XML or JSON) and of a process image (SVG)
 - `ProcessAdminServicesClient`: Provides an interface for operations with process instances (found in `~/org/kie/server/client/admin`)
 - `UserTaskAdminServicesClient`: Provides an interface for operations with user tasks (found in `~/org/kie/server/client/admin`)
 
@@ -473,6 +474,7 @@ public void listContainers() {
 
 You can optionally filter the KIE container results using an instance of the `org.kie.server.api.model.KieContainerResourceFilter` class, which is passed to the `org.kie.server.client.KieServicesClient.listContainers()` method.
 
+{/* TODO: Review this */}
 ```java Example request to return KIE containers by release ID and status
 public void listContainersWithFilter() {
 
@@ -574,7 +576,7 @@ public void executeCommands() {
 ```
 
 <Note>
-A conversation between a client and a specific KIE Server container in a clustered environment is secured by a unique `conversationID`. The `conversationID` is transferred using the `X-KIE-ConversationId` REST header. If you update the container, unset the previous `conversationID`. Use `KieServiesClient.completeConversation()` to unset the `conversationID` for Java API.
+A conversation between a client and a specific KIE Server container in a clustered environment is secured by a unique `conversationID`. The `conversationID` is transferred using the `X-KIE-ConversationId` REST header. If you update the container, unset the previous `conversationID`. Use `KieServicesClient.completeConversation()` to unset the `conversationID` for the Java API.
 </Note>
 
 **Listing available business processes in a KIE container**

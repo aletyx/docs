@@ -6,7 +6,7 @@ processes:
     command: "mint dev"
     working_dir: "."
     availability:
-      restart: "on_failure"
+      restart: "always"
       backoff_seconds: 2
     readiness_probe:
       http_get:

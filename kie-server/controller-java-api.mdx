@@ -4,7 +4,9 @@ description: "Connect to the jBPM controller using REST or WebSocket protocol fr
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#controller-java-api-con_kie-apis"
 ---
 
-jBPM provides an jBPM controller Java client API that enables you to connect to the jBPM controller using REST or WebSocket protocol from your Java client application. You can use the jBPM controller Java client API as an alternative to the jBPM controller REST API to interact with your KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units) in jBPM without using the Business Central user interface. This API support enables you to maintain your jBPM servers and resources more efficiently and optimize your integration and development with jBPM.
+{/* TODO: Review this */}
+
+jBPM provides a jBPM controller Java client API that enables you to connect to the jBPM controller using REST or WebSocket protocol from your Java client application. You can use the jBPM controller Java client API as an alternative to the jBPM controller REST API to interact with your KIE Server templates (configurations), KIE Server instances (remote servers), and associated KIE containers (deployment units) in jBPM without using the Business Central user interface. This API support enables you to maintain your jBPM servers and resources more efficiently and optimize your integration and development with jBPM.
 
 With the jBPM controller Java client API, you can perform the following actions also supported by the jBPM controller REST API:
 
@@ -30,7 +32,7 @@ To add a user with the `kie-server` role or the `rest-all` role or both (assumin
 $ ./bin/jboss-cli.sh --commands="embed-server --std-out=echo,/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity(identity=<USERNAME>),/subsystem=elytron/filesystem-realm=ApplicationRealm:set-password(identity=<USERNAME>, clear={password='<PASSWORD>'}),/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity-attribute(identity=<USERNAME>, name=role, value=['rest-all','kie-server'])"
 ```
 
-In case the Keystore is not set, then execute the following command to create a Keystore:
+If the Keystore is not set, execute the following command to create a Keystore:
 
 ```bash
 $ keytool -importpassword -keystore $SERVER_HOME/standalone/configuration/kie_keystore.jceks -keypass <SECRETKEYPASSWORD> -alias kieserver -storepass <SECRETSTOREPASSWORD> -storetype JCEKS
@@ -57,7 +59,7 @@ To configure the `kie-server` or `rest-all` user with jBPM controller access, na
 ```
 
 For more information about user roles and jBPM installation options, see
-[Installing the KIE Server](/archive/kie-server/installation).
+[Installing the KIE Server](/kie-server/installation).
 
 **Project dependencies**
 
@@ -93,7 +95,7 @@ The jBPM controller Java client API requires the following dependencies on the r
 </dependency>
 ```
 
-The `<version>` for jBPM dependencies is the Maven artifact version for jBPM currently used in your project (for example, 7.67.2.Final).
+The `<version>` for jBPM dependencies is the Maven artifact version for jBPM currently used in your project (for example, 7.67.2.Final). {/* TODO: Review this */}
 
 **Client request configuration**
 
@@ -209,12 +211,11 @@ The jBPM controller Java client API enables you to connect to the jBPM controlle
    </dependency>
    ```
 
-2. In the `~/kie/server/controller/client` folder
-   of the Java client API in [GitHub](https://github.com/kiegroup/droolsjbpm-integration/tree/master/kie-server-parent/kie-server-controller/kie-server-controller-client/src/main/java/org/kie/server/controller/client)
-   , identify the relevant Java client implementation for the request you want to send, such as the `RestKieServerControllerClient` implementation to access client services for KIE Server templates and KIE containers in REST protocol.
+2. In the `~/kie/server/controller/client` folder of the Java client API in [GitHub](https://github.com/kiegroup/droolsjbpm-integration/tree/master/kie-server-parent/kie-server-controller/kie-server-controller-client/src/main/java/org/kie/server/controller/client), identify the relevant Java client implementation for the request you want to send, such as the `RestKieServerControllerClient` implementation to access client services for KIE Server templates and KIE containers in REST protocol.
 
 3. In your client application, create a `.java` class for the API request. The class must contain the necessary imports, the jBPM controller location and user credentials, a `KieServerControllerClient` object, and the client method to execute, such as `createServerTemplate` and `createContainer` from the `RestKieServerControllerClient` implementation. Adjust any configuration details according to your use case.
 
+   {/* TODO: Review this */}
    ```java Creating and interacting with a KIE Server template and KIE containers
    import java.util.Arrays;
    import java.util.HashMap;
@@ -307,6 +308,7 @@ see the Java client API source in [GitHub](https://github.com/kiegroup/droolsjbp
 
 You can use the `ServerTemplate` and `ContainerSpec` services in the REST or WebSocket jBPM controller clients to create, dispose, and update KIE Server templates and KIE containers, and to start and stop KIE containers, as illustrated in this example.
 
+{/* TODO: Review this */}
 ```java Example request to create and interact with a KIE Server template and KIE containers
 import java.util.Arrays;
 import java.util.HashMap;

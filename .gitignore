@@ -2,6 +2,7 @@
 .envrc*
 *.local.*
 *-local
+*.local
 
 
 # Maven build output in the kie-docs source mirror

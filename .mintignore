@@ -17,3 +17,6 @@ migration-report.md
 docs-backup/
 docs-local/
 /prompts/
+
+# Local-only files and directories (e.g. test.local/)
+*.local

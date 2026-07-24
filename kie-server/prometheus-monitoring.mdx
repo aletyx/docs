@@ -4,6 +4,8 @@ description: "Prometheus is an open-source systems monitoring toolkit that you c
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#prometheus-monitoring-con_kie-apis"
 ---
 
+{/* TODO: Review this */}
+
 Prometheus is an open-source systems monitoring toolkit that you can use with jBPM to collect and store metrics related to the execution of business rules, processes, Decision Model and Notation (DMN) models, and other jBPM assets. You can access the stored metrics through a REST API call to the KIE Server, through the Prometheus expression browser, or using a data-graphing tool such as Grafana.
 
 You can configure Prometheus metrics monitoring for an on-premise KIE Server instance, for KIE Server on Spring Boot, or for a KIE Server deployment on Red Hat OpenShift Container Platform.
@@ -24,7 +26,7 @@ see the [KIE Server Prometheus Extension](https://github.com/kiegroup/droolsjbpm
 
 **Procedure**
 
-1. In your KIE Server instance, set the `org.kie.prometheus.server.ext.disabled` system property to `false` to enable the Prometheus extension. You can define this property when you start KIE Server or in the `standalone.xml` or `standalone-full.xml` file of jBPM distribution.
+1. In your KIE Server instance, set the `org.kie.prometheus.server.ext.disabled` system property to `false` to enable the Prometheus extension. You can define this property when you start KIE Server or in the `standalone.xml` or `standalone-full.xml` file of the jBPM distribution.
 
 2. If you are running jBPM on Spring Boot, configure the required key in the `application.properties` system property:
 
@@ -88,6 +90,7 @@ see the [KIE Server Prometheus Extension](https://github.com/kiegroup/droolsjbpm
     curl -u 'baAdmin:password@1' -X GET "http://localhost:8080/rest/metrics"
     ```
 
+    {/* TODO: Review this */}
     ```text Example server response
     # HELP kie_server_container_started_total Kie Server Started Containers
     # TYPE kie_server_container_started_total counter
@@ -261,6 +264,7 @@ As an example, this procedure defines custom Decision Model and Notation (DMN) m
 
 1. Create an empty Maven project and define the following packaging type and dependencies in the `pom.xml` file for the project:
 
+    {/* TODO: Review this */}
     ```xml Example pom.xml file in the sample project
     <packaging>jar</packaging>
 

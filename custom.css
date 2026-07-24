@@ -1,0 +1,74 @@
+/* Button-styled links.
+ *
+ * Internal CTA buttons must be markdown links (not raw <a> tags) so that
+ * Mintlify rewrites their href for the production /docs base path. These
+ * classes give those markdown links the button look previously done with
+ * Tailwind utility classes on raw anchors.
+ *
+ * Usage:
+ *   <div className="btn-links">
+ *
+ *   [Get started](/quickstart)
+ *
+ *   [Try the Playground!](https://playground.aletyx.ai)
+ *
+ *   </div>
+ *
+ * Internal links (path hrefs) render as filled buttons; external links
+ * (http...) render as the outlined variant.
+ */
+
+.btn-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.btn-links p {
+  margin: 0;
+}
+
+.btn-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  border-bottom: none !important;
+  color: #ffffff !important;
+  background-color: #fc764c;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-links a:hover {
+  opacity: 0.9;
+}
+
+.dark .btn-links a {
+  background-color: #fd9a78;
+  color: #1a1a1a !important;
+}
+
+/* Outlined variant: external links */
+.btn-links a[href^="http"] {
+  background-color: transparent;
+  color: #fc764c !important;
+  border: 1px solid #fc764c;
+}
+
+.btn-links a[href^="http"]:hover {
+  background-color: rgba(252, 118, 76, 0.1);
+  opacity: 1;
+}
+
+.dark .btn-links a[href^="http"] {
+  color: #fd9a78 !important;
+  border-color: #fd9a78;
+  background-color: transparent;
+}
+
+.dark .btn-links a[href^="http"]:hover {
+  background-color: rgba(253, 154, 120, 0.1);
+}

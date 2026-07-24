@@ -4,6 +4,8 @@ description: "The capabilities in KIE Server are determined by plug-in extension
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#kie-server-extensions-con_kie-apis"
 ---
 
+{/* TODO: Review this */}
+
 The capabilities in KIE Server are determined by plug-in extensions that you can enable, disable, or further extend to meet your business needs. KIE Server supports the following default capabilities and extensions:
 
 **Table: KIE Server capabilities and extensions**
@@ -24,6 +26,7 @@ To view the supported extensions of a running KIE Server instance, send a `GET` 
 http://SERVER:PORT/kie-server/services/rest/server
 ```
 
+{/* TODO: Review this */}
 ```json Example JSON response with KIE Server information
 {
   "type": "SUCCESS",
@@ -62,7 +65,7 @@ http://SERVER:PORT/kie-server/services/rest/server
 ```
 
 To enable or disable KIE Server extensions, configure the related `*.server.ext.disabled` KIE Server system property. For example, to disable the `BRM` capability, set the system property `org.drools.server.ext.disabled=true`. For all KIE Server system properties, see
-[KIE Server system properties](/archive/kie-server/system-properties).
+[KIE Server system properties](/kie-server/system-properties).
 
 By default, KIE Server extensions are exposed through REST or JMS data transports and use predefined client APIs. You can extend existing KIE Server capabilities with additional REST endpoints, extend supported transport methods beyond REST or JMS, or extend functionality in the KIE Server client.
 
@@ -84,6 +87,7 @@ This example custom endpoint accepts a list of facts to be inserted into the wor
 
 1. Create an empty Maven project and define the following packaging type and dependencies in the `pom.xml` file for the project:
 
+   {/* TODO: Review this */}
    ```xml Example pom.xml file in the sample project
    <packaging>jar</packaging>
 
@@ -261,7 +265,7 @@ This example custom endpoint accepts a list of facts to be inserted into the wor
    In this example, the `CustomResource` class for the custom endpoint specifies the following data and behavior:
 
    - Uses the base endpoint `server/containers/instances/{containerId}/ksession`
-   - Uses `POST` HTTP method
+   - Uses the `POST` HTTP method
    - Expects the following data to be given in REST requests:
      - The `containerId` as a path argument
      - The `ksessionId` as a path argument
@@ -272,7 +276,7 @@ This example custom endpoint accepts a list of facts to be inserted into the wor
    - Unmarshals the payload into a `List<?>` collection and, for each item in the list, creates an `InsertCommand` instance followed by `FireAllRules` and `GetObject` commands.
    - Adds all commands to the `BatchExecutionCommand` instance that calls to the Drools engine.
 
-4. To make the new endpoint discoverable for KIE Server, create a `META-INF/services/org.kie.server.services.api.KieServerApplicationComponentsService` file in your Maven project and add the fully qualified class name of the `KieServerApplicationComponentsService` implementation class within the file. For this example, the file contains the single line `org.kie.server.ext.drools.rest.CusomtDroolsKieServerApplicationComponentsService`.
+4. To make the new endpoint discoverable for KIE Server, create a `META-INF/services/org.kie.server.services.api.KieServerApplicationComponentsService` file in your Maven project and add the fully qualified class name of the `KieServerApplicationComponentsService` implementation class within the file. For this example, the file contains the single line `org.kie.server.ext.drools.rest.CustomDroolsKieServerApplicationComponentsService`.
 
 5. Build your project and copy the resulting JAR file into the `~/kie-server.war/WEB-INF/lib` directory of your project.
 
@@ -324,6 +328,7 @@ As an example, this procedure adds a custom data transport to KIE Server that us
 
 1. Create an empty Maven project and define the following packaging type and dependencies in the `pom.xml` file for the project:
 
+   {/* TODO: Review this */}
    ```xml Example pom.xml file in the sample project
    <packaging>jar</packaging>
 
@@ -522,7 +527,7 @@ As an example, this procedure adds a custom data transport to KIE Server that us
 
    1. Specifies the capability that is covered by this extension. The capability must be unique within KIE Server.
    2. Defines a human-readable name for the extension.
-   3. Determines when the specified extension should be started. For extensions that have dependencies on other extensions, this setting must not conflict with the parent setting. For example, in this case, this custom extension depends on the `Drools` extension, which has `StartOrder` set to `0`, so this custom add-on extension must be greater than `0` (set to `20` in the sample implementation).
+   3. Determines when the specified extension should be started. For extensions that have dependencies on other extensions, this setting must not conflict with the parent setting. For example, in this case, this custom extension depends on the `Drools` extension, which has `StartOrder` set to `0`, so this custom add-on extension must have a start order greater than `0` (set to `20` in the sample implementation).
 
    In the previous `MinaDroolsKieServerExtension` sample implementation of this interface, the `init` method is the main element for collecting services from the `Drools` extension and for bootstrapping the MINA server. All other methods in the `KieServerExtension` interface can remain with the standard implementation to fulfill interface requirements.
 
@@ -580,7 +585,7 @@ As an example, this procedure adds a custom data transport to KIE Server that us
 
 4. To make the new data transport discoverable for KIE Server, create a `META-INF/services/org.kie.server.services.api.KieServerExtension` file in your Maven project and add the fully qualified class name of the `KieServerExtension` implementation class within the file. For this example, the file contains the single line `org.kie.server.ext.mina.MinaDroolsKieServerExtension`.
 
-5. Build your project and copy the resulting JAR file and the `mina-core-2.0.9.jar` file (which the extension depends on in this example) into the `~/kie-server.war/WEB-INF/lib` directory of your project.
+5. Build your project and copy the resulting JAR file and the `mina-core-2.0.9.jar` file (which the extension depends on in this example) into the `~/kie-server.war/WEB-INF/lib` directory of your project. {/* TODO: Review this */}
 
 6. Start the KIE Server and deploy the built project to the running KIE Server. You can deploy the project using either the Business Central interface or the KIE Server REST API (a `PUT` request to `http://SERVER:PORT/kie-server/services/rest/server/containers/{containerId}`).
 
@@ -593,10 +598,12 @@ As an example, this procedure adds a custom data transport to KIE Server that us
 
    For this example, you can use Telnet to interact with the new MINA-based data transport in KIE Server:
 
+   {/* TODO: Review this */}
    ```shell Starting Telnet and connecting to KIE Server on port 9123 in a command terminal
    telnet 127.0.0.1 9123
    ```
 
+   {/* TODO: Review this */}
    ```shell Example interactions with KIE Server in a command terminal
    Trying 127.0.0.1...
    Connected to localhost.
@@ -651,6 +658,7 @@ As an example, this procedure adds a custom client API to KIE Server to accommod
 
 1. Create an empty Maven project and define the following packaging type and dependencies in the `pom.xml` file for the project:
 
+   {/* TODO: Review this */}
    ```xml Example pom.xml file in the sample project
    <packaging>jar</packaging>
 

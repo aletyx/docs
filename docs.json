@@ -344,6 +344,29 @@
             ]
           },
           {
+            "group": "KIE Server",
+            "pages": [
+              "kie-server/overview",
+              "kie-server/installation",
+              "kie-server/system-properties",
+              "kie-server/extensions",
+              "kie-server/setup",
+              "kie-server/creating-a-kie-container",
+              "kie-server/managing-containers",
+              "kie-server/rest-api",
+              "kie-server/java-client-api",
+              "kie-server/commands",
+              "kie-server/runtime-commands",
+              "kie-server/controller-rest-api",
+              "kie-server/controller-java-api",
+              "kie-server/ejb-api",
+              "kie-server/securing-passwords",
+              "kie-server/prometheus-monitoring",
+              "kie-server/performance-tuning",
+              "kie-server/task-assigning"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "guides/overview",

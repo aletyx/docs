@@ -4,6 +4,8 @@ description: "Containers within the Execution Server can be started, stopped and
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#_managing_containers"
 ---
 
+{/* TODO: Review this */}
+
 Containers within the Execution Server can be started, stopped and updated from within Business Central.
 
 ## Starting a Container
@@ -30,22 +32,15 @@ You can have multiple versions of the same package provisioned and deployed, eac
 
 To update deployments in a `KieContainer` dynamically, click the icon next to the Container.
 This will open up the Container Info screen.
-An example of this screen is shown here:
-
-<Info>
-**Important**
-
-INSERT SCREENSHOT HERE
-</Info>
 
 The Container Info screen is a useful tool because it not only allows you to see the endpoint for this `KieContainer`, but it also allows you to either manually or automatically refresh the provision if an update is available.
 The update can be manual or automatic:
 
 **Manual Update:** To manually update a `KieContainer`, enter the new Version number in the Version box and click the **Update** button.
-You can of course, update the Group Id or the Artifact Id , if these have changed as well.
-Once updated, the Execution server updates the container and shows you the resolved GAV attributes at the bottom of the screen in the **Resolved Release Id** section.
+You can, of course, update the Group Id or the Artifact Id, if these have changed as well.
+Once updated, the Execution Server updates the container and shows you the resolved GAV attributes at the bottom of the screen in the **Resolved Release Id** section.
 
 **Automatic Update:** If you want a deployed Container to always have the latest version of your deployment without manually editing it, you will need to set the Version property to the value of `LATEST` and start a `Scanner`.
 This will ensure that the deployed provision always contains the latest version.
-The Scanner can be started just once on demand by clicking the Scan Now button or you can start it in the background with scans happening at a specified interval (in milliseconds).You can also set this value to `LATEST` when you are first creating this deployment.
+The Scanner can be started just once on demand by clicking the Scan Now button or you can start it in the background with scans happening at a specified interval (in milliseconds). You can also set this value to `LATEST` when you are first creating this deployment.
 The **Resolved Release Id** in this case will show you the actual, latest version number.

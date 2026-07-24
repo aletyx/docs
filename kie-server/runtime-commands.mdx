@@ -4,11 +4,13 @@ description: "Runtime commands that you can send to KIE Server for asset-related
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#runtime-commands-con_kie-apis"
 ---
 
+{/* TODO: Review this */}
+
 jBPM supports runtime commands that you can send to KIE Server for asset-related operations, such as executing all rules or inserting or retracting objects in a KIE session. The full list of supported runtime commands is located in the `org.drools.core.command.runtime` package in your jBPM instance.
 
-In the KIE Server REST API, you use the global `org.drools.core.command.runtime` commands or the rule-specific `org.drools.core.command.runtime.rule` commands as the request body for `POST` requests to `http://SERVER:PORT/kie-server/services/rest/server/containers/instances/{containerId}`. For more information about using the KIE Server REST API, see [KIE Server REST API for KIE containers and business assets](/archive/kie-server/rest-api).
+In the KIE Server REST API, you use the global `org.drools.core.command.runtime` commands or the rule-specific `org.drools.core.command.runtime.rule` commands as the request body for `POST` requests to `http://SERVER:PORT/kie-server/services/rest/server/containers/instances/{containerId}`. For more information about using the KIE Server REST API, see [KIE Server REST API for KIE containers and business assets](/kie-server/rest-api).
 
-In the KIE Server Java client API, you can embed these commands in your Java application along with the relevant Java client. For example, for rule-related commands, you use the `RuleServicesClient` Java client with the embedded commands. For more information about using the KIE Server Java client API, see [KIE Server Java client API for KIE containers and business assets](/archive/kie-server/java-client-api).
+In the KIE Server Java client API, you can embed these commands in your Java application along with the relevant Java client. For example, for rule-related commands, you use the `RuleServicesClient` Java client with the embedded commands. For more information about using the KIE Server Java client API, see [KIE Server Java client API for KIE containers and business assets](/kie-server/java-client-api).
 
 ## Sample runtime commands in jBPM
 
@@ -43,7 +45,7 @@ Contains multiple commands to be executed together.
 | Name | Description | Requirement |
 | --- | --- | --- |
 | `commands` | List of commands to be executed. | Required |
-| `lookup` | Sets the KIE session ID on which the commands will be executed. For stateless KIE sessions, this attribute is required. For stateful KIE sessions, this attribute is optional and if not specified, the default KIE session is used. | Required for stateless KIE session, optional for stateful KIE session |
+| `lookup` | Sets the KIE session ID on which the commands will be executed. For stateless KIE sessions, this attribute is required. For stateful KIE sessions, this attribute is optional and, if not specified, the default KIE session is used. | Required for stateless KIE session, optional for stateful KIE session |
 
 <Note>
 KIE session IDs are in the `kmodule.xml` file of your jBPM project. To view or add a KIE session ID in Business Central to use with the `lookup` command attribute, navigate to the relevant project in Business Central and go to project **Settings** → **KIE bases** → **KIE sessions**. If no KIE bases exist, click **Add KIE base** → **KIE sessions** to define the new KIE base and KIE sessions.

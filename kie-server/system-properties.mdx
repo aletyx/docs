@@ -4,6 +4,8 @@ description: "System properties (bootstrap switches) accepted by KIE Server to c
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#kie-server-system-properties-ref_kie-apis"
 ---
 
+{/* TODO: Review this */}
+
 KIE Server accepts the following system properties (bootstrap switches) to configure the behavior of the server:
 
 **System properties for disabling KIE Server extensions**
@@ -17,7 +19,7 @@ KIE Server accepts the following system properties (bootstrap switches) to confi
 | `org.kie.prometheus.server.ext.disabled` | `true`, `false` | `true` | If set to `true`, disables the Prometheus Server extension. |
 | `org.kie.scenariosimulation.server.ext.disabled` | `true`, `false` | `true` | If set to `true`, disables the Test scenario Server extension. |
 | `org.kie.dmn.server.ext.disabled` | `true`, `false` | `false` | If set to `true`, disables the KIE Server DMN support. |
-| `org.kie.swagger.server.ext.disabled` | `true`, `false` | `false` | If set to `true`, disables the KIE Server swagger documentation support |
+| `org.kie.swagger.server.ext.disabled` | `true`, `false` | `false` | If set to `true`, disables the KIE Server swagger documentation support. |
 
 <Note>
 Some jBPM controller properties listed in the following table are marked as required. Set these properties when you create or remove KIE Server containers in Business Central. If you use KIE Server separately without any interaction with Business Central, you do not need to set the required properties.
@@ -28,13 +30,13 @@ Some jBPM controller properties listed in the following table are marked as requ
 | Property | Values | Default | Description |
 |---|---|---|---|
 | `org.kie.server.id` | String | N/A | An arbitrary ID to be assigned to the server. If a headless jBPM controller is configured outside of Business Central, this is the ID under which the server connects to the headless jBPM controller to fetch the KIE container configurations. If not provided, the ID is automatically generated. |
-| `org.kie.server.user` | String | `kieserver` | The user name used to connect with KIE Server from the jBPM controller, required when running in managed mode. Set this property in Business Central system properties. Set this property when using an jBPM controller. |
-| `org.kie.server.pwd` | String | `kieserver1!` | The password used to connect with KIE Server from the jBPM controller, required when running in managed mode. Set this property in Business Central system properties. Set this property when using an jBPM controller. |
+| `org.kie.server.user` | String | `kieserver` | The user name used to connect with KIE Server from the jBPM controller, required when running in managed mode. Set this property in Business Central system properties. Set this property when using a jBPM controller. |
+| `org.kie.server.pwd` | String | `kieserver1!` | The password used to connect with KIE Server from the jBPM controller, required when running in managed mode. Set this property in Business Central system properties. Set this property when using a jBPM controller. |
 | `org.kie.server.token` | String | N/A | A property that enables you to use token-based authentication between the jBPM controller and KIE Server instead of the basic user name and password authentication. The jBPM controller sends the token as a parameter in the request header. The server requires long-lived access tokens because the tokens are not refreshed. |
-| `org.kie.server.location` | URL | N/A | The URL of the KIE Server instance used by the jBPM controller to call back on this server, for example, `http://localhost:8230/kie-server/services/rest/server`. Setting this property is required when using an jBPM controller. |
-| `org.kie.server.controller` | Comma-separated list | N/A | A comma-separated list of URLs to the jBPM controller REST endpoints, for example, `http://localhost:8080/business-central/rest/controller`. Setting this property is required when using an jBPM controller. |
-| `org.kie.server.controller.user` | String | `kieserver` | The user name to connect to the jBPM controller REST API. Setting this property is required when using an jBPM controller. |
-| `org.kie.server.controller.pwd` | String | `kieserver1!` | The password to connect to the jBPM controller REST API. Setting this property is required when using an jBPM controller. |
+| `org.kie.server.location` | URL | N/A | The URL of the KIE Server instance used by the jBPM controller to call back on this server, for example, `http://localhost:8230/kie-server/services/rest/server`. Setting this property is required when using a jBPM controller. |
+| `org.kie.server.controller` | Comma-separated list | N/A | A comma-separated list of URLs to the jBPM controller REST endpoints, for example, `http://localhost:8080/business-central/rest/controller`. Setting this property is required when using a jBPM controller. |
+| `org.kie.server.controller.user` | String | `kieserver` | The user name to connect to the jBPM controller REST API. Setting this property is required when using a jBPM controller. |
+| `org.kie.server.controller.pwd` | String | `kieserver1!` | The password to connect to the jBPM controller REST API. Setting this property is required when using a jBPM controller. |
 | `org.kie.server.controller.token` | String | N/A | A property that enables you to use token-based authentication between KIE Server and the jBPM controller instead of the basic user name and password authentication. The server sends the token as a parameter in the request header. The server requires long-lived access tokens because the tokens are not refreshed. |
 | `org.kie.server.controller.connect` | Long | `10000` | The waiting time in milliseconds between repeated attempts to connect KIE Server to the jBPM controller when the server starts. |
 
@@ -222,13 +224,13 @@ Some jBPM controller properties listed in the following table are marked as requ
       <td><code>org.kie.server.startup.strategy</code></td>
       <td><code>ControllerBasedStartupStrategy</code>, <code>LocalContainersStartupStrategy</code></td>
       <td><code>ControllerBasedStartupStrategy</code></td>
-      <td>The Startup strategy of KIE Server used to control the KIE containers that are deployed and the order in which they are deployed.</td>
+      <td>The startup strategy of KIE Server used to control the KIE containers that are deployed and the order in which they are deployed.</td>
     </tr>
     <tr>
       <td><code>org.kie.server.mgmt.api.disabled</code></td>
       <td><code>true</code>, <code>false</code></td>
       <td><code>false</code></td>
-      <td>When set to <code>true</code>, disables KIE Server management API.</td>
+      <td>When set to <code>true</code>, disables the KIE Server management API.</td>
     </tr>
     <tr>
       <td><code>org.kie.server.xstream.enabled.packages</code></td>
@@ -240,13 +242,13 @@ Some jBPM controller properties listed in the following table are marked as requ
       <td><code>org.kie.store.services.class</code></td>
       <td>String</td>
       <td><code>org.drools.persistence.jpa.KnowledgeStoreServiceImpl</code></td>
-      <td>Fully qualified name of the class that implements <code>KieStoreServices</code> that are responsible for bootstrapping KieSession instances.</td>
+      <td>Fully qualified name of the class that implements <code>KieStoreServices</code>, which is responsible for bootstrapping KieSession instances.</td>
     </tr>
     <tr>
       <td><code>org.kie.server.strict.id.format</code></td>
       <td><code>true</code>, <code>false</code></td>
       <td><code>false</code></td>
-      <td>While using JSON marshalling, if the property is set to <code>true</code>, it will always return a response in the proper JSON format. For example, if the original response contains only a single number, then the response is wrapped in a JSON format. For example, <strong>&#123;"value" : 1&#125;</strong>.</td>
+      <td>While using JSON marshalling, if the property is set to <code>true</code>, it will always return a response in the proper JSON format. For example, if the original response contains only a single number, then the response is wrapped in a JSON format, for example, <strong>&#123;"value" : 1&#125;</strong>.</td>
     </tr>
     <tr>
       <td><code>org.kie.server.json.customObjectDeserializerCNFEBehavior</code></td>
