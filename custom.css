@@ -29,27 +29,47 @@
  * Mintlify gives every table cell min-width: 150px and puts wide tables in a
  * horizontal scroll area with a hidden scrollbar, so multi-column tables
  * (e.g. the KIE Server system properties reference) look cut off at the
- * right edge. Drop the min-width floor so text columns can wrap within the
- * page width. break-word (unlike anywhere) does not shrink a column below
- * its longest unbreakable word, so short code chips like `false` never
- * split mid-word.
+ * right edge. Replace it with:
+ *
+ * - Everything (text and code chips) may wrap, breaking mid-token when a
+ *   column runs out of room (overflow-wrap: anywhere). The browser only
+ *   breaks when needed, so short content stays on one line.
+ * - Column floors keep narrow columns readable instead of letting a prose
+ *   column crush them: 11rem for the first column (identifiers), 8rem for
+ *   the rest. Floors, not unbreakable chips, are what protect short values
+ *   like `false` — a floored column never gets narrow enough to split
+ *   them. (Unbreakable chips instead push the table off the page whenever
+ *   a long chip lands in a middle column, e.g. `queue/KIE.SERVER.EXECUTOR`
+ *   on the executor properties table.)
+ * - The description/last column absorbs remaining width and wraps freely.
  */
 
 #content-area table td,
 #content-area table th {
-  min-width: 0 !important;
+  min-width: 8rem !important;
   white-space: normal;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
 }
 
-/* Mintlify breaks code chips mid-word inside tables, which lets columns
- * collapse below the width of short values like `false`. Treat code as
- * unbreakable so each column stays at least as wide as its longest chip. */
+#content-area table td:first-child,
+#content-area table th:first-child {
+  min-width: 11rem !important;
+}
+
 #content-area table td code,
 #content-area table th code {
+  white-space: normal !important;
   word-break: normal !important;
-  overflow-wrap: normal !important;
-  white-space: nowrap !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Mintlify wraps markdown tables in a scroll area whose content div is
+ * inline-styled min-width: fit-content, so the table lays out at its
+ * natural width (wider than the page) and the wrapping rules above never
+ * engage. Clamp the scroll content to the viewport width; a table whose
+ * minimum content truly cannot fit still overflows into the scroll area. */
+#content-area [aria-label="Scrollable table"] [data-component-part="scroll-area-content"] {
+  min-width: 100% !important;
 }
 
 .btn-links {
