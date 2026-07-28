@@ -18,6 +18,34 @@
  * (http...) render as the outlined variant.
  */
 
+/* Wrap table cells instead of overflowing.
+ *
+ * Mintlify gives every table cell min-width: 150px and puts wide tables in a
+ * horizontal scroll area with a hidden scrollbar, so multi-column tables
+ * (e.g. the KIE Server system properties reference) look cut off at the
+ * right edge. Drop the min-width floor so text columns can wrap within the
+ * page width. break-word (unlike anywhere) does not shrink a column below
+ * its longest unbreakable word, so short code chips like `false` never
+ * split mid-word.
+ */
+
+#content-area table td,
+#content-area table th {
+  min-width: 0 !important;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* Mintlify breaks code chips mid-word inside tables, which lets columns
+ * collapse below the width of short values like `false`. Treat code as
+ * unbreakable so each column stays at least as wide as its longest chip. */
+#content-area table td code,
+#content-area table th code {
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  white-space: nowrap !important;
+}
+
 .btn-links {
   display: flex;
   flex-wrap: wrap;
