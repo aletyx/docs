@@ -9,6 +9,8 @@ The WAR file is available in different packagings:
 - *webc* - WAR for ordinary Web containers (Servlet)
 - *ee10* - WAR for Jakarta EE containers like JBoss EAP or WildFly
 
+
+
 To install the KIE Execution Server and verify it is running, complete the following steps:
 
 1. Deploy the WAR file into your web container.
@@ -28,11 +30,11 @@ To install the KIE Execution Server and verify it is running, complete the follo
 
 ## Installation details for different containers
 
-{/* TODO: Review this */}
 ### Tomcat
 
 1. Download and unzip the Tomcat distribution. Let's call the root of the distribution `TOMCAT_HOME`.
 2. Download *kie-server-...-webc.war* and place it into `TOMCAT_HOME/webapps`.
+   You can find this file inside the "kie-server-distribution-...zip" bundle
 3. Configure user(s) and role(s). Make sure that the file `TOMCAT_HOME/conf/tomcat-users.xml` contains the following user name and role definition. You can choose a different user name and password, just make sure that the user has the role `kie-server`:
 
    ```xml User name and role definition for Tomcat
@@ -43,11 +45,12 @@ To install the KIE Execution Server and verify it is running, complete the follo
 4. Start the server by running `TOMCAT_HOME/bin/startup.[sh|bat]`. You can check out the Tomcat logs in `TOMCAT_HOME/logs` to see if the application deployed successfully. See the [KIE Server system properties](/kie-server/system-properties) table for the bootstrap switches that can be used to properly configure the instance. For instance:
 
    ```text
-   ./startup.sh -Dorg.kie.server.id=first-kie-server
+   ./startup.sh -Dorg.kie.server.id=first-kie-server \
                 -Dorg.kie.server.location=http://localhost:8080/kie-server/services/rest/server
    ```
 
-5. Verify the server is running. Go to `http://SERVER:PORT/CONTEXT/services/rest/server/` and type the specified user name and password. You should see a simple XML message with basic information about the server.
+5. Verify the server is running. 
+   Using the browser, navigate to to `http://localhost:8080/kie-server/services/rest/server/`, or the appropriate address for your deployment, and type the specified user name and password. You should see a simple XML message with basic information about the server.
 
 <Info>
 **Important**
@@ -56,7 +59,6 @@ You cannot leverage the JMS interface when running with Tomcat, or any other Web
 container. The Web container version of the WAR contains only the REST interface.
 </Info>
 
-{/* TODO: Review this */}
 ### WildFly
 
 1. Download and unzip the WildFly distribution. Let's call the root of the distribution `WILDFLY_HOME`.
