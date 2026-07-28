@@ -22,11 +22,13 @@ KIE Server Java client API requests require the following components:
 
 The KIE Server Java client API requires HTTP Basic authentication for the user role `kie-server`. To view configured user roles for your jBPM distribution, navigate to `~/$SERVER_HOME/standalone/configuration/application-roles.properties` and `~/application-users.properties`.
 
-To add a user with the `kie-server` role, navigate to `~/$SERVER_HOME/bin` and run the following command:
+To add a user with the `kie-server` role, navigate to `~/$SERVER_HOME` and run the following command:
 
 ```bash
-$ ./bin/jboss-cli.sh --commands="embed-server --std-out=echo,/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity(identity=<USERNAME>),/subsystem=elytron/filesystem-realm=ApplicationRealm:set-password(identity=<USERNAME>, clear={password='<PASSWORD>'}),/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity-attribute(identity=<USERNAME>, name=role, value=['kie-server'])"
+./bin/add-user.sh -a -u <USERNAME> -p <PASSWORD> -g kie-server
 ```
+
+The `-a` flag adds the user to the application realm (`ApplicationRealm`), and `-g` assigns its groups.
 
 For more information about user roles and jBPM installation options, see
 [Installing the KIE Server](/kie-server/installation).

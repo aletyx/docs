@@ -26,11 +26,13 @@ The jBPM controller REST API requires HTTP Basic authentication or token-based a
 
 To view configured user roles for your jBPM distribution, navigate to `~/$SERVER_HOME/standalone/configuration/application-roles.properties` and `~/application-users.properties`.
 
-To add a user with the `kie-server` role or the `rest-all` role or both, navigate to `~/$SERVER_HOME/bin` and run the following command with the role or roles specified:
+To add a user with the `kie-server` role or the `rest-all` role or both, navigate to `~/$SERVER_HOME` and run the following command with the role or roles specified:
 
 ```bash
-$ ./bin/jboss-cli.sh --commands="embed-server --std-out=echo,/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity(identity=<USERNAME>),/subsystem=elytron/filesystem-realm=ApplicationRealm:set-password(identity=<USERNAME>, clear={password='<PASSWORD>'}),/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity-attribute(identity=<USERNAME>, name=role, value=['kie-server','rest-all'])"
+./bin/add-user.sh -a -u <USERNAME> -p <PASSWORD> -g kie-server,rest-all
 ```
+
+The `-a` flag adds the user to the application realm (`ApplicationRealm`), and `-g` assigns its groups (comma-separated).
 
 To configure the `kie-server` or `rest-all` user with jBPM controller access, navigate to `~/$SERVER_HOME/standalone/configuration/standalone-full.xml`, uncomment the `org.kie.server` properties (if applicable), and add the controller user login credentials and controller location (if needed):
 

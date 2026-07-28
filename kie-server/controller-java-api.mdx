@@ -26,11 +26,13 @@ The jBPM controller Java client API requires HTTP Basic authentication for the f
 
 To view configured user roles for your jBPM distribution, navigate to `~/$SERVER_HOME/standalone/configuration/application-roles.properties` and `~/application-users.properties`.
 
-To add a user with the `kie-server` role or the `rest-all` role or both (assuming a Keystore is already set), navigate to `~/$SERVER_HOME/bin` and run the following command with the role or roles specified:
+To add a user with the `kie-server` role or the `rest-all` role or both (assuming a Keystore is already set), navigate to `~/$SERVER_HOME` and run the following command with the role or roles specified:
 
 ```bash
-$ ./bin/jboss-cli.sh --commands="embed-server --std-out=echo,/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity(identity=<USERNAME>),/subsystem=elytron/filesystem-realm=ApplicationRealm:set-password(identity=<USERNAME>, clear={password='<PASSWORD>'}),/subsystem=elytron/filesystem-realm=ApplicationRealm:add-identity-attribute(identity=<USERNAME>, name=role, value=['rest-all','kie-server'])"
+./bin/add-user.sh -a -u <USERNAME> -p <PASSWORD> -g rest-all,kie-server
 ```
+
+The `-a` flag adds the user to the application realm (`ApplicationRealm`), and `-g` assigns its groups (comma-separated).
 
 If the Keystore is not set, execute the following command to create a Keystore:
 
