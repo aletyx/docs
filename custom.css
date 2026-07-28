@@ -16,6 +16,12 @@
  *
  * Internal links (path hrefs) render as filled buttons; external links
  * (http...) render as the outlined variant.
+ *
+ * Spacing lives here, not in Tailwind utilities on the wrapping div:
+ * Mintlify rewrites MDX utility classes to a `mint-` prefix (my-8 ->
+ * mint-my-8) that its shipped stylesheets never define, so classes like
+ * my-8 / mt-2 / justify-center silently do nothing. Use the `centered`
+ * modifier class for a centered row.
  */
 
 /* Wrap table cells instead of overflowing.
@@ -50,9 +56,16 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+  margin: 2rem 0;
 }
 
-.btn-links p {
+.btn-links.centered {
+  justify-content: center;
+  margin: 0.5rem 0 0;
+}
+
+.btn-links p,
+.btn-links [data-as="p"] {
   margin: 0;
 }
 
@@ -79,11 +92,14 @@
   color: #1a1a1a !important;
 }
 
-/* Outlined variant: external links */
+/* Outlined variant: external links. The border must be !important to beat
+ * the base rule's `border-bottom: none !important` (needed to suppress
+ * Mintlify's link underline), which otherwise erases the bottom edge of
+ * the outline and makes the button look cut off. */
 .btn-links a[href^="http"] {
   background-color: transparent;
   color: #fc764c !important;
-  border: 1px solid #fc764c;
+  border: 1px solid #fc764c !important;
 }
 
 .btn-links a[href^="http"]:hover {
@@ -93,7 +109,7 @@
 
 .dark .btn-links a[href^="http"] {
   color: #fd9a78 !important;
-  border-color: #fd9a78;
+  border-color: #fd9a78 !important;
   background-color: transparent;
 }
 
