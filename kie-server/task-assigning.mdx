@@ -1,6 +1,6 @@
 ---
 title: "KIE Server Task Assigning"
-description: "Integrating OptaPlanner with jBPM to assign the human tasks produced by business processes to users as part of an optimized plan."
+description: "Configuring jBPM to assign the human tasks produced by business processes to users."
 source: "https://docs.jboss.org/jbpm/release/7.67.0.Final/jbpm-docs/html_single/#_ch.taskAssigning"
 ---
 
@@ -24,8 +24,6 @@ It is usual for a system that executes several process instances to have many hu
 ![BPMDefaultAssignment](/images/kie-server/KieServerTaskAssigning/BPMDefaultAssignment.png)
 
 *Default task list*
-
-***OptaPlanner integrates with jBPM to provide the ability to assign human tasks to users as part of an optimized plan.*** {/* TODO: Review this */}
 
 This is referred to as *task assigning integration*.
 
@@ -58,129 +56,6 @@ In the preceding example, the claimer of the task is the `wbadmin` user. After t
 
 Although this is the standard procedure for most BPMS products, it is not flexible enough for all use cases. For example, this procedure does not work well with scenarios where an optimal distribution of a huge set of tasks between users by given criteria is required.
 In these cases, users usually find a large list of tasks up-front but do not have the knowledge to claim and execute them in the best way.
-
-{/* TODO: Review this */}
-### OptaPlanner driven task assigning
-
-OptaPlanner and jBPM integration provides the ability to assign the human tasks produced by the process runtime engine between users according to an optimized plan. {/* TODO: Review this */}
-Instead of users having to claim the tasks, the tasks are assigned to them.
-
-The following image shows how the tasks are assigned when integration is enabled.
-
-![TasksAlreadyDistributed](/images/kie-server/KieServerTaskAssigning/TasksAlreadyDistributed.png)
-
-*Assignments produced by OptaPlanner* {/* TODO: Review this */}
-
-The following assignments are shown:
-
-- User katy is assigned to tasks #150 and #148
-- User john is assigned to tasks #151 and #149
-- Tasks #152, #153, #154, #155, #156 and #157 are left un-assigned (these tasks will be analysed later)
-
-Behind the scenes the following actions took place:
-
-1. All of the available tasks with the status "Ready" were consumed by OptaPlanner. {/* TODO: Review this */}
-2. The users john and katy were identified as belonging to the "PurchaseDepartment" users group.
-3. The "Review Purchase Order" tasks were identified as defined for the "PurchaseDepartment" group.
-4. An optimized plan was calculated and all of the tasks (including the "un-assigned" tasks) were assigned according to their configuration, for example group condition and OptaPlanner optimization rules. The resulting plan stated that: {/* TODO: Review this */}
-   - Tasks #150 and #148 must be assigned to katy
-   - Tasks #151 and #149 must be assigned to john
-5. OptaPlanner executed the correct process runtime actions to make these assignments happen. Note that the users were not required to execute the "claim" operation. Instead they can focus on completing their respective assigned work and leave the distribution and assignment work to OptaPlanner. {/* TODO: Review this */}
-
-This simple example shows the main concept behind integration:
-
-***"OptaPlanner analyses the available work, calculates an optimized plan, and produces the necessary assignments in the process runtime. Users then rely on that plan and focus on executing their assigned work".*** {/* TODO: Review this */}
-
-**Unassigned tasks**
-
-Usually, a running BPM creates many process instances and many human tasks.
-At the same time, users are working and completing these human tasks.
-This cycle is repeated over and over.
-
-OptaPlanner addresses this situation by re-calculating the optimized plan when new human tasks are created and/or completed and producing "new assignments" to reflect the new optimized plan. {/* TODO: Review this */}
-This is often achieved by combining different "Repeated Planning and Real Time Planning" techniques. For detailed information see the OptaPlanner documentation. {/* TODO: Review this */}
-
-Additionally it might be the case that a plan that was optimal at time N is no longer optimal at time N+1.
-For example, a higher priority task has arrived and must be performed as soon as possible.
-The direct impact of this situation is that the programmed assignments at time N might change at time N+1, which means that tasks are routinely re-assigned many times when the new optimized plans are calculated. One of OptaPlanner’s strengths is the ability to react to a changing context. {/* TODO: Review this */}
-
-**User impact**
-
-If not controlled, continuous task re-assignment might negatively impact the user’s experience because they might feel that tasks come in and out of their workload randomly.
-This situation is present in other types of optimization problems as well and is usually managed by combining different repeated and continuous planning techniques.
-For detailed information see the "Repeated Planning" section of the OptaPlanner documentation. {/* TODO: Review this */}
-
-A simple strategy is to introduce the concept of a planning window which is a defined subset of the available work that will not be changed or re-assigned even when new plans are calculated.
-Only this subset is available to users. The tasks in the planning window are called published tasks.
-
-The previous example contains a planning window with a size of two. This means that only two tasks from the optimized plan are assigned in the processes runtime for each user so that users have at most two tasks assigned to them and they must focus on those two tasks.
-As soon as they start completing these tasks OptaPlanner assigns them additional tasks according to the last optimized plan. {/* TODO: Review this */}
-However, internally OptaPlanner maintains information about the best assignments for all of the tasks and not only the published tasks. {/* TODO: Review this */}
-
-This is how the assignments are distributed in the preceding example:
-
-- User katy is assigned to tasks #150 and #148 which belong to the planning window
-- User john is assigned to tasks #151 and #149 which belong to the planning window
-- The un-assigned tasks are outside of the planning window which means they are assigned only internally by OptaPlanner. As long as these tasks remain unpublished they can be reassigned if necessary during the different optimized plans calculation. {/* TODO: Review this */}
-
-## Configuring the integration
-
-### Product version
-
-The current task assigning integration implementation is provided for the OptaPlanner, jBPM, and KIE Server 7.38.x+ series. {/* TODO: Review this */}
-
-<Note>
-KIE Server provides many installation alternatives, for example controller driven servers, standalone servers, high availability, etc.
-The purpose of this guide is to show you how to configure your KIE Server installation for the task assigning integration.
-</Note>
-
-For KIE Server and jBPM configuration information see their respective product documentation.
-
-The following procedure is recommended:
-
-1. Install the KIE Servers topology that you require.
-2. If you are using the jBPM schema generation scripts be sure to execute the following sql script corresponding to the target database management system:
-
-   jBPM installer → `/db/ddl-scripts/<dbms_vendor>/task_assigning_tables_<dbms_vendor>.sql`
-
-   For example, in the case of a db2 database you must execute the following script:
-
-   jBPM installer → `/db/ddl-scripts/db2/task_assigning_tables_db2.sql`
-
-   For more information related to these scripts see jBPM documentation.
-
-   Note: the reverse script in cases where the generated schema needs to be deleted can be found in the same location
-   and has the following name: `task_assigning_tables_drop_<dbms_vendor>.sql`
-
-3. Be sure the process runtime is executing well.
-4. Install a dedicated [Planning kie-server](#planning-kie-server) (see next topics).
-5. Complete the task assigning integration specific configuration parameters in all of the associated [Process Runtime kie-servers](#process-runtime-kie-server) and the [Planning kie-server](#planning-kie-server).
-
-### Simplified architecture
-
-The following simplified architecture identifies the key components and configuration parameters for the task assigning integration.
-
-![SimplifiedArchitecture](/images/kie-server/KieServerTaskAssigning/SimplifiedArchitecture.png)
-
-*Simplified architecture*
-
-#### Process Runtime kie-server
-
-This is the KIE Server instance where the business processes execute. In clustered and high-availability configurations, multiple instances can be used.
-
-<Note>
-The task assigning integration can manage multiple process runtime KIE Servers as long as they share the same database where the process instances, human tasks instances, and so forth are stored and have the same set of deployed containers.
-In topologies where a KIE Server controller is configured this usually happens when they belong to the same KIE Server template.
-Be sure these statements are true before running the task assigning integration.
-</Note>
-
-#### Planning kie-server
-
-This is the KIE Server instance where OptaPlanner will execute, for example where the optimized plans and so forth will be calculated, and where the [UserSystemService integration component](#usersystemservice-integration-component) will run. {/* TODO: Review this */}
-The task assigning integration requires a single dedicated KIE Server instance for this purpose.
-Be sure no other KIE Server extensions are enabled on this server.
-
-### Configuration parameters setup
 
 All of the configuration parameters that are defined in the next topics are defined through the Java system properties.
 In Wildfly and Red Hat Enterprise Application Server (EAP) installations, these parameters are usually configured in the `<system-properties>` section of the selected configuration file, for example:
@@ -261,159 +136,6 @@ The parameters tagged as "Required" must be set only in cases where the task ass
 | org.kie.server.taskAssigning.waitForImprovedSolutionDuration | Not Required | The default value is "PT0S" (no wait)<br/><br/>This value configures the time interval to improve a solution before the corresponding optimized plan is sent to the [Process Runtime kie-server](#process-runtime-kie-server).<br/><br/>Because this wait time is applied every time a new set of changes is processed it should usually be short, for example "PT0.500" (500 milliseconds). Use it in cases when early improvements are desired.<br/><br/>The accepted format is based on the ISO-8601 duration format PnDTnHnMn.nS with days considered to be exactly 24 hours. |
 | org.kie.server.taskAssigning.improveSolutionOnBackgroundDuration | Not Required | The default value is "PT1M" (one minute)<br/><br/>This value configures the time interval for doing a background optimization of the current solution after the corresponding optimized plan is sent to the [Process Runtime kie-server](#process-runtime-kie-server).<br/><br/>In situations where no changes in the processes are produced and a better solution is calculated during that period, the new optimized plan is automatically sent to the [Process Runtime kie-server](#process-runtime-kie-server).<br/><br/>The accepted format is based on the ISO-8601 duration format PnDTnHnMn.nS with days considered to be exactly 24 hours. |
 
-#### Solver configuration parameters
-
-As mentioned, the task assigning integration delegates the calculation of "which tasks must be assigned to whom" to OptaPlanner, which resolves this requirement by producing an optimized plan. {/* TODO: Review this */}
-This plan is calculated by using a Solver with a set of configured constraints. See OptaPlanner product documentation for more information. {/* TODO: Review this */}
-
-Two mechanisms are available for configuring OptaPlanner’s Solver specifics. {/* TODO: Review this */}
-
-Note: The parameter tagged as "Required" must have a value independently of the selected Solver configuration mechanism.
-
-#### Class path based solver configuration
-
-This mechanism implements the ability of configuring the Solver by using a class path resource.
-
-{/* TODO: Review this */}
-| Parameter | Requirement | Description |
-|---|---|---|
-| org.kie.server.taskAssigning.solver.configResource | Required | The default value is: "org/kie/server/services/taskassigning/solver/taskAssigningDefaultSolverConfig.xml"<br/><br/>This value configures the path to a class-path resource with the Solver configuration.<br/><br/>If the resource can’t be found or the configuration is wrong, a controlled error will be added to the [Planning kie-server](#planning-kie-server) error messages and the task assigning integration won’t be initialized. The KIE Server APIs can be used for querying these error messages and checking the status. |
-| org.kie.server.taskAssigning.solver.moveThreadCount | Not Required | The default value is AUTO.<br/><br/>This value configures the solver’s ability of using multithreaded incremental solving.<br/><br/>For more information see OptaPlanner documentation.<br/><br/>Note: when the container based solver configuration is used this value is not considered, the configuration provided in the KJAR is used instead. |
-| org.kie.server.taskAssigning.solver.moveThreadBufferSize | Not Required | No default value is set.<br/><br/>This value power tweaks the number of moves that are selected but won’t be foraged when multithreaded incremental solving is used. Setting it too low reduces performance, but setting it too high too. Unless you’re deeply familiar with the inner workings of multithreaded solving, don’t configure this parameter.<br/><br/>For more information see OptaPlanner documentation.<br/><br/>Note: when the container based solver configuration is used this value is not considered, the configuration provided in the KJAR is used instead. |
-| org.kie.server.taskAssigning.solver.threadFactoryClass | Not Required | No default value is set.<br/><br/>The threadFactoryClass allows you to plug in a custom ThreadFactory for environments where arbitrary thread creation should be avoided.<br/><br/>For more information see OptaPlanner documentation.<br/><br/>Note: when the container based solver configuration is used this value is not considered, the configuration provided in the KJAR is used instead. |
-
-<Note>
-The default solver configuration includes a set of constraints for implementing optimized task assigning, therefore it is not necessary to provide a different set of constraints in most cases.
-Use cases that require specific tunings, for example related to business data, can use this alternative. However it is recommended to use a Container based configuration for these purposes.
-</Note>
-
-#### Container based solver configuration
-
-This mechanism implements the ability to configure the Solver by using a container.
-Finally, given that the KIE Server architecture is based on containers, this is usually the recommended approach.
-However, in many of the use cases the default configuration is good enough and no container configuration is necessary, see [Default Constraints](#default-constraints).
-
-The following table shows the container-based configuration parameters:
-
-| Parameter | Requirement | Description |
-|---|---|---|
-| org.kie.server.taskAssigning.solver.container.id | Not Required | No default value is set.<br/><br/>This value configures the Identifier of the container to use.<br/><br/>When set the container based configuration will be activated and the following container related parameters are required. |
-| org.kie.server.taskAssigning.solver.container.groupId | Required if the container configuration is activated | No default value is set.<br/><br/>This value configures the Maven groupId of the artifact to use for creating the container when needed. |
-| org.kie.server.taskAssigning.solver.container.artifactId | Required if the container configuration is activated | No default value is set.<br/><br/>This value configures the Maven artifactId for the artifact to use for creating the container when needed. |
-| org.kie.server.taskAssigning.solver.container.version | Required if the container configuration is activated | No default value is set.<br/><br/>This value configures the Maven version for the artifact to use for creating the container when needed. |
-| org.kie.server.taskAssigning.solver.configResource | Required if the container configuration is activated | This value configures the path to the resource with the Solver configuration in the container class-path. |
-
-In case of errors, analogous to the "Class path based solver configuration" proper KIE Server error messages will be generated and the task assigning integration won’t be initialized.
-The KIE Server APIs can be used for querying these error messages and checking the status.
-
-#### UserSystemService integration component
-
-Calculating an optimized plan for assigning tasks to users often requires considering business related information.
-Common examples, included in the current task assigning integration version, are the usage of the groups, the skills that a given user has, or the affinities in certain topics, etc. See [Skills and Affinities](#skills-and-affinities).
-This business oriented information must be provided by each particular installation and is delegated to the UserSystemService integration component.
-It is up to the tasks assigning integrator to provide this component.
-
-UserSystemService API
-
-A user system service component must implement the following API.
-
-```java
-public interface UserSystemService {
-
-    /**
-     * Invoked by the task assigning integration as part of the initialization procedure and
-     * before any other method is invoked.
-     */
-    void start();
-
-    /**
-     * Invoked by the task assigning integration as part of the initialization procedure and
-     * after the start() method is invoked.
-     * @throws Exception if the test method failed.
-     */
-    void test() throws Exception;
-
-    /**
-     * @return the name of the UserSystemService implementation.
-     */
-    String getName();
-
-    /**
-     * @return the list of all users present in the external user system. This method is normally
-     * invoked each time the solver is initialized or when the users information is updated from
-     * the external user system.
-     */
-    List<User> findAllUsers();
-
-    /**
-     * Get the user information for a particular user.
-     * @param id user identifier for querying.
-     * @return the User corresponding to the given identifier, null if no user was found.
-     */
-    User findUser(String id);
-}
-```
-
-#### UserSystemService configuration
-
-Analogous to the Solver configuration, two mechanisms are available for configuring the UserSystemService and in both cases the standard Java SPI (Service Provider Interface) and ServiceLoader mechanisms are used for its instantiation.
-
-#### Class path based UserSystemService configuration
-
-Use the following resource for configuring the different UserSystemService provider implementations:
-
-META-INF/services/org.kie.server.services.taskassigning.user.system.api.UserSystemService
-
-And finally add the following configuration parameters for configuring the selected implementation:
-
-| Parameter | Requirement | Description |
-|---|---|---|
-| org.kie.server.taskAssigning.userSystem.name | Required | No default value is set.<br/><br/>This value configures the name of the UserSystemService provider instance to use.<br/><br/>See: UserSystemService.getName()<br/><br/>All of the configured providers are loaded from the application class-path and the one that matches with the configured name will be used.<br/><br/>A simple user system service implementation is provided, see [SimpleUserSystemService](#simpleusersystemservice). |
-
-#### Container based UserSystemService configuration
-
-Use the following resource in your Kie Module (KJAR) to configure the different UserSystemService provider implementations:
-
-project_home/src/main/resources/META-INF/services/org.kie.server.services.taskassigning.user.system.api.UserSystemService
-
-And finally add the following configuration parameters for configuring the selected implementation:
-
-| Parameter | Requirement | Description |
-|---|---|---|
-| org.kie.server.taskAssigning.userSystem.name | Required | No default value is set.<br/><br/>This value configures the name of the UserSystemService provider instance to use.<br/><br/>See: UserSystemService.getName() |
-| org.kie.server.taskAssigning.userSystem.container.id | Not Required | No default value is set.<br/><br/>This value configures the Identifier of the container to use.<br/><br/>When set the container based configuration will be activated and all of the potential UserSystemService providers that might be defined in the container class-path will be considered for selection, additionally to the ones in the application class-path.<br/><br/>The following parameters will be required. |
-| org.kie.server.taskAssigning.userSystem.container.groupId | Required if the container configuration is activated. | No default value is set.<br/><br/>This value configures the Maven groupId of the artifact to use for creating the container when needed. |
-| org.kie.server.taskAssigning.userSystem.container.artifactId | Required if the container configuration is activated. | No default value is set.<br/><br/>This value configures the Maven artifactId for the artifact to use for creating the container when needed. |
-| org.kie.server.taskAssigning.userSystem.container.version | Required if the container configuration is activated. | No default value is set.<br/><br/>This value configures the Maven version for the artifact to use for creating the container when needed. |
-
-In case of errors, for example if the configured provider name was not found, the container couldn’t be instantiated, etc., a controlled error will be added to the [Planning kie-server](#planning-kie-server) error messages and the task assigning integration won’t be initialized.
-The KIE Server APIs can be used for querying these error messages and checking the status.
-
-#### SimpleUserSystemService
-
-The SimpleUserSystemService is a basic UserSystemService implementation that loads the user definitions, skills and affinities from a Java properties file in the format used by the Wildfly/EAP application servers.
-This implementation is always present in the [Planning kie-server](#planning-kie-server) and is intended mainly for development and testing purposes.
-
-The following example shows a user definitions file:
-
-```java
-katy=analyst,HR
-john=IT,Developer
-```
-
-In this example, two users are defined:
-
-- User katy that belongs to the groups analyst and HR
-- User john that belongs to the groups IT and Developer
-
-The following parameters can be used to configure it:
-
-| Parameter | Requirement | Description |
-|---|---|---|
-| org.kie.server.taskAssigning.userSystem.name | Required | Must be the value SimpleUserSystemService |
-| org.kie.server.services.taskassigning.user.system.simple.users | Required | This value configures a [Planning kie-server](#planning-kie-server) web application accessible path with the user definitions file.<br/><br/>For example, in Wildfly/EAP installations it can be like this.<br/><br/>`${jboss.server.config.dir}/roles.properties`<br/><br/>Note: the configured file must have the same values as the roles.properties files of the [Process Runtime kie-servers](#process-runtime-kie-server) in the target topology. |
-| org.kie.server.services.taskassigning.user.system.simple.skills | Not Required | This value configures a [Planning kie-server](#planning-kie-server) web application accessible path with the users skills definitions if desired, see [Skills and Affinities](#skills-and-affinities).<br/><br/>For example, in Wildfly/EAP installations it can be like this.<br/><br/>`${jboss.server.config.dir}/skills.properties`<br/><br/>Note: the format is analogous to the user definitions file.<br/><br/>katy=skill1,skill2<br/>john=skill1,skill2 |
-| org.kie.server.services.taskassigning.user.system.simple.affinities | Not Required | This value configures a [Planning kie-server](#planning-kie-server) web application accessible path with the users affinities definition if desired, [Skills and Affinities](#skills-and-affinities).<br/><br/>For example, in Wildfly/EAP installations it can be like this.<br/><br/>`${jboss.server.config.dir}/affinities.properties`<br/><br/>Note: the format is analogous to the user definitions file.<br/><br/>katy=affinity1,affinity4<br/>In this example john has no affinities. |
 
 #### Planning kie-server Wildfly/EAP configuration example
 
@@ -938,27 +660,11 @@ The following image shows the ResolveDispute task configuration, which establish
 
 ![ResolveDisputeTaskConfiguration](/images/kie-server/KieServerTaskAssigning/ResolveDisputeTaskConfiguration.png)
 
-*Resolve dispute task configuration*
-
-With this configuration, OptaPlanner assigns this task to users that meet the following criteria: {/* TODO: Review this */}
-
-1. Are in the user group CreditAnalyst
-2. Have all of the skills configured in the task input parameter skills
-
 #### Notify customer task configuration
 
 The following image shows the NotifyCustomer task configuration, which establishes that the task input parameter skills is assigned with the value of the process variable language.
 
 ![NotifyCustomerTaskConfiguration](/images/kie-server/KieServerTaskAssigning/NotifyCustomerTaskConfiguration.png)
-
-*Notify customer task configuration*
-
-With this configuration OptaPlanner assigns this task to users that meet the following criteria: {/* TODO: Review this */}
-
-1. Are in the group ClientRelations
-2. Have all of the skills configured in the task input parameter skills
-3. Note that in this case the language selection is optional since the form field is not marked with "*" [see the process start form](#process-start), meaning that when no language is selected the task won’t have any configured skills.
-   This implies that in such cases whatever users that are in group ClientRelations can be assigned to the task.
 
 #### Process execution (example users)
 
@@ -1001,10 +707,6 @@ With the preceding configurations the following execution scenarios are expected
 *Resolve dispute task for process instance #1*
 
 The ResolveDispute task is assigned to the user maciek since it requires VISA skills.
-
-<Note>
-In real environments there might be many users with this skill. In this case OptaPlanner assigns the newly created task considering the optimized plan, which means that depending on the workload a different user could have been assigned. {/* TODO: Review this */}
-</Note>
 
 3) NotifyCustomer task
 
@@ -1079,7 +781,7 @@ For creating a custom user system service implementation follow these steps:
 {/* TODO: Review this */}
 ```xml
 <dependency>
-  <!-- Kie Server, OptaPlanner, or any other product dependencies must use provided scope -->
+  <!-- Kie Server and other product dependencies must use provided scope -->
   <groupId>org.kie.server</groupId>
     <artifactId>kie-server-services-task-assigning-user-system-api</artifactId>
     <version>configure the proper version number aligned with the target kie-server</version>
