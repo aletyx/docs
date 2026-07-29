@@ -30,7 +30,7 @@ To install the KIE Execution Server and verify it is running, complete the follo
 
 ## Installation details for different containers
 
-### Tomcat
+### Tomcat {{AX_TOMCAT_VERSION}}
 
 1. Download and unzip the Tomcat distribution. Let's call the root of the distribution `TOMCAT_HOME`.
 2. Download *{{AX_TOMCAT_WEBC_FILE}}* and place it into `TOMCAT_HOME/webapps`.
@@ -59,7 +59,7 @@ You cannot leverage the JMS interface when running with Tomcat, or any other Web
 container. The Web container version of the WAR contains only the REST interface.
 </Info>
 
-### WildFly
+### WildFly {{AX_WILDFLY_VERSION}}
 
 1. Download and unzip the WildFly distribution. Let's call the root of the distribution `WILDFLY_HOME`.
 2. Download *kie-server-${VERSION}-ee10.war* and place it into `WILDFLY_HOME/standalone/deployments`. 
