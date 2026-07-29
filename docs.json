@@ -19,6 +19,13 @@
       "twitter:card": "summary_large_image"
     }
   },
+
+  "variables": {
+      "AX_DIST_VERSION": "10.0.0",
+      "AX_TOMCAT_WEBC_FILE": "kie-server-10.0.0-aletyx-ks-rc.1-webc.war",
+      "AX_KIE_SERVER_BUNDLE_FILE": "kie-server-distribution-10.0.0-aletyx-ks-rc.1.zip"
+  },
+
   "contextual": {
     "options": [
       "copy",
