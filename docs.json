@@ -25,8 +25,8 @@
       "AX_TOMCAT_VERSION": "11.0.24",
       "AX_WILDFLY_VERSION": "41.0.0",
       "AX_TOMCAT_WEBC_FILE": "kie-server-10.0.0-aletyx-ks-rc.1-webc.war",
-      "AX_KIE_SERVER_BUNDLE_FILE": "kie-server-distribution-10.0.0-aletyx-ks-rc.1.zip"
-  
+      "AX_KIE_SERVER_BUNDLE_FILE": "kie-server-distribution-10.0.0-aletyx-ks-rc.1.zip",
+      "AX_KIE_SERVER_MAVEN_VERSION": "7.74.1.Final"
   },
 
   "contextual": {
