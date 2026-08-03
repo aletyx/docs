@@ -1,5 +1,0 @@
-- Add a brief FAQ section in the end.
-- Add a TL;DR / key-takeaways block up top; 
-- Review and prefer explicit answer sentences ("answer-first" phrasing); 
-- Add at least one concrete example or mini scenario; 
-- Review for Search Quality (E-E-A-T signals)
