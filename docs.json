@@ -110,6 +110,16 @@
             ]
           },
           {
+            "group": "AI Assistant",
+            "pages": [
+              "ai-assistant/overview",
+              "ai-assistant/setup",
+              "guides/getting-started/ai-assistant",
+              "ai-assistant/prompts",
+              "ai-assistant/testing"
+            ]
+          },
+          {
             "group": "Core Concepts",
             "pages": [
               "core-concepts",
@@ -246,16 +256,6 @@
                 ]
               },
               "guides/best-practices"
-            ]
-          },
-          {
-            "group": "AI Assistant",
-            "pages": [
-              "ai-assistant/overview",
-              "ai-assistant/setup",
-              "guides/getting-started/ai-assistant",
-              "ai-assistant/prompts",
-              "ai-assistant/testing"
             ]
           },
           {
