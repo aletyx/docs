@@ -136,3 +136,41 @@
 .dark .btn-links a[href^="http"]:hover {
   background-color: rgba(253, 154, 120, 0.1);
 }
+
+/* Closing CTA panel (home page). A raw div so it can wrap markdown button
+ * links; styled here rather than with Tailwind utilities for the same
+ * mint- prefix reason as .btn-links. */
+.cta-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  margin: 4rem 0;
+  padding: 3rem 1.5rem;
+  border-radius: 1rem;
+  background-color: rgba(252, 118, 76, 0.05);
+  border: 1px solid rgba(252, 118, 76, 0.15);
+}
+
+.cta-box h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.cta-box p,
+.cta-box [data-as="p"] {
+  margin: 0;
+  max-width: 36rem;
+  color: #4b5563;
+}
+
+.dark .cta-box {
+  background-color: rgba(253, 154, 120, 0.06);
+  border-color: rgba(253, 154, 120, 0.15);
+}
+
+.dark .cta-box p,
+.dark .cta-box [data-as="p"] {
+  color: #d1d5db;
+}
