@@ -15,11 +15,52 @@ or development tools required.
 
 Get up and running in less than 5 minutes:
 
-* Open the Aletyx Playground in your browser
-* Create a new project or use a starter template
-* Model your first decision or process
-* Test with sample data
-* Export or deploy your solution
+<Steps>
+  <Step title="Open the Aletyx Playground">
+    Go to [playground.aletyx.ai](https://playground.aletyx.ai) in your browser —
+    there is nothing to install and no setup required.
+  </Step>
+  <Step title="Explore a sample model">
+    From the welcome screen, click **Try Sample** under the Decision section to
+    open the Loan Pre-qualification DMN model — a complete, working decision you
+    can inspect and change.
+  </Step>
+  <Step title="Model your first decision">
+    Click **New Decision** to start from a blank canvas, drag inputs and decisions
+    onto the diagram, and capture the logic in decision tables. The
+    [DMN tutorial](/components/playground/dmn-tutorial) walks through building a
+    vacation-days model step by step.
+  </Step>
+  <Step title="Test with sample data">
+    Click **Run** in the top-right corner. A form appears where you enter sample
+    inputs, and the results update in real time as you edit the model — no
+    compilation or deployment needed.
+  </Step>
+  <Step title="Save and share your work">
+    [Connect the Playground to Git](/components/playground/dmn-tutorial#connecting-to-git)
+    to save and version your models, or download the `.dmn` and `.bpmn` files to
+    hand off to your development team.
+  </Step>
+</Steps>
+
+{/*
+## DMN or BPMN? Picking the right notation
+
+As a rule of thumb: model the **decision** in DMN, and model the **workflow around
+it** in BPMN.
+
+* Use [DMN](/faq/concepts/what-is-dmn) when the question is *"what should the
+  answer be?"* — eligibility, pricing, risk ratings, discounts. The logic lives in
+  [decision tables](/faq/concepts/decision-tables) that read like spreadsheets.
+* Use [BPMN](/faq/concepts/what-is-bpmn) when the question is *"what happens, in
+  what order, and by whom?"* — approvals, hand-offs between people and systems,
+  escalations, and timeouts.
+
+The two work together: a BPMN process typically invokes DMN decisions at its
+decision points. For a deeper comparison, including where the DRL rule language
+fits in, see
+[What is the difference between DMN, DRL, and BPMN?](/faq/concepts/dmn-drl-bpmn)
+*/}
 
 ## Visual Decision Modeling with DMN
 
@@ -46,6 +87,14 @@ Get up and running in less than 5 minutes:
   </Frame>
 </div>
 
+### Test decisions as you model
+
+DMN models are executable as written, and the Playground includes a built-in DMN
+runner. Click **Run**, fill in a form with sample inputs — an applicant's credit
+score, say — and watch the outputs update in real time as you edit decision-table
+cells. It's the fastest way to validate your logic against real business examples
+before anything is deployed. See it in action in the
+[tutorial's testing walkthrough](/components/playground/dmn-tutorial#interacting-with-your-decision-model).
 
 ## Process Automation with BPMN
 
