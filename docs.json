@@ -88,6 +88,7 @@
               "quickstart",
               "quickstart/decision-analysts",
               "quickstart/tech-leads",
+              "guides/getting-started/ai-assistant",
               {
                 "group": "Playground Tutorials",
                 "pages": [
@@ -114,7 +115,6 @@
             "pages": [
               "ai-assistant/overview",
               "ai-assistant/setup",
-              "guides/getting-started/ai-assistant",
               "ai-assistant/prompts",
               "ai-assistant/testing"
             ]
