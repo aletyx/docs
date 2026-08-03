@@ -137,6 +137,23 @@
   background-color: rgba(253, 154, 120, 0.1);
 }
 
+/* Two-column text-beside-media section. Styled here rather than with
+ * Tailwind grid utilities for the same mint- prefix reason as .btn-links.
+ * Stacks to a single column on narrow screens. */
+.split-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+  margin: 2rem 0;
+}
+
+@media (min-width: 768px) {
+  .split-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Closing CTA panel (home page). A raw div so it can wrap markdown button
  * links; styled here rather than with Tailwind utilities for the same
  * mint- prefix reason as .btn-links. */
