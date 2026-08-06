@@ -12,20 +12,40 @@ To install the KIE Execution Server and verify it is running, complete the follo
 4. When prompted for user name/password, type in the user name and password that you created.
 5. Once authenticated, you will see an XML response in the form of KIE Server status, similar to this:
 
-   ```xml Sample handshaking server response
-   <response type="SUCCESS" msg="KIE Server info">
-     <kie-server-info>
-       <version>7.67.2-SNAPSHOT</version>
-     </kie-server-info>
-   </response>
-   ```
+```xml Sample handshaking server response
+<response type="SUCCESS" msg="Kie Server info">
+    <kie-server-info>
+        <capabilities>KieServer</capabilities>
+        <capabilities>BRM</capabilities>
+        <capabilities>BPM</capabilities>
+        <capabilities>CaseMgmt</capabilities>
+        <capabilities>BPM-UI</capabilities>
+        <capabilities>Swagger</capabilities>
+        <location>http://localhost:8080/kie-server/services/rest/server</location>
+        <messages>
+            <content>Server KieServerInfo{serverId='first-kie-server',
+                version='10.1.2-aletyx-ks-005', name='first-kie-server',
+                location='http://localhost:8080/kie-server/services/rest/server',
+                capabilities=[KieServer, BRM, BPM, CaseMgmt, BPM-UI, Swagger]', messages=null',
+                mode=DEVELOPMENT}started successfully at Thu Aug 06 16:01:49 CEST 2026</content>
+            <severity>INFO</severity>
+            <timestamp>2026-08-06T16:01:49.722+02:00</timestamp>
+        </messages>
+        <mode>DEVELOPMENT</mode>
+        <name>first-kie-server</name>
+        <id>first-kie-server</id>
+        <version>10.1.2-aletyx-ks-005</version>
+    </kie-server-info>
+</response>
+```
 
 ## Application Server Deployment
 
 ### WildFly {{AX_WILDFLY_VERSION}}
 
 1. Download and unzip your WildFly distribution file from the [project website](https://www.wildfly.org/) . Let's call the root of the distribution `WILDFLY_HOME`.
-2. Download the kie-server war file ({{AX_KIE_SERVER_EE10_FILE}}) from https://my.aletyx.ai/maven. 
+2. Download the kie-server war file ({{AX_KIE_SERVER_EE10_FILE}}).
+   From https://my.aletyx.ai/maven, download your .war file. 
 
    Find the file under *org/kie/server/kie-server/{{AX_KIE_SERVER_RELEASE}}* 
    
@@ -43,10 +63,10 @@ To install the KIE Execution Server and verify it is running, complete the follo
 5. Start the server by running `WILDFLY_HOME/bin/standalone.[sh|bat] -c standalone-full.xml <bootstrap_switches>`. You can check out the standard output or WildFly logs in `WILDFLY_HOME/standalone/logs` to see if the application deployed successfully. See the [KIE Server system properties](/kie-server/system-properties) table for the bootstrap switches that can be used to properly configure the instance. For instance:
 
    ```text
-   ./standalone.sh  --server-config=standalone-full.xml
-                    -Djboss.socket.binding.port-offset=150
-                    -Dorg.kie.server.id=first-kie-server
-                    -Dorg.kie.server.location=http://localhost:8230/kie-server/services/rest/server
+   ./standalone.sh   -b 0.0.0.0 \
+                     --server-config=standalone-full.xml \
+                     --Dorg.kie.server.id=first-kie-server \
+                     --Dorg.kie.server.location=http://localhost:8230/kie-server/services/rest/server
    ```
 
 6. Verify the server is running. Go to `http://localhost:8080/kie-server/services/rest/server/` and type the specified user name and password. You should see a simple XML message with basic information about the server.
