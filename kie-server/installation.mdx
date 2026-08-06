@@ -25,7 +25,10 @@ To install the KIE Execution Server and verify it is running, complete the follo
 ### WildFly {{AX_WILDFLY_VERSION}}
 
 1. Download and unzip your WildFly distribution file from the [project website](https://www.wildfly.org/) . Let's call the root of the distribution `WILDFLY_HOME`.
-2. Download the kie-server war file ({{AX_KIE_SERVER_EE10_FILE}}) from https://my.aletyx.ai/maven. Find the file under *org/kie/server/kie-server/{{AX_KIE_SERVER_RELEASE}}* 
+2. Download the kie-server war file ({{AX_KIE_SERVER_EE10_FILE}}) from https://my.aletyx.ai/maven. 
+
+   Find the file under *org/kie/server/kie-server/{{AX_KIE_SERVER_RELEASE}}* 
+   
    You can rename the file to simply "kie-server.war" to set "kie-server" as context path, or map your prefered context path in wildfly configuration.
    ![Maven WAR](/images/kie-server/Installation/maven_war.png)
 
