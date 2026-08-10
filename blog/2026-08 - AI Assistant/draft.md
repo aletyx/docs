@@ -138,7 +138,7 @@ The future of AI isn't just intelligent. It's accountable — including the AI y
 ## Frequently asked questions
 
 **Do I need to know DMN or FEEL to use the AI Assistant?**
-No. You describe what you want in business language — attach a policy document, or type the rule change in the same words your policy uses — and the assistant drafts the model elements for you. The result is standard DMN you can read on the diagram, so understanding grows as you go, but it isn't a prerequisite.
+No. You describe what you want in business language. Attach a policy document, or type the rule change in the same words your policy uses, and the assistant drafts the model elements for you. The result is standard DMN you can read on the diagram, so understanding grows as you go, but it isn't a prerequisite.
 
 **Does the assistant change my model on its own?**
 No. The assistant only proposes changes. Every suggestion appears in the Changes panel with its old and new values, and nothing is applied until you accept it — per change, per group, or all at once. Reverting a change discards it and restores the previous value.
@@ -147,10 +147,10 @@ No. The assistant only proposes changes. Every suggestion appears in the Changes
 PDFs, spreadsheets, CSVs, and images — policy documents, decision tables, rate sheets. Individual attachments are limited to 2 MB (the specification PDF in this post is well under that).
 
 **How do the generated tests keep protecting me after this session?**
-When you pin a correct result in the Run panel, it becomes an expected value: every future run of the model is checked against all pinned cases, and the pass badge tells you instantly if a change broke an established scenario. Ask the assistant for new scenarios — including edge cases near your thresholds — whenever the policy evolves.
+When you pin a correct result in the Run panel, it becomes an expected value: every future run of the model is checked against all pinned cases, and the pass badge tells you instantly if a change broke an established scenario.
 
 **Is this the same as letting an AI make lending decisions?**
-No — it's closer to the opposite. The AI helps you *author* the decision model; the model, not the AI, evaluates every application, producing identical outputs for identical inputs with a stated reason. That separation — AI for the ambiguity, predictable models for the accountable decision — is what makes the approach defensible to auditors and regulators.
+No, it's closer to the opposite. The AI helps you *author* the decision model; the model, not the AI, evaluates every application, producing identical outputs for identical inputs with a stated reason. That separation: AI for the ambiguity, predictable models for the accountable decision, is what makes the approach defensible to auditors and regulators.
 
 **What do I need to try this myself?**
 A browser and about twenty minutes. The [Aletyx Playground](https://playground.aletyx.ai) is free; the AI Assistant has a 14-day free trial — the [setup guide](https://docs.aletyx.ai/ai-assistant/setup) walks you from zero to your first conversation with the assistant.
