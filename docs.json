@@ -97,6 +97,7 @@
                 "group": "Environment Setup",
                 "pages": [
                   "getting-started/environment-setup",
+                  "getting-started/credentials",
                   "getting-started/java-setup",
                   "getting-started/maven",
                   "getting-started/container-tools",
