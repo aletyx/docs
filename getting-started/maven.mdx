@@ -30,6 +30,15 @@ If you don't have subscription credentials, reach out to us [to get access](http
 
 ## Setting Up Your Maven Settings File
 
+<Tip>
+**You can skip the manual steps below.**
+
+My Aletyx generates this file for you, with your token already filled in:
+**[my.aletyx.ai](https://my.aletyx.ai) → Maven Repository → Maven Instructions → Download settings.xml**.
+Follow the steps below if you would rather configure it by hand, or need to merge it into an
+existing `settings.xml`.
+</Tip>
+
 ### 1. Locate or Create Your Settings File
 
 First, check if you already have a user-level `settings.xml` file:
@@ -123,9 +132,28 @@ Edit your `settings.xml` file with the following configuration:
 
 ### 3. Token Format
 
-Your authentication token is provided as part of your Aletyx subscription. If you don't have your token:
+Your authentication token is provided as part of your Aletyx subscription, so there is
+nothing for you to generate. To find it:
+
+<Steps>
+  <Step title="Sign in to My Aletyx">
+    Go to [my.aletyx.ai](https://my.aletyx.ai) and sign in.
+  </Step>
+  <Step title="Copy your Repository Access Token">
+    It is shown on the **Profile** page. Click **Copy**.
+  </Step>
+</Steps>
 
 The token format will be similar to: `email@domain.com|generatedTokenString`
+
+<Note>
+**This is not an AI Assistant API key.**
+
+Your Repository Access Token comes with your subscription tier and covers both the Maven
+repository and the Container Registry. The Aletyx AI Assistant is a separate product with
+its own API keys. You do **not** need to enable the AI Assistant or start its free trial
+to use the Maven repository.
+</Note>
 
 ## Verifying Your Configuration
 
