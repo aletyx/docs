@@ -18,6 +18,7 @@ docs-backup/
 docs-local/
 /prompts/
 blog/
+drafts
 
 # Local-only files and directories (e.g. test.local/)
 *.local

@@ -1,0 +1,172 @@
+---
+title: "KIE Server Project Modernization"
+description: "Move an existing jBPM/KIE Server 7.x project to the Aletyx Enterprise Build of KIE Server 10.x on a modern Java stack, without changing your processes, rules, or forms."
+---
+
+This guide describes how to move an existing jBPM/KIE Server (7.x) project to
+the Aletyx Enterprise Build of KIE Server (10.x) and modern Java stacks.
+The short version: **your project does not change**.
+The same BPMN processes, business rules, decision tables, forms, and data objects build and run unmodified.
+What you migrate is the *infrastructure* around them, and the only edit the project itself needs is the version tags in `pom.xml`.
+
+The `Mortgage_Process` project in the [samples repository](https://github.com/aletyx/samples-and-demos/tree/main/Mortgage_Process) demonstrates how a project can be modernized to a current Java stack: it is a copy of the classic kie-server example, except for the KIE artifact versions in its pom.
+
+## What changes, and what doesn't
+
+| | v7 (community) | v10 (Aletyx) |
+|---|---|---|
+| KIE artifacts | `7.74.1.Final` | `10.1.2-aletyx-ks-005` |
+| JDK | 8 / 11 | 17+ |
+| Application server | WildFly 14–26 (Jakarta EE 8, `javax.*`) | WildFly 35 (Jakarta EE 10, `jakarta.*`) |
+| Maven repository | Maven Central | Aletyx Maven |
+
+**Unchanged:**
+
+- All project assets: `.bpmn` processes, `.rdrl`/`.drl` rules, `.gdst`
+  decision tables, `.frm` forms, Java data objects, `kmodule.xml`,
+  deployment descriptors.
+- The kjar packaging model: same `<packaging>kjar</packaging>`, same GAV,
+  same `mvn install` then deploy-by-GAV workflow.
+- The KIE Server REST API: same endpoints, same payloads, same
+  authentication model. Every `curl` that worked against v7 works against
+  v10 verbatim (only the port differs if you run them side by side).
+- Process behavior at runtime: same execution paths, same task lifecycle.
+
+## Migration steps
+
+### 1. Set the KIE versions in `pom.xml`
+
+Change the KIE artifacts from the community version to the Aletyx
+version. Nothing else in the pom needs to change:
+
+```xml
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kie-api</artifactId>
+  <version>10.1.2-aletyx-ks-005</version>   <!-- was 7.74.1.Final -->
+  <scope>provided</scope>
+</dependency>
+<dependency>
+  <groupId>org.kie</groupId>
+  <artifactId>kie-internal</artifactId>
+  <version>10.1.2-aletyx-ks-005</version>   <!-- was 7.74.1.Final -->
+  <scope>provided</scope>
+</dependency>
+...
+<plugin>
+  <groupId>org.kie</groupId>
+  <artifactId>kie-maven-plugin</artifactId>
+  <version>10.1.2-aletyx-ks-005</version>   <!-- was 7.74.1.Final -->
+  <extensions>true</extensions>
+</plugin>
+```
+
+### 2. Rebuild
+
+Build with JDK 17+ and a Maven `settings.xml` that adds the Aletyx
+repository. Copy your `settings.xml` containing your access token from
+[my.aletyx.ai/maven](https://my.aletyx.ai/maven), then build your project:
+
+```bash
+mvn -s settings.xml clean install
+```
+
+<Warning>
+Make sure `settings.xml` is listed in `.gitignore` so your access token stays
+out of version control.
+</Warning>
+
+The Aletyx `kie-maven-plugin` compiles and validates exactly the same assets the v7
+plugin did: a successful `KieModule successfully built!` means your rules,
+decision tables, and processes are compatible. In the Mortgage_Process
+migration there were zero source changes and zero build errors.
+
+### 3. Redeploy
+
+The new KIE Server deploys kjars the same way classic did: by Maven GAV, over the
+same REST API. Point the same calls at the new server:
+
+```bash
+KIE=http://localhost:8080/kie-server/services/rest/server
+
+curl -u admin:admin123! -X PUT "$KIE/containers/mortgage-process_1.0.0-SNAPSHOT" \
+  -H 'Content-Type: application/json' -d '{
+    "container-id": "mortgage-process_1.0.0-SNAPSHOT",
+    "release-id": {
+      "group-id": "mortgage-process",
+      "artifact-id": "mortgage-process",
+      "version": "1.0.0-SNAPSHOT"
+    }
+  }'
+```
+
+The server resolves the kjar from the local Maven repository, exactly as
+before. Container ids, release ids, and the deployment lifecycle
+(`STARTED`/`DISPOSED`, dispose-and-recreate to pick up SNAPSHOT updates) are
+unchanged.
+
+### 4. Rerun
+
+Start processes, query instances, and work with tasks using the same REST
+calls as v7:
+
+```bash
+# start a process
+curl -u admin:admin123! -X POST \
+  "$KIE/containers/mortgage-process_1.0.0-SNAPSHOT/processes/Mortgage_Process.MortgageApprovalProcess/instances" \
+  -H 'Content-Type: application/json' -d @application.json
+
+# list active instances
+curl -u admin:admin123! "$KIE/queries/processes/instances?status=1"
+```
+
+Against both servers the sample process takes the identical path: Start, then Validation
+rules, then Mortgage Calculation rules, then waiting on the Qualify human task.
+
+## Why this modernizes your infrastructure
+
+Moving to the Aletyx v10 KIE Server is an infrastructure upgrade, not an
+application rewrite:
+
+- **Supported JDK**: off JDK 8/11 (the 7.x kjar toolchain breaks on JDK 21
+  because it references APIs removed from the platform) and onto a current
+  LTS release, JDK 17 or 21.
+- **Supported application server**: off outdated WildFly and Jakarta EE and onto new
+  WildFly 35+ / Jakarta EE 10 (`jakarta.*` namespace), which the
+  `-ee10` WAR is built for. Deployment is a plain WAR drop into
+  `standalone/deployments/` on a `standalone-full` profile.
+- **Maintained KIE runtime**: the Aletyx distribution carries the fixes and
+  platform compatibility work that stopped with community 7.x, while keeping
+  the 7.x REST API and kjar contract intact, which is what makes it a
+  drop-in replacement.
+
+## Running v7 and v10 side by side
+
+You don't have to cut over in one step. The
+[samples repository](https://github.com/aletyx/samples-and-demos/tree/main/Mortgage_Process)
+runs both servers on the same machine during migration.
+
+Each server has its own distinct `org.kie.server.id`
+(`demo-kie-server` / `demo-kie-server-v10`), so they register and operate
+independently. This lets you deploy the migrated kjar to v10, run the same
+verification against both, and compare behavior before decommissioning v7.
+
+<Warning>
+One practical caveat while both are alive: if the v7 and v10 builds share a
+GAV *and* a local Maven repository (as the sample does with
+`mortgage-process:1.0.0-SNAPSHOT` in `~/.m2`), whichever was built last wins
+resolution for both servers. Rebuild with the matching stack before
+recreating a container on either server, or, cleaner, bump the migrated
+project to a new version so the two artifacts coexist.
+</Warning>
+
+## Migration checklist
+
+1. Copy (or branch) the v7 project.
+2. In `pom.xml`, set `kie-api`, `kie-internal`, and `kie-maven-plugin` to the
+   Aletyx version (`10.1.2-aletyx-ks-005`).
+3. Build with JDK 17+ and the Aletyx repository settings:
+   `mvn -s settings.xml clean install`.
+4. Deploy the container to the v10 server with the same REST call (or UI)
+   you used on v7.
+5. Start a process and verify: same API, same payloads, same behavior.
