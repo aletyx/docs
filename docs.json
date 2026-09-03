@@ -325,43 +325,43 @@
           {
             "group": "Decision Control",
             "pages": [
-              "decision-control/overview",
-              "decision-control/architecture",
               {
-                "group": "Deployment Guide",
+                "group": "Decisions Authoring",
                 "pages": [
+                  "decision-control/how-to/authoring-models",
+                  "decision-control/how-to/authoring-testing",
+                  "decision-control/how-to/authoring-ai"
+                ]
+              },
+              {
+                "group": "Management",
+                "pages": [
+                  "decision-control/how-to/management-models",
+                  "decision-control/how-to/management-execute"
+                ]
+              },
+              "decision-control/how-to/monitoring",
+              "decision-control/how-to/prompting",
+              {
+                "group": "Architecture",
+                "pages": [
+                  "decision-control/overview",
+                  "decision-control/architecture",
                   "decision-control/deployment/overview",
                   "decision-control/deployment/identity-access-management",
                   "decision-control/deployment/database-configuration",
                   "decision-control/deployment/container-configuration",
                   "decision-control/deployment/kubernetes-openshift-deployment",
-                  "decision-control/deployment/supported-operating-environments"
-                ]
-              },
-              "decision-control/integration-and-apis",
-              "decision-control/usage-scenarios",
-              {
-                "group": "How-To Guides",
-                "pages": [
+                  "decision-control/deployment/supported-operating-environments",
+                  "decision-control/integration-and-apis",
+                  "decision-control/usage-scenarios",
                   "decision-control/how-to/overview",
                   "decision-control/how-to/home-and-global",
-                  "decision-control/how-to/authoring-models",
-                  "decision-control/how-to/authoring-testing",
-                  "decision-control/how-to/authoring-ai",
-                  "decision-control/how-to/management-models",
-                  "decision-control/how-to/management-execute",
-                  "decision-control/how-to/monitoring",
-                  "decision-control/how-to/prompting"
-                ]
-              },
-              {
-                "group": "AWS Deployment",
-                "pages": [
                   "decision-control/aws/overview",
-                  "decision-control/aws/sandbox"
+                  "decision-control/aws/sandbox",
+                  "decision-control/faq-troubleshooting"
                 ]
-              },
-              "decision-control/faq-troubleshooting"
+              }
             ]
           },
           {
