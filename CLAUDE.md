@@ -2,25 +2,43 @@
 
 ## Writing style
 
-- Avoid em dashes; prefer a natural text flow using articles and regular punctuation (commas, colons, parentheses, or separate sentences).
-- Avoid the word "deterministic"; describe the behavior in plain terms instead (e.g. "predictable", "the same inputs always produce the same result").
+- No em dashes. Use commas, colons, parentheses, or separate sentences.
+- Never write "deterministic". Say "predictable", or "the same inputs always produce the same result".
 
 ## Issue tracking
 
-- All issues (tickets) for this project live in a separate repo: https://github.com/aletyx/aletyx-content-issues. Never use this repo's issue tracker.
-- Create, list, comment on, and close issues there, e.g. `gh issue list --repo aletyx/aletyx-content-issues`.
+Tickets live in a separate repo: `aletyx/aletyx-content-issues`. Never use this repo's tracker.
 
-## Workflow
+- Create, list, comment, and close there: `gh issue <cmd> --repo aletyx/aletyx-content-issues`.
+- Rank the next ticket by: (1) priority label, (2) business relevance, (3) site nav order.
+- After picking a ticket, stop. Present it and wait for explicit instructions before changing anything.
+- Comment on the ticket summarizing the change before pushing.
 
-- When picking the next ticket to work on, rank by: (1) explicit priority labels, (2) relevance to the business, (3) order in the site navigation.
-- Always comment on the related GitHub issue (ticket) summarizing the change **before** pushing.
-- Verify links with `scripts/links-check.sh` before committing content or nav changes.
-- Any page move or rename must ship with a 301 redirect in `docs.json`.
-- Original (pre-migration) docs pages can be found at https://aletyx-docs-preview.aletyx.workers.dev — the production old-docs site is retired, but this preview still serves the rendered originals; use it as the `source:` frontmatter target and for fidelity comparisons.
-- When migrating documents, observe admonitions (callouts) in the source and migrate them as closely as possible visually to the new doc: map each mkdocs-material type to the nearest Mintlify callout (`!!! note` → `<Note>`, `!!! tip` → `<Tip>`, `!!! info` → `<Info>`, `!!! warning` → `<Warning>`, `!!! danger` → `<Danger>`), keep custom admonition titles as a bold first line inside the callout, and preserve the full body content.
-- When reviewing blog posts (content under `blog/`), always:
-  - Add a TL;DR / key-takeaways block up top.
-  - Add a brief FAQ section at the end.
-  - Review and prefer explicit answer sentences ("answer-first" phrasing).
-  - Add at least one concrete example or mini scenario.
-  - Review for search quality (E-E-A-T signals: experience, expertise, authoritativeness, trustworthiness).
+## Content changes
+
+- Run `scripts/links-check.sh` before committing content or nav changes.
+- Every page move or rename ships with a 301 redirect in `docs.json`.
+
+## Migrating pages
+
+Pre-migration originals render at https://aletyx-docs-preview.aletyx.workers.dev (the production old-docs site is retired). Use it as the `source:` frontmatter value and for fidelity comparisons.
+
+Map each mkdocs-material admonition to the nearest Mintlify callout. Keep any custom title as a bold first line inside the callout, and preserve the full body.
+
+| Source | Callout |
+| --- | --- |
+| `!!! note` | `<Note>` |
+| `!!! tip` | `<Tip>` |
+| `!!! info` | `<Info>` |
+| `!!! warning` | `<Warning>` |
+| `!!! danger` | `<Danger>` |
+
+## Reviewing blog posts (`blog/`)
+
+Always add or verify:
+
+- TL;DR / key takeaways up top.
+- Brief FAQ at the end.
+- Answer-first phrasing (explicit answer sentences).
+- At least one concrete example or mini scenario.
+- E-E-A-T signals (experience, expertise, authoritativeness, trustworthiness).
