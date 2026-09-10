@@ -1,16 +1,16 @@
 ---
-title: "Authoring – Models"
-description: "Guides covering the lifecycle of a decision model in the authoring editor: creating, importing, organizing, syncing, and publishing."
+title: "Decisions – Models"
+description: "Guides covering the lifecycle of a decision model in the Decisions editor: creating, importing, organizing, syncing, and publishing."
 source: "https://aletyx-docs-preview.aletyx.workers.dev/decision-control/how-to/authoring-models/"
 ---
 
-These guides cover the lifecycle of a decision model in the authoring editor: creating, importing, organizing, syncing, and publishing. All require Authoring access.
+These guides cover the lifecycle of a decision model in the Decisions editor: creating, importing, organizing, syncing, and publishing. All require Authoring access.
 
-## The Authoring home
+## The Decisions home
 
-When you open Authoring, you land on the home page below. It's where every model starts — either from scratch, from an existing source, or by reopening recent work.
+When you open Decisions, you land on the home page below. It's where every model starts — either from scratch, from an existing source, or by reopening recent work.
 
-![Authoring home page](/images/decision-control/how-to/authoring-home-page.png)
+![Decisions home page](/images/decision-control/how-to/authoring-home-page.png)
 
 The page has three areas, plus the masthead at the top:
 
@@ -35,7 +35,7 @@ Most model actions start from the toolbar at the top of the editor. The numbered
 | 4 | **Share** ▾ | Download (current file / SVG / workspace ZIP) or embed; in Git-backed workspaces, Sync (push/pull) appears here too. |
 | 5 | **⋮** (kebab) | Extra actions: Commit, delete the file, and more. |
 
-**Run** is no longer in this toolbar. To test the model, use the play button at the right end of the model tabs row, or **Run** in the status bar along the bottom of the editor.
+**Run** is no longer in this toolbar. To test the model, use the play button at the right end of the model tabs row.
 
 ## The editor canvas
 
@@ -91,7 +91,7 @@ Start a blank decision model in the editor.
 
 **Steps:**
 
-1. Open **Authoring**.
+1. Open **Decisions**.
 2. In the **Create** section, click **New Decision** for a full DMN model, or **New Decision Table** for a single decision-table (DMNS) model.
 
 **Verify:** The editor opens with an empty canvas and the new file name in the toolbar.
@@ -102,7 +102,7 @@ Open a ready-made example to explore DMN features.
 
 **Steps:**
 
-1. Open **Authoring**.
+1. Open **Decisions**.
 2. In the **Create** section, click **Try sample** under **Decision** or **Decision Table**.
 
 **Verify:** The editor opens populated with the sample model.
@@ -117,7 +117,7 @@ Bring a model that already exists into Decision Control — either from a Git so
   <Tab title="From a URL">
     The address in the **From URL** card is detected automatically and can be a Git repository (any host — cloned in full), a GitHub repo or single file, a GitHub Gist, a Bitbucket repo/Snippet/file, a GitLab repo/Snippet/file, or any other direct file URL.
 
-    1. Open **Authoring** and find the **From URL** card.
+    1. Open **Decisions** and find the **From URL** card.
     2. Paste the address into the **URL** field.
     3. (Optional) Click **More options…** to choose the Git branch/ref, the authentication session (Git account), whether to skip TLS certificate validation, or the encoding.
     4. Click the action button — its label depends on the source: **Clone** for a Git repository (brings the full history) or **Import** for a single file / Gist / Snippet.
@@ -127,12 +127,12 @@ Bring a model that already exists into Decision Control — either from a Git so
   <Tab title="Upload from your computer">
     You can upload one or more individual files (**Select files…**, multi-select), an entire folder including subfolders (**Select folder…**), or drag and drop files/folders onto the drop area. There is no extension filter on upload — you can bring a whole project, but only supported model files open in the editor.
 
-    1. In **Authoring**, go to the **Upload** card.
+    1. In **Decisions**, go to the **Upload** card.
     2. Drag files/folders onto **Drag & drop files and folders here…**, or click **Select files…** / **Select folder…**.
   </Tab>
 </Tabs>
 
-**Verify:** A workspace is created and the model opens in the DMN editor. It also appears under **Recent models** on the Authoring home (replacing the "Nothing here" empty state).
+**Verify:** A workspace is created and the model opens in the DMN editor. It also appears under **Recent models** on the Decisions home (replacing the "Nothing here" empty state).
 
 <Note>
 Importing only creates a local workspace in your browser. Versioning (**Commit**), syncing with Git (**Sync**), and publishing (**Publish**) happen afterward, inside the editor. The **Clone** vs **Import** distinction is only the button label: Clone brings the Git repository and its history; Import brings a standalone file or snippet.
@@ -146,7 +146,7 @@ Reopen a model you worked on before.
 
 **Steps:**
 
-1. Open **Authoring**.
+1. Open **Decisions**.
 2. In **Recent models**, click the workspace card (expand it to pick a specific file).
 
 **Verify:** The selected model opens in the editor.
@@ -157,7 +157,7 @@ Remove a workspace and its files you no longer need.
 
 **Steps:**
 
-1. Open **Authoring**.
+1. Open **Decisions**.
 2. On the workspace card in **Recent models**, open the kebab (⋮) menu.
 3. Click **Delete** and confirm in the dialog.
 
@@ -370,7 +370,7 @@ Remove the file currently open in the editor.
 1. In the toolbar, open the kebab (⋮) menu.
 2. Click **Delete `<file name>`** and confirm.
 
-**Verify:** The file closes; if it was the last file, you return to the Authoring home.
+**Verify:** The file closes; if it was the last file, you return to the Decisions home.
 
 ## How to publish (deploy) a model
 

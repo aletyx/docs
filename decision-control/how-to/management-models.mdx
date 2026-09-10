@@ -52,7 +52,7 @@ Pull the latest metrics on demand.
 <Note>
 **Units aren't created empty**
 
-A decision unit comes into existence only when you [upload DMN models](#how-to-upload-dmn-models). The "Create Decision Unit" button on the dashboard simply opens the Units page.
+A decision unit comes into existence only when you [publish a model from Decisions](/decision-control/how-to/authoring-models#how-to-publish-deploy-a-model). The "Create Decision Unit" button on the dashboard simply opens the Units page. To bring an existing model in first, see [how to import an existing model](/decision-control/how-to/authoring-models#how-to-import-an-existing-model).
 </Note>
 
 Every unit row exposes the same controls. The how-tos below use them by name:
@@ -125,36 +125,6 @@ Deleting a unit removes **every version and every model inside it**. The dialog 
 3. If a conflict appears, confirm the force-delete option.
 
 **Verify:** The unit disappears from the table.
-
-## Upload DMN
-
-![Upload DMN screen](/images/decision-control/how-to/upload-dmn.png)
-
-### How to upload DMN models
-
-Bring DMN models into the workbench from a ZIP archive.
-
-**Prerequisites:** A `.zip` of DMN models.
-
-**Steps:**
-
-1. Open **Management → Upload DMN**.
-2. Drag the ZIP onto the dropzone or click **Select File**.
-3. Click **Proceed to Upload**.
-
-**Verify:** A success card shows the created unit, version, and model count.
-
-### How to activate uploaded models
-
-Turn freshly uploaded models into live API endpoints.
-
-**Prerequisites:** A successful upload that produced models.
-
-**Steps:**
-
-1. In the post-upload **Activate DMN Models** dialog, click **Activate Models** (or **Skip for Now**).
-
-**Verify:** The unit, version, and each model are enabled; you can then click **View Units**.
 
 ## Versions & Models
 
