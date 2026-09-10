@@ -1,50 +1,110 @@
 ---
 title: "Quickstart for Tech Leads"
-description: "Tech-lead quickstart: design enterprise-scale, deployable Aletyx automation, covering architecture styles and Kubernetes, OpenShift, or Docker deployment."
+description: "Tech-lead quickstart: design enterprise-scale, deployable Aletyx automation, covering architecture styles, governance, and Kubernetes, OpenShift, or Docker deployment."
 ---
 
 This path is for **tech leads** designing enterprise-scale automation. Rather
-than a single linear tutorial, it points you to the architecture and deployment
-guidance you need to design a production system.
+than a single linear tutorial, it points you to the architecture, governance,
+and deployment guidance you need to design a production system.
 
 ## Prerequisites
 
 Familiarity with your target runtime platform (Kubernetes, OpenShift, or Docker)
-and your organization's deployment and DevOps practices.
+and your organization's deployment and DevOps practices. To build and run models
+locally, work through the [environment setup](/getting-started/environment-setup)
+first.
 
 ## Design the architecture
 
 <Steps>
   <Step title="Choose an architecture style">
-    Decide between a compact microservices architecture and an event-driven
-    architecture based on your scale, coupling, and latency needs.
+    Decide between the
+    [Adaptive Process Architecture](/components/compact-architecture/overview),
+    which co-locates the process components in a single Quarkus deployment, and an
+    [event-driven architecture](/architecture/processes/advanced-bpmn/event-driven)
+    built on Apache Kafka and CloudEvents. Base the choice on your scale,
+    coupling, and latency needs.
   </Step>
   <Step title="Model decisions and processes as services">
     Package decisions (DMN/DRL) and processes (BPMN) as independently deployable,
-    cloud-native services.
+    cloud-native services. The
+    [integration patterns](/architecture/integration/overview) cover embedding
+    decisions in processes, event-driven messaging, and service orchestration.
+  </Step>
+  <Step title="Plan governance">
+    Decide how models are reviewed, promoted between environments, and audited.
+    [Decision Control](/decision-control/overview) centralizes deployment and
+    management of decision services, and
+    [Decision Control Tower](/decision-control-tower/overview) adds governance
+    workflows and an audit trail across environments.
   </Step>
   <Step title="Plan deployment">
-    Select your deployment target — Kubernetes, OpenShift, or Docker — and
-    multi-environment promotion strategy.
+    Select your deployment target (Kubernetes, OpenShift, or Docker) and your
+    multi-environment promotion strategy. See the
+    [deployment guides](/deployment/overview) and, for image and runtime choices,
+    [JVM vs native](/deployment/cloud-native/jvm-vs-native).
   </Step>
   <Step title="Integrate with DevOps">
-    Wire builds and deployments into your CI/CD and observability tooling.
+    Wire builds and deployments into your CI/CD and observability tooling, and
+    [secure the architecture](/components/compact-architecture/securing-the-architecture)
+    before exposing it.
   </Step>
 </Steps>
 
 ## Architecture & deployment guides
 
 <CardGroup cols={2}>
-  <Card title="Microservices architecture" icon="sitemap" href="https://docs.aletyx.ai/core/processes/architecture/compact-architecture/">
-    Compact, scalable process architecture.
+  <Card title="Adaptive Process Architecture" icon="sitemap" href="/components/compact-architecture/overview">
+    Compact, scalable process architecture in a single deployment.
   </Card>
-  <Card title="Event-driven architecture" icon="bolt" href="https://docs.aletyx.ai/core/processes/advanced-bpmn/event-driven/">
-    Design event-driven automation.
+  <Card title="Event-driven architecture" icon="bolt" href="/architecture/processes/advanced-bpmn/event-driven">
+    Design event-driven automation with Kafka and CloudEvents.
   </Card>
-  <Card title="Deployment options" icon="server" href="https://docs.aletyx.ai/deployment/">
-    Kubernetes, OpenShift, Docker, and DevOps integration.
+  <Card title="Deployment options" icon="server" href="/deployment/overview">
+    Kubernetes, OpenShift, Docker, AWS, and DevOps integration.
   </Card>
-  <Card title="Platform & tech stack" icon="layer-group" href="https://docs.aletyx.ai/components/">
+  <Card title="Platform & tech stack" icon="layer-group" href="/components/overview">
     The components that make up the Aletyx platform.
+  </Card>
+</CardGroup>
+
+## Govern decisions in production
+
+<CardGroup cols={2}>
+  <Card title="Decision Control" icon="shield-halved" href="/decision-control/overview">
+    Centralized governance, deployment, and management for decision services.
+  </Card>
+  <Card title="Decision Control Tower" icon="tower-observation" href="/decision-control-tower/overview">
+    One portal across environments, with governance workflows and audit trail.
+  </Card>
+</CardGroup>
+
+## Ready for the next steps?
+
+<CardGroup cols={2}>
+  <Card title="Set up your environment" icon="wrench" href="/getting-started/environment-setup">
+    Install and configure the tools needed to build and run models locally.
+  </Card>
+  <Card title="Review the architecture" icon="compass-drafting" href="/architecture/overview">
+    How decisions, processes, and integrations fit together.
+  </Card>
+  <Card title="Explore Guides and Labs" icon="book-open" href="/guides/overview">
+    Tutorials, labs, and industry examples to keep going.
+  </Card>
+  <Card title="Hand Off to Your Analysts" icon="table-cells" href="/quickstart/decision-analysts">
+    The decision-analyst quickstart covers visual modeling in the Playground.
+  </Card>
+</CardGroup>
+
+### Need Help Getting Started?
+
+Our team is ready to assist with your business automation journey.
+
+<CardGroup cols={2}>
+  <Card title="Contact Us" icon="envelope" href="https://aletyx.ai/contact">
+    Reach out to the Aletyx team for help.
+  </Card>
+  <Card title="Join the Community" icon="people-group" href="https://kie.apache.org/docs/community/">
+    Join the Apache KIE™ (incubating) Community.
   </Card>
 </CardGroup>
