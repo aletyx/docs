@@ -18,6 +18,7 @@ Tickets live in a separate repo: `aletyx/aletyx-content-issues`. Never use this 
 
 - Run `scripts/links-check.sh` before committing content or nav changes.
 - Every page move or rename ships with a 301 redirect in `docs.json`.
+- Never publish staging, stage, or test addresses in the docs. Use them only as working references. Published product endpoints (Maven repo, container registry) are fine.
 
 ## Migrating pages
 
