@@ -22,3 +22,8 @@ drafts
 
 # Local-only files and directories (e.g. test.local/)
 *.local
+
+# Blume build output. Mintlify loads every .css file in the project as
+# custom CSS, so Blume's generated stylesheets would override the theme.
+.blume/
+dist/
