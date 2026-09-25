@@ -12,3 +12,4 @@ docs-backup/kie-docs/**/target/
 .vscode
 node_modules
 .blume/
+dist/
