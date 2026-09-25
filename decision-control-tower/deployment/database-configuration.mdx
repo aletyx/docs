@@ -52,7 +52,7 @@ GRANT ALL PRIVILEGES ON DATABASE decision_tower_db TO tower;
 
 Optionally, grant a separate read-only role for monitoring or BI tools (see "Operational access patterns" below).
 
-For deployments that must use a non-default database name, override `ALETYX_DC_TOWER_DB_URL`:
+For deployments that must use a non-default database name, override `SPRING_DATASOURCE_URL`:
 
 ```
 jdbc:postgresql://<host>:<port>/<database-name>
@@ -152,9 +152,9 @@ The application image's truststore includes the publicly-trusted certificate aut
 
 | Variable                      | Required         | Default                                              | Description                                                    |
 | ----------------------------- | ---------------- | ---------------------------------------------------- | -------------------------------------------------------------- |
-| `ALETYX_DC_TOWER_DB_URL`      | yes (production) | `jdbc:postgresql://localhost:5434/decision_tower_db` | JDBC connection URL                                            |
-| `ALETYX_DC_TOWER_DB_USERNAME` | yes (production) | `tower`                                              | Database username                                              |
-| `ALETYX_DC_TOWER_DB_PASSWORD` | yes (production) | `tower`                                              | Database password (provide via secret manager — see chapter 3) |
+| `SPRING_DATASOURCE_URL`      | yes (production) | `jdbc:postgresql://localhost:5434/decision_tower_db` | JDBC connection URL                                            |
+| `SPRING_DATASOURCE_USERNAME` | yes (production) | `tower`                                              | Database username                                              |
+| `SPRING_DATASOURCE_PASSWORD` | yes (production) | `tower`                                              | Database password (provide via secret manager — see chapter 3) |
 
 ## Example: docker-compose for a self-hosted PostgreSQL alongside Tower
 
@@ -182,9 +182,9 @@ services:
       tower-database:
         condition: service_healthy
     environment:
-      ALETYX_DC_TOWER_DB_URL: jdbc:postgresql://tower-database:5432/decision_tower_db
-      ALETYX_DC_TOWER_DB_USERNAME: tower
-      ALETYX_DC_TOWER_DB_PASSWORD: <strong-password>
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tower-database:5432/decision_tower_db
+      SPRING_DATASOURCE_USERNAME: tower
+      SPRING_DATASOURCE_PASSWORD: <strong-password>
       # plus OIDC variables, see chapter 1
     ports:
       - "8080:8080"

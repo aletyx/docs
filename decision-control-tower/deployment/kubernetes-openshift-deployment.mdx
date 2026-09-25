@@ -61,11 +61,11 @@ data:
   BACKEND_PORT: "8080"
 
   # Database — password lives in tower-secret
-  ALETYX_DC_TOWER_DB_URL: "jdbc:postgresql://postgres.data.svc.cluster.local:5432/decision_tower_db"
-  ALETYX_DC_TOWER_DB_USERNAME: "tower"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres.data.svc.cluster.local:5432/decision_tower_db"
+  SPRING_DATASOURCE_USERNAME: "tower"
 
   # OIDC (Entra example)
-  ALETYX_DC_TOWER_USE_MOCKS: "false"
+  ALETYX_CONTROL_TOWER_USE_MOCKS: "false"
   ALETYX_OIDC_PROVIDER: "entra"
   ALETYX_OIDC_CLIENT_ID: "<your-entra-client-id>"
   ALETYX_OIDC_SCOPES: "openid,profile,email"
@@ -74,31 +74,31 @@ data:
   ALETYX_OIDC_ENTRA_AUDIENCE: "<your-entra-client-id>"
 
   # CORS — restrict to the public hostname
-  ALETYX_DC_TOWER_CORS_ALLOWED_ORIGINS: "https://dc-tower.example.com"
+  ALETYX_CONTROL_TOWER_CORS_ALLOWED_ORIGINS: "https://dc-tower.example.com"
 
   # Sidecar wiring — in-cluster DNS, NOT the public hostname
-  ALETYX_DC_TOWER_SIDECAR_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
-  ALETYX_DC_TOWER_DATA_INDEX_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
+  ALETYX_CONTROL_TOWER_SIDECAR_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
+  ALETYX_CONTROL_TOWER_DATA_INDEX_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
 
   # Environment seed file (mounted from tower-static-config)
-  ALETYX_DC_TOWER_ENVIRONMENTS_FILE: "/app/config/environments.json"
+  ALETYX_CONTROL_TOWER_ENVIRONMENTS_FILE: "/app/config/environments.json"
 
   # Health probe loop
-  ALETYX_DC_TOWER_HEALTH_INTERVAL_MS: "30000"
-  ALETYX_DC_TOWER_HEALTH_TIMEOUT: "5"
-  ALETYX_DC_TOWER_HEALTH_POOL_SIZE: "4"
+  ALETYX_CONTROL_TOWER_HEALTH_INTERVAL_MS: "30000"
+  ALETYX_CONTROL_TOWER_HEALTH_TIMEOUT: "5"
+  ALETYX_CONTROL_TOWER_HEALTH_POOL_SIZE: "4"
 
   # Task list
-  ALETYX_DC_TOWER_TASKS_PAGE_SIZE: "200"
-  ALETYX_DC_TOWER_TASKS_FUTURE_TIMEOUT: "5"
-  ALETYX_DC_TOWER_TASKS_EXECUTOR_POOL_SIZE: "0"
+  ALETYX_CONTROL_TOWER_TASKS_PAGE_SIZE: "200"
+  ALETYX_CONTROL_TOWER_TASKS_FUTURE_TIMEOUT: "5"
+  ALETYX_CONTROL_TOWER_TASKS_EXECUTOR_POOL_SIZE: "0"
 
   # Logging
-  ALETYX_DC_TOWER_LOG_LEVEL_ROOT: "INFO"
-  ALETYX_DC_TOWER_LOG_LEVEL_APP: "INFO"
-  ALETYX_DC_TOWER_LOG_LEVEL_WEB: "ERROR"
-  ALETYX_DC_TOWER_LOG_LEVEL_HTTP: "ERROR"
-  ALETYX_DC_TOWER_LOG_LEVEL_SQL: "ERROR"
+  ALETYX_CONTROL_TOWER_LOG_LEVEL_ROOT: "INFO"
+  ALETYX_CONTROL_TOWER_LOG_LEVEL_APP: "INFO"
+  ALETYX_CONTROL_TOWER_LOG_LEVEL_WEB: "ERROR"
+  ALETYX_CONTROL_TOWER_LOG_LEVEL_HTTP: "ERROR"
+  ALETYX_CONTROL_TOWER_LOG_LEVEL_SQL: "ERROR"
 ```
 
 ### Secret
@@ -113,7 +113,7 @@ metadata:
   namespace: tower-prod
 type: Opaque
 stringData:
-  ALETYX_DC_TOWER_DB_PASSWORD: "<from-secret-manager>"
+  SPRING_DATASOURCE_PASSWORD: "<from-secret-manager>"
   ALETYX_OIDC_ENTRA_CLIENT_SECRET: "<from-secret-manager>"
   ALETYX_OIDC_CALLBACK_SECRET: "<shared-with-sidecar>"
 ```
@@ -310,14 +310,14 @@ data:
   SPRING_PROFILES_ACTIVE: "prod"
 
   # Canonical DB envs read by the Sidecar's application.properties:
-  #   spring.datasource.url=${ALETYX_DC_TOWER_SIDECAR_DB_URL}
-  #   spring.datasource.username=${ALETYX_DC_TOWER_SIDECAR_DB_USERNAME}
-  #   spring.datasource.password=${ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD}
-  ALETYX_DC_TOWER_SIDECAR_DB_URL: "jdbc:postgresql://postgres-sidecar.data.svc.cluster.local:5432/sidecar_db"
-  ALETYX_DC_TOWER_SIDECAR_DB_USERNAME: "sidecar"
+  #   spring.datasource.url=${ALETYX_CONTROL_TOWER_SIDECAR_DB_URL}
+  #   spring.datasource.username=${ALETYX_CONTROL_TOWER_SIDECAR_DB_USERNAME}
+  #   spring.datasource.password=${ALETYX_CONTROL_TOWER_SIDECAR_DB_PASSWORD}
+  ALETYX_CONTROL_TOWER_SIDECAR_DB_URL: "jdbc:postgresql://postgres-sidecar.data.svc.cluster.local:5432/sidecar_db"
+  ALETYX_CONTROL_TOWER_SIDECAR_DB_USERNAME: "sidecar"
 
   # Callback URL the Sidecar uses to call back into Tower.
-  ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL: "http://decision-control-tower.tower-prod.svc.cluster.local"
+  ALETYX_CONTROL_TOWER_SIDECAR_TOWER_CALLBACK_URL: "http://decision-control-tower.tower-prod.svc.cluster.local"
 ---
 apiVersion: v1
 kind: Secret
@@ -326,7 +326,7 @@ metadata:
   namespace: tower-prod
 type: Opaque
 stringData:
-  ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD: "<from-secret-manager>"
+  ALETYX_CONTROL_TOWER_SIDECAR_DB_PASSWORD: "<from-secret-manager>"
   # Shared callback secret used to authenticate Sidecar → Tower callbacks.
   # Value must match the Tower-side Secret entry of the same name.
   ALETYX_OIDC_CALLBACK_SECRET: "<shared-with-tower>"
@@ -403,8 +403,8 @@ The shared callback secret must be **identical** on both sides — the Sidecar a
 Once both are running, point Tower at the Sidecar Service in the Tower ConfigMap:
 
 ```yaml
-ALETYX_DC_TOWER_SIDECAR_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
-ALETYX_DC_TOWER_DATA_INDEX_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
+ALETYX_CONTROL_TOWER_SIDECAR_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
+ALETYX_CONTROL_TOWER_DATA_INDEX_URL: "http://tower-sidecar.tower-prod.svc.cluster.local"
 ```
 
 Use the in-cluster Service hostname — never a public ingress URL, which would add latency and a failure surface to what is a same-cluster call.
@@ -581,7 +581,7 @@ For diagnostics that require a shell, the Tower image is distroless and ships no
 The Tower and Sidecar images are distroless and ship no shell, so `kubectl exec` is not available. Use `kubectl run` to launch a short-lived helper pod in the same namespace, or `kubectl debug --copy-to` with a tools image, and run the checks from there.
 
 1. Verify the Tower Sidecar Deployment is `1/1 Running` — Tower depends on it for environment state. If the Sidecar is missing or crash-looping, the environments page surfaces no rows.
-2. From a helper pod in the same namespace, check the Sidecar Service is reachable at the URL Tower uses (the value of `ALETYX_DC_TOWER_SIDECAR_URL`):
+2. From a helper pod in the same namespace, check the Sidecar Service is reachable at the URL Tower uses (the value of `ALETYX_CONTROL_TOWER_SIDECAR_URL`):
    ```sh
    kubectl run sidecar-check --rm -it --restart=Never \
      -n <your-namespace> --image=curlimages/curl:8.10.1 -- \
