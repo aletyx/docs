@@ -32,6 +32,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: blume-docs-site
+          # Preview builds include Draft pages; keep them apart from publishable output.
+          name: blume-docs-site${{ inputs.preview && '-preview' || '' }}
           path: dist/
           retention-days: 14

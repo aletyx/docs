@@ -4,7 +4,6 @@ import { z } from "zod";
 export default defineConfig({
   content: {
     sources: [
-      // { type: "filesystem", root: "docs" },
       // Notion source: needs NOTION_DB_ID and NOTION_TOKEN in the environment.
       {
         type: "notion",

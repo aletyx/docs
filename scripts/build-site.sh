@@ -4,7 +4,8 @@
 #
 # Blume reads every page from Notion (see blume.config.ts), so the build needs
 # NOTION_TOKEN and NOTION_DB_ID. They come from the environment (CI secrets) or,
-# locally, from .env.local / .env at the repo root.
+# locally, from .env.local / .env at the repo root. Exported values take
+# precedence over the files.
 #
 # Output lands in dist/. Extra arguments go straight to `blume build`, e.g.:
 #   scripts/build-site.sh --preview    include Draft pages
@@ -17,6 +18,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# File values are fallbacks: anything already exported wins over a stale file.
+keep_token="${NOTION_TOKEN:-}"
+keep_db_id="${NOTION_DB_ID:-}"
 for f in .env.local .env; do
   if [[ -f "$f" ]]; then
     set -a
@@ -26,6 +30,8 @@ for f in .env.local .env; do
     break
   fi
 done
+[[ -n "$keep_token" ]] && export NOTION_TOKEN="$keep_token"
+[[ -n "$keep_db_id" ]] && export NOTION_DB_ID="$keep_db_id"
 
 missing=()
 [[ -n "${NOTION_TOKEN:-}" ]] || missing+=(NOTION_TOKEN)
