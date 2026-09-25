@@ -19,15 +19,15 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 # File values are fallbacks: anything already exported wins over a stale file.
+# Load .env first, then .env.local on top, so each file can supply any subset.
 keep_token="${NOTION_TOKEN:-}"
 keep_db_id="${NOTION_DB_ID:-}"
-for f in .env.local .env; do
+for f in .env .env.local; do
   if [[ -f "$f" ]]; then
     set -a
     # shellcheck disable=SC1090
     . "./$f"
     set +a
-    break
   fi
 done
 [[ -n "$keep_token" ]] && export NOTION_TOKEN="$keep_token"

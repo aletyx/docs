@@ -22,11 +22,11 @@ processes:
 
   blume-dev:
     description: "Blume local docs dev server (content from Notion)"
-    # Blume reads NOTION_TOKEN and NOTION_DB_ID; load them from .env.local or .env
-    # the same way scripts/build-site.sh does, without overriding exported values.
+    # Blume reads NOTION_TOKEN and NOTION_DB_ID; load .env then .env.local the same
+    # way scripts/build-site.sh does, without overriding exported values.
     command: >-
       bash -c 'keep_token="${NOTION_TOKEN:-}"; keep_db_id="${NOTION_DB_ID:-}";
-      for f in .env.local .env; do [ -f "$f" ] && { set -a; . "./$f"; set +a; break; }; done;
+      for f in .env .env.local; do [ -f "$f" ] && { set -a; . "./$f"; set +a; }; done;
       [ -n "$keep_token" ] && export NOTION_TOKEN="$keep_token";
       [ -n "$keep_db_id" ] && export NOTION_DB_ID="$keep_db_id";
       [ -d node_modules/blume ] || npm ci;

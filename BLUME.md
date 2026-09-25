@@ -1,6 +1,6 @@
 # Blume + Notion migration tracker
 
-Source: legacy Mintlify site (`docs.json` navigation). **246** pages in nav, **1** `.mdx` files not in nav.
+Source: legacy Mintlify site (`docs.json` navigation). **246** pages in nav, **6** `.mdx` files not in nav (1 in `reference/`, 5 in `archive/`).
 
 Target: the Notion [Docs database](https://app.notion.com/p/aletyx/3dcabc1d8c6480988b34d33e8c1df33a?v=3dcabc1d8c64800f90dd000c7a36eced) (properties: Name, Description, Order, Slug, Status). Blume reads its content from that database (`blume.config.ts`), so a page's Blume URL is derived from its Slug (`index` maps to `/`).
 
@@ -262,3 +262,10 @@ Files present on disk but not referenced by `docs.json`. Decide per file: migrat
 | # | Page title | Source file | Nav category | Blume URL | Notion URL |
 |---|---|---|---|---|---|
 | 1 | Release Notes | reference/release-notes.mdx | (none) |  |  |
+| 2 | First Interaction | archive/first-interaction.mdx | (archived) |  |  |
+| 3 | Getting Started with Aletyx: A Visual Guide for Aletyx Enterprise Build of Kogito and Drools 10.1.0-aletyx | archive/getting-started-start-aletyx.mdx | (archived) |  |  |
+| 4 | Quickstart for Developers | archive/quickstart-developers.mdx | (archived) |  |  |
+| 5 | Test Scenarios | archive/test-scenarios.mdx | (archived) |  |  |
+| 6 | Testing | archive/testing-overview.mdx | (archived) |  |  |
+
+The `archive/` pages were already removed from the Mintlify site (`archive/` is in `.mintignore`) and their old routes redirect elsewhere in `docs.json`. Default decision: drop, unless a page holds content that should be folded into a migrated page.
