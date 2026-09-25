@@ -21,9 +21,9 @@ The Sidecar requires its **own** PostgreSQL database — never share a schema wi
 
 | Variable | Default | Description |
 |---|---|---|
-| `ALETYX_DC_TOWER_SIDECAR_DB_URL` | (required) | JDBC URL, e.g. `jdbc:postgresql://sidecar-postgres:5432/decision_tower_sidecar`. |
-| `ALETYX_DC_TOWER_SIDECAR_DB_USERNAME` | (required) | Database user. |
-| `ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD` | (required) | Database password. Source from a secret manager. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_DB_URL` | (required) | JDBC URL, e.g. `jdbc:postgresql://sidecar-postgres:5432/decision_tower_sidecar`. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_DB_USERNAME` | (required) | Database user. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_DB_PASSWORD` | (required) | Database password. Source from a secret manager. |
 
 ## Tower callbacks
 
@@ -31,7 +31,7 @@ How the Sidecar reaches Tower Core. The secret must match the value configured o
 
 | Variable | Default | Description |
 |---|---|---|
-| `ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL` | (required) | Base URL of Tower Core, e.g. `http://decision-control-tower:8080`. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_TOWER_CALLBACK_URL` | (required) | Base URL of Tower Core, e.g. `http://decision-control-tower:8080`. |
 | `ALETYX_OIDC_CALLBACK_SECRET` | (empty) | Shared secret authenticating Sidecar → Tower callbacks. **Must match Tower.** Rotate on both sides simultaneously. |
 
 ## Integrations (optional)
@@ -50,13 +50,13 @@ Commits the promoted model's files to a Git repository on approval. See [Git Mod
 
 | Variable | Default | Description |
 |---|---|---|
-| `ALETYX_DC_TOWER_SIDECAR_GITHUB_ENABLED` | `false` | Master switch. When `false`, the Git step is a no-op and no model is fetched. |
-| `ALETYX_DC_TOWER_SIDECAR_GITHUB_API_URL` | `https://api.github.com` | Git host API base URL. |
-| `ALETYX_DC_TOWER_SIDECAR_GITHUB_TOKEN` | (empty) | Access token with **Contents: read and write** on the target repository. |
-| `ALETYX_DC_TOWER_SIDECAR_GITHUB_REPO` | (empty) | Target repository in `owner/repo` form. |
-| `ALETYX_DC_TOWER_SIDECAR_GITHUB_BRANCH` | `main` | Branch to commit to. |
-| `ALETYX_DC_TOWER_SIDECAR_GITHUB_COMMITTER_NAME` | `Aletyx Tower` | Commit author/committer name. |
-| `ALETYX_DC_TOWER_SIDECAR_GITHUB_COMMITTER_EMAIL` | `tower@aletyx.ai` | Commit author/committer email. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_ENABLED` | `false` | Master switch. When `false`, the Git step is a no-op and no model is fetched. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_API_URL` | `https://api.github.com` | Git host API base URL. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_TOKEN` | (empty) | Access token with **Contents: read and write** on the target repository. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_REPO` | (empty) | Target repository in `owner/repo` form. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_BRANCH` | `main` | Branch to commit to. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_COMMITTER_NAME` | `Aletyx Tower` | Commit author/committer name. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_COMMITTER_EMAIL` | `tower@aletyx.ai` | Commit author/committer email. |
 
 ### Messaging (Slack)
 
@@ -64,15 +64,15 @@ Posts a message when a promotion completes.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ALETYX_DC_TOWER_SIDECAR_SLACK_API_URL` | `https://slack.com/api` | Messaging API base URL. |
-| `ALETYX_DC_TOWER_SIDECAR_SLACK_TOKEN` | (empty) | Bot token. Blank disables messaging. |
-| `ALETYX_DC_TOWER_SIDECAR_SLACK_CHANNEL` | (empty) | Target channel ID. Blank disables messaging. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_SLACK_API_URL` | `https://slack.com/api` | Messaging API base URL. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_SLACK_TOKEN` | (empty) | Bot token. Blank disables messaging. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_SLACK_CHANNEL` | (empty) | Target channel ID. Blank disables messaging. |
 
 ### REST callout
 
 | Variable | Default | Description |
 |---|---|---|
-| `ALETYX_DC_TOWER_SIDECAR_HOLIDAYS_API_URL` | `https://date.nager.at` | Base URL for the example public-REST callout used by the integration workflow. |
+| `ALETYX_CONTROL_TOWER_SIDECAR_HOLIDAYS_API_URL` | `https://date.nager.at` | Base URL for the example public-REST callout used by the integration workflow. |
 
 ## Next Steps
 

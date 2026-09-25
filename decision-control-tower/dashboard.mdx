@@ -94,7 +94,7 @@ Aletyx Decision Control Tower manages your session through:
 Aletyx Decision Control Tower surfaces feedback through two channels:
 
 - **In-app toasts** - short success / error / warning / info banners that appear after a user action (submitting a promotion, claiming a task, saving an environment). Toasts are transient; they fade after a few seconds and are not persisted.
-- **Email** - Tower sends SMTP email when a promotion enters the review step, addressed to the configured notification group. The sender, SMTP host, and template path are wired through the `ALETYX_DC_TOWER_EMAIL_*` and `ALETYX_DC_TOWER_SMTP_*` environment variables (see [Container Configuration](/decision-control-tower/deployment/container-configuration#email-notification)).
+- **Email** - Tower sends SMTP email when a promotion enters the review step, addressed to the configured notification group. The sender, SMTP host, and template path are wired through the `ALETYX_CONTROL_TOWER_EMAIL_*` and `ALETYX_CONTROL_TOWER_SMTP_*` environment variables (see [Container Configuration](/decision-control-tower/deployment/container-configuration#email-notification)).
 
 There is no in-app subscription model - task discovery is by polling the Tasks page. Use the email channel when reviewers need to be paged outside the app.
 

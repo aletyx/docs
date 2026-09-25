@@ -79,9 +79,9 @@ See [chapter 2](/decision-control-tower/deployment/database-configuration) for f
 
 | Variable                      | Required | Default                                              | Description                                    |
 | ----------------------------- | -------- | ---------------------------------------------------- | ---------------------------------------------- |
-| `ALETYX_DC_TOWER_DB_URL`      | yes      | `jdbc:postgresql://localhost:5434/decision_tower_db` | JDBC URL                                       |
-| `ALETYX_DC_TOWER_DB_USERNAME` | yes      | `tower`                                              | Database username                              |
-| `ALETYX_DC_TOWER_DB_PASSWORD` | yes      | `tower`                                              | Database password (provide via secret manager) |
+| `SPRING_DATASOURCE_URL`      | yes      | `jdbc:postgresql://localhost:5434/decision_tower_db` | JDBC URL                                       |
+| `SPRING_DATASOURCE_USERNAME` | yes      | `tower`                                              | Database username                              |
+| `SPRING_DATASOURCE_PASSWORD` | yes      | `tower`                                              | Database password (provide via secret manager) |
 
 ### OIDC / Security
 
@@ -115,23 +115,23 @@ Tunes the outbound HTTP client (Feign) and the resilience4j circuit breaker and 
 
 | Variable                                    | Default  | Description                                                                                                                  |
 | ------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `ALETYX_DC_TOWER_FEIGN_CONNECT_TIMEOUT`     | `5000`   | TCP connect timeout (milliseconds) for outbound Feign calls.                                                                 |
-| `ALETYX_DC_TOWER_FEIGN_READ_TIMEOUT`        | `15000`  | Socket read timeout (milliseconds) for outbound Feign calls.                                                                 |
-| `ALETYX_DC_TOWER_CB_WINDOW`                 | `10`     | Circuit breaker sliding window size (number of recent calls evaluated).                                                      |
-| `ALETYX_DC_TOWER_CB_MIN_CALLS`              | `5`      | Minimum number of calls in the window before the failure/slow rates are evaluated.                                           |
-| `ALETYX_DC_TOWER_CB_FAILURE_RATE`           | `50`     | Failure rate threshold (percentage). When the failure rate is at or above this value, the circuit opens.                      |
-| `ALETYX_DC_TOWER_CB_WAIT`                   | `30s`    | Time the circuit stays open before transitioning to half-open (Duration).                                                    |
-| `ALETYX_DC_TOWER_CB_SLOW_THRESHOLD`         | `5s`     | Call duration considered "slow" for the slow-call rate (Duration).                                                            |
-| `ALETYX_DC_TOWER_CB_SLOW_RATE`              | `80`     | Slow-call rate threshold (percentage). When the slow-call rate is at or above this value, the circuit opens.                  |
-| `ALETYX_DC_TOWER_RETRY_ATTEMPTS`            | `2`      | Maximum retry attempts on transient failures (connection timeout, retryable Feign exceptions).                                |
-| `ALETYX_DC_TOWER_RETRY_WAIT`                | `500ms`  | Base wait between retries (Duration); exponential backoff (×2) is applied on each subsequent attempt.                         |
+| `ALETYX_CONTROL_TOWER_FEIGN_CONNECT_TIMEOUT`     | `5000`   | TCP connect timeout (milliseconds) for outbound Feign calls.                                                                 |
+| `ALETYX_CONTROL_TOWER_FEIGN_READ_TIMEOUT`        | `15000`  | Socket read timeout (milliseconds) for outbound Feign calls.                                                                 |
+| `ALETYX_CONTROL_TOWER_CB_WINDOW`                 | `10`     | Circuit breaker sliding window size (number of recent calls evaluated).                                                      |
+| `ALETYX_CONTROL_TOWER_CB_MIN_CALLS`              | `5`      | Minimum number of calls in the window before the failure/slow rates are evaluated.                                           |
+| `ALETYX_CONTROL_TOWER_CB_FAILURE_RATE`           | `50`     | Failure rate threshold (percentage). When the failure rate is at or above this value, the circuit opens.                      |
+| `ALETYX_CONTROL_TOWER_CB_WAIT`                   | `30s`    | Time the circuit stays open before transitioning to half-open (Duration).                                                    |
+| `ALETYX_CONTROL_TOWER_CB_SLOW_THRESHOLD`         | `5s`     | Call duration considered "slow" for the slow-call rate (Duration).                                                            |
+| `ALETYX_CONTROL_TOWER_CB_SLOW_RATE`              | `80`     | Slow-call rate threshold (percentage). When the slow-call rate is at or above this value, the circuit opens.                  |
+| `ALETYX_CONTROL_TOWER_RETRY_ATTEMPTS`            | `2`      | Maximum retry attempts on transient failures (connection timeout, retryable Feign exceptions).                                |
+| `ALETYX_CONTROL_TOWER_RETRY_WAIT`                | `500ms`  | Base wait between retries (Duration); exponential backoff (×2) is applied on each subsequent attempt.                         |
 
 ### Sidecar and Data Index
 
 | Variable                                  | Default                 | Description                                                                                    |
 | ----------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------- |
-| `ALETYX_DC_TOWER_SIDECAR_URL`             | `http://localhost:8080` | Tower → Sidecar HTTP base URL                                                                  |
-| `ALETYX_DC_TOWER_DATA_INDEX_URL`          | `http://localhost:8080` | Tower → Data Index HTTP base URL (typically the same host as sidecar)                          |
+| `ALETYX_CONTROL_TOWER_SIDECAR_URL`             | `http://localhost:8080` | Tower → Sidecar HTTP base URL                                                                  |
+| `ALETYX_CONTROL_TOWER_DATA_INDEX_URL`          | `http://localhost:8080` | Tower → Data Index HTTP base URL (typically the same host as sidecar)                          |
 | `ALETYX_OIDC_CALLBACK_SECRET`             | (empty)                 | Shared secret used to authenticate Sidecar → Tower callbacks. Must match the value on the Sidecar.                                                                                              |
 
 When deploying both Tower and Sidecar in the same Kubernetes cluster, set these to the in-cluster Service hostname (e.g. `http://decision-control-tower-sidecar.<namespace>.svc.cluster.local`) — never the public Cloudflare / load-balancer hostname.
@@ -140,8 +140,8 @@ When deploying both Tower and Sidecar in the same Kubernetes cluster, set these 
 
 | Variable                            | Default                                         | Description                                                                       |
 | ----------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- |
-| `ALETYX_DC_TOWER_ENVIRONMENTS_FILE` | `/app/config/environments.json`                 | Path to the JSON file used to seed and upsert the `environments` table on startup |
-| `ALETYX_DC_TOWER_SEED_TENANT_ID`    | falls back to `ALETYX_OIDC_ENTRA_TENANT_ID` | Tenant ID stamped on rows seeded by the file                                      |
+| `ALETYX_CONTROL_TOWER_ENVIRONMENTS_FILE` | `/app/config/environments.json`                 | Path to the JSON file used to seed and upsert the `environments` table on startup |
+| `ALETYX_CONTROL_TOWER_SEED_TENANT_ID`    | falls back to `ALETYX_OIDC_ENTRA_TENANT_ID` | Tenant ID stamped on rows seeded by the file                                      |
 
 The file format and behavior are documented in chapter 4 (sidecar / static-config section).
 
@@ -149,14 +149,14 @@ The file format and behavior are documented in chapter 4 (sidecar / static-confi
 
 | Variable                              | Default                            | Description                                                                                                                |
 | ------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `ALETYX_DC_TOWER_EMAIL_ENABLED`       | `true`                             | Master switch. When `false`, no notification email is sent regardless of the other SMTP settings.                          |
-| `ALETYX_DC_TOWER_EMAIL_FROM`          | `notifier@example.com`             | Address used in the `From:` header of every notification email. The image ships with a placeholder default; override to your organization's notification sender.                                                            |
-| `ALETYX_DC_TOWER_SMTP_HOST`           | `smtp.example.com`                 | SMTP server hostname. The image ships with a placeholder default; override to your organization's SMTP relay.                                                                                                      |
-| `ALETYX_DC_TOWER_SMTP_PORT`           | `587`                              | SMTP server port (`587` for STARTTLS, `465` for SMTPS).                                                                    |
-| `ALETYX_DC_TOWER_SMTP_USERNAME`       | `notifier@example.com`             | Username used to authenticate against the SMTP server. The image ships with a placeholder default; override to match your SMTP credentials.                                                                                                     |
-| `ALETYX_DC_TOWER_SMTP_PASSWORD`       | _(empty)_                          | Password used to authenticate against the SMTP server. Provide via a Kubernetes Secret (or equivalent) — never a ConfigMap. |
-| `ALETYX_DC_TOWER_GROUPS_CONFIG_PATH`  | `./config/notification-groups.json` | Path (inside the container) to the JSON file mapping notification groups to recipient email addresses. Must be mounted.    |
-| `ALETYX_DC_TOWER_EMAIL_TEMPLATES_FILE`| `./config/email-template.json`     | Path (inside the container) to the JSON file with email subject/body templates. Must be mounted.                           |
+| `ALETYX_CONTROL_TOWER_EMAIL_ENABLED`       | `true`                             | Master switch. When `false`, no notification email is sent regardless of the other SMTP settings.                          |
+| `ALETYX_CONTROL_TOWER_EMAIL_FROM`          | `notifier@example.com`             | Address used in the `From:` header of every notification email. The image ships with a placeholder default; override to your organization's notification sender.                                                            |
+| `ALETYX_CONTROL_TOWER_SMTP_HOST`           | `smtp.example.com`                 | SMTP server hostname. The image ships with a placeholder default; override to your organization's SMTP relay.                                                                                                      |
+| `ALETYX_CONTROL_TOWER_SMTP_PORT`           | `587`                              | SMTP server port (`587` for STARTTLS, `465` for SMTPS).                                                                    |
+| `ALETYX_CONTROL_TOWER_SMTP_USERNAME`       | `notifier@example.com`             | Username used to authenticate against the SMTP server. The image ships with a placeholder default; override to match your SMTP credentials.                                                                                                     |
+| `ALETYX_CONTROL_TOWER_SMTP_PASSWORD`       | _(empty)_                          | Password used to authenticate against the SMTP server. Provide via a Kubernetes Secret (or equivalent) — never a ConfigMap. |
+| `ALETYX_CONTROL_TOWER_GROUPS_CONFIG_PATH`  | `./config/notification-groups.json` | Path (inside the container) to the JSON file mapping notification groups to recipient email addresses. Must be mounted.    |
+| `ALETYX_CONTROL_TOWER_EMAIL_TEMPLATES_FILE`| `./config/email-template.json`     | Path (inside the container) to the JSON file with email subject/body templates. Must be mounted.                           |
 
 
 ### Frontend
@@ -164,36 +164,36 @@ The file format and behavior are documented in chapter 4 (sidecar / static-confi
 | Variable                               | Default                                 | Description                                                                                                                                       |
 | -------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ALETYX_OIDC_PROVIDER`        | `entra`                | `entra` or `keycloak`                   |
-| `ALETYX_DC_TOWER_USE_MOCKS`            | `true`                                  | Set to `false` for any deployment that should hit the real backend; the default is `true` to support the in-image quick-start without a database. |
-| `ALETYX_DC_TOWER_APP_NAME`             | `Decision Control Tower`                | Application title displayed in the UI                                                                                                             |
-| `ALETYX_DC_TOWER_CORS_ALLOWED_ORIGINS` | `http://localhost:*,http://127.0.0.1:*` | Comma-separated list of origins allowed for CORS pre-flight                                                                                       |
-| `ALETYX_DC_TOWER_TASKS_REFETCH_INTERVAL_MS` | `10000`                              | Polling interval (milliseconds) used by the UI to refetch the task list/count. Set to `0` to disable background polling.                          |
+| `ALETYX_CONTROL_TOWER_USE_MOCKS`            | `true`                                  | Set to `false` for any deployment that should hit the real backend; the default is `true` to support the in-image quick-start without a database. |
+| `ALETYX_CONTROL_TOWER_APP_NAME`             | `Decision Control Tower`                | Application title displayed in the UI                                                                                                             |
+| `ALETYX_CONTROL_TOWER_CORS_ALLOWED_ORIGINS` | `http://localhost:*,http://127.0.0.1:*` | Comma-separated list of origins allowed for CORS pre-flight                                                                                       |
+| `ALETYX_CONTROL_TOWER_TASKS_REFETCH_INTERVAL_MS` | `10000`                              | Polling interval (milliseconds) used by the UI to refetch the task list/count. Set to `0` to disable background polling.                          |
 
 ### Health probe loop (Tower → Decision Control instances)
 
 | Variable                             | Default | Description                          |
 | ------------------------------------ | ------- | ------------------------------------ |
-| `ALETYX_DC_TOWER_HEALTH_INTERVAL_MS` | `30000` | Probe interval in milliseconds       |
-| `ALETYX_DC_TOWER_HEALTH_TIMEOUT`     | `5`     | Probe timeout in seconds             |
-| `ALETYX_DC_TOWER_HEALTH_POOL_SIZE`   | `4`     | Thread pool used for outbound probes |
+| `ALETYX_CONTROL_TOWER_HEALTH_INTERVAL_MS` | `30000` | Probe interval in milliseconds       |
+| `ALETYX_CONTROL_TOWER_HEALTH_TIMEOUT`     | `5`     | Probe timeout in seconds             |
+| `ALETYX_CONTROL_TOWER_HEALTH_POOL_SIZE`   | `4`     | Thread pool used for outbound probes |
 
 ### Task list
 
 | Variable                                   | Default | Description                                                                           |
 | ------------------------------------------ | ------- | ------------------------------------------------------------------------------------- |
-| `ALETYX_DC_TOWER_TASKS_PAGE_SIZE`          | `200`   | Default page size for task list endpoints                                             |
-| `ALETYX_DC_TOWER_TASKS_FUTURE_TIMEOUT`     | `8`     | Future-completion timeout in seconds                                                  |
-| `ALETYX_DC_TOWER_TASKS_EXECUTOR_POOL_SIZE` | `0`     | `0` selects the framework default executor; override only with measured workload data |
+| `ALETYX_CONTROL_TOWER_TASKS_PAGE_SIZE`          | `200`   | Default page size for task list endpoints                                             |
+| `ALETYX_CONTROL_TOWER_TASKS_FUTURE_TIMEOUT`     | `8`     | Future-completion timeout in seconds                                                  |
+| `ALETYX_CONTROL_TOWER_TASKS_EXECUTOR_POOL_SIZE` | `0`     | `0` selects the framework default executor; override only with measured workload data |
 
 ### Logging
 
 | Variable                         | Default | Description                                                     |
 | -------------------------------- | ------- | --------------------------------------------------------------- |
-| `ALETYX_DC_TOWER_LOG_LEVEL_ROOT` | `INFO`  | Root logger level                                               |
-| `ALETYX_DC_TOWER_LOG_LEVEL_APP`  | `INFO`  | `ai.aletyx.towercore.*` package level                           |
-| `ALETYX_DC_TOWER_LOG_LEVEL_WEB`  | `ERROR` | Spring Web / DispatcherServlet level                            |
-| `ALETYX_DC_TOWER_LOG_LEVEL_HTTP` | `ERROR` | HTTP client level                                               |
-| `ALETYX_DC_TOWER_LOG_LEVEL_SQL`  | `ERROR` | Hibernate SQL level (set to `DEBUG` only briefly for diagnosis) |
+| `ALETYX_CONTROL_TOWER_LOG_LEVEL_ROOT` | `INFO`  | Root logger level                                               |
+| `ALETYX_CONTROL_TOWER_LOG_LEVEL_APP`  | `INFO`  | `ai.aletyx.towercore.*` package level                           |
+| `ALETYX_CONTROL_TOWER_LOG_LEVEL_WEB`  | `ERROR` | Spring Web / DispatcherServlet level                            |
+| `ALETYX_CONTROL_TOWER_LOG_LEVEL_HTTP` | `ERROR` | HTTP client level                                               |
+| `ALETYX_CONTROL_TOWER_LOG_LEVEL_SQL`  | `ERROR` | Hibernate SQL level (set to `DEBUG` only briefly for diagnosis) |
 
 ## Secrets and credential management
 
@@ -207,7 +207,7 @@ Secrets that must be provided in production:
 
 | Secret                                    | Source                                     | Rotation                                                        |
 | ----------------------------------------- | ------------------------------------------ | --------------------------------------------------------------- |
-| `ALETYX_DC_TOWER_DB_PASSWORD`             | Database team / secret manager             | Rotate at most every 90 days                                    |
+| `SPRING_DATASOURCE_PASSWORD`             | Database team / secret manager             | Rotate at most every 90 days                                    |
 | `ALETYX_OIDC_ENTRA_CLIENT_SECRET`     | Entra app registration                     | Rotate before the secret's expiry; default 24 months            |
 | `ALETYX_OIDC_CALLBACK_SECRET` | Operator-generated random string ≥32 chars | Rotate alongside sidecar; both sides must update simultaneously |
 
@@ -230,12 +230,12 @@ Where `/etc/tower/tower.env` (mode `0600`, owned by the deployment user) contain
 APP_HOST=https://dc-tower.example.com
 
 # Database
-ALETYX_DC_TOWER_DB_URL=jdbc:postgresql://db.internal:5432/decision_tower_db
-ALETYX_DC_TOWER_DB_USERNAME=tower
-ALETYX_DC_TOWER_DB_PASSWORD=<from-secret-manager>
+SPRING_DATASOURCE_URL=jdbc:postgresql://db.internal:5432/decision_tower_db
+SPRING_DATASOURCE_USERNAME=tower
+SPRING_DATASOURCE_PASSWORD=<from-secret-manager>
 
 # OIDC
-ALETYX_DC_TOWER_USE_MOCKS=false
+ALETYX_CONTROL_TOWER_USE_MOCKS=false
 ALETYX_OIDC_PROVIDER=entra
 ALETYX_OIDC_CLIENT_ID=<client-id>
 ALETYX_OIDC_ENTRA_TENANT_ID=<tenant-id>
@@ -243,12 +243,12 @@ ALETYX_OIDC_ENTRA_AUDIENCE=<client-id>
 ALETYX_OIDC_ENTRA_CLIENT_SECRET=<from-secret-manager>
 
 # Sidecar
-ALETYX_DC_TOWER_SIDECAR_URL=http://sidecar.internal:8080
-ALETYX_DC_TOWER_DATA_INDEX_URL=http://sidecar.internal:8080
+ALETYX_CONTROL_TOWER_SIDECAR_URL=http://sidecar.internal:8080
+ALETYX_CONTROL_TOWER_DATA_INDEX_URL=http://sidecar.internal:8080
 ALETYX_OIDC_CALLBACK_SECRET=<shared-secret>
 
 # CORS
-ALETYX_DC_TOWER_CORS_ALLOWED_ORIGINS=https://dc-tower.example.com
+ALETYX_CONTROL_TOWER_CORS_ALLOWED_ORIGINS=https://dc-tower.example.com
 ```
 
 ### Custom port
@@ -287,19 +287,19 @@ BACKEND_PORT=8080
 SPRING_PROFILES_ACTIVE=prod
 
 # Database — canonical names read by the Sidecar's application.properties
-# (spring.datasource.url=${ALETYX_DC_TOWER_SIDECAR_DB_URL}, etc.).
-ALETYX_DC_TOWER_SIDECAR_DB_URL=jdbc:postgresql://db.internal:5432/decision_tower_sidecar_db
-ALETYX_DC_TOWER_SIDECAR_DB_USERNAME=sidecar
-ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD=<from-secret-manager>
+# (spring.datasource.url=${ALETYX_CONTROL_TOWER_SIDECAR_DB_URL}, etc.).
+ALETYX_CONTROL_TOWER_SIDECAR_DB_URL=jdbc:postgresql://db.internal:5432/decision_tower_sidecar_db
+ALETYX_CONTROL_TOWER_SIDECAR_DB_USERNAME=sidecar
+ALETYX_CONTROL_TOWER_SIDECAR_DB_PASSWORD=<from-secret-manager>
 
 # How the Sidecar reaches Tower for callbacks.
-ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL=http://decision-control-tower.internal:8080
+ALETYX_CONTROL_TOWER_SIDECAR_TOWER_CALLBACK_URL=http://decision-control-tower.internal:8080
 
 # Shared callback secret — must equal Tower's ALETYX_OIDC_CALLBACK_SECRET.
 ALETYX_OIDC_CALLBACK_SECRET=<shared-secret>
 ```
 
-In the Tower `tower.env` shown earlier, point `ALETYX_DC_TOWER_SIDECAR_URL` and `ALETYX_DC_TOWER_DATA_INDEX_URL` at this Sidecar — `http://sidecar.internal:8181` for the host-port mapping above, or the in-cluster Service hostname on Kubernetes (see chapter 4 under "Sidecar component (required)").
+In the Tower `tower.env` shown earlier, point `ALETYX_CONTROL_TOWER_SIDECAR_URL` and `ALETYX_CONTROL_TOWER_DATA_INDEX_URL` at this Sidecar — `http://sidecar.internal:8181` for the host-port mapping above, or the in-cluster Service hostname on Kubernetes (see chapter 4 under "Sidecar component (required)").
 
 ## Health and verification
 
