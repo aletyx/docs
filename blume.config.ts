@@ -3,6 +3,8 @@ import { notion } from "blume/sources";
 import { z } from "zod";
 
 export default defineConfig({
+  // Serve every page under /docs (index -> /docs); public/ assets stay at the root.
+  basePath: "/docs",
   content: {
     sources: [
       // Notion source: needs NOTION_DB_ID and NOTION_TOKEN in the environment.
