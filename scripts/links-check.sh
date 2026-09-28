@@ -9,7 +9,8 @@
 #   markdown:   [text](/path/to/page)
 #   component:  href="/path/to/page"
 # External (http/https/mailto), in-page anchors (#...), and protocol-relative
-# (//...) links are ignored.
+# (//...) links are ignored. Generated and vendored trees (node_modules, .blume,
+# dist) are skipped.
 #
 # Resolution rules for a link target (after stripping #anchor and ?query):
 #   - absolute "/x/y" is resolved from the docs root (this script's parent dir)
@@ -89,7 +90,7 @@ while IFS= read -r -d '' file; do
 
   total_ok=$((total_ok + ok))
   total_broken=$((total_broken + broken))
-done < <(find "$root" -name '*.mdx' -type f -print0 | sort -z)
+done < <(find "$root" \( -name node_modules -o -name .blume -o -name dist \) -prune -o -name '*.mdx' -type f -print0 | sort -z)
 
 printf '\nTOTAL  ok=%d broken=%d\n' "$total_ok" "$total_broken"
 

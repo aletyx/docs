@@ -10,6 +10,8 @@ docs-backup/kie-docs/target/
 docs-backup/kie-docs/**/target/
 
 .vscode
-node_modules
+
+node_modules/
 .blume/
 dist/
+.blume-verify/

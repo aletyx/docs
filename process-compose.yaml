@@ -3,7 +3,7 @@ version: "0.5"
 processes:
   mintlify-dev:
     description: "Mintlify local docs dev server"
-    command: "mint dev"
+    command: "mint dev --no-open"
     working_dir: "."
     availability:
       restart: "always"
@@ -14,6 +14,33 @@ processes:
         scheme: http
         path: "/"
         port: 3000
+      initial_delay_seconds: 5
+      period_seconds: 5
+      timeout_seconds: 3
+      success_threshold: 1
+      failure_threshold: 12
+
+  blume-dev:
+    description: "Blume local docs dev server (content from Notion)"
+    # Blume reads NOTION_TOKEN and NOTION_DB_ID; load .env then .env.local the same
+    # way scripts/build-site.sh does, without overriding exported values.
+    command: >-
+      bash -c 'keep_token="${NOTION_TOKEN:-}"; keep_db_id="${NOTION_DB_ID:-}";
+      for f in .env .env.local; do [ -f "$f" ] && { set -a; . "./$f"; set +a; }; done;
+      [ -n "$keep_token" ] && export NOTION_TOKEN="$keep_token";
+      [ -n "$keep_db_id" ] && export NOTION_DB_ID="$keep_db_id";
+      [ -d node_modules/blume ] || npm ci;
+      exec npx blume dev --host 127.0.0.1 --port 4321'
+    working_dir: "."
+    availability:
+      restart: "always"
+      backoff_seconds: 2
+    readiness_probe:
+      http_get:
+        host: "127.0.0.1"
+        scheme: http
+        path: "/"
+        port: 4321
       initial_delay_seconds: 5
       period_seconds: 5
       timeout_seconds: 3
