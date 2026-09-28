@@ -46,7 +46,7 @@ class LinkParser(HTMLParser):
                 continue
             if name == "id":
                 self.ids.add(value)
-            elif name in ("href", "src") and tag not in ("link", "script"):
+            elif name in ("href", "src"):
                 self.links.append(value)
 
 
@@ -60,7 +60,9 @@ def page_url(dist, file):
 
 def resolve(dist, path):
     """Return the built file serving a URL path, or None."""
-    local = os.path.join(dist, unquote(path).lstrip("/"))
+    local = os.path.normpath(os.path.join(dist, unquote(path).lstrip("/")))
+    if local != dist and not local.startswith(dist + os.sep):
+        return None  # an encoded ".." escaped the build; nothing serves it
     candidates = [os.path.join(local, "index.html")] if path.endswith("/") else [
         local,
         os.path.join(local, "index.html"),
@@ -107,6 +109,10 @@ def main():
                 with open(file, encoding="utf-8") as fh:
                     parser.feed(fh.read())
                 pages[file] = parser
+
+    if not pages:
+        print(f"error: no HTML pages in {dist}; is the build complete?", file=sys.stderr)
+        return 2
 
     total_ok = 0
     broken = defaultdict(list)
