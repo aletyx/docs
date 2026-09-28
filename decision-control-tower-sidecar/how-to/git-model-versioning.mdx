@@ -41,10 +41,10 @@ Supply `…GITHUB_TOKEN` only through your secret manager / environment. A token
 **Steps:**
 
 1. Set the Git variables on the Sidecar (see [Configuration](/decision-control-tower-sidecar/deployment/configuration)):
-    - `ALETYX_DC_TOWER_SIDECAR_GITHUB_ENABLED=true`
-    - `ALETYX_DC_TOWER_SIDECAR_GITHUB_TOKEN=<token>`
-    - `ALETYX_DC_TOWER_SIDECAR_GITHUB_REPO=<owner/repo>`
-    - `ALETYX_DC_TOWER_SIDECAR_GITHUB_BRANCH=<branch>` (defaults to `main`)
+    - `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_ENABLED=true`
+    - `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_TOKEN=<token>`
+    - `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_REPO=<owner/repo>`
+    - `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_BRANCH=<branch>` (defaults to `main`)
     - Optionally `…GITHUB_COMMITTER_NAME` / `…GITHUB_COMMITTER_EMAIL`.
 2. Restart the Sidecar so it picks up the new configuration.
 
@@ -56,7 +56,7 @@ Stop committing without removing the rest of the configuration.
 
 **Steps:**
 
-1. Set `ALETYX_DC_TOWER_SIDECAR_GITHUB_ENABLED=false` (or leave it unset).
+1. Set `ALETYX_CONTROL_TOWER_SIDECAR_GITHUB_ENABLED=false` (or leave it unset).
 2. Restart the Sidecar.
 
 **Verify:** Approved promotions complete normally, the completion message reports no commit, and no calls are made to the Git host.

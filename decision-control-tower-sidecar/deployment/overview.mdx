@@ -35,15 +35,15 @@ docker run -d --name tower-sidecar --network aletyx-tower \
   -e APP_HOST=0.0.0.0 \
   -e BACKEND_PORT=8080 \
   -e SPRING_PROFILES_ACTIVE=prod \
-  -e ALETYX_DC_TOWER_SIDECAR_DB_URL=jdbc:postgresql://sidecar-postgres:5432/decision_tower_sidecar \
-  -e ALETYX_DC_TOWER_SIDECAR_DB_USERNAME=sidecar \
-  -e ALETYX_DC_TOWER_SIDECAR_DB_PASSWORD=sidecar \
-  -e ALETYX_DC_TOWER_SIDECAR_TOWER_CALLBACK_URL=http://decision-control-tower:8080 \
+  -e ALETYX_CONTROL_TOWER_SIDECAR_DB_URL=jdbc:postgresql://sidecar-postgres:5432/decision_tower_sidecar \
+  -e ALETYX_CONTROL_TOWER_SIDECAR_DB_USERNAME=sidecar \
+  -e ALETYX_CONTROL_TOWER_SIDECAR_DB_PASSWORD=sidecar \
+  -e ALETYX_CONTROL_TOWER_SIDECAR_TOWER_CALLBACK_URL=http://decision-control-tower:8080 \
   -e ALETYX_OIDC_CALLBACK_SECRET="$CALLBACK_SECRET" \
   <your-registry>/aletyx/decision-control-tower-sidecar:<sidecar-version>
 ```
 
-Tower then points at the Sidecar with `ALETYX_DC_TOWER_SIDECAR_URL` and `ALETYX_DC_TOWER_DATA_INDEX_URL` (see the Tower quickstart).
+Tower then points at the Sidecar with `ALETYX_CONTROL_TOWER_SIDECAR_URL` and `ALETYX_CONTROL_TOWER_DATA_INDEX_URL` (see the Tower quickstart).
 
 ## Kubernetes / OpenShift
 

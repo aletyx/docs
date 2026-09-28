@@ -160,14 +160,14 @@ Tower Core is configured entirely through environment variables (with sensible d
 
 | Variable prefix | Configures |
 |-----------------|------------|
-| `ALETYX_DC_TOWER_DB_*` | Database connection |
-| `ALETYX_DC_TOWER_SIDECAR_URL` | Tower Sidecar base URL |
-| `ALETYX_DC_TOWER_DATA_INDEX_URL` | Process/task history base URL |
-| `ALETYX_DC_TOWER_SMTP_*` / `ALETYX_DC_TOWER_EMAIL_*` | Notification email |
-| `ALETYX_DC_TOWER_CORS_ALLOWED_ORIGINS` | Allowed UI origins |
+| `SPRING_DATASOURCE_*` | Database connection |
+| `ALETYX_CONTROL_TOWER_SIDECAR_URL` | Tower Sidecar base URL |
+| `ALETYX_CONTROL_TOWER_DATA_INDEX_URL` | Process/task history base URL |
+| `ALETYX_CONTROL_TOWER_SMTP_*` / `ALETYX_CONTROL_TOWER_EMAIL_*` | Notification email |
+| `ALETYX_CONTROL_TOWER_CORS_ALLOWED_ORIGINS` | Allowed UI origins |
 | `ALETYX_OIDC_*` | Auth provider, audience, tenant claim, roles |
 | `ALETYX_OIDC_CALLBACK_SECRET` | Shared secret for sidecar callbacks |
-| `ALETYX_DC_TOWER_CB_*` | Circuit-breaker tuning |
+| `ALETYX_CONTROL_TOWER_CB_*` | Circuit-breaker tuning |
 
 For complete deployment instructions, see the [Deployment](/decision-control-tower/deployment/overview) chapter, in particular [Container Configuration](/decision-control-tower/deployment/container-configuration) and [Identity & Access Management](/decision-control-tower/deployment/identity-access-management).
 
@@ -180,7 +180,7 @@ For complete deployment instructions, see the [Deployment](/decision-control-tow
 curl http://localhost:8080/actuator/health
 ```
 
-Tower Core also actively probes each registered environment's health on a configurable interval (`ALETYX_DC_TOWER_HEALTH_INTERVAL_MS`) and surfaces an aggregate view to the dashboard.
+Tower Core also actively probes each registered environment's health on a configurable interval (`ALETYX_CONTROL_TOWER_HEALTH_INTERVAL_MS`) and surfaces an aggregate view to the dashboard.
 
 ### Resilience Signals
 
