@@ -12,6 +12,10 @@ export default defineConfig({
     ],
   },
   description: "Documentation powered by Blume.",
+  navigation: {
+    // Collapsible groups, so nested folders (e.g. Core Concepts > Process Automation > BPMN Basics) show their hierarchy.
+    sidebar: { display: "group" },
+  },
   frontmatter: {
     // Migrated pages record the pre-migration original they were checked against.
     extend: {
