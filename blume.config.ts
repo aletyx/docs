@@ -1,14 +1,12 @@
 import { defineConfig } from "blume";
+import { notion } from "blume/sources";
 import { z } from "zod";
 
 export default defineConfig({
   content: {
     sources: [
       // Notion source: needs NOTION_DB_ID and NOTION_TOKEN in the environment.
-      {
-        type: "notion",
-        database: process.env.NOTION_DB_ID,
-      },
+      notion({ database: process.env.NOTION_DB_ID }),
     ],
   },
   description: "Documentation powered by Blume.",
