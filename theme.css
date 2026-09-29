@@ -1,0 +1,6 @@
+/* Blume theme overrides (the last layer in the cascade). */
+
+/* Scale all rem-based sizes up from the 16px default to 18px. */
+html {
+  font-size: 112.5%;
+}
