@@ -1,6 +1,8 @@
 import { defineConfig } from "blume";
-import { notion } from "blume/sources";
+import { custom } from "blume/sources";
+import { notionSource } from "blume/sources/notion.ts";
 import { z } from "zod";
+import { withDocVariables } from "./lib/doc-variables.ts";
 
 export default defineConfig({
   // Serve every page under /docs (index -> /docs); public/ assets stay at the root.
@@ -8,7 +10,8 @@ export default defineConfig({
   content: {
     sources: [
       // Notion source: needs NOTION_DB_ID and NOTION_TOKEN in the environment.
-      notion({ database: process.env.NOTION_DB_ID }),
+      // {{AX_KEY}} placeholders resolve from the Doc variables database (NOTION_VARS_DB_ID).
+      custom(withDocVariables(notionSource({ name: "notion", database: process.env.NOTION_DB_ID ?? "" }))),
     ],
   },
   description: "Documentation powered by Blume.",
