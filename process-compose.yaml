@@ -39,7 +39,7 @@ processes:
       http_get:
         host: "127.0.0.1"
         scheme: http
-        path: "/"
+        path: "/docs"
         port: 4321
       initial_delay_seconds: 5
       period_seconds: 5
