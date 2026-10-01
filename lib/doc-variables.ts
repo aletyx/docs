@@ -5,10 +5,9 @@ import { escapeMarkdownText } from "blume/sources/lower.ts";
 import type { ContentSource } from "blume/sources/types.ts";
 
 // Doc variables: a Notion database with a Key (title) and a Value (text) column.
-// Pages write {{ALETYX_KEY}} (the convention Mintlify's docs.json variables used);
-// the build swaps in the value. An unknown ALETYX_ key fails the build, so a typo
-// never ships; any other {{...}} (a Mermaid hexagon, an email template) stays
-// as written. Prose reaches us escaped by
+// Pages write {{ALETYX_KEY}}; the build swaps in the value. An unknown ALETYX_
+// key fails the build, so a typo never ships; any other {{...}} (a Mermaid
+// hexagon, an email template) stays as written. Prose reaches us escaped by
 // Blume's Notion lowering (\{\{key\}\}), code spans and blocks verbatim, so the
 // pattern takes both and the value is escaped only where the token was.
 const TOKEN = /(\\?)\{\\?\{\s*((?:[\w.-]|\\[_.-])+?)\s*\\?\}\\?\}/g;
@@ -56,6 +55,9 @@ const loadVars = async (): Promise<Vars> => {
   }
   try {
     const vars = await fetchVars(database, token);
+    if (Object.keys(vars).length === 0) {
+      console.warn("[doc-variables] The Doc Variables database returned no Key/Value rows.");
+    }
     await mkdir(dirname(CACHE), { recursive: true });
     await writeFile(CACHE, JSON.stringify(vars, null, 2));
     return vars;

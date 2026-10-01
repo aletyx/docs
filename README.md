@@ -13,7 +13,7 @@ Track progress on the [Blume migration tracker](https://app.notion.com/p/aletyx/
 Run `scripts/links-check.sh` before committing content or nav changes. It checks every internal link in an existing build and does not build the site itself, so build first:
 
 ```sh
-scripts/build-site.sh      # builds from Notion into dist/ (needs NOTION_TOKEN and NOTION_DB_ID, from the environment or .env.local)
+scripts/build-site.sh      # builds from Notion into dist/ (needs NOTION_TOKEN, NOTION_DB_ID and NOTION_VARS_DB_ID, from the environment or .env.local)
 scripts/links-check.sh     # checks dist/
 ```
 
