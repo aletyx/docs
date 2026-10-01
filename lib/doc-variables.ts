@@ -5,8 +5,8 @@ import { escapeMarkdownText } from "blume/sources/lower.ts";
 import type { ContentSource } from "blume/sources/types.ts";
 
 // Doc variables: a Notion database with a Key (title) and a Value (text) column.
-// Pages write {{AX_KEY}} (the convention Mintlify's docs.json variables used);
-// the build swaps in the value. An unknown AX_ key fails the build, so a typo
+// Pages write {{ALETYX_KEY}} (the convention Mintlify's docs.json variables used);
+// the build swaps in the value. An unknown ALETYX_ key fails the build, so a typo
 // never ships; any other {{...}} (a Mermaid hexagon, an email template) stays
 // as written. Prose reaches us escaped by
 // Blume's Notion lowering (\{\{key\}\}), code spans and blocks verbatim, so the
@@ -72,13 +72,13 @@ const substitute = (text: string, vars: Vars, where: string, plainText = false):
     const key = rawKey.replace(/\\/g, "");
     const value = vars[key];
     if (value === undefined) {
-      if (key.startsWith("AX_")) throw new Error(`[doc-variables] Unknown variable {{${key}}} in ${where}`);
+      if (key.startsWith("ALETYX_")) throw new Error(`[doc-variables] Unknown variable {{${key}}} in ${where}`);
       return match;
     }
     return escaped && !plainText ? escapeMarkdownText(value) : value;
   });
 
-/** Wraps a content source so `{{AX_KEY}}` placeholders resolve from the Notion doc variables database. */
+/** Wraps a content source so `{{ALETYX_KEY}}` placeholders resolve from the Notion doc variables database. */
 export const withDocVariables = (source: ContentSource): ContentSource => {
   let current: Promise<Vars> | undefined;
   return {

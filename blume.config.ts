@@ -10,7 +10,7 @@ export default defineConfig({
   content: {
     sources: [
       // Notion source: needs NOTION_DB_ID and NOTION_TOKEN in the environment.
-      // {{AX_KEY}} placeholders resolve from the Doc variables database (NOTION_VARS_DB_ID).
+      // {{ALETYX_KEY}} placeholders resolve from the Doc variables database (NOTION_VARS_DB_ID).
       custom(withDocVariables(notionSource({ name: "notion", database: process.env.NOTION_DB_ID ?? "" }))),
     ],
   },
