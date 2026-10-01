@@ -89,6 +89,8 @@ export const withDocVariables = (source: ContentSource): ContentSource => {
       for (const entry of result.entries) {
         const where = entry.ref;
         entry.body.text = substitute(entry.body.text, vars, where);
+        // Staged pages render from `raw` (front matter + body), not `body.text`.
+        if (entry.raw !== undefined) entry.raw = substitute(entry.raw, vars, where);
         for (const field of ["title", "description"]) {
           const value = entry.data[field];
           if (typeof value === "string") {
