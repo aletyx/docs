@@ -21,10 +21,10 @@
   },
 
   "variables": {
-      "AX_WILDFLY_VERSION": "35.0.0",
-      "AX_KIE_SERVER_RELEASE": "10.1.2-aletyx-ks-005",
-      "AX_KIE_SERVER_EE10_FILE": "kie-server-10.1.2-aletyx-ks-005-ee10.war",
-      "AX_KIE_SERVER_MAVEN_VERSION": "7.74.1.Final"
+      "ALETYX_WILDFLY_VERSION": "35.0.0",
+      "ALETYX_KIE_SERVER_RELEASE": "10.1.2-aletyx-ks-005",
+      "ALETYX_KIE_SERVER_EE10_FILE": "kie-server-10.1.2-aletyx-ks-005-ee10.war",
+      "ALETYX_KIE_SERVER_MAVEN_VERSION": "7.74.1.Final"
   },
 
   "contextual": {

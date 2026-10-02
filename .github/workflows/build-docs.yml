@@ -28,6 +28,7 @@ jobs:
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
+          NOTION_VARS_DB_ID: ${{ secrets.NOTION_VARS_DB_ID }}
         run: scripts/build-site.sh ${{ inputs.preview && '--preview' || '' }}
 
       - uses: actions/upload-artifact@v4
