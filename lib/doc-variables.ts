@@ -52,14 +52,20 @@ const fetchRows = async (database: string, token: string): Promise<VariableRow[]
     }
     cursor = res.has_more ? (res.next_cursor ?? undefined) : undefined;
   } while (cursor);
-  // Resolve each referenced Blume Docs page once, for its title and slug.
+  // Resolve each referenced Blume Docs page once, for its title and slug. These only feed the
+  // reference page, so a page we can't read is skipped rather than failing the values.
   const ids = [...new Set(rows.flatMap((row) => row.referenceIds))];
   const pages = new Map(
     await Promise.all(
       ids.map(async (id) => {
-        const page = (await client.pages.retrieve({ page_id: id })) as { properties: Record<string, any> };
-        const title = plain(page.properties.Name?.title);
-        return [id, { title, slug: plain(page.properties.Slug?.rich_text) }] as const;
+        try {
+          const page = (await client.pages.retrieve({ page_id: id })) as { properties: Record<string, any> };
+          const title = plain(page.properties.Name?.title);
+          return [id, { title, slug: plain(page.properties.Slug?.rich_text) }] as const;
+        } catch (error) {
+          console.warn(`[doc-variables] Skipping referenced page ${id}: ${(error as Error).message}`);
+          return [id, { title: "", slug: "" }] as const;
+        }
       })
     )
   );
@@ -106,8 +112,15 @@ const loadRows = async (): Promise<VariableRow[]> => {
   }
 };
 
-const toVars = (rows: VariableRow[]): Vars =>
-  Object.fromEntries(rows.map((row) => [row.key, row.value]));
+// Two rows with one Key would make the value depend on row order; fail instead.
+const toVars = (rows: VariableRow[]): Vars => {
+  const seen = new Set<string>();
+  for (const { key } of rows) {
+    if (seen.has(key)) throw new Error(`[doc-variables] Duplicate variable key ${key} in the Doc Variables database`);
+    seen.add(key);
+  }
+  return Object.fromEntries(rows.map((row) => [row.key, row.value]));
+};
 
 // A table cell: Markdown-escaped (so a `|` can't split the cell) on one line.
 const cell = (text: string) => escapeMarkdownText(text.replace(/\s+/g, " ")) || " ";
@@ -146,11 +159,9 @@ const referenceEntry = (rows: VariableRow[]): SourceEntry => {
 const substitute = (text: string, vars: Vars, where: string, plainText = false): string =>
   text.replace(TOKEN, (match, escaped: string, rawKey: string) => {
     const key = rawKey.replace(/\\/g, "");
+    if (!key.startsWith("ALETYX_")) return match;
+    if (!Object.hasOwn(vars, key)) throw new Error(`[doc-variables] Unknown variable {{${key}}} in ${where}`);
     const value = vars[key];
-    if (value === undefined) {
-      if (key.startsWith("ALETYX_")) throw new Error(`[doc-variables] Unknown variable {{${key}}} in ${where}`);
-      return match;
-    }
     return escaped && !plainText ? escapeMarkdownText(value) : value;
   });
 
