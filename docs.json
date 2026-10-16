@@ -217,6 +217,7 @@
               "guides/overview",
               "guides/decisions",
               "guides/processes",
+              "components/mcp/governance",
               {
                 "group": "Decision Modeling",
                 "pages": [
