@@ -1,4 +1,14 @@
 {
+  "name": "aletyx-docs",
+  "private": true,
+  "scripts": {
+    "dev": "scripts/dev.sh",
+    "start": "scripts/dev.sh",
+    "build": "scripts/build-site.sh",
+    "build:preview": "scripts/build-site.sh --preview",
+    "links-check": "scripts/links-check.sh",
+    "broken-links": "scripts/build-site.sh && scripts/links-check.sh"
+  },
   "dependencies": {
     "@notionhq/client": "^5.26.0",
     "blume": "^2.0.3",

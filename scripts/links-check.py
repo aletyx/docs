@@ -32,6 +32,7 @@ from urllib.parse import unquote, urljoin, urlsplit
 SITE_ORIGINS = {"aletyx.ai", "www.aletyx.ai"}
 BASE_PATH = "/docs"
 IGNORED_SCHEMES = {"mailto", "tel", "data", "javascript"}
+MOUNT = ""  # set in main() from the build layout, see mount_point()
 
 
 class LinkParser(HTMLParser):
@@ -50,9 +51,19 @@ class LinkParser(HTMLParser):
                 self.links.append(value)
 
 
+def mount_point(dist):
+    """The URL path the build directory is served at.
+
+    A site built with `deployment.base: "/docs"` holds only the site: dist/ is
+    served at /docs. An older build with `basePath: "/docs"` has the pages in
+    dist/docs/ and is served at the root.
+    """
+    return "" if os.path.isdir(os.path.join(dist, BASE_PATH.lstrip("/"))) else BASE_PATH
+
+
 def page_url(dist, file):
     """The URL path a built file is served at."""
-    rel = "/" + os.path.relpath(file, dist).replace(os.sep, "/")
+    rel = MOUNT + "/" + os.path.relpath(file, dist).replace(os.sep, "/")
     if rel.endswith("/index.html"):
         return rel[: -len("index.html")]
     return rel
@@ -60,6 +71,10 @@ def page_url(dist, file):
 
 def resolve(dist, path):
     """Return the built file serving a URL path, or None."""
+    if MOUNT:
+        if not (path == MOUNT or path.startswith(MOUNT + "/")):
+            return None  # outside /docs: the docs host doesn't serve it
+        path = path[len(MOUNT):] or "/"
     local = os.path.normpath(os.path.join(dist, unquote(path).lstrip("/")))
     if local != dist and not local.startswith(dist + os.sep):
         return None  # an encoded ".." escaped the build; nothing serves it
@@ -99,6 +114,8 @@ def main():
     if not os.path.isdir(dist):
         print(f"error: build output not found: {dist}", file=sys.stderr)
         return 2
+    global MOUNT
+    MOUNT = mount_point(dist)
 
     pages = {}
     for dirpath, _, filenames in os.walk(dist):
