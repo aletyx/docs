@@ -3,7 +3,8 @@
 # build-site.sh — build the Blume docs site from the Notion Docs database.
 #
 # Blume reads every page from Notion (see blume.config.ts), so the build needs
-# NOTION_TOKEN and NOTION_DB_ID. They come from the environment (CI secrets) or,
+# NOTION_TOKEN, NOTION_DB_ID, and NOTION_VARS_DB_ID (the Doc Variables database
+# that {{ALETYX_*}} placeholders resolve from). They come from the environment (CI secrets) or,
 # locally, from .env.local / .env at the repo root. Exported values take
 # precedence over the files.
 #
@@ -22,6 +23,7 @@ cd "$ROOT"
 # Load .env first, then .env.local on top, so each file can supply any subset.
 keep_token="${NOTION_TOKEN:-}"
 keep_db_id="${NOTION_DB_ID:-}"
+keep_vars_db_id="${NOTION_VARS_DB_ID:-}"
 for f in .env .env.local; do
   if [[ -f "$f" ]]; then
     set -a
@@ -32,10 +34,12 @@ for f in .env .env.local; do
 done
 [[ -n "$keep_token" ]] && export NOTION_TOKEN="$keep_token"
 [[ -n "$keep_db_id" ]] && export NOTION_DB_ID="$keep_db_id"
+[[ -n "$keep_vars_db_id" ]] && export NOTION_VARS_DB_ID="$keep_vars_db_id"
 
 missing=()
 [[ -n "${NOTION_TOKEN:-}" ]] || missing+=(NOTION_TOKEN)
 [[ -n "${NOTION_DB_ID:-}" ]] || missing+=(NOTION_DB_ID)
+[[ -n "${NOTION_VARS_DB_ID:-}" ]] || missing+=(NOTION_VARS_DB_ID)
 if (( ${#missing[@]} )); then
   echo "error: ${missing[*]} not set (export it, or add it to .env.local)" >&2
   exit 1
