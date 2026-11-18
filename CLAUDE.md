@@ -2,7 +2,7 @@
 
 ## Where docs live
 
-- Docs live in Notion (the Blume Docs database), not in this repo. The Mintlify site here is deprecated: don't change, build, or check it unless told to; read it only as a migration source.
+- Docs live in Notion (the Blume Docs database), not in this repo. The old Mintlify site is archived under `archive/mintlify/` (pages, `docs.json`, images): don't change, build, or check it unless told to; read it only as a migration source.
 - Register every migrated or new page on the [Blume migration tracker](https://app.notion.com/p/aletyx/Blume-migration-tracker-3e9abc1d8c6481dcb8f2f38bf3accbef?pvs=28). With every change, update the completion line at the top (Mintlify nav rows with a Notion URL, out of all nav rows) and add a dated entry under Changelog (newest first).
 - Check every new or changed page in `blume dev` at `/docs/<slug>`: every section, callout, list, code block, image and link must render. Drafts show only in `blume dev`.
 - After adding or changing a page, compare it with the other pages. If two are too similar, propose a merge; the user chooses which page to keep. Never merge on your own.
@@ -16,6 +16,20 @@
 - A Red page gets a comment listing each open item and, unless it is Published (ask first), a red 🚩 callout at the top saying what is needed and from whom (engineering, product, or the user). Remove the callout when the page leaves Red.
 - A page waiting on engineering or product stays Red until the answer is applied.
 - Record every Red-flag resolution as a page comment (what was decided, by whom, what changed). Comment before trashing a page; Notion can't comment on trashed pages.
+
+## Quarantine (outdated pages)
+
+- Outdated pages move to the hidden Quarantine section instead of being trashed: set Section to `Quarantine`, Status to `Draft`, Flag to `⚑ Red`, and change the Slug to `quarantine/<old-slug>`. Keep the Order.
+- Quarantined pages show only in `blume dev`, under the "Quarantine [DEV ONLY]" tab at `/docs/quarantine`. Every other build (production, and `--preview` builds that keep Drafts) drops them at the source (`lib/dev-only-sections.ts`), so no Published page may link to a quarantined page.
+- Add a top callout saying why the page was quarantined, what would bring it back, and who decides. Record the move as a page comment and as a dated Changelog entry on the migration tracker.
+- If the page was Published, ship a 301 in `blume.config.ts` (`redirects`) from its old slug to the page that replaces it, or to its section index when nothing does.
+- A quarantined page leaves by being rewritten (move it back to its product folder, with a redirect from the quarantine slug) or by being trashed after the user decides, with the decision recorded as a page comment first.
+
+## Legacy Decision Control (`/docs/dc`)
+
+- The old Decision Control, Decision Control Tower and Sidecar docs live under slug `dc/` with Section `Decision Control`. They are Published, and `lib/legacy-section.ts` noindexes them and drops them from site search. The "Decision Control" header tab is visible for now (since 2026-11-17) and will be phased out; to hide it except on `dc/` pages, uncomment the rule in `theme.css`.
+- Each page starts with a gray legacy-notice callout instead of 🚩 callouts; its open items stay in page comments, and its Flag stays `⚑ Red` until they are resolved.
+- The intended entry points are the end of the index page and the FAQ item `platform/05-faq/decision-control`. Ask the user before adding other links from new-platform pages into `/dc`.
 
 ## Blume rendering (Notion source)
 
