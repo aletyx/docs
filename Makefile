@@ -21,7 +21,8 @@ preview: ## Build into dist/ including Draft pages
 links-check: ## Check internal links in the existing dist/
 	scripts/links-check.sh
 
-broken-links: build links-check ## Build, then check internal links
+broken-links: build ## Build, then check internal links
+	scripts/links-check.sh
 
 clean: ## Remove build output (keeps the .blume Notion cache, so dev still starts fast)
 	rm -rf dist .blume-verify
