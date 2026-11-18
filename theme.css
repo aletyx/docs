@@ -4,3 +4,13 @@
 html {
   font-size: 112.5%;
 }
+
+/* Legacy Decision Control tab (/docs/dc): shown in the top navbar for now (2026-11-17), to be
+ * phased out later. To hide it again everywhere except on its own pages (where Blume marks it
+ * aria-current), uncomment this rule. The tab bars (header and mobile drawer) are the navs
+ * labelled "Sections"; the sidebar and page links are left alone.
+nav[aria-label="Sections"] a[href="/docs/dc"]:not([aria-current="page"]),
+nav[aria-label="Sections"] li:has(> a[href="/docs/dc"]:not([aria-current="page"])) {
+  display: none;
+}
+*/
