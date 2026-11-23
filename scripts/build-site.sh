@@ -10,7 +10,9 @@
 #
 # Output lands in dist/. Extra arguments go straight to `blume build`, e.g.:
 #   scripts/build-site.sh --preview    include Draft pages
-#   scripts/build-site.sh --isolated   build while `blume dev` is running
+#   scripts/build-site.sh --isolated   build while `blume dev` is running (output in
+#                                      .blume-verify/dist, not dist/, so links-check.sh
+#                                      does not see it)
 #
 # Usage: scripts/build-site.sh [blume build options]
 

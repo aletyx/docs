@@ -11,11 +11,11 @@
 # The server keeps running after this script exits. Its output goes to
 # .blume/dev.log (`tail -f .blume/dev.log` to follow it).
 #
-# Usage: scripts/restart-dev.sh [--keep-cache] [--build]
+# Usage: scripts/restart-dev.sh [--keep-cache]
 #   --keep-cache  restart without clearing the Notion cache (fast, but page and
 #                 slug changes made in Notion since the last fetch don't show)
-#   --build       once dev is up, also run a production build into dist/ and the
-#                 link check (scripts/build-site.sh --isolated, links-check.sh)
+#
+# For a production build and link check, stop dev first and run `make broken-links`.
 #
 # Environment: HOST (default 127.0.0.1), PORT (default 4321),
 #              ATTEMPTS (default 3), READY_TIMEOUT in seconds (default 900).
@@ -33,12 +33,10 @@ LOG=".blume/dev.log"
 URL="http://$HOST:$PORT/docs"
 
 keep_cache=false
-build=false
 for arg in "$@"; do
   case "$arg" in
     --keep-cache) keep_cache=true ;;
-    --build) build=true ;;
-    -h | --help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h | --help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "error: unknown option $arg (try --help)" >&2; exit 2 ;;
   esac
 done
@@ -119,12 +117,6 @@ $ok || { echo "error: the dev server did not start after $ATTEMPTS attempts. See
 if grep -qE '\[ERROR\]' "$LOG"; then
   echo "Warning: the server logged errors (pages that fail to render):"
   grep -E '\[ERROR\]' "$LOG" | head -5 | cut -c1-200
-fi
-
-if $build; then
-  echo "Building the production site into dist/ (runs beside the dev server)."
-  scripts/build-site.sh --isolated
-  scripts/links-check.sh
 fi
 
 echo "Dev server running at $URL (log: $LOG)"
