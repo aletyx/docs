@@ -36,9 +36,9 @@ export default defineConfig({
     // One header tab per product; each scopes the sidebar to its slug folder. The root tab keeps the Get started pages.
     tabs: [
       { label: "Get started", path: "/" },
-      { label: "Aletyx Platform", path: "/platform" },
-      { label: "Aletyx Playground", path: "/playground" },
-      { label: "Aletyx Enterprise Builds", path: "/enterprise-builds" },
+      { label: "Platform", path: "/platform" },
+      { label: "Playground", path: "/playground" },
+      { label: "Enterprise Builds", path: "/enterprise-builds" },
       // Aletyx Decision Control and Decision Control Tower were renamed to Aletyx Platform (2026-11-04): their
       // surviving pages live under /platform, and the old Decision Control docs are a hidden legacy sub-site at /dc.
       // Its tab scopes the sidebar to dc/ (without it the pages would land in the Get started sidebar). The tab is
@@ -47,7 +47,7 @@ export default defineConfig({
       { label: "Decision Control", path: "/dc" },
       // Quarantine: outdated pages parked for rewrite or removal (see CLAUDE.md). Dev only: the tab is added only
       // in `blume dev`, and every other build (production and --preview) drops the pages at the source.
-      ...(isDev ? [{ label: "Quarantine [DEV ONLY]", path: "/quarantine" }] : []),
+      ...(isDev ? [{ label: "Quarantine", path: "/quarantine" }] : []),
     ],
   },
   // Published pages that moved under a product folder (the /docs base is added automatically).

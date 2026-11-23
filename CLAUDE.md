@@ -19,15 +19,15 @@
 
 ## Review queue
 
-- Every page outside Quarantine has a place in the review queue: Documentation Database properties `Review #` (position), `Review` (To review, In review, Reviewed), `Review reason` and `Reviewed on`. Sort by `Review #` and take the lowest page that is not Reviewed.
-- Set `Review` to In review when you start a page. When done, set it to Reviewed, set `Reviewed on`, set the Flag to match the outcome, and add a page comment summarizing what changed and what is still open.
+- Four internal Documentation Database columns track the page review: `Review #` (position in the queue, most impact and most problems first), `Review reason`, `Reviewed on` and `Reviewed by`. Blume publishes only Name, Description, Status, Order and Slug, so these never reach the site; keep it that way (don't map them in `blume.config.ts` or `lib/`).
+- Work the queue by sorting on `Review #` and taking the lowest page with no `Reviewed on`. When done, set `Reviewed on` and `Reviewed by`, set the Flag to match the outcome, and add a page comment summarizing what changed and what is still open.
 - A page moved to Quarantine during review leaves the queue: clear its `Review #`.
-- New pages join the queue as To review, ranked with the same rules: Published Red first, then Published with broken links, Published Review, Platform drafts, other Red drafts, Review drafts, Published Green, Green drafts, and the legacy `dc/` section last. Within a tier: Get started, Aletyx Platform, Playground, Enterprise Builds, then the most linked pages first.
+- Ranking, used for new pages too: (1) Published Red, ordered by reader impact (entry pages, then pages whose steps fail or conflict); (2) Draft pages that live pages link to, since those links 404 until the target is published or the link is removed; (3) Published Review, with Platform pages in navigation order first; (4) Platform drafts; (5) Red drafts; (6) Review drafts; (7) Published Green, as a spot-check; (8) Green drafts; (9) the legacy `dc/` section. Inside a group, pages whose review notes report errors readers hit (failing commands, code that does not compile, conflicts between pages) come first, then Get started, Platform, Playground and Enterprise Builds, then the most linked pages. Notes written before a page's latest "Resolved" comment don't count.
 
 ## Quarantine (outdated pages)
 
 - Outdated pages move to the hidden Quarantine section instead of being trashed: set Section to `Quarantine`, Status to `Draft`, Flag to `⚑ Red`, and change the Slug to `quarantine/<old-slug>`. Keep the Order.
-- Quarantined pages show only in `blume dev`, under the "Quarantine [DEV ONLY]" tab at `/docs/quarantine`. Every other build (production, and `--preview` builds that keep Drafts) drops them at the source (`lib/dev-only-sections.ts`), so no Published page may link to a quarantined page.
+- Quarantined pages show only in `blume dev`, under the "Quarantine" tab (added only in dev) at `/docs/quarantine`. Every other build (production, and `--preview` builds that keep Drafts) drops them at the source (`lib/dev-only-sections.ts`), so no Published page may link to a quarantined page.
 - Add a top callout saying why the page was quarantined, what would bring it back, and who decides. Record the move as a page comment and as a dated Changelog entry on the migration tracker.
 - If the page was Published, ship a 301 in `blume.config.ts` (`redirects`) from its old slug to the page that replaces it, or to its section index when nothing does.
 - A quarantined page leaves by being rewritten (move it back to its product folder, with a redirect from the quarantine slug) or by being trashed after the user decides, with the decision recorded as a page comment first.
