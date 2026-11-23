@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "scripts/dev.sh",
     "start": "scripts/dev.sh",
+    "restart": "scripts/restart-dev.sh",
     "build": "scripts/build-site.sh",
     "build:preview": "scripts/build-site.sh --preview",
     "links-check": "scripts/links-check.sh",
