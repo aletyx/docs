@@ -17,6 +17,13 @@
 - A page waiting on engineering or product stays Red until the answer is applied.
 - Record every Red-flag resolution as a page comment (what was decided, by whom, what changed). Comment before trashing a page; Notion can't comment on trashed pages.
 
+## Review queue
+
+- Every page outside Quarantine has a place in the review queue: Documentation Database properties `Review #` (position), `Review` (To review, In review, Reviewed), `Review reason` and `Reviewed on`. Sort by `Review #` and take the lowest page that is not Reviewed.
+- Set `Review` to In review when you start a page. When done, set it to Reviewed, set `Reviewed on`, set the Flag to match the outcome, and add a page comment summarizing what changed and what is still open.
+- A page moved to Quarantine during review leaves the queue: clear its `Review #`.
+- New pages join the queue as To review, ranked with the same rules: Published Red first, then Published with broken links, Published Review, Platform drafts, other Red drafts, Review drafts, Published Green, Green drafts, and the legacy `dc/` section last. Within a tier: Get started, Aletyx Platform, Playground, Enterprise Builds, then the most linked pages first.
+
 ## Quarantine (outdated pages)
 
 - Outdated pages move to the hidden Quarantine section instead of being trashed: set Section to `Quarantine`, Status to `Draft`, Flag to `⚑ Red`, and change the Slug to `quarantine/<old-slug>`. Keep the Order.
