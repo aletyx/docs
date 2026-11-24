@@ -16,6 +16,7 @@
 - A Red page gets a comment listing each open item and, unless it is Published (ask first), a red 🚩 callout at the top saying what is needed and from whom (engineering, product, or the user). Remove the callout when the page leaves Red.
 - A page waiting on engineering or product stays Red until the answer is applied.
 - Record every Red-flag resolution as a page comment (what was decided, by whom, what changed). Comment before trashing a page; Notion can't comment on trashed pages.
+- Delete an issue comment (a 🚩 finding, or a reply saying it's fixed) once its fix is verified in Notion and on the rendered site. Keep the dated resolution records. A comment on a deleted block can only be deleted after restoring the block; delete the block again afterwards.
 
 ## Review queue
 
