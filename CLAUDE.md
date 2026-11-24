@@ -41,8 +41,8 @@
 ## Blume rendering (Notion source)
 
 - Tables and heading_4 blocks are dropped: use lists and heading_1 to heading_3.
-- Docs links must be absolute `https://aletyx.ai/docs/<slug>`, without a trailing `/index` (Blume serves `x/index` at `/docs/x`). Relative links break.
-- Published pages must not link to Draft pages: those links 404 in production.
+- Link to another docs page with a Notion page link (paste the page's Notion link, or @-mention it): it opens the page inside Notion, and the build turns it into `/docs/<slug>` (`lib/notion-links.ts`). Only a link to a section keeps the absolute form `https://aletyx.ai/docs/<slug>#anchor`, without a trailing `/index` (Blume serves `x/index` at `/docs/x`); the build makes it root-relative. Relative links typed by hand break.
+- Published pages must not link to Draft pages: those links 404 in production. The build warns about each one (`[notion-links]` in the log).
 - Callouts render without their type; MDX typed as text shows literally.
 
 ## Doc variables

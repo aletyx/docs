@@ -5,6 +5,7 @@ import { z } from "zod";
 import { withDevOnlySections } from "./lib/dev-only-sections.ts";
 import { withDocVariables } from "./lib/doc-variables.ts";
 import { withLegacySections } from "./lib/legacy-section.ts";
+import { withNotionLinks } from "./lib/notion-links.ts";
 
 // `blume dev` (and the `astro dev` it spawns) carry "dev" in argv; `blume build` does not.
 const isDev = process.argv.includes("dev");
@@ -19,11 +20,14 @@ export default defineConfig({
     sources: [
       // Notion source: needs NOTION_DB_ID and NOTION_TOKEN in the environment.
       // {{ALETYX_KEY}} placeholders resolve from the Doc variables database (NOTION_VARS_DB_ID).
+      // Links to Notion pages of the Docs database become /docs/<slug> links (lib/notion-links.ts).
       // Legacy sections (dc/) are noindexed and kept out of search (lib/legacy-section.ts).
       // Dev-only sections (quarantine/) are dropped from every build but `blume dev` (lib/dev-only-sections.ts).
       custom(
         withDevOnlySections(
-          withLegacySections(withDocVariables(notionSource({ name: "notion", database: process.env.NOTION_DB_ID ?? "" }))),
+          withLegacySections(
+            withNotionLinks(withDocVariables(notionSource({ name: "notion", database: process.env.NOTION_DB_ID ?? "" }))),
+          ),
           isDev,
         ),
       ),
