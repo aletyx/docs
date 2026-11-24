@@ -1,0 +1,23 @@
+{
+  "name": "Aletyx docs (Blume)",
+  // Blume needs Node >= 22.12; CI builds on Node 22 too.
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  // Blume reads its content from Notion. Add these as Codespaces secrets with access to this repo
+  // (github.com/settings/codespaces); the create page also prompts for them.
+  "secrets": {
+    "NOTION_TOKEN": { "description": "Notion integration token with access to the Blume Docs and Doc Variables databases." },
+    "NOTION_DB_ID": { "description": "ID of the Blume Docs database." },
+    "NOTION_VARS_DB_ID": { "description": "ID of the Doc Variables database." }
+  },
+  "containerEnv": {
+    // Vite rejects unknown Host headers; allow the Codespaces forwarded URL (*.app.github.dev).
+    "__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS": ".app.github.dev"
+  },
+  "postCreateCommand": "npm ci",
+  // Runs in a terminal on every attach; the pages are under /docs on the forwarded port.
+  "postAttachCommand": { "blume-dev": "bash .devcontainer/blume-dev.sh" },
+  "forwardPorts": [4321],
+  "portsAttributes": {
+    "4321": { "label": "Blume docs (/docs)", "onAutoForward": "notify" }
+  }
+}

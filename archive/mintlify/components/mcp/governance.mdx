@@ -1,0 +1,63 @@
+---
+title: "Governing AI Agents with MCP: Policy Your Agents Call, Not Rewrite"
+sidebarTitle: "MCP governance"
+description: "How Aletyx keeps AI agent actions governed: policy is published as a versioned skill, the agent calls it over MCP, and every execution is recorded."
+---
+
+AI agents can act on your policy today. On Aletyx, governance happens before the agent acts, not in monitoring afterwards: policy is published as a versioned skill, the agent calls it over MCP, and each execution is recorded with its inputs, outputs, and the rule that fired. This page explains what that looks like end to end and where the boundaries are.
+
+## What does governing an AI agent mean in practice?
+
+The agent handles the conversation. The published policy model produces the outcome. Every run is versioned and recorded.
+
+## What goes wrong when agents produce outcomes on their own?
+
+When an agent produces the outcome itself, three things go wrong:
+
+- **Invented values:** the agent fills in data it doesn't have instead of asking for it.
+- **No record:** there is nothing to show how the outcome was reached.
+- **No version:** there is no policy version to point to when someone asks which rules applied.
+
+## How does MCP fit?
+
+Through the [Model Context Protocol (MCP)](/components/mcp/overview), the agent gets access to your published policy as a skill it can call. The policy itself stays out of its reach: the agent calls your policy, it does not rewrite it. For how a published model becomes something an LLM can call, see [How can I connect DMN decisions to LLMs with MCP?](/faq/products-features/dmn-mcp).
+
+## What happens when a model is published?
+
+Publishing a model creates a new version of your policy and exposes it as an agent skill. Every time an agent calls it, the execution is recorded with its inputs, outputs, and the rule that fired.
+
+## Example: a loan pre-qualification agent
+
+This flow shows the pieces working together:
+
+<Steps>
+  <Step title="Publish the model">
+    A loan pre-qualification model is published.
+  </Step>
+  <Step title="Expose it as a skill">
+    The published model is exposed as an agent skill.
+  </Step>
+  <Step title="Restrict the agent">
+    A Claude Code agent is restricted to that skill.
+  </Step>
+  <Step title="Ask, don't assume">
+    The agent asks for the missing data instead of assuming it.
+  </Step>
+  <Step title="The model produces the outcome">
+    The model returns "not qualified, DTI too high".
+  </Step>
+  <Step title="Show the proof">
+    The agent links to the execution record in the platform, with the evaluated element highlighted.
+  </Step>
+</Steps>
+
+The agent ran the conversation, but the outcome came from the published policy version, and the record shows exactly how it was reached.
+
+## Who controls changes and releases to policy?
+
+Changes and releases to policy go through publishing, not through the agent. Enterprise governance controls differ by edition: see [pricing](https://aletyx.ai/pricing) to compare editions.
+
+## How do teams start?
+
+- **Ready to try:** start a [free trial](https://aletyx.ai/free-trial/).
+- **Evaluating editions:** compare them on the [pricing page](https://aletyx.ai/pricing).

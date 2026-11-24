@@ -1,45 +1,73 @@
 # Working agreements
 
+## Where docs live
+
+- Docs live in Notion (the Blume Docs database), not in this repo. The old Mintlify site is archived under `archive/mintlify/` (pages, `docs.json`, images): don't change, build, or check it unless told to; read it only as a migration source.
+- Register every migrated or new page on the [Blume migration tracker](https://app.notion.com/p/aletyx/Blume-migration-tracker-3e9abc1d8c6481dcb8f2f38bf3accbef?pvs=28). With every change, update the completion line at the top (Mintlify nav rows with a Notion URL, out of all nav rows) and add a dated entry under Changelog (newest first).
+- Check every new or changed page in `blume dev` at `/docs/<slug>`: every section, callout, list, code block, image and link must render. Drafts show only in `blume dev`.
+- After adding or changing a page, compare it with the other pages. If two are too similar, propose a merge; the user chooses which page to keep. Never merge on your own.
+
+## Review flags
+
+- Every page has a Flag:
+  - `⚑ Green`: great content, no broken links, nothing needed.
+  - `⚑ Review` (yellow): looks good, but something may need an eye.
+  - `⚑ Red`: broken links, outdated content, conflicts, or anything needing manual review or the user's decision.
+- A Red page gets a comment listing each open item and, unless it is Published (ask first), a red 🚩 callout at the top saying what is needed and from whom (engineering, product, or the user). Remove the callout when the page leaves Red.
+- A page waiting on engineering or product stays Red until the answer is applied.
+- Record every Red-flag resolution as a page comment (what was decided, by whom, what changed). Comment before trashing a page; Notion can't comment on trashed pages.
+
+## Review queue
+
+- Four internal Documentation Database columns track the page review: `Review #` (position in the queue, most impact and most problems first), `Review reason`, `Reviewed on` and `Reviewed by`. Blume publishes only Name, Description, Status, Order and Slug, so these never reach the site; keep it that way (don't map them in `blume.config.ts` or `lib/`).
+- Work the queue by sorting on `Review #` and taking the lowest page with no `Reviewed on`. When done, set `Reviewed on` and `Reviewed by`, set the Flag to match the outcome, and add a page comment summarizing what changed and what is still open.
+- A page moved to Quarantine during review leaves the queue: clear its `Review #`.
+- Ranking, used for new pages too: (1) Published Red, ordered by reader impact (entry pages, then pages whose steps fail or conflict); (2) Draft pages that live pages link to, since those links 404 until the target is published or the link is removed; (3) Published Review, with Platform pages in navigation order first; (4) Platform drafts; (5) Red drafts; (6) Review drafts; (7) Published Green, as a spot-check; (8) Green drafts; (9) the legacy `dc/` section. Inside a group, pages whose review notes report errors readers hit (failing commands, code that does not compile, conflicts between pages) come first, then Get started, Platform, Playground and Enterprise Builds, then the most linked pages. Notes written before a page's latest "Resolved" comment don't count.
+
+## Quarantine (outdated pages)
+
+- Outdated pages move to the hidden Quarantine section instead of being trashed: set Section to `Quarantine`, Status to `Draft`, Flag to `⚑ Red`, and change the Slug to `quarantine/<old-slug>`. Keep the Order.
+- Quarantined pages show only in `blume dev`, under the "Quarantine" tab (added only in dev) at `/docs/quarantine`. Every other build (production, and `--preview` builds that keep Drafts) drops them at the source (`lib/dev-only-sections.ts`), so no Published page may link to a quarantined page.
+- Add a top callout saying why the page was quarantined, what would bring it back, and who decides. Record the move as a page comment and as a dated Changelog entry on the migration tracker.
+- If the page was Published, ship a 301 in `blume.config.ts` (`redirects`) from its old slug to the page that replaces it, or to its section index when nothing does.
+- A quarantined page leaves by being rewritten (move it back to its product folder, with a redirect from the quarantine slug) or by being trashed after the user decides, with the decision recorded as a page comment first.
+
+## Legacy Decision Control (`/docs/dc`)
+
+- The old Decision Control, Decision Control Tower and Sidecar docs live under slug `dc/` with Section `Decision Control`. They are Published, and `lib/legacy-section.ts` noindexes them and drops them from site search. The "Decision Control" header tab is visible for now (since 2026-11-17) and will be phased out; to hide it except on `dc/` pages, uncomment the rule in `theme.css`.
+- Each page starts with a gray legacy-notice callout instead of 🚩 callouts; its open items stay in page comments, and its Flag stays `⚑ Red` until they are resolved.
+- The intended entry points are the end of the index page and the FAQ item `platform/05-faq/decision-control`. Ask the user before adding other links from new-platform pages into `/dc`.
+
+## Blume rendering (Notion source)
+
+- Tables and heading_4 blocks are dropped: use lists and heading_1 to heading_3.
+- Docs links must be absolute `https://aletyx.ai/docs/<slug>`, without a trailing `/index` (Blume serves `x/index` at `/docs/x`). Relative links break.
+- Published pages must not link to Draft pages: those links 404 in production.
+- Callouts render without their type; MDX typed as text shows literally.
+
+## Doc variables
+
+- Values that change between releases live in the [Doc Variables database](https://app.notion.com/p/aletyx/3ecabc1d8c6480d48300d9cf1cd614e6?v=3ecabc1d8c6480b3a7c0000cb22300ac). Pages write `{{ALETYX_NAME}}` and the build substitutes it (`lib/doc-variables.ts`, `NOTION_VARS_DB_ID`). An unknown `ALETYX_` key fails the build.
+- When a page adds, changes, or removes a variable, update its row (Key, Value, Description, References) in the same change. Delete a row only when no page uses it.
+
 ## Writing style
 
 - No em dashes. Use commas, colons, parentheses, or separate sentences.
 - Never write "deterministic". Say "predictable", or "the same inputs always produce the same result".
+- Never publish staging or test addresses (e.g. `cosmos.aletyx.services`). Published product endpoints (Maven repos, container registries) are fine.
 
-## Issue tracking
-
-Tickets live in a separate repo: `aletyx/aletyx-content-issues`. Never use this repo's tracker.
-
-- Create, list, comment, and close there: `gh issue <cmd> --repo aletyx/aletyx-content-issues`.
-- Rank the next ticket by: (1) priority label, (2) business relevance, (3) site nav order.
-- After picking a ticket, stop. Present it and wait for explicit instructions before changing anything.
-- Comment on the ticket summarizing the change before pushing.
-
-## Content changes
+## Repo changes
 
 - Run `scripts/links-check.sh` before committing content or nav changes.
-- Every page move or rename ships with a 301 redirect in `docs.json`.
-- Never publish staging, stage, or test addresses in the docs. Use them only as working references. Published product endpoints (Maven repo, container registry) are fine.
+- Every page move or rename ships with a 301 redirect in `blume.config.ts` (`redirects`).
+- Tickets live in `aletyx/aletyx-content-issues` (`gh issue <cmd> --repo aletyx/aletyx-content-issues`), never this repo. Rank by priority label, business relevance, then nav order. After picking a ticket, stop and wait for instructions. Comment on it summarizing the change before pushing.
+- After submitting a PR, wait for Greptile's review and fix each reasonable comment on the PR branch.
 
 ## Migrating pages
 
-Pre-migration originals render at https://aletyx-docs-preview.aletyx.workers.dev (the production old-docs site is retired). Use it as the `source:` frontmatter value and for fidelity comparisons.
-
-Map each mkdocs-material admonition to the nearest Mintlify callout. Keep any custom title as a bold first line inside the callout, and preserve the full body.
-
-| Source | Callout |
-| --- | --- |
-| `!!! note` | `<Note>` |
-| `!!! tip` | `<Tip>` |
-| `!!! info` | `<Info>` |
-| `!!! warning` | `<Warning>` |
-| `!!! danger` | `<Danger>` |
+- Pre-migration originals render at https://aletyx-docs-preview.aletyx.workers.dev; use it for fidelity checks.
+- Keep every admonition as a Notion callout, with any custom title as a bold first line and the full body.
 
 ## Reviewing blog posts (`blog/`)
 
-Always add or verify:
-
-- TL;DR / key takeaways up top.
-- Brief FAQ at the end.
-- Answer-first phrasing (explicit answer sentences).
-- At least one concrete example or mini scenario.
-- E-E-A-T signals (experience, expertise, authoritativeness, trustworthiness).
+Add or verify: a TL;DR up top, a short FAQ at the end, answer-first phrasing, at least one concrete example, and E-E-A-T signals.
